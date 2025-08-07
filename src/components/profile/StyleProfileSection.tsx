@@ -1,0 +1,288 @@
+import React, { useState } from 'react';
+import Button from '../Button';
+import { SectionWrapper, ContentHeader } from '../../pages/ProfilePage.styles';
+import { FaTshirt, FaArrowRight, FaCloudSun, FaArrowLeft, FaBullseye, FaShoppingCart, FaDollarSign } from 'react-icons/fa';
+
+// Import SaveConfirmationModal
+import SaveConfirmationModal from './modals/SaveConfirmationModal';
+
+// Import styled components
+import {
+  GridContainer,
+  StylePreferencesItem,
+  ClimateItem,
+  WardrobeGoalsItem,
+  ShoppingLimitItem,
+  ClothingBudgetItem,
+  IconContainer,
+  ItemTitle,
+  ItemDescription,
+  ButtonContainer
+} from './StyleProfileSection.styles';
+
+// Import wrapper components
+import StylePreferencesSectionWrapper from './wrappers/StylePreferencesSectionWrapper';
+import ClimateSectionWrapper from './wrappers/ClimateSectionWrapper';
+import WardrobeGoalsSectionWrapper from './wrappers/WardrobeGoalsSectionWrapper';
+import ShoppingLimitSectionWrapper from './wrappers/ShoppingLimitSectionWrapper';
+import ClothingBudgetSectionWrapper from './wrappers/ClothingBudgetSectionWrapper';
+import SubscriptionSectionWrapper from './wrappers/SubscriptionSectionWrapper';
+
+// Types
+import { ProfileData } from '../../types';
+
+// Import context provider
+import { StyleProfileProvider, useStyleProfile, SaveResult } from './context/StyleProfileContext';
+
+interface StyleProfileProps {
+  initialData: ProfileData;
+  onSave: (data: ProfileData) => Promise<SaveResult>;
+  onNavigateToScenarios?: () => void;
+}
+
+// Wrapper component that provides the StyleProfileContext
+const StyleProfileSection: React.FC<StyleProfileProps> = ({ initialData, onSave, onNavigateToScenarios }) => {
+  return (
+    <StyleProfileProvider 
+      initialData={initialData} 
+      onSave={onSave}
+      onNavigateToScenarios={onNavigateToScenarios}
+    >
+      <StyleProfileContent />
+    </StyleProfileProvider>
+  );
+};
+
+// Main content component that uses the context
+const StyleProfileContent: React.FC = () => {
+  const { 
+    profileData, 
+    handleSave, 
+    handleNestedChange,
+    isModalOpen,
+    closeModal
+    // setProfileData removed to fix linting warning
+  } = useStyleProfile();
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+  
+  // Create refs for each section component
+  const stylePreferencesSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
+  const climateSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const wardrobeGoalsSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const shoppingLimitSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const clothingBudgetSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const subscriptionSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+
+  return (
+    <SectionWrapper>
+      {/* Save Confirmation Modal with scenario suggestions */}
+      <SaveConfirmationModal 
+        isOpen={isModalOpen} 
+        onClose={closeModal} 
+        message="Profile updated successfully!"
+      />
+      {/* Direct content without SectionContent wrapper to avoid double borders and padding */}
+      <ContentHeader>My Style Profile</ContentHeader>
+      
+      {activeSection === null ? (
+        // Grid layout for section blocks - styled directly without nested containers
+        <GridContainer>
+
+          {/* Style Preferences Block */}
+          <StylePreferencesItem onClick={() => setActiveSection('stylePreferences')}>
+            <IconContainer style={{ backgroundColor: '#f5e6ff' }}>
+              <FaTshirt size={24} style={{ color: '#9C27B0' }} />
+            </IconContainer>
+            <ItemTitle>Style Preferences</ItemTitle>
+            <ItemDescription>Share your personal style and fashion preferences</ItemDescription>
+            <FaArrowRight style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }} />
+          </StylePreferencesItem>
+
+          {/* Climate Block */}
+          <ClimateItem onClick={() => setActiveSection('climate')}>
+            <IconContainer style={{ backgroundColor: '#fff5e6' }}>
+              <FaCloudSun size={24} style={{ color: '#FF9800' }} />
+            </IconContainer>
+            <ItemTitle>Climate</ItemTitle>
+            <ItemDescription>Set your local climate for better recommendations</ItemDescription>
+            <FaArrowRight style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }} />
+          </ClimateItem>
+
+          {/* Wardrobe Goals Block */}
+          <WardrobeGoalsItem onClick={() => setActiveSection('wardrobeGoals')}>
+            <IconContainer style={{ backgroundColor: '#e6fff9' }}>
+              <FaBullseye size={24} style={{ color: '#00BCD4' }} />
+            </IconContainer>
+            <ItemTitle>Wardrobe Goals</ItemTitle>
+            <ItemDescription>Define your wardrobe objectives and priorities</ItemDescription>
+            <FaArrowRight style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }} />
+          </WardrobeGoalsItem>
+
+          {/* Shopping Limit Block */}
+          <ShoppingLimitItem onClick={() => setActiveSection('shoppingLimit')}>
+            <IconContainer style={{ backgroundColor: '#ffe6f0' }}>
+              <FaShoppingCart size={24} style={{ color: '#E91E63' }} />
+            </IconContainer>
+            <ItemTitle>Shopping Limit</ItemTitle>
+            <ItemDescription>Set your shopping frequency and preferences</ItemDescription>
+            <FaArrowRight style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }} />
+          </ShoppingLimitItem>
+
+          {/* Clothing Budget Block */}
+          <ClothingBudgetItem onClick={() => setActiveSection('clothingBudget')}>
+            <IconContainer style={{ backgroundColor: '#f1f1f1' }}>
+              <FaDollarSign size={24} style={{ color: '#666666' }} />
+            </IconContainer>
+            <ItemTitle>Clothing Budget</ItemTitle>
+            <ItemDescription>Configure your monthly clothing budget</ItemDescription>
+            <FaArrowRight style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }} />
+          </ClothingBudgetItem>
+          
+          {/* Subscription Block removed to avoid duplication with sidebar menu */}
+        </GridContainer>
+      ) : (
+        // Show the selected section
+        <>
+          <Button 
+            outlined={true} 
+            onClick={() => setActiveSection(null)} 
+            style={{ marginBottom: '20px' }}
+          >
+            <FaArrowLeft style={{ marginRight: '8px' }} /> Back to Profile
+          </Button>
+          
+          {activeSection === 'stylePreferences' && (
+            <>
+              <StylePreferencesSectionWrapper
+                initialData={profileData}
+                onSave={() => console.log('Style preferences saved successfully')}
+                ref={stylePreferencesSectionRef}
+              />
+              <ButtonContainer>
+                <Button 
+                  onClick={async () => {
+                    // Always use direct save functionality for StylePreferencesSection
+                    if (stylePreferencesSectionRef.current?.saveDirectly) {
+                      console.log('Using direct save functionality');
+                      const result = await stylePreferencesSectionRef.current.saveDirectly();
+                      if (result.success) {
+                        // Success handling is done in the wrapper via onSave callback
+                        console.log('Style preferences saved successfully via direct save');
+                      } else {
+                        console.error('Error saving style preferences via direct save:', result.error);
+                      }
+                    } else {
+                      // This should never happen if the component is properly set up
+                      console.error('Direct save functionality not available - this is unexpected');
+                      alert('An error occurred while saving. Please try again or contact support.');
+                    }
+                  }} 
+                  disabled={stylePreferencesSectionRef.current?.isSaving}
+                  success
+                >
+                  {stylePreferencesSectionRef.current?.isSaving ? 'Saving...' : 'Save Style Preferences'}
+                </Button>
+              </ButtonContainer>
+            </>
+          )}
+
+          {activeSection === 'climate' && (
+            <>
+              <ClimateSectionWrapper
+                initialData={profileData}
+                onSave={() => handleSave('climate')}
+                handleNestedChange={handleNestedChange}
+                ref={climateSectionRef}
+              />
+              <ButtonContainer>
+                <Button onClick={() => {
+                  // Sync climate data to context before saving
+                  if (climateSectionRef.current) {
+                    console.log('StyleProfileSection: Syncing climate data to context');
+                    climateSectionRef.current.syncToContext();
+                  }
+                  handleSave('climate');
+                }} success>Save Climate</Button>
+              </ButtonContainer>
+            </>
+          )}
+
+          {activeSection === 'wardrobeGoals' && (
+            <>
+              <WardrobeGoalsSectionWrapper
+                initialData={profileData}
+                onSave={() => handleSave('wardrobeGoals')}
+                handleNestedChange={handleNestedChange}
+                ref={wardrobeGoalsSectionRef}
+              />
+              <ButtonContainer>
+                <Button onClick={() => {
+                  // Sync wardrobe goals data to context before saving
+                  if (wardrobeGoalsSectionRef.current) {
+                    console.log('StyleProfileSection: Syncing wardrobe goals data to context');
+                    wardrobeGoalsSectionRef.current.syncToContext();
+                  }
+                  handleSave('wardrobeGoals');
+                }} success>Save Wardrobe Goals</Button>
+              </ButtonContainer>
+            </>
+          )}
+
+          {activeSection === 'shoppingLimit' && (
+            <>
+              <ShoppingLimitSectionWrapper 
+                profileData={profileData} 
+                handleNestedChange={handleNestedChange}
+                forwardedRef={shoppingLimitSectionRef}
+              />
+              <ButtonContainer>
+                <Button onClick={() => {
+                  // Sync the latest shopping limit data to context before saving
+                  if (shoppingLimitSectionRef.current) {
+                    console.log('StyleProfileSection: Calling syncToContext before handleSave');
+                    shoppingLimitSectionRef.current.syncToContext();
+                  }
+                  // Then call handleSave
+                  handleSave();
+                }} success>Save Shopping Limit</Button>
+              </ButtonContainer>
+            </>
+          )}
+
+          {activeSection === 'clothingBudget' && (
+            <>
+              <ClothingBudgetSectionWrapper
+                profileData={profileData}
+                handleNestedChange={handleNestedChange}
+                forwardedRef={clothingBudgetSectionRef}
+              />
+              <ButtonContainer>
+                <Button onClick={() => {
+                  // Sync clothing budget data to context before saving
+                  if (clothingBudgetSectionRef.current) {
+                    console.log('StyleProfileSection: Syncing clothing budget data to context');
+                    clothingBudgetSectionRef.current.syncToContext();
+                  }
+                  handleSave('clothingBudget');
+                }} success>Save Clothing Budget</Button>
+              </ButtonContainer>
+            </>
+          )}
+          
+          {activeSection === 'subscription' && (
+            <>
+              <SubscriptionSectionWrapper
+                profileData={profileData}
+                handleNestedChange={handleNestedChange}
+                handleSave={handleSave}
+                forwardedRef={subscriptionSectionRef}
+              />
+            </>
+          )}
+        </>
+      )}
+    </SectionWrapper>
+  );
+};
+
+export default StyleProfileSection;
