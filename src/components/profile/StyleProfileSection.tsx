@@ -69,7 +69,7 @@ const StyleProfileContent: React.FC = () => {
   const stylePreferencesSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const climateSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const wardrobeGoalsSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
-  const shoppingLimitSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const shoppingLimitSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean } | null>(null);
   const clothingBudgetSectionRef = React.useRef<{ syncToContext: () => void }>(null);
   const subscriptionSectionRef = React.useRef<{ syncToContext: () => void }>(null);
 
@@ -233,20 +233,30 @@ const StyleProfileContent: React.FC = () => {
           {activeSection === 'shoppingLimit' && (
             <>
               <ShoppingLimitSectionWrapper 
-                profileData={profileData} 
-                handleNestedChange={handleNestedChange}
-                forwardedRef={shoppingLimitSectionRef}
+                ref={shoppingLimitSectionRef}
+                initialData={profileData}
+                onSave={() => {
+                  console.log('StyleProfileSection: ShoppingLimitSectionWrapper onSave called');
+                  // Optional: refresh profile data or update context if needed
+                }}
               />
               <ButtonContainer>
-                <Button onClick={() => {
-                  // Sync the latest shopping limit data to context before saving
-                  if (shoppingLimitSectionRef.current) {
-                    console.log('StyleProfileSection: Calling syncToContext before handleSave');
-                    shoppingLimitSectionRef.current.syncToContext();
-                  }
-                  // Then call handleSave
-                  handleSave();
-                }} success>Save Shopping Limit</Button>
+                <Button 
+                  onClick={async () => {
+                    if (shoppingLimitSectionRef.current) {
+                      console.log('StyleProfileSection: Calling saveDirectly on ShoppingLimitSectionWrapper');
+                      const result = await shoppingLimitSectionRef.current.saveDirectly();
+                      if (!result.success && result.error) {
+                        console.error('StyleProfileSection: Shopping limit save failed:', result.error);
+                        // Could show an error message to user here
+                      }
+                    }
+                  }}
+                  success
+                  disabled={shoppingLimitSectionRef.current?.isSaving}
+                >
+                  {shoppingLimitSectionRef.current?.isSaving ? 'Saving...' : 'Save Shopping Limit'}
+                </Button>
               </ButtonContainer>
             </>
           )}

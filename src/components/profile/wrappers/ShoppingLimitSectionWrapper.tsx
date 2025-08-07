@@ -1,102 +1,166 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
 import { ProfileData } from '../../../types';
 import ShoppingLimitSection from '../sections/ShoppingLimitSection';
+import { getShoppingLimitData, saveShoppingLimitData, ShoppingLimitData } from '../../../services/shoppingLimitService';
+import SaveConfirmationModal from '../modals/SaveConfirmationModal';
+import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 
-interface ShoppingLimitSectionWrapperProps {
-  profileData: ProfileData;
-  handleNestedChange: (parentField: keyof ProfileData, field: string, value: any) => void;
-  forwardedRef?: React.RefObject<{
-    syncToContext: () => void;
-  } | null>;
+export interface SaveResult {
+  success: boolean;
+  error?: string;
 }
 
-const ShoppingLimitSectionWrapper: React.FC<ShoppingLimitSectionWrapperProps> = ({ 
-  profileData, 
-  handleNestedChange,
-  forwardedRef 
-}) => {
-  // Get initial values from profile data
-  const initialAmount = typeof profileData.shoppingLimit?.amount === 'number' ? profileData.shoppingLimit.amount : 0;
-  const initialFrequency = profileData.shoppingLimit?.frequency || 'monthly';
-  
-  // Create a local state to track shopping limit changes - only initialize once
-  const [localShoppingLimit, setLocalShoppingLimit] = useState({
-    amount: initialAmount,
-    frequency: initialFrequency
-  });
-  
-  // Expose syncToContext method via ref for parent component to call before save
-  const syncToContext = useCallback(() => {
-    console.log('StyleProfileSection: Synchronizing latest shopping limit data with context before save', localShoppingLimit);
-    // First update the amount
-    handleNestedChange('shoppingLimit', 'amount', localShoppingLimit.amount);
-    // Then update the frequency
-    handleNestedChange('shoppingLimit', 'frequency', localShoppingLimit.frequency);
-    // Force a direct update to the shoppingLimit object as a whole
-    // Include all required fields from the ShoppingLimit interface
-    handleNestedChange('shoppingLimit', '', {
-      amount: localShoppingLimit.amount,
-      frequency: localShoppingLimit.frequency,
-      // Include optional fields with their current values or defaults
-      limitAmount: profileData.shoppingLimit?.limitAmount,
-      currency: profileData.shoppingLimit?.currency
-    });
-    return true; // Indicate successful sync
-  }, [localShoppingLimit, handleNestedChange, profileData.shoppingLimit]);
-  
-  // Expose the syncToContext method via the forwarded ref
-  useEffect(() => {
-    if (forwardedRef) {
-      forwardedRef.current = {
-        syncToContext
-      };
+interface ShoppingLimitSectionWrapperProps {
+  initialData?: ProfileData; // Made optional since we'll fetch from service
+  onSave: () => void;
+}
+
+const ShoppingLimitSectionWrapper = React.forwardRef<
+  { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
+  ShoppingLimitSectionWrapperProps
+>((props, ref) => {
+  const defaultShoppingLimitData: ShoppingLimitData = {
+    shoppingLimitAmount: undefined,
+    shoppingLimitFrequency: 'monthly',
+    currentSpent: 0,
+    periodStartDate: undefined,
+    periodEndDate: undefined
+  };
+
+  const [localData, setLocalData] = useState<ShoppingLimitData>(defaultShoppingLimitData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { user } = useSupabaseAuth();
+
+  // Fetch shopping limit data on component mount
+  const fetchShoppingLimitData = useCallback(async () => {
+    if (!user?.id) {
+      console.log('🛍️ ShoppingLimitSectionWrapper - No user ID available, skipping fetch');
+      setIsLoading(false);
+      return;
     }
-  }, [forwardedRef, syncToContext]);
-  
-  // Only sync from context to local state when profileData changes externally
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      console.log('🛍️ ShoppingLimitSectionWrapper - Fetching shopping limit data for user:', user.id);
+      
+      const data = await getShoppingLimitData(user.id);
+      console.log('🛍️ ShoppingLimitSectionWrapper - Received shopping limit data:', data);
+      
+      setLocalData(data);
+    } catch (error) {
+      console.error('🛍️ ShoppingLimitSectionWrapper - Error fetching shopping limit data:', error);
+      setError(error instanceof Error ? error.message : 'Failed to fetch shopping limit data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id]);
+
   useEffect(() => {
-    // Only update local state if profileData.shoppingLimit has changed from external source
-    // and is different from our local state
-    const externalAmount = typeof profileData.shoppingLimit?.amount === 'number' ? profileData.shoppingLimit.amount : 0;
-    const externalFrequency = profileData.shoppingLimit?.frequency || 'monthly';
+    fetchShoppingLimitData();
+  }, [fetchShoppingLimitData]);
+
+  // Save shopping limit data directly to Supabase
+  const saveDirectly = useCallback(async (): Promise<SaveResult> => {
+    if (!user?.id) {
+      const errorMsg = 'No user ID available for saving shopping limit data';
+      console.error('🛍️ ShoppingLimitSectionWrapper - ' + errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    try {
+      setIsSaving(true);
+      setError(null);
+      console.log('🛍️ ShoppingLimitSectionWrapper - Saving shopping limit data for user:', user.id, localData);
+      
+      await saveShoppingLimitData(user.id, localData);
+      console.log('🛍️ ShoppingLimitSectionWrapper - Successfully saved shopping limit data');
+      
+      // Show success modal
+      setIsModalOpen(true);
+      
+      // Call parent onSave callback
+      props.onSave();
+      
+      return { success: true };
+    } catch (error) {
+      console.error('🛍️ ShoppingLimitSectionWrapper - Error saving shopping limit data:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save shopping limit data';
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [user?.id, localData, props]);
+
+  // Expose saveDirectly and isSaving methods via ref
+  useImperativeHandle(ref, () => ({
+    saveDirectly,
+    isSaving
+  }), [saveDirectly, isSaving]);
+
+  // Handle changes to shopping limit data
+  const handleDataChange = useCallback((field: keyof ShoppingLimitData, value: any) => {
+    console.log('🛍️ ShoppingLimitSectionWrapper - Data changed:', field, value);
+    setLocalData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  }, []);
+
+  // Create a compatibility setProfileData function for the section component
+  const setProfileData = useCallback((updatedData: Partial<ProfileData>) => {
+    console.log('🛍️ ShoppingLimitSectionWrapper - Profile data updated (compatibility layer):', updatedData);
     
-    if (externalAmount !== localShoppingLimit.amount || externalFrequency !== localShoppingLimit.frequency) {
-      console.log('StyleProfileSection: Updating local state from external profile data change');
-      setLocalShoppingLimit({
-        amount: externalAmount,
-        frequency: externalFrequency
-      });
+    // Extract shopping limit data from the updated profile data
+    if (updatedData.shoppingLimit) {
+      const { amount, frequency } = updatedData.shoppingLimit;
+      setLocalData(prev => ({
+        ...prev,
+        shoppingLimitAmount: amount,
+        shoppingLimitFrequency: frequency as 'monthly' | 'quarterly' | 'yearly'
+      }));
     }
-  // Deliberately omit localShoppingLimit from dependencies to prevent loops
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileData.shoppingLimit]);
-  
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  if (isLoading) {
+    return <div>Loading shopping limit data...</div>;
+  }
+
   return (
-    <ShoppingLimitSection
-      key="shopping-limit"
-      initialData={{
-        shoppingLimit: {
-          amount: localShoppingLimit.amount,
-          frequency: localShoppingLimit.frequency
-        }
-      }}
-      onSave={(data) => {
-        // Log the incoming data from ShoppingLimitSection
-        console.log('StyleProfileSection: Received shopping limit data', data);
-        
-        // Ensure amount is a number and not NaN
-        const amount = typeof data.amount === 'number' && !isNaN(data.amount) ? data.amount : 0;
-        const frequency = data.frequency || 'monthly';
-        
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        // Update the local state only
-        setLocalShoppingLimit({
-          amount,
-          frequency
-        });
-      }}
-    />
+    <>
+      <ShoppingLimitSection 
+        initialData={{
+          shoppingLimit: {
+            amount: localData.shoppingLimitAmount || 0,
+            frequency: localData.shoppingLimitFrequency || 'monthly'
+          }
+        }}
+        onSave={(data) => {
+          console.log('🛍️ ShoppingLimitSectionWrapper - onSave called with:', data);
+          // Update local data when section component calls onSave
+          setLocalData(prev => ({
+            ...prev,
+            shoppingLimitAmount: data.amount,
+            shoppingLimitFrequency: data.frequency as 'monthly' | 'quarterly' | 'yearly'
+          }));
+        }}
+      />
+      
+      <SaveConfirmationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        message="Shopping Limit Updated! Your shopping limit settings have been saved successfully."
+      />
+    </>
   );
-};
+});
 
 export default ShoppingLimitSectionWrapper;
