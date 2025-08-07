@@ -1,125 +1,169 @@
-import React from 'react';
-import { ProfileData } from '../../../types';
+import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
+import { ProfileData, ClimateData } from '../../../types';
 import ClimateSection from '../sections/ClimateSection';
-import { ClimateData } from '../sections/types';
-import { useStyleProfile } from '../context/StyleProfileContext';
+import { getClimateData, saveClimateData } from '../../../services/climateService';
+import SaveConfirmationModal from '../modals/SaveConfirmationModal';
+import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
+
+export interface SaveResult {
+  success: boolean;
+  error?: string;
+}
 
 interface ClimateSectionWrapperProps {
-  // Extract only the climate data from ProfileData
-  initialData: ProfileData;
+  initialData?: ProfileData; // Made optional since we'll fetch from service
   onSave: () => void;
-  // Keep the original handler signatures to match context
-  handleNestedChange: (parentField: keyof ProfileData, field: string, value: any) => void;
-  handleSave?: (section?: string) => void;
 }
 
 const ClimateSectionWrapper = React.forwardRef<
-  { syncToContext: () => void },
+  { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   ClimateSectionWrapperProps
 >((props, ref) => {
-  const { handleSave } = useStyleProfile();
-
-  // Extract only the climate data from the full ProfileData
-  const extractClimateData = (profileData: ProfileData): ClimateData => ({
-    localClimate: profileData.localClimate || ''
-  });
-
-  // Local state for climate data
-  const [localData, setLocalData] = React.useState<ClimateData>(
-    extractClimateData(props.initialData)
-  );
-
-  // Update local state when initialData changes
-  React.useEffect(() => {
-    setLocalData(extractClimateData(props.initialData));
-  }, [props.initialData]);
-
-  // Function to sync local state back to context
-  const syncToContext = () => {
-    console.log('ClimateSectionWrapper - syncToContext - localData:', localData);
-    
-    // Log each field as it syncs for better debugging
-    console.log('ClimateSectionWrapper - syncToContext - localClimate:', localData.localClimate);
-    
-    // Update parent context with our local state
-    if (localData.localClimate) {
-      props.handleNestedChange('localClimate', '', localData.localClimate);
-    }
+  const defaultClimateData: ClimateData = {
+    localClimate: ''
   };
 
-  // Expose syncToContext to parent via ref
-  React.useImperativeHandle(ref, () => ({
-    syncToContext
+  const [localData, setLocalData] = useState<ClimateData>(defaultClimateData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Get the current authenticated user
+  const { user } = useSupabaseAuth();
+
+  // Fetch climate data on mount
+  useEffect(() => {
+    const fetchClimateData = async () => {
+      if (!user?.id) {
+        console.log('ClimateSectionWrapper - No user ID, using default data');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        console.log('ClimateSectionWrapper - Fetching climate data for user:', user.id);
+        const climateData = await getClimateData(user.id);
+        
+        if (climateData) {
+          console.log('ClimateSectionWrapper - Fetched data:', climateData);
+          setLocalData(climateData);
+        } else {
+          console.log('ClimateSectionWrapper - No existing data, using defaults');
+          setLocalData(defaultClimateData);
+        }
+      } catch (error) {
+        console.error('ClimateSectionWrapper - Error fetching climate data:', error);
+        setLocalData(defaultClimateData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchClimateData();
+  }, [user?.id]);
+
+  const saveDirectly = useCallback(async (): Promise<SaveResult> => {
+    console.log('ClimateSectionWrapper - Saving directly to Supabase:', localData);
+
+    if (!user?.id) {
+      const error = 'No authenticated user found';
+      console.error('ClimateSectionWrapper - Save error:', error);
+      setSaveError(error);
+      return { success: false, error };
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      await saveClimateData(user.id, localData);
+      console.log('ClimateSectionWrapper - Save successful');
+      
+      // Show success modal
+      setIsModalOpen(true);
+      
+      // Call parent onSave if provided
+      props.onSave?.();
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('ClimateSectionWrapper - Save error:', error);
+      const errorMessage = error?.message || 'Failed to save climate data';
+      setSaveError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localData, props.onSave, user]);
+
+  useImperativeHandle(ref, () => ({
+    saveDirectly,
+    isSaving
   }));
 
   // Local handler for nested changes
   const handleLocalNestedChange = (parentField: string, field: string, value: any) => {
-    console.log('ClimateSectionWrapper - handleLocalNestedChange:', parentField, field, value);
+    console.log('ClimateSectionWrapper - handleLocalNestedChange:', { parentField, field, value });
     
-    // Update local state
     if (parentField === 'localClimate') {
+      // Handle direct localClimate updates
       setLocalData(prev => ({
         ...prev,
         localClimate: value
       }));
-      
-      // Immediately sync to context to ensure up-to-date state
-      setTimeout(() => {
-        props.handleNestedChange('localClimate', '', value);
-      }, 0);
+    } else {
+      console.warn('ClimateSectionWrapper - Unknown parentField:', parentField);
     }
   };
 
   // Create an adapter for handleNestedChange to match the expected signature in ClimateSection
   const adaptedHandleNestedChange = (parentField: string, field: string, value: any) => {
-    // Only pass through fields that are valid for ClimateData
-    if (parentField === 'localClimate') {
-      // This field exists in both interfaces, so we can pass it directly
-      handleLocalNestedChange(parentField, field, value);
-    }
-    // Ignore other fields that might be in ProfileData but not in ClimateData
-  };
-  
-  // Handle section-specific save
-  const handleSectionSave = () => {
-    // First sync to context to ensure latest data
-    syncToContext();
+    console.log('ClimateSectionWrapper - adaptedHandleNestedChange:', { parentField, field, value });
     
-    // Then trigger section-specific save
-    if (props.handleSave) {
-      props.handleSave('climate');
-    } else if (handleSave) {
-      handleSave('climate');
-    }
+    // Handle local state updates for climate data
+    handleLocalNestedChange(parentField, field, value);
   };
 
+  // Error message display
+  const ErrorMessage = saveError ? (
+    <div style={{
+      padding: '10px',
+      marginTop: '10px',
+      backgroundColor: '#ffeeee',
+      borderRadius: '4px',
+      border: '1px solid #ffcccc'
+    }}>
+      <strong>Error:</strong> {saveError}
+    </div>
+  ) : null;
+
+  if (isLoading) {
+    return <div>Loading climate data...</div>;
+  }
+
   return (
-    <>
+    <div>
       <ClimateSection
-        // Pass only the climate data to the section component
-        profileData={localData}
+        climateData={localData}
         handleNestedChange={adaptedHandleNestedChange}
+        showSaveButton={false}
       />
-      {/* Section-specific save button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-        <button 
-          onClick={handleSectionSave}
-          className="btn btn-primary"
-          style={{ 
-            padding: '0.5rem 1rem',
-            backgroundColor: '#4F46E5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: 500
-          }}
-        >
-          Save Climate Preferences
-        </button>
-      </div>
-    </>
+      
+      {ErrorMessage}
+
+      {isSaving && (
+        <div style={{ textAlign: 'center', marginTop: '10px' }}>
+          Saving your climate preferences...
+        </div>
+      )}
+
+      <SaveConfirmationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        message="Climate preferences saved successfully!"
+      />
+    </div>
   );
 });
 

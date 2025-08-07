@@ -67,7 +67,7 @@ const StyleProfileContent: React.FC = () => {
   
   // Create refs for each section component
   const stylePreferencesSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
-  const climateSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const climateSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const wardrobeGoalsSectionRef = React.useRef<{ syncToContext: () => void }>(null);
   const shoppingLimitSectionRef = React.useRef<{ syncToContext: () => void }>(null);
   const clothingBudgetSectionRef = React.useRef<{ syncToContext: () => void }>(null);
@@ -189,20 +189,22 @@ const StyleProfileContent: React.FC = () => {
           {activeSection === 'climate' && (
             <>
               <ClimateSectionWrapper
-                initialData={profileData}
                 onSave={() => handleSave('climate')}
-                handleNestedChange={handleNestedChange}
                 ref={climateSectionRef}
               />
               <ButtonContainer>
-                <Button onClick={() => {
-                  // Sync climate data to context before saving
+                <Button onClick={async () => {
+                  // Save climate data directly via the new service
                   if (climateSectionRef.current) {
-                    console.log('StyleProfileSection: Syncing climate data to context');
-                    climateSectionRef.current.syncToContext();
+                    console.log('Saving climate data directly');
+                    const result = await climateSectionRef.current.saveDirectly();
+                    if (result.success) {
+                      console.log('Climate data saved successfully');
+                    } else {
+                      console.error('Failed to save climate data:', result.error);
+                    }
                   }
-                  handleSave('climate');
-                }} success>Save Climate</Button>
+                }} disabled={climateSectionRef.current?.isSaving} success>Save Climate</Button>
               </ButtonContainer>
             </>
           )}

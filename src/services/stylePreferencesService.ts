@@ -154,8 +154,6 @@ export const saveStylePreferences = async (
     throw new Error('Missing stylePreferencesData');
   }
 
-  // Test comment
-  
   // Validate the data before saving
   if (!validateStylePreferences(stylePreferencesData)) {
     console.error('ERROR - saveStylePreferences - Invalid stylePreferencesData');
