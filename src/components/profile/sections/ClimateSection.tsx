@@ -11,7 +11,9 @@ import { climateOptionsWithDetails, climatePreferenceStepContent } from '../../.
 
 // Define a more specific props interface using ClimateData
 interface ClimateSectionProps extends Omit<SectionProps, 'profileData'> {
-  profileData: Partial<ClimateData>;
+  climateData?: ClimateData;
+  profileData?: Partial<ClimateData>; // Keep for backward compatibility
+  showSaveButton?: boolean;
 }
 
 // Custom styled components for the dropdown
@@ -77,12 +79,16 @@ const ArrowIcon = styled.div`
 `;
 
 const ClimateSection: React.FC<ClimateSectionProps> = ({
+  climateData,
   profileData,
-  handleNestedChange
+  handleNestedChange,
+  showSaveButton = false
 }) => {
+  // Use climateData if available, otherwise fall back to profileData for backward compatibility
+  const currentData = climateData || profileData || { localClimate: '' };
   // State for custom dropdown
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<string>(profileData.localClimate || '');
+  const [selectedOption, setSelectedOption] = useState<string>(currentData.localClimate || '');
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Handle click outside to close dropdown
@@ -99,10 +105,10 @@ const ClimateSection: React.FC<ClimateSectionProps> = ({
     };
   }, []);
 
-  // Update selectedOption when profileData changes
+  // Update selectedOption when climate data changes
   useEffect(() => {
-    setSelectedOption(profileData.localClimate || '');
-  }, [profileData.localClimate]);
+    setSelectedOption(currentData.localClimate || '');
+  }, [currentData.localClimate]);
 
   // Handle option selection
   const handleOptionSelect = (optionId: string) => {
