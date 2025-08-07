@@ -153,6 +153,8 @@ export const saveStylePreferences = async (
     console.error('ERROR - saveStylePreferences - Missing stylePreferencesData');
     throw new Error('Missing stylePreferencesData');
   }
+
+  // Test comment
   
   // Validate the data before saving
   if (!validateStylePreferences(stylePreferencesData)) {
