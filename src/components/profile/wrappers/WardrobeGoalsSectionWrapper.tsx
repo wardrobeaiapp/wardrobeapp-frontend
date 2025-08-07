@@ -1,71 +1,105 @@
-import React from 'react';
-import { ProfileData } from '../../../types';
+import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
+import { ProfileData, WardrobeGoalsData } from '../../../types';
 import WardrobeGoalsSection from '../sections/WardrobeGoalsSection';
-import { WardrobeGoalsData } from '../sections/types';
-import { useStyleProfile } from '../context/StyleProfileContext';
+import { getWardrobeGoalsData, saveWardrobeGoalsData } from '../../../services/wardrobeGoalsService';
+import SaveConfirmationModal from '../modals/SaveConfirmationModal';
+import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
+
+export interface SaveResult {
+  success: boolean;
+  error?: string;
+}
 
 interface WardrobeGoalsSectionWrapperProps {
-  initialData: ProfileData;
+  initialData?: ProfileData; // Made optional since we'll fetch from service
   onSave: () => void;
-  handleNestedChange: (parentField: keyof ProfileData, field: string, value: any) => void;
-  handleSave?: (section?: string) => void;
-  handleCheckboxChange?: (field: keyof ProfileData, value: string) => void;
 }
 
 const WardrobeGoalsSectionWrapper = React.forwardRef<
-  { syncToContext: () => void },
+  { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   WardrobeGoalsSectionWrapperProps
 >((props, ref) => {
-  const { handleSave } = useStyleProfile();
-  // Extract only the wardrobe goals data from the full ProfileData
-  const extractWardrobeGoalsData = (profileData: ProfileData): WardrobeGoalsData => ({
-    wardrobeGoals: profileData.wardrobeGoals || [],
-    otherWardrobeGoal: profileData.otherWardrobeGoal || ''
-  });
-
-  // Local state for wardrobe goals data
-  const [localData, setLocalData] = React.useState<WardrobeGoalsData>(
-    extractWardrobeGoalsData(props.initialData)
-  );
-
-  // Update local state when initialData changes
-  React.useEffect(() => {
-    setLocalData(extractWardrobeGoalsData(props.initialData));
-  }, [props.initialData]);
-
-  // Function to sync local state back to context
-  const syncToContext = () => {
-    console.log('WardrobeGoalsSectionWrapper - syncToContext - localData:', localData);
-    
-    // Log each field as it syncs for better debugging
-    console.log('WardrobeGoalsSectionWrapper - syncToContext - wardrobeGoals:', localData.wardrobeGoals);
-    console.log('WardrobeGoalsSectionWrapper - syncToContext - otherWardrobeGoal:', localData.otherWardrobeGoal);
-    
-    // Update parent context with our local state
-    if (localData.wardrobeGoals && localData.wardrobeGoals.length > 0) {
-      props.handleNestedChange('wardrobeGoals', '', localData.wardrobeGoals);
-    }
-    if (localData.otherWardrobeGoal) {
-      props.handleNestedChange('otherWardrobeGoal', '', localData.otherWardrobeGoal);
-    }
-  };
-  
-  // Handle section-specific save
-  const handleSectionSave = () => {
-    // First sync to context to ensure latest data
-    syncToContext();
-    
-    // Then trigger section-specific save
-    if (props.handleSave) {
-      props.handleSave('wardrobeGoals');
-    } else if (handleSave) {
-      handleSave('wardrobeGoals');
-    }
+  const defaultWardrobeGoalsData: WardrobeGoalsData = {
+    wardrobeGoals: [],
+    otherWardrobeGoal: undefined
   };
 
-  // Expose syncToContext to parent via ref
-  React.useImperativeHandle(ref, () => ({
-    syncToContext
+  const [localData, setLocalData] = useState<WardrobeGoalsData>(defaultWardrobeGoalsData);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Get the current authenticated user
+  const { user } = useSupabaseAuth();
+
+  // Fetch wardrobe goals data on mount
+  useEffect(() => {
+    const fetchWardrobeGoalsData = async () => {
+      if (!user?.id) {
+        console.log('WardrobeGoalsSectionWrapper - No user ID, using default data');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        console.log('WardrobeGoalsSectionWrapper - Fetching wardrobe goals data for user:', user.id);
+        const wardrobeGoalsData = await getWardrobeGoalsData(user.id);
+        
+        if (wardrobeGoalsData) {
+          console.log('WardrobeGoalsSectionWrapper - Fetched data:', wardrobeGoalsData);
+          setLocalData(wardrobeGoalsData);
+        } else {
+          console.log('WardrobeGoalsSectionWrapper - No existing data, using defaults');
+          setLocalData(defaultWardrobeGoalsData);
+        }
+      } catch (error) {
+        console.error('WardrobeGoalsSectionWrapper - Error fetching wardrobe goals data:', error);
+        setLocalData(defaultWardrobeGoalsData);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWardrobeGoalsData();
+  }, [user?.id]);
+
+  const saveDirectly = useCallback(async (): Promise<SaveResult> => {
+    console.log('WardrobeGoalsSectionWrapper - Saving directly to Supabase:', localData);
+
+    if (!user?.id) {
+      const error = 'No authenticated user found';
+      console.error('WardrobeGoalsSectionWrapper - Save error:', error);
+      setSaveError(error);
+      return { success: false, error };
+    }
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
+      await saveWardrobeGoalsData(user.id, localData);
+      console.log('WardrobeGoalsSectionWrapper - Save successful');
+      
+      // Show success modal
+      setIsModalOpen(true);
+      
+      // Call parent onSave if provided
+      props.onSave?.();
+      
+      return { success: true };
+    } catch (error: any) {
+      console.error('WardrobeGoalsSectionWrapper - Save error:', error);
+      const errorMessage = error?.message || 'Failed to save wardrobe goals data';
+      setSaveError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setIsSaving(false);
+    }
+  }, [localData, props.onSave, user]);
+  useImperativeHandle(ref, () => ({
+    saveDirectly,
+    isSaving
   }));
 
   // Handle setProfileData calls from the WardrobeGoalsSection
@@ -79,16 +113,6 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
       wardrobeGoals: typedData.wardrobeGoals || prev.wardrobeGoals,
       otherWardrobeGoal: typedData.otherWardrobeGoal || prev.otherWardrobeGoal
     }));
-    
-    // Immediately sync to context to ensure up-to-date state
-    setTimeout(() => {
-      if (typedData.wardrobeGoals) {
-        props.handleNestedChange('wardrobeGoals', '', typedData.wardrobeGoals);
-      }
-      if (typedData.otherWardrobeGoal) {
-        props.handleNestedChange('otherWardrobeGoal', '', typedData.otherWardrobeGoal);
-      }
-    }, 0);
   };
   
   // Create an adapter for handleCheckboxChange to match the expected signature in WardrobeGoalsSection
@@ -113,46 +137,49 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
           wardrobeGoals: currentGoals
         };
       });
-      
-      // Also pass to props handler if available
-      if (props.handleCheckboxChange) {
-        props.handleCheckboxChange(field, value);
-      }
     }
   };
 
+  // Error message display
+  const ErrorMessage = saveError ? (
+    <div style={{
+      padding: '10px',
+      marginTop: '10px',
+      backgroundColor: '#ffeeee',
+      borderRadius: '4px',
+      border: '1px solid #ffcccc'
+    }}>
+      <strong>Error:</strong> {saveError}
+    </div>
+  ) : null;
+
+  if (isLoading) {
+    return <div>Loading wardrobe goals data...</div>;
+  }
+
   return (
-    <>
+    <div>
       <WardrobeGoalsSection
-        profileData={{
-          ...props.initialData,
-          wardrobeGoals: localData.wardrobeGoals,
-          otherWardrobeGoal: localData.otherWardrobeGoal
-        }}
+        wardrobeGoalsData={localData}
         setProfileData={handleSetProfileData}
-        handleNestedChange={props.handleNestedChange}
         handleCheckboxChange={adaptedHandleCheckboxChange}
+        showSaveButton={false}
       />
-      {/* Section-specific save button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
-        <button 
-          onClick={handleSectionSave}
-          className="btn btn-primary"
-          style={{ 
-            padding: '0.5rem 1rem',
-            backgroundColor: '#4F46E5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '0.375rem',
-            cursor: 'pointer',
-            fontSize: '0.875rem',
-            fontWeight: 500
-          }}
-        >
-          Save Wardrobe Goals
-        </button>
-      </div>
-    </>
+      
+      {ErrorMessage}
+
+      {isSaving && (
+        <div style={{ textAlign: 'center', marginTop: '10px' }}>
+          Saving your wardrobe goals...
+        </div>
+      )}
+
+      <SaveConfirmationModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        message="Wardrobe goals saved successfully!"
+      />
+    </div>
   );
 });
 

@@ -68,7 +68,7 @@ const StyleProfileContent: React.FC = () => {
   // Create refs for each section component
   const stylePreferencesSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const climateSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
-  const wardrobeGoalsSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const wardrobeGoalsSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const shoppingLimitSectionRef = React.useRef<{ syncToContext: () => void }>(null);
   const clothingBudgetSectionRef = React.useRef<{ syncToContext: () => void }>(null);
   const subscriptionSectionRef = React.useRef<{ syncToContext: () => void }>(null);
@@ -214,17 +214,17 @@ const StyleProfileContent: React.FC = () => {
               <WardrobeGoalsSectionWrapper
                 initialData={profileData}
                 onSave={() => handleSave('wardrobeGoals')}
-                handleNestedChange={handleNestedChange}
                 ref={wardrobeGoalsSectionRef}
               />
               <ButtonContainer>
-                <Button onClick={() => {
-                  // Sync wardrobe goals data to context before saving
+                <Button onClick={async () => {
+                  // Save wardrobe goals data directly
                   if (wardrobeGoalsSectionRef.current) {
-                    console.log('StyleProfileSection: Syncing wardrobe goals data to context');
-                    wardrobeGoalsSectionRef.current.syncToContext();
+                    console.log('StyleProfileSection: Saving wardrobe goals data directly');
+                    await wardrobeGoalsSectionRef.current.saveDirectly();
+                  } else {
+                    handleSave('wardrobeGoals');
                   }
-                  handleSave('wardrobeGoals');
                 }} success>Save Wardrobe Goals</Button>
               </ButtonContainer>
             </>
