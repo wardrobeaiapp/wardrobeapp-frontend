@@ -69,7 +69,7 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
         shopping_period_end_date
       `)
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1);
 
     if (error) {
@@ -169,9 +169,7 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
       shopping_limit_frequency: userBudgetsData.shoppingLimitFrequency,
 
       clothing_budget_amount: userBudgetsData.clothingBudgetAmount || 0,
-      clothing_budget_frequency: userBudgetsData.clothingBudgetFrequency,
-
-      updated_at: new Date().toISOString()
+      clothing_budget_frequency: userBudgetsData.clothingBudgetFrequency
     };
 
     console.log('💰 UserBudgetsService - Mapped data for database:', dbData);
@@ -203,11 +201,12 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
 
   try {
     // Query only shopping limit specific columns - get most recent record if multiple exist
+    // Use ID-based ordering for consistent results
     const { data, error } = await supabase
       .from('user_progress')
-      .select('shopping_limit_amount, shopping_limit_frequency')
+      .select('shopping_limit_amount, shopping_limit_frequency, id')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1);
 
     if (error) {
@@ -270,11 +269,12 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
 
   try {
     // Query only clothing budget specific columns - get most recent record if multiple exist
+    // Query only clothing budget specific columns - get most recent record if multiple exist
     const { data, error } = await supabase
       .from('user_progress')
-      .select('clothing_budget_amount, clothing_budget_currency')
+      .select('clothing_budget_amount, clothing_budget_currency, clothing_budget_frequency, id')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1);
 
     if (error) {
@@ -317,7 +317,7 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
     const mappedData: ClothingBudgetData = {
       amount: (record && typeof record.clothing_budget_amount === 'number') ? record.clothing_budget_amount : 0,
       currency: (record?.clothing_budget_currency as string) || 'USD',
-      frequency: 'monthly', // Default since we don't query this column yet
+      frequency: (record?.clothing_budget_frequency as 'monthly' | 'quarterly' | 'yearly') || 'monthly',
       currentSpent: 0, // Default to 0 since we don't store this
       periodStartDate: undefined,
       periodEndDate: undefined
@@ -335,16 +335,17 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
 /**
  * Save clothing budget data only (optimized save for clothing budget section)
  */
-export async function saveClothingBudgetData(userId: string, clothingBudgetData: ClothingBudgetData): Promise<void> {
-  console.log('👕 UserBudgetsService - Saving clothing budget data for user:', userId, clothingBudgetData);
-
+export async function saveClothingBudgetData(userId: string, clothingBudgetData: ClothingBudgetData): Promise<ClothingBudgetData> {
   try {
-    // First fetch the most recent record to preserve existing shopping limit data
+    console.log('👕 UserBudgetsService - Starting to save clothing budget data:', clothingBudgetData);
+    console.log('👕 UserBudgetsService - DEBUGGING: frequency value received:', clothingBudgetData.frequency, 'type:', typeof clothingBudgetData.frequency);
+    
+    // First fetch ANY existing record for this user to determine update vs insert
     const { data: existingData, error: fetchError } = await supabase
       .from('user_progress')
-      .select('shopping_limit_amount, shopping_limit_frequency, shopping_period_start_date, shopping_period_end_date')
+      .select('shopping_limit_amount, shopping_limit_frequency, shopping_period_start_date, shopping_period_end_date, clothing_budget_amount, clothing_budget_currency, clothing_budget_frequency, id')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false })
+      .order('id', { ascending: false })
       .limit(1);
 
     if (fetchError) {
@@ -354,33 +355,84 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
 
     // Preserve existing shopping limit data if available
     const existingRecord = existingData?.[0];
-    const dbData = {
-      user_id: userId,
-      // Preserve existing shopping limit data
-      shopping_limit_amount: existingRecord?.shopping_limit_amount || null,
-      shopping_limit_frequency: existingRecord?.shopping_limit_frequency || null,
-      shopping_period_start_date: existingRecord?.shopping_period_start_date || null,
-      shopping_period_end_date: existingRecord?.shopping_period_end_date || null,
-      // Update clothing budget data
-      clothing_budget_amount: clothingBudgetData.amount || null,
-      clothing_budget_currency: clothingBudgetData.currency || 'USD',
-      updated_at: new Date().toISOString()
-    };
-
-    console.log('👕 UserBudgetsService - Mapped clothing budget data with preserved shopping limit data:', dbData);
-
-    // Use upsert to handle both insert and update cases
-    const { data, error } = await supabase
+    
+    console.log('👕 UserBudgetsService - Existing record found:', existingRecord?.id ? 'Yes' : 'No');
+    console.log('👕 UserBudgetsService - Existing record ID:', existingRecord?.id);
+    console.log('👕 UserBudgetsService - CRITICAL DEBUG: About to send clothing_budget_frequency to DB:', clothingBudgetData.frequency);
+    
+    // DEBUGGING: Let's see what happens before and after the save
+    console.log('👕 BEFORE SAVE - Checking current database state...');
+    const beforeSave = await supabase
       .from('user_progress')
-      .upsert(dbData)
-      .select();
+      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
+      .eq('user_id', userId)
+      .order('id', { ascending: false });
+    console.log('👕 BEFORE SAVE - Current records:', beforeSave.data);
+
+    // Simply UPDATE the existing record - no new records, no complex logic
+    let data, error;
+    
+    if (existingRecord?.id) {
+      // Update the existing record - no timestamps needed
+      const result = await supabase
+        .from('user_progress')
+        .update({
+          clothing_budget_amount: clothingBudgetData.amount || null,
+          clothing_budget_currency: clothingBudgetData.currency || 'USD',
+          clothing_budget_frequency: clothingBudgetData.frequency || 'monthly'
+        })
+        .eq('id', existingRecord.id)
+        .select();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Create new record only if none exists - no timestamps needed
+      const result = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: userId,
+          clothing_budget_amount: clothingBudgetData.amount || null,
+          clothing_budget_currency: clothingBudgetData.currency || 'USD',
+          clothing_budget_frequency: clothingBudgetData.frequency || 'monthly'
+        })
+        .select();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('👕 UserBudgetsService - Supabase error saving clothing budget data:', error);
       throw error;
     }
 
-    console.log('👕 UserBudgetsService - Successfully saved clothing budget data with preserved shopping limit data:', data);
+    console.log('👕 UserBudgetsService - Successfully saved clothing budget data:', data);
+    
+    // DEBUGGING: Let's see what the database looks like after the save
+    console.log('👕 AFTER SAVE - Checking updated database state...');
+    const afterSave = await supabase
+      .from('user_progress')
+      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
+      .eq('user_id', userId)
+      .order('id', { ascending: false });
+    console.log('👕 AFTER SAVE - All records (ordered by ID DESC):', afterSave.data);
+    
+    // Also check with different ordering to see what's happening
+    const afterSaveAsc = await supabase
+      .from('user_progress')
+      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
+      .eq('user_id', userId)
+      .order('id', { ascending: true });
+    console.log('👕 AFTER SAVE - All records (ordered by ID ASC):', afterSaveAsc.data);
+
+    // Return the saved clothing budget data
+    return {
+      amount: clothingBudgetData.amount,
+      currency: clothingBudgetData.currency,
+      frequency: clothingBudgetData.frequency,
+      currentSpent: clothingBudgetData.currentSpent,
+      periodStartDate: clothingBudgetData.periodStartDate,
+      periodEndDate: clothingBudgetData.periodEndDate
+    };
 
   } catch (error) {
     console.error('👕 UserBudgetsService - Error saving clothing budget data:', error);
@@ -395,21 +447,50 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
   console.log('🛍️ UserBudgetsService - Saving shopping limit data for user:', userId, shoppingLimitData);
 
   try {
-    // Map ShoppingLimitData interface to database fields (only shopping limit columns)
-    const dbData = {
-      user_id: userId,
-      shopping_limit_amount: shoppingLimitData.shoppingLimitAmount || null,
-      shopping_limit_frequency: shoppingLimitData.shoppingLimitFrequency,
-      updated_at: new Date().toISOString()
-    };
-
-    console.log('🛍️ UserBudgetsService - Mapped shopping limit data for database:', dbData);
-
-    // Use upsert to handle both insert and update cases
-    const { data, error } = await supabase
+    // First fetch ANY existing record for this user to determine update vs insert
+    const { data: existingData, error: fetchError } = await supabase
       .from('user_progress')
-      .upsert(dbData)
-      .select();
+      .select('shopping_limit_amount, shopping_limit_frequency, shopping_period_start_date, shopping_period_end_date, clothing_budget_amount, clothing_budget_currency, clothing_budget_frequency, id')
+      .eq('user_id', userId)
+      .order('id', { ascending: false })
+      .limit(1);
+
+    if (fetchError) {
+      console.error('🛍️ UserBudgetsService - Error fetching existing shopping limit data:', fetchError);
+      throw fetchError;
+    }
+
+    const existingRecord = existingData?.[0];
+    console.log('🛍️ UserBudgetsService - Existing record found:', existingRecord?.id ? 'Yes' : 'No');
+
+    // Use update-or-insert logic to prevent duplicate records (same as clothing budget)
+    let data, error;
+    
+    if (existingRecord?.id) {
+      // Update the existing record - preserve clothing budget data
+      const result = await supabase
+        .from('user_progress')
+        .update({
+          shopping_limit_amount: shoppingLimitData.shoppingLimitAmount || null,
+          shopping_limit_frequency: shoppingLimitData.shoppingLimitFrequency
+        })
+        .eq('id', existingRecord.id)
+        .select();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Create new record only if none exists
+      const result = await supabase
+        .from('user_progress')
+        .insert({
+          user_id: userId,
+          shopping_limit_amount: shoppingLimitData.shoppingLimitAmount || null,
+          shopping_limit_frequency: shoppingLimitData.shoppingLimitFrequency
+        })
+        .select();
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('🛍️ UserBudgetsService - Supabase error saving shopping limit data:', error);

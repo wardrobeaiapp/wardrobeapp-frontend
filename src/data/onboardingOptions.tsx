@@ -463,7 +463,6 @@ export const uniformOptions = [
 export const frequencyOptions = [
   { id: 'monthly', label: 'Monthly' },
   { id: 'quarterly', label: 'Quarterly' },
-  { id: 'semiannual', label: 'Semiannually' },
   { id: 'yearly', label: 'Yearly' }
 ];
 
