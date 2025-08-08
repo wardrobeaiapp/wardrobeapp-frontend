@@ -161,16 +161,54 @@ const updateUserMetadata = async (userId: string, metadata: any): Promise<any> =
       delete snakeCaseMetadata.preferences;
     }
     
-    // Simplified approach - just use direct insert/update with the user_uuid field
-    const { data, error } = await supabase
+    // 🎯 Use update-or-insert pattern to prevent duplicate records (same pattern as budget service)
+    // First, check if a profile already exists for this user
+    const { data: existingProfile, error: fetchError } = await supabase
       .from('user_profiles')
-      .upsert({
-        user_uuid: userId,
-        ...snakeCaseMetadata,
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+      .select('id')
+      .eq('user_uuid', userId)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    if (fetchError) {
+      console.error('Error checking existing user profile:', fetchError);
+      throw fetchError;
+    }
+    
+    let data, error;
+    
+    if (existingProfile) {
+      // Update existing record by ID to preserve position and prevent duplicates
+      console.log(`👤 updateUserMetadata - Updating existing profile ID ${existingProfile.id} for user ${userId}`);
+      const updateResult = await supabase
+        .from('user_profiles')
+        .update({
+          ...snakeCaseMetadata,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingProfile.id as number)
+        .select()
+        .single();
+      
+      data = updateResult.data;
+      error = updateResult.error;
+    } else {
+      // Insert new record only if none exists
+      console.log(`👤 updateUserMetadata - Creating new profile for user ${userId}`);
+      const insertResult = await supabase
+        .from('user_profiles')
+        .insert({
+          user_uuid: userId,
+          ...snakeCaseMetadata,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      data = insertResult.data;
+      error = insertResult.error;
+    }
       
     if (error) {
       // Always log errors even in non-debug mode
