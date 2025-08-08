@@ -65,12 +65,9 @@ export const supabasePreferencesService = {
         wardrobeGoals: (data.wardrobe_goals as string[]) || [],
         otherWardrobeGoal: data.other_wardrobe_goal as string | undefined,
         
-        // Shopping limits and budget
-        shoppingLimitFrequency: data.shopping_limit_frequency as string | undefined,
-        shoppingLimitAmount: data.shopping_limit_amount as number | undefined,
-        clothingBudgetAmount: data.clothing_budget_amount as number | undefined,
-        clothingBudgetCurrency: data.clothing_budget_currency as string | undefined,
-        clothingBudgetFrequency: data.clothing_budget_frequency as string | undefined,
+        // 🎯 BUDGET DATA REMOVED - now handled by unified budget service (user_progress table)
+        // Budget fields (shopping limits and clothing budget) are no longer stored in user_preferences
+        // They are managed exclusively through userBudgetsService.ts and user_progress table
         
         // Subscription information
         subscriptionPlan: data.subscription_plan as string | undefined,
@@ -132,12 +129,8 @@ export const supabasePreferencesService = {
         wardrobe_goals: preferences.wardrobeGoals,
         other_wardrobe_goal: preferences.otherWardrobeGoal,
         
-        // Shopping limits and budget
-        shopping_limit_frequency: preferences.shoppingLimitFrequency,
-        shopping_limit_amount: preferences.shoppingLimitAmount,
-        clothing_budget_amount: preferences.clothingBudgetAmount,
-        clothing_budget_currency: preferences.clothingBudgetCurrency,
-        clothing_budget_frequency: preferences.clothingBudgetFrequency,
+        // 🎯 BUDGET DATA REMOVED - now handled by unified budget service (user_progress table)
+        // Budget fields are no longer saved to user_preferences - they go to user_progress via userBudgetsService.ts
         
         // Subscription information
         subscription_plan: preferences.subscriptionPlan,

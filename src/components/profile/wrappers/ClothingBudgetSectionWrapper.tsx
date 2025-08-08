@@ -81,6 +81,10 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
       await saveClothingBudgetData(user.id, localData);
       console.log('👔 ClothingBudgetSectionWrapper - Successfully saved clothing budget data');
       
+      // CRITICAL: Refetch data from database to ensure UI shows the latest data
+      console.log('👔 ClothingBudgetSectionWrapper - Refetching data to update UI...');
+      await fetchClothingBudgetData();
+      
       // Show success modal
       setIsModalOpen(true);
       

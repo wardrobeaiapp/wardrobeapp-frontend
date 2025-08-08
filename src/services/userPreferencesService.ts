@@ -16,9 +16,8 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
     stylePreferences, 
     outdoorFrequency, 
     socialFrequency, 
-    formalEventsFrequency,
-    shoppingLimit,
-    clothingBudget
+    formalEventsFrequency
+    // 🎯 BUDGET FIELDS REMOVED - shoppingLimit and clothingBudget now handled by unified budget service
   } = profileData;
 
   // Get the officeDressCode value, ensuring it's a valid string
@@ -228,24 +227,9 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
     // Wardrobe goals already added above
     
     // Shopping limits and budget - ensure numeric values are actual numbers
-    // Add detailed debugging for shopping limit data
-    ...(function() {
-      console.log('DEBUG - userPreferencesService - mapProfileDataToUserPreferences - shoppingLimit:', {
-        shoppingLimit,
-        amount: shoppingLimit?.amount,
-        frequency: shoppingLimit?.frequency,
-        typeofAmount: typeof shoppingLimit?.amount
-      });
-      return {
-        shopping_limit_frequency: shoppingLimit?.frequency || null,
-        shopping_limit_amount: typeof shoppingLimit?.amount === 'number' ? shoppingLimit.amount : null,
-      };
-    })(),
-    // Check both direct properties and nested object for clothing budget values
-    clothing_budget_amount: typeof (profileData as any).clothingBudgetAmount === 'number' ? (profileData as any).clothingBudgetAmount : 
-      (typeof clothingBudget?.amount === 'number' ? clothingBudget.amount : null),
-    clothing_budget_currency: (profileData as any).clothingBudgetCurrency || clothingBudget?.currency || null,
-    clothing_budget_frequency: (profileData as any).clothingBudgetFrequency || clothingBudget?.frequency || null,
+    // 🎯 BUDGET DATA REMOVED - shopping limit and clothing budget mapping removed
+    // Budget fields are now handled exclusively by unified budget service (user_progress table)
+    // No longer stored in user_preferences table
     
     // Debug logging removed for performance
     ...(function() {
@@ -279,7 +263,7 @@ export type ProfileSection =
   | 'dailyActivities'   // Daily activities section
   | 'leisureActivities' // Leisure activities section
   | 'climate'           // Climate section
-  | 'shoppingLimit'     // Shopping limit section
+  // 🎯 'shoppingLimit' REMOVED - now handled by unified budget service
   | 'subscription';     // Subscription section
 
 /**
@@ -526,28 +510,7 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
         local_climate: updatePayload.local_climate
       });
     }
-    else if (section === 'shoppingLimit') {
-      console.log('DEBUG - saveUserPreferences - Saving ONLY shoppingLimit section');
-      
-      // Only extract and process shoppingLimit fields
-      if (profileData.shoppingLimit) {
-        const amount = typeof profileData.shoppingLimit.amount === 'number' ? 
-          profileData.shoppingLimit.amount : 
-          (typeof profileData.shoppingLimit.amount === 'string' ? 
-            parseFloat(profileData.shoppingLimit.amount) : 0);
-            
-        updatePayload.shopping_limit = {
-          amount: !isNaN(amount) ? amount : 0,
-          frequency: profileData.shoppingLimit.frequency || 'monthly'
-        };
-      } else {
-        updatePayload.shopping_limit = null;
-      }
-        
-      console.log('DEBUG - saveUserPreferences - shoppingLimit update payload:', {
-        shopping_limit: updatePayload.shopping_limit
-      });
-    }
+    // 🎯 shoppingLimit section logic REMOVED - now handled by unified budget service
 
     console.log(`DEBUG - saveUserPreferences - Saving ONLY ${section} section with fields:`, Object.keys(updatePayload));
 
@@ -626,18 +589,7 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
           targetedPayload.local_climate = typeof profileData.localClimate === 'string' ? 
             profileData.localClimate : null;
         }
-        else if (section === 'shoppingLimit') {
-          // Handle shoppingLimit section
-          if (profileData.shoppingLimit) {
-            targetedPayload.shopping_limit_frequency = typeof profileData.shoppingLimit.frequency === 'string' ? 
-              profileData.shoppingLimit.frequency : null;
-            targetedPayload.shopping_limit_amount = typeof profileData.shoppingLimit.amount === 'number' ? 
-              profileData.shoppingLimit.amount : null;
-          } else {
-            targetedPayload.shopping_limit_frequency = null;
-            targetedPayload.shopping_limit_amount = null;
-          }
-        }
+        // 🎯 shoppingLimit targeted payload logic REMOVED - now handled by unified budget service
         
         // Replace the entire updatePayload with our targeted payload
         updatePayload = targetedPayload;

@@ -3,6 +3,7 @@ import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { supabaseAuthService } from '../services/supabaseAuthService';
 import { supabasePreferencesService } from '../services/supabasePreferencesService';
 import { getUserProfileByUserId } from '../services/supabaseAuthService';
+import { getClothingBudgetData, getShoppingLimitData } from '../services/userBudgetsService';
 import { 
   UserPreferences, 
   defaultPreferences, 
@@ -17,6 +18,7 @@ export const useProfileData = () => {
   const { user, refreshUserData } = useSupabaseAuth();
   const [userPreferencesData, setUserPreferencesData] = useState<any>(null);
   const [userProfileData, setUserProfileData] = useState<any>(null);
+  const [budgetData, setBudgetData] = useState<{ clothingBudget: any; shoppingLimit: any } | null>(null);
   
   // Fetch user preferences from user_preferences table
   useEffect(() => {
@@ -42,6 +44,41 @@ export const useProfileData = () => {
     };
     
     fetchUserPreferences();
+  }, [user?.id]);
+
+  // Fetch budget data from user_progress table (unified budget service)
+  useEffect(() => {
+    const fetchBudgetData = async () => {
+      if (user?.id) {
+        try {
+          console.log('🎯 useProfileData - Fetching budget data from user_progress table');
+          
+          // Fetch both clothing budget and shopping limit data from user_progress
+          const [clothingBudget, shoppingLimit] = await Promise.all([
+            getClothingBudgetData(user.id).catch(error => {
+              console.warn('No clothing budget data found:', error);
+              return { amount: 0, currency: 'USD', frequency: 'monthly' as const };
+            }),
+            getShoppingLimitData(user.id).catch(error => {
+              console.warn('No shopping limit data found:', error);
+              return { shoppingLimitAmount: 0, shoppingLimitFrequency: 'monthly' as const };
+            })
+          ]);
+
+          setBudgetData({ clothingBudget, shoppingLimit });
+          console.log('🎯 useProfileData - Budget data fetched successfully:', { clothingBudget, shoppingLimit });
+        } catch (error) {
+          console.error('🎯 useProfileData - Error fetching budget data:', error);
+          // Set default values on error
+          setBudgetData({
+            clothingBudget: { amount: 0, currency: 'USD', frequency: 'monthly' as const },
+            shoppingLimit: { shoppingLimitAmount: 0, shoppingLimitFrequency: 'monthly' as const }
+          });
+        }
+      }
+    };
+    
+    fetchBudgetData();
   }, [user?.id]);
 
   // Map user preferences to our UserPreferences structure
@@ -168,24 +205,23 @@ export const useProfileData = () => {
         scenarios: parseArrayData(userPreferencesData?.scenarios, userPreferences?.scenarios || []),
         favoriteColors: parseArrayData(userPreferencesData?.favorite_colors, userPreferences?.favoriteColors || []),
         seasonalPreferences: parseArrayData(userPreferencesData?.seasonal_preferences, userPreferences?.seasonalPreferences || []),
-        // IMPORTANT: Map shopping limit directly from user_preferences table fields
-        // This ensures we always use the latest data from the database
-        shoppingLimit: {
-          amount: userPreferencesData ? (
-            typeof userPreferencesData.shopping_limit_amount === 'number' ? userPreferencesData.shopping_limit_amount : 
-            typeof userPreferencesData.shopping_limit_amount === 'string' ? parseFloat(userPreferencesData.shopping_limit_amount) : 0
-          ) : 0,
-          frequency: userPreferencesData?.shopping_limit_frequency || 'monthly'
+        // 🎯 IMPORTANT: Map budget data from user_progress table (unified budget service)
+        // This ensures we always use the latest data from the unified budget storage
+        shoppingLimit: budgetData?.shoppingLimit ? {
+          amount: budgetData.shoppingLimit.shoppingLimitAmount || 0,
+          frequency: budgetData.shoppingLimit.shoppingLimitFrequency || 'monthly'
+        } : {
+          amount: 0,
+          frequency: 'monthly'
         },
-        // IMPORTANT: Map clothing budget directly from user_preferences table fields
-        // This ensures we always use the latest data from the database
-        clothingBudget: {
-          amount: userPreferencesData ? (
-            typeof userPreferencesData.clothing_budget_amount === 'number' ? userPreferencesData.clothing_budget_amount : 
-            typeof userPreferencesData.clothing_budget_amount === 'string' ? parseFloat(userPreferencesData.clothing_budget_amount) : 0
-          ) : 0,
-          currency: userPreferencesData?.clothing_budget_currency || 'USD',
-          frequency: userPreferencesData?.clothing_budget_frequency || 'monthly'
+        clothingBudget: budgetData?.clothingBudget ? {
+          amount: budgetData.clothingBudget.amount || 0,
+          currency: budgetData.clothingBudget.currency || 'USD',
+          frequency: budgetData.clothingBudget.frequency || 'monthly'
+        } : {
+          amount: 0,
+          currency: 'USD',
+          frequency: 'monthly'
         },
         // Subscription information - now from user_profiles table
         subscriptionPlan: userProfileData?.subscription_plan || 'free',
@@ -195,7 +231,7 @@ export const useProfileData = () => {
       return mappedPreferences as UserPreferences;
     }
     return defaultPreferences;
-  }, [user, userPreferencesData, userProfileData]); // Added userProfileData to dependency array
+  }, [user, userPreferencesData, userProfileData, budgetData]); // Added budgetData to dependency array for unified budget storage
   
   // Function to save profile data to backend
   const saveProfileData = useCallback(async (data: any) => {

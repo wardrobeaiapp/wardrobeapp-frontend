@@ -1,5 +1,6 @@
 // Import from the consolidated client to prevent multiple instances
 import { supabase } from './supabaseClientMigration';
+import { saveClothingBudgetData, saveShoppingLimitData } from './userBudgetsService';
 
 // Types
 interface RegisterData {
@@ -770,12 +771,62 @@ const supabaseAuthServiceImpl: AuthService = {
             amount: (data.preferences as Record<string, any>)['preferences'].shoppingLimit.amount || 0
           } : undefined
         };
+
+        // 🚀 HYBRID SAVE STRATEGY: Save budget data to user_progress table
+        console.log('DEBUG - completeOnboarding - Implementing hybrid save strategy for budget data');
         
-        console.log('DEBUG - completeOnboarding - BEFORE calling saveUserPreferences with profileData:', JSON.stringify(profileData, null, 2));
+        // Remove budget data from profileData before saving to user_preferences
+        const { shoppingLimit, clothingBudgetAmount, clothingBudgetCurrency, clothingBudgetFrequency, ...preferencesOnlyData } = profileData;
         
         try {
-          // Call saveUserPreferences with the profile data, user ID, and section
-          const result = await saveUserPreferences(profileData, authData.user.id);
+          // Extract clothing budget data
+          const clothingBudgetData = {
+            amount: data.clothingBudgetAmount || 0,
+            currency: data.clothingBudgetCurrency || 'USD', 
+            frequency: data.clothingBudgetFrequency || 'monthly',
+            currentSpent: 0,
+            periodStartDate: undefined,
+            periodEndDate: undefined
+          };
+
+          // Extract shopping limit data
+          const shoppingLimitData = profileData.shoppingLimit ? {
+            shoppingLimitAmount: profileData.shoppingLimit.amount,
+            shoppingLimitFrequency: profileData.shoppingLimit.frequency,
+            currentSpent: 0,
+            periodStartDate: undefined,
+            periodEndDate: undefined
+          } : null;
+
+          console.log('DEBUG - completeOnboarding - Budget data extracted:', {
+            clothingBudget: clothingBudgetData,
+            shoppingLimit: shoppingLimitData
+          });
+
+          // Save clothing budget to user_progress table (if amount > 0)
+          if (clothingBudgetData.amount > 0) {
+            console.log('DEBUG - completeOnboarding - Saving clothing budget to user_progress');
+            await saveClothingBudgetData(authData.user.id, clothingBudgetData);
+            console.log('DEBUG - completeOnboarding - Clothing budget saved successfully');
+          }
+
+          // Save shopping limit to user_progress table (if exists)
+          if (shoppingLimitData && shoppingLimitData.shoppingLimitAmount > 0) {
+            console.log('DEBUG - completeOnboarding - Saving shopping limit to user_progress');
+            await saveShoppingLimitData(authData.user.id, shoppingLimitData);
+            console.log('DEBUG - completeOnboarding - Shopping limit saved successfully');
+          }
+
+          console.log('DEBUG - completeOnboarding - BEFORE calling saveUserPreferences with preferencesOnlyData (budget data removed):', JSON.stringify(preferencesOnlyData, null, 2));
+          
+        } catch (budgetSaveError) {
+          console.error('ERROR - completeOnboarding - Failed to save budget data to user_progress:', budgetSaveError);
+          // Continue with regular preferences save even if budget save fails
+        }
+        
+        try {
+          // Call saveUserPreferences with preferences data only (budget data removed)
+          const result = await saveUserPreferences(preferencesOnlyData || profileData, authData.user.id);
           
           console.log('DEBUG - completeOnboarding - AFTER calling saveUserPreferences, result:', result);
           console.log('Successfully synced onboarding data to user_preferences table');
