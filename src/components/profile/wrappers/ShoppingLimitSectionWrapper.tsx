@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
 import { ProfileData } from '../../../types';
 import ShoppingLimitSection from '../sections/ShoppingLimitSection';
-import { getShoppingLimitData, saveShoppingLimitData, ShoppingLimitData } from '../../../services/shoppingLimitService';
+import { getShoppingLimitData, saveShoppingLimitData, type ShoppingLimitData } from '../../../services/userBudgetsService';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 
@@ -47,10 +47,10 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
       setError(null);
       console.log('🛍️ ShoppingLimitSectionWrapper - Fetching shopping limit data for user:', user.id);
       
-      const data = await getShoppingLimitData(user.id);
-      console.log('🛍️ ShoppingLimitSectionWrapper - Received shopping limit data:', data);
+      const shoppingLimitData = await getShoppingLimitData(user.id);
+      console.log('🛍️ ShoppingLimitSectionWrapper - Received shopping limit data:', shoppingLimitData);
       
-      setLocalData(data);
+      setLocalData(shoppingLimitData);
     } catch (error) {
       console.error('🛍️ ShoppingLimitSectionWrapper - Error fetching shopping limit data:', error);
       setError(error instanceof Error ? error.message : 'Failed to fetch shopping limit data');
@@ -76,6 +76,7 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
       setError(null);
       console.log('🛍️ ShoppingLimitSectionWrapper - Saving shopping limit data for user:', user.id, localData);
       
+      // Use dedicated shopping limit save function (much simpler!)
       await saveShoppingLimitData(user.id, localData);
       console.log('🛍️ ShoppingLimitSectionWrapper - Successfully saved shopping limit data');
       

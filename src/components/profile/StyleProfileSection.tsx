@@ -70,7 +70,7 @@ const StyleProfileContent: React.FC = () => {
   const climateSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const wardrobeGoalsSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean }>(null);
   const shoppingLimitSectionRef = React.useRef<{ saveDirectly: () => Promise<SaveResult>; isSaving: boolean } | null>(null);
-  const clothingBudgetSectionRef = React.useRef<{ syncToContext: () => void }>(null);
+  const clothingBudgetSectionRef = React.useRef<{ saveDirectly: () => Promise<{ success: boolean; error?: string }>; isSaving: boolean }>(null);
   const subscriptionSectionRef = React.useRef<{ syncToContext: () => void }>(null);
 
   return (
@@ -264,19 +264,34 @@ const StyleProfileContent: React.FC = () => {
           {activeSection === 'clothingBudget' && (
             <>
               <ClothingBudgetSectionWrapper
-                profileData={profileData}
-                handleNestedChange={handleNestedChange}
-                forwardedRef={clothingBudgetSectionRef}
+                ref={clothingBudgetSectionRef}
+                initialData={profileData}
+                onSave={() => {
+                  console.log('StyleProfileSection: ClothingBudgetSectionWrapper onSave callback');
+                }}
               />
               <ButtonContainer>
-                <Button onClick={() => {
-                  // Sync clothing budget data to context before saving
-                  if (clothingBudgetSectionRef.current) {
-                    console.log('StyleProfileSection: Syncing clothing budget data to context');
-                    clothingBudgetSectionRef.current.syncToContext();
-                  }
-                  handleSave('clothingBudget');
-                }} success>Save Clothing Budget</Button>
+                <Button 
+                  onClick={async () => {
+                    if (clothingBudgetSectionRef.current) {
+                      try {
+                        console.log('StyleProfileSection: Saving clothing budget data directly');
+                        const result = await clothingBudgetSectionRef.current.saveDirectly();
+                        if (result.success) {
+                          console.log('StyleProfileSection: Clothing budget data saved successfully');
+                        } else {
+                          console.error('StyleProfileSection: Error saving clothing budget data:', result.error);
+                        }
+                      } catch (error) {
+                        console.error('StyleProfileSection: Exception saving clothing budget data:', error);
+                      }
+                    }
+                  }}
+                  success
+                  disabled={clothingBudgetSectionRef.current?.isSaving}
+                >
+                  {clothingBudgetSectionRef.current?.isSaving ? 'Saving...' : 'Save Clothing Budget'}
+                </Button>
               </ButtonContainer>
             </>
           )}
