@@ -109,7 +109,8 @@ export const SavingsAmount = styled.div<{ color?: string }>`
 
 // Total savings highlight card
 export const TotalSavingsCard = styled.div`
-  background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 12px;
   padding: 24px;
   margin: 20px 0;

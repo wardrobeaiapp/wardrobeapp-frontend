@@ -3,7 +3,7 @@ import {
   SectionDivider,
   SectionWrapper
 } from '../../pages/ProfilePage.styles';
-import { getShoppingLimitData } from '../../services/userBudgetsService';
+import { getShoppingLimitData, getClothingBudgetData, ClothingBudgetData } from '../../services/userBudgetsService';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { getUserProfileByUserId } from '../../services/supabaseAuthService';
 import { getAIUsageData, AIUsageData } from '../../services/aiUsageService';
@@ -38,6 +38,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
   const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro'>('free');
   const [aiUsageData, setAiUsageData] = useState<AIUsageData | null>(null);
   const [impulseBuyTrackerData, setImpulseBuyTrackerData] = useState<ImpulseBuyTrackerData | null>(null);
+  const [clothingBudgetData, setClothingBudgetData] = useState<ClothingBudgetData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -47,18 +48,20 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       try {
         setIsLoading(true);
         
-        // Fetch shopping data, user profile (for subscription plan), AI usage data, and impulse buy tracker data
-        const [shopping, userProfile, aiUsage, impulseBuyTracker] = await Promise.all([
+        // Fetch shopping data, user profile (for subscription plan), AI usage data, impulse buy tracker data, and clothing budget data
+        const [shopping, userProfile, aiUsage, impulseBuyTracker, clothingBudget] = await Promise.all([
           getShoppingLimitData(user.id),
           getUserProfileByUserId(user.id),
           getAIUsageData(user.id),
-          getImpulseBuyTrackerData(user.id)
+          getImpulseBuyTrackerData(user.id),
+          getClothingBudgetData(user.id)
         ]);
         
         setShoppingData(shopping);
         setSubscriptionPlan((userProfile?.subscription_plan as 'free' | 'pro') || 'free');
         setAiUsageData(aiUsage);
         setImpulseBuyTrackerData(impulseBuyTracker);
+        setClothingBudgetData(clothingBudget);
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -88,23 +91,47 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
     }
   };
 
+  const getTypicalPeriodText = (frequency: 'monthly' | 'quarterly' | 'yearly') => {
+    switch (frequency) {
+      case 'monthly': return 'Typical monthly';
+      case 'quarterly': return 'Typical quarterly';
+      case 'yearly': return 'Typical yearly';
+      default: return 'Typical period';
+    }
+  };
+
   // Calculate AI usage limit based on subscription plan
   const aiUsageLimit = subscriptionPlan === 'pro' ? 50 : 3;
   const aiUsageUsed = aiUsageData?.aiChecksUsed || 0; // Real data from database
   const aiUsagePercentage = (aiUsageUsed / aiUsageLimit) * 100;
 
+  // Helper function to get currency symbol
+  const getCurrencySymbol = (currency: string) => {
+    const symbols: { [key: string]: string } = {
+      'USD': '$',
+      'EUR': '€',
+      'GBP': '£',
+      'JPY': '¥',
+      'CAD': '$',
+      'AUD': '$'
+    };
+    return symbols[currency] || '$'; // Default to $ if currency not found
+  };
+
   // Calculate progress and stats
   const shoppingLimit = shoppingData?.shoppingLimitAmount || 0;
-  const shoppingLimitUsed = shoppingData?.shoppingLimitUsed || 0; // Actual usage from database
+  const shoppingLimitUsed = shoppingData?.shoppingLimitUsed || 0;
   const shoppingLimitFrequency = shoppingData?.shoppingLimitFrequency || 'monthly';
   const progressPercentage = shoppingLimit > 0 ? (shoppingLimitUsed / shoppingLimit) * 100 : 0;
   const isWithinLimit = progressPercentage <= 100;
   
-  // Mock data for demonstration - in real app, this would come from purchase tracking
-  const typicalMonthly = 280;
-  const currentSpent = (shoppingLimitUsed || 0) * 40; // Mock: $40 per usage, ensure safe calculation
+  // Use real clothing budget data or fallback to previous hardcoded value
+  const typicalMonthly = clothingBudgetData?.amount || 0;
+  const currencySymbol = getCurrencySymbol(clothingBudgetData?.currency || 'USD');
+  const clothingBudgetFrequency = clothingBudgetData?.frequency || 'monthly';
+  const currentSpent = clothingBudgetData?.currentSpent || 0; // Use real current spent from clothing budget data
   const savedThisMonth = typicalMonthly - currentSpent;
-  const totalSaved = 690;
+  const totalSaved = savedThisMonth; // Use current period savings for now, will elaborate total savings logic later
   
   // Calculate impulse buy streak days from real tracker data
   const impulseBuyStreak = impulseBuyTrackerData?.isSet 
@@ -272,7 +299,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       {/* Savings This Month */}
       <ProgressCard theme="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
         <CardTitle>
-          💰 Saved this month
+          💰 Saved {getPeriodText(clothingBudgetFrequency)}
         </CardTitle>
         
         <SavingsGrid>
@@ -281,11 +308,11 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
             <SavingsAmount>${currentSpent}</SavingsAmount>
           </SavingsCard>
           <SavingsCard>
-            <StatLabel>Typical monthly</StatLabel>
-            <SavingsAmount>${typicalMonthly}</SavingsAmount>
+            <StatLabel>{getTypicalPeriodText(clothingBudgetFrequency)}</StatLabel>
+            <SavingsAmount>{currencySymbol}{typicalMonthly}</SavingsAmount>
           </SavingsCard>
           <SavingsCard>
-            <StatLabel>Saved this month</StatLabel>
+            <StatLabel>Saved {getPeriodText(clothingBudgetFrequency).toLowerCase()}</StatLabel>
             <SavingsAmount color="#38a169">${savedThisMonth}</SavingsAmount>
           </SavingsCard>
         </SavingsGrid>
