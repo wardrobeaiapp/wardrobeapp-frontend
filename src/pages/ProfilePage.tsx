@@ -86,7 +86,8 @@ const ProfilePage: React.FC = () => {
     handleOtherSettingsExportData,
     handleOtherSettingsDeleteAccount,
     handleOtherSettingsSave,
-    onNavigateToScenarios: navigateToScenarios
+    onNavigateToScenarios: navigateToScenarios,
+    onNavigateToSubscription: () => setActiveCategory('subscription')
   });
   
   // Function to render the appropriate content based on active category

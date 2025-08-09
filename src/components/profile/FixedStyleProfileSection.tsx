@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingData, ShoppingLimit } from '../../types';
+import { ShoppingLimit } from '../../types';
 import Button from '../../components/Button';
 import {
   ContentHeader,
   ButtonContainer,
-  SectionHeader
 } from '../../pages/ProfilePage.styles';
 import { FaBriefcase, FaUmbrellaBeach, FaTshirt, FaCloudSun, FaBullseye, FaShoppingCart, FaDollarSign, FaArrowLeft } from 'react-icons/fa';
 
@@ -17,7 +16,7 @@ import BudgetSection from './sections/BudgetSection';
 
 // Import types
 import { ProfileData, ArrayFieldsOfProfileData } from '../../types';
-import { ClothingBudgetData, ShoppingLimitData } from '../../types/profile';
+import { ClothingBudgetData } from '../../types/profile';
 import styled from 'styled-components';
 
 // Styled Components for Grid Layout

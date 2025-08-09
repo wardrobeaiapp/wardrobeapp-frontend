@@ -34,6 +34,7 @@ interface ProfileSectionsProps {
   handleOtherSettingsDeleteAccount: () => void;
   handleOtherSettingsSave: (data: OtherSettingsData) => void;
   onNavigateToScenarios?: () => void;
+  onNavigateToSubscription?: () => void;
 }
 
 export const useProfileSections = ({
@@ -51,7 +52,8 @@ export const useProfileSections = ({
   handleOtherSettingsExportData,
   handleOtherSettingsDeleteAccount,
   handleOtherSettingsSave,
-  onNavigateToScenarios
+  onNavigateToScenarios,
+  onNavigateToSubscription
 }: ProfileSectionsProps) => {
   // Memoize each section separately to prevent unnecessary re-renders
   const styleProfileSection = useMemo(() => (
@@ -94,8 +96,8 @@ export const useProfileSections = ({
   ), [shoppingLimit, handleShoppingLimitSave]);
   
   const myProgressSection = useMemo(() => (
-    <MyProgressSection />
-  ), []);
+    <MyProgressSection onNavigateToSubscription={onNavigateToSubscription} />
+  ), [onNavigateToSubscription]);
   
   const notificationsSection = useMemo(() => (
     <NotificationsSection 
