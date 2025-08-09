@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ProfileData } from '../../../types';
 import SubscriptionSection from '../SubscriptionSection';
 import { ProfileSection } from '../sections/types';
-import { SaveResult } from '../context/StyleProfileContext';
+import { SaveResult } from '../types/StyleProfileTypes';
 
 // Define the interface for SubscriptionSectionWrapper
 interface SubscriptionSectionWrapperProps {

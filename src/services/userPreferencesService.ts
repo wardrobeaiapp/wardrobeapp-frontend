@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import { ProfileData } from '../types';
-import { SaveResult } from '../components/profile/context/StyleProfileContext';
+import { SaveResult } from '../components/profile/types/StyleProfileTypes';
 
 /**
  * Service for managing user preferences in the dedicated user_preferences table

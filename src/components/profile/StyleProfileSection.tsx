@@ -31,8 +31,10 @@ import SubscriptionSectionWrapper from './wrappers/SubscriptionSectionWrapper';
 // Types
 import { ProfileData } from '../../types';
 
-// Import context provider
-import { StyleProfileProvider, useStyleProfile, SaveResult } from './context/StyleProfileContext';
+// Import context provider - direct imports to avoid re-export issues
+import { StyleProfileProvider } from './components/StyleProfileProvider';
+import { useStyleProfile } from './context/StyleProfileContext';
+import { SaveResult } from './types/StyleProfileTypes';
 
 interface StyleProfileProps {
   initialData: ProfileData;
