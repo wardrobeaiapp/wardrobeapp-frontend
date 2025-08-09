@@ -831,7 +831,7 @@ const supabaseAuthServiceImpl: AuthService = {
           const shoppingLimitData = profileData.shoppingLimit ? {
             shoppingLimitAmount: profileData.shoppingLimit.amount,
             shoppingLimitFrequency: profileData.shoppingLimit.frequency,
-            currentSpent: 0,
+            shoppingLimitUsed: 0, // Initialize as 0 for new users
             periodStartDate: undefined,
             periodEndDate: undefined
           } : null;

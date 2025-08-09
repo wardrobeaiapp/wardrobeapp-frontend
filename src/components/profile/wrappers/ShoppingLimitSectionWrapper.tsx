@@ -22,7 +22,7 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
   const defaultShoppingLimitData: ShoppingLimitData = {
     shoppingLimitAmount: undefined,
     shoppingLimitFrequency: 'monthly',
-    currentSpent: 0,
+    shoppingLimitUsed: 0,
     periodStartDate: undefined,
     periodEndDate: undefined
   };
@@ -30,7 +30,7 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
   const [localData, setLocalData] = useState<ShoppingLimitData>(defaultShoppingLimitData);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Removed unused error state
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useSupabaseAuth();
 
@@ -44,7 +44,7 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
 
     try {
       setIsLoading(true);
-      setError(null);
+      // Clear any previous errors
       console.log('🛍️ ShoppingLimitSectionWrapper - Fetching shopping limit data for user:', user.id);
       
       const shoppingLimitData = await getShoppingLimitData(user.id);
@@ -53,7 +53,6 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
       setLocalData(shoppingLimitData);
     } catch (error) {
       console.error('🛍️ ShoppingLimitSectionWrapper - Error fetching shopping limit data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch shopping limit data');
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +62,6 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
     fetchShoppingLimitData();
   }, [fetchShoppingLimitData]);
 
-  // Save shopping limit data directly to Supabase
   const saveDirectly = useCallback(async (): Promise<SaveResult> => {
     if (!user?.id) {
       const errorMsg = 'No user ID available for saving shopping limit data';
@@ -73,59 +71,28 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
 
     try {
       setIsSaving(true);
-      setError(null);
       console.log('🛍️ ShoppingLimitSectionWrapper - Saving shopping limit data for user:', user.id, localData);
       
-      // Use dedicated shopping limit save function (much simpler!)
       await saveShoppingLimitData(user.id, localData);
       console.log('🛍️ ShoppingLimitSectionWrapper - Successfully saved shopping limit data');
       
-      // Show success modal
       setIsModalOpen(true);
       
-      // Call parent onSave callback
       props.onSave();
       
       return { success: true };
     } catch (error) {
       console.error('🛍️ ShoppingLimitSectionWrapper - Error saving shopping limit data:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save shopping limit data';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to save shopping limit data' };
     } finally {
       setIsSaving(false);
     }
   }, [user?.id, localData, props]);
 
-  // Expose saveDirectly and isSaving methods via ref
   useImperativeHandle(ref, () => ({
     saveDirectly,
     isSaving
   }), [saveDirectly, isSaving]);
-
-  // Handle changes to shopping limit data
-  const handleDataChange = useCallback((field: keyof ShoppingLimitData, value: any) => {
-    console.log('🛍️ ShoppingLimitSectionWrapper - Data changed:', field, value);
-    setLocalData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  }, []);
-
-  // Create a compatibility setProfileData function for the section component
-  const setProfileData = useCallback((updatedData: Partial<ProfileData>) => {
-    console.log('🛍️ ShoppingLimitSectionWrapper - Profile data updated (compatibility layer):', updatedData);
-    
-    // Extract shopping limit data from the updated profile data
-    if (updatedData.shoppingLimit) {
-      const { amount, frequency } = updatedData.shoppingLimit;
-      setLocalData(prev => ({
-        ...prev,
-        shoppingLimitAmount: amount,
-        shoppingLimitFrequency: frequency as 'monthly' | 'quarterly' | 'yearly'
-      }));
-    }
-  }, []);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
