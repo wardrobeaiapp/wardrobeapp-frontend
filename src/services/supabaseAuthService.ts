@@ -855,6 +855,17 @@ const supabaseAuthServiceImpl: AuthService = {
             console.log('DEBUG - completeOnboarding - Shopping limit saved successfully');
           }
 
+          // Activate impulse buy tracker after onboarding completion
+          console.log('DEBUG - completeOnboarding - Activating impulse buy tracker');
+          try {
+            const { activateImpulseBuyTracker } = await import('../services/impulseBuyTrackerService');
+            await activateImpulseBuyTracker(authData.user.id);
+            console.log('DEBUG - completeOnboarding - Impulse buy tracker activated successfully');
+          } catch (trackerError) {
+            console.error('ERROR - completeOnboarding - Failed to activate impulse buy tracker:', trackerError);
+            // Continue with onboarding even if tracker activation fails
+          }
+
           console.log('DEBUG - completeOnboarding - BEFORE calling saveUserPreferences with preferencesOnlyData (budget data removed):', JSON.stringify(preferencesOnlyData, null, 2));
           
         } catch (budgetSaveError) {
