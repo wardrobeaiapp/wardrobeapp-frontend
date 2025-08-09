@@ -5,6 +5,8 @@ import {
 } from '../../pages/ProfilePage.styles';
 import { getShoppingLimitData } from '../../services/userBudgetsService';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import { getUserProfileByUserId } from '../../services/supabaseAuthService';
+import { getAIUsageData, AIUsageData } from '../../services/aiUsageService';
 import {
   ProgressCard,
   CardTitle,
@@ -26,12 +28,14 @@ import {
 
 
 interface MyProgressProps {
-  // Add any props needed for the progress section
+  onNavigateToSubscription?: () => void;
 }
 
-const MyProgressSection: React.FC<MyProgressProps> = () => {
+const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription }) => {
   const { user } = useSupabaseAuth();
   const [shoppingData, setShoppingData] = useState<any>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro'>('free');
+  const [aiUsageData, setAiUsageData] = useState<AIUsageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -40,8 +44,17 @@ const MyProgressSection: React.FC<MyProgressProps> = () => {
       
       try {
         setIsLoading(true);
-        const shopping = await getShoppingLimitData(user.id);
+        
+        // Fetch shopping data, user profile (for subscription plan), and AI usage data
+        const [shopping, userProfile, aiUsage] = await Promise.all([
+          getShoppingLimitData(user.id),
+          getUserProfileByUserId(user.id),
+          getAIUsageData(user.id)
+        ]);
+        
         setShoppingData(shopping);
+        setSubscriptionPlan((userProfile?.subscription_plan as 'free' | 'pro') || 'free');
+        setAiUsageData(aiUsage);
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -61,9 +74,25 @@ const MyProgressSection: React.FC<MyProgressProps> = () => {
     );
   }
 
+  // Helper function to get period display text
+  const getPeriodText = (frequency: 'monthly' | 'quarterly' | 'yearly') => {
+    switch (frequency) {
+      case 'monthly': return 'This Month';
+      case 'quarterly': return 'This Quarter';
+      case 'yearly': return 'This Year';
+      default: return 'This Period';
+    }
+  };
+
+  // Calculate AI usage limit based on subscription plan
+  const aiUsageLimit = subscriptionPlan === 'pro' ? 50 : 3;
+  const aiUsageUsed = aiUsageData?.aiChecksUsed || 0; // Real data from database
+  const aiUsagePercentage = (aiUsageUsed / aiUsageLimit) * 100;
+
   // Calculate progress and stats
   const shoppingLimit = shoppingData?.shoppingLimitAmount || 0;
   const shoppingLimitUsed = shoppingData?.shoppingLimitUsed || 0; // Actual usage from database
+  const shoppingLimitFrequency = shoppingData?.shoppingLimitFrequency || 'monthly';
   const progressPercentage = shoppingLimit > 0 ? (shoppingLimitUsed / shoppingLimit) * 100 : 0;
   const isWithinLimit = progressPercentage <= 100;
   
@@ -98,7 +127,7 @@ const MyProgressSection: React.FC<MyProgressProps> = () => {
               marginBottom: '8px',
               fontWeight: '500'
             }}>
-              Justified Purchases
+              Justified Purchases {getPeriodText(shoppingLimitFrequency)}
             </div>
             <div style={{ 
               fontSize: '36px', 
@@ -158,40 +187,46 @@ const MyProgressSection: React.FC<MyProgressProps> = () => {
             color: '#4f46e5',
             marginBottom: '16px'
           }}>
-            2 of 3
+            {aiUsageUsed} of {aiUsageLimit}
           </div>
           
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '14px', color: '#6b7280' }}>Usage</span>
-              <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>67%</span>
+              <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>{Math.round(aiUsagePercentage)}%</span>
             </div>
             <ProgressBar>
               <ProgressFill 
-                $percentage={67} 
+                $percentage={aiUsagePercentage} 
                 color="#4f46e5"
               />
             </ProgressBar>
           </div>
         </div>
         
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button style={{
-            background: '#4f46e5',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '12px 24px',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            + Get more checks
-          </button>
-        </div>
+        {/* Only show "Get more checks" button for free users */}
+        {subscriptionPlan === 'free' && (
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <button 
+              onClick={onNavigateToSubscription}
+              style={{
+                background: '#4f46e5',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px 24px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              + Get more checks
+            </button>
+          </div>
+        )}
       </ProgressCard>
 
       {/* Impulse Buy Tracker */}
