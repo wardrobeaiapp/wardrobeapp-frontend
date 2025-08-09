@@ -305,7 +305,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
         <SavingsGrid>
           <SavingsCard>
             <StatLabel>You spent</StatLabel>
-            <SavingsAmount>${currentSpent}</SavingsAmount>
+            <SavingsAmount>{currencySymbol}{currentSpent}</SavingsAmount>
           </SavingsCard>
           <SavingsCard>
             <StatLabel>{getTypicalPeriodText(clothingBudgetFrequency)}</StatLabel>
@@ -313,7 +313,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           </SavingsCard>
           <SavingsCard>
             <StatLabel>Saved {getPeriodText(clothingBudgetFrequency).toLowerCase()}</StatLabel>
-            <SavingsAmount color="#38a169">${savedThisMonth}</SavingsAmount>
+            <SavingsAmount color="#38a169">{currencySymbol}{savedThisMonth}</SavingsAmount>
           </SavingsCard>
         </SavingsGrid>
         
@@ -328,7 +328,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           </div>
           <div>
             <div style={{ fontSize: '28px', fontWeight: '700', color: '#38a169' }}>
-              ${totalSaved}
+              {currencySymbol}{totalSaved}
             </div>
             <div style={{ fontSize: '12px', color: '#4a5568' }}>
               saved in total
@@ -337,7 +337,8 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
         </TotalSavingsCard>
       </ProgressCard>
 
-      {/* Last Update - Standalone Block */}
+      {/* Last Update - Standalone Block - Only show if impulse buy tracker is set */}
+      {impulseBuyTrackerData?.isSet && (
       <LastUpdate>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
@@ -385,6 +386,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           </div>
         </div>
       </LastUpdate>
+      )}
     </SectionWrapper>
   );
 };
