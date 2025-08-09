@@ -7,6 +7,7 @@ import { getShoppingLimitData } from '../../services/userBudgetsService';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { getUserProfileByUserId } from '../../services/supabaseAuthService';
 import { getAIUsageData, AIUsageData } from '../../services/aiUsageService';
+import { getImpulseBuyTrackerData, calculateDaysSinceStart, ImpulseBuyTrackerData } from '../../services/impulseBuyTrackerService';
 import {
   ProgressCard,
   CardTitle,
@@ -36,6 +37,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
   const [shoppingData, setShoppingData] = useState<any>(null);
   const [subscriptionPlan, setSubscriptionPlan] = useState<'free' | 'pro'>('free');
   const [aiUsageData, setAiUsageData] = useState<AIUsageData | null>(null);
+  const [impulseBuyTrackerData, setImpulseBuyTrackerData] = useState<ImpulseBuyTrackerData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -45,16 +47,18 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       try {
         setIsLoading(true);
         
-        // Fetch shopping data, user profile (for subscription plan), and AI usage data
-        const [shopping, userProfile, aiUsage] = await Promise.all([
+        // Fetch shopping data, user profile (for subscription plan), AI usage data, and impulse buy tracker data
+        const [shopping, userProfile, aiUsage, impulseBuyTracker] = await Promise.all([
           getShoppingLimitData(user.id),
           getUserProfileByUserId(user.id),
-          getAIUsageData(user.id)
+          getAIUsageData(user.id),
+          getImpulseBuyTrackerData(user.id)
         ]);
         
         setShoppingData(shopping);
         setSubscriptionPlan((userProfile?.subscription_plan as 'free' | 'pro') || 'free');
         setAiUsageData(aiUsage);
+        setImpulseBuyTrackerData(impulseBuyTracker);
       } catch (error) {
         console.error('Error fetching progress data:', error);
       } finally {
@@ -101,7 +105,11 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
   const currentSpent = (shoppingLimitUsed || 0) * 40; // Mock: $40 per usage, ensure safe calculation
   const savedThisMonth = typicalMonthly - currentSpent;
   const totalSaved = 690;
-  const impulseBuyStreak = 40;
+  
+  // Calculate impulse buy streak days from real tracker data
+  const impulseBuyStreak = impulseBuyTrackerData?.isSet 
+    ? calculateDaysSinceStart(impulseBuyTrackerData.startDate) 
+    : 0;
 
   return (
     <SectionWrapper>
@@ -229,7 +237,8 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
         )}
       </ProgressCard>
 
-      {/* Impulse Buy Tracker */}
+      {/* Impulse Buy Tracker - Only show if activated */}
+      {impulseBuyTrackerData?.isSet && (
       <ProgressCard theme="linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%)">
         <CardTitle>
           🎯 Impulse Buy Tracker
@@ -241,19 +250,24 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           <StreakLabel>No impulse buys streak!</StreakLabel>
           
           <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', margin: '16px 0' }}>
-            {[...Array(5)].map((_, i) => (
-              <div key={i} style={{ 
-                width: '8px', 
-                height: '8px', 
-                borderRadius: '50%', 
-                backgroundColor: i < 3 ? '#8b5cf6' : '#e2e8f0' 
-              }} />
-            ))}
+            {[...Array(5)].map((_, i) => {
+              // Create gradual color progression from dark purple to light purple
+              const colors = ['#7c3aed', '#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
+              return (
+                <div key={i} style={{ 
+                  width: '8px', 
+                  height: '8px', 
+                  borderRadius: '50%', 
+                  backgroundColor: colors[i]
+                }} />
+              );
+            })}
           </div>
           
           <StreakMessage>Keep it up!</StreakMessage>
         </ImpulseTracker>
       </ProgressCard>
+      )}
 
       {/* Savings This Month */}
       <ProgressCard theme="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
@@ -275,21 +289,6 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
             <SavingsAmount color="#38a169">${savedThisMonth}</SavingsAmount>
           </SavingsCard>
         </SavingsGrid>
-        
-        <div style={{ 
-          background: 'rgba(56, 161, 105, 0.1)', 
-          borderRadius: '12px', 
-          padding: '16px', 
-          textAlign: 'center',
-          marginTop: '16px'
-        }}>
-          <div style={{ color: '#38a169', fontWeight: '600' }}>
-            Estimated savings this month
-          </div>
-          <div style={{ fontSize: '24px', fontWeight: '700', color: '#38a169' }}>
-            ${savedThisMonth}
-          </div>
-        </div>
         
         <TotalSavingsCard>
           <div>
