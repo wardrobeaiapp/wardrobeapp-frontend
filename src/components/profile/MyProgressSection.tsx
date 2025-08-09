@@ -1,37 +1,329 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  FormGroup,
-  Label,
   SectionDivider,
   SectionWrapper
 } from '../../pages/ProfilePage.styles';
+import { getShoppingLimitData } from '../../services/userBudgetsService';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import {
+  ProgressCard,
+  CardTitle,
+  StatLabel,
+  ProgressBar,
+  ProgressFill,
+  SuccessMessage,
+  ImpulseTracker,
+  StreakNumber,
+  StreakLabel,
+  StreakMessage,
+  SavingsGrid,
+  SavingsCard,
+  SavingsAmount,
+  TotalSavingsCard,
+  LastUpdate
+} from './MyProgressSection.styles';
 
-// Using SectionWrapper from ProfilePage.styles instead of a local styled component
+
 
 interface MyProgressProps {
   // Add any props needed for the progress section
 }
 
 const MyProgressSection: React.FC<MyProgressProps> = () => {
+  const { user } = useSupabaseAuth();
+  const [shoppingData, setShoppingData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProgressData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setIsLoading(true);
+        const shopping = await getShoppingLimitData(user.id);
+        setShoppingData(shopping);
+      } catch (error) {
+        console.error('Error fetching progress data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProgressData();
+  }, [user?.id]);
+
+  if (isLoading) {
+    return (
+      <SectionWrapper>
+        <SectionDivider>My Progress</SectionDivider>
+        <div>Loading your progress...</div>
+      </SectionWrapper>
+    );
+  }
+
+  // Calculate progress and stats
+  const shoppingLimit = shoppingData?.shoppingLimitAmount || 0;
+  const shoppingLimitUsed = shoppingData?.shoppingLimitUsed || 0; // Actual usage from database
+  const progressPercentage = shoppingLimit > 0 ? (shoppingLimitUsed / shoppingLimit) * 100 : 0;
+  const isWithinLimit = progressPercentage <= 100;
+  
+  // Mock data for demonstration - in real app, this would come from purchase tracking
+  const typicalMonthly = 280;
+  const currentSpent = (shoppingLimitUsed || 0) * 40; // Mock: $40 per usage, ensure safe calculation
+  const savedThisMonth = typicalMonthly - currentSpent;
+  const totalSaved = 690;
+  const impulseBuyStreak = 40;
+
   return (
     <SectionWrapper>
-        <SectionDivider>My Progress</SectionDivider>
-        <FormGroup>
-          <Label>Track your wardrobe optimization journey</Label>
-          <p>Your progress stats and achievements will appear here.</p>
+      <SectionDivider>My Progress</SectionDivider>
+      
+      {/* Shopping Limit Summary - Only show if shopping limit is set */}
+      {shoppingLimit > 0 && (
+        <ProgressCard theme="linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%)">
+          <CardTitle>
+            🛍️ Shopping Limit Summary
+          </CardTitle>
           
-          {/* Placeholder content for the progress section */}
-          <div style={{ marginTop: '20px' }}>
-            <h4>Coming Soon</h4>
-            <p>We're working on exciting new features to help you track your wardrobe progress!</p>
-            <ul>
-              <li>Wardrobe optimization score</li>
-              <li>Style consistency metrics</li>
-              <li>Shopping habit improvements</li>
-              <li>Sustainability impact</li>
-            </ul>
+          <div style={{ 
+            background: 'white',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '20px',
+            border: '1px solid #e9ecef'
+          }}>
+            <div style={{ 
+              fontSize: '14px', 
+              color: '#6b7280', 
+              marginBottom: '8px',
+              fontWeight: '500'
+            }}>
+              Justified Purchases
+            </div>
+            <div style={{ 
+              fontSize: '36px', 
+              fontWeight: '700', 
+              color: '#38a169',
+              marginBottom: '16px'
+            }}>
+              {shoppingLimitUsed} of {shoppingLimit}
+            </div>
+            
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span>Progress</span>
+                <span>{Math.round(progressPercentage)}%</span>
+              </div>
+              <ProgressBar>
+                <ProgressFill 
+                  $percentage={Math.min(progressPercentage, 100)} 
+                  color={isWithinLimit ? '#48bb78' : '#f56565'}
+                />
+              </ProgressBar>
+            </div>
           </div>
-        </FormGroup>
+          
+          {isWithinLimit && (
+            <SuccessMessage>
+              ✅ You've stayed within your limit.
+            </SuccessMessage>
+          )}
+        </ProgressCard>
+      )}
+
+      {/* AI Usage Tracker */}
+      <ProgressCard theme="linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)">
+        <CardTitle>
+          🤖 AI Usage Tracker
+        </CardTitle>
+        
+        <div style={{ 
+          background: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          marginBottom: '20px',
+          border: '1px solid #e9ecef'
+        }}>
+          <div style={{ 
+            fontSize: '14px', 
+            color: '#6b7280', 
+            marginBottom: '8px',
+            fontWeight: '500'
+          }}>
+            AI Checks Used This Month
+          </div>
+          <div style={{ 
+            fontSize: '36px', 
+            fontWeight: '700', 
+            color: '#4f46e5',
+            marginBottom: '16px'
+          }}>
+            2 of 3
+          </div>
+          
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>Usage</span>
+              <span style={{ fontSize: '14px', color: '#6b7280', fontWeight: '600' }}>67%</span>
+            </div>
+            <ProgressBar>
+              <ProgressFill 
+                $percentage={67} 
+                color="#4f46e5"
+              />
+            </ProgressBar>
+          </div>
+        </div>
+        
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <button style={{
+            background: '#4f46e5',
+            color: 'white',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            + Get more checks
+          </button>
+        </div>
+      </ProgressCard>
+
+      {/* Impulse Buy Tracker */}
+      <ProgressCard theme="linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%)">
+        <CardTitle>
+          🎯 Impulse Buy Tracker
+        </CardTitle>
+        
+        <ImpulseTracker>
+          <div>🏆</div>
+          <StreakNumber>{impulseBuyStreak} Days</StreakNumber>
+          <StreakLabel>No impulse buys streak!</StreakLabel>
+          
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', margin: '16px 0' }}>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                backgroundColor: i < 3 ? '#8b5cf6' : '#e2e8f0' 
+              }} />
+            ))}
+          </div>
+          
+          <StreakMessage>Keep it up!</StreakMessage>
+        </ImpulseTracker>
+      </ProgressCard>
+
+      {/* Savings This Month */}
+      <ProgressCard theme="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
+        <CardTitle>
+          💰 Saved this month
+        </CardTitle>
+        
+        <SavingsGrid>
+          <SavingsCard>
+            <StatLabel>You spent</StatLabel>
+            <SavingsAmount>${currentSpent}</SavingsAmount>
+          </SavingsCard>
+          <SavingsCard>
+            <StatLabel>Typical monthly</StatLabel>
+            <SavingsAmount>${typicalMonthly}</SavingsAmount>
+          </SavingsCard>
+          <SavingsCard>
+            <StatLabel>Saved this month</StatLabel>
+            <SavingsAmount color="#38a169">${savedThisMonth}</SavingsAmount>
+          </SavingsCard>
+        </SavingsGrid>
+        
+        <div style={{ 
+          background: 'rgba(56, 161, 105, 0.1)', 
+          borderRadius: '12px', 
+          padding: '16px', 
+          textAlign: 'center',
+          marginTop: '16px'
+        }}>
+          <div style={{ color: '#38a169', fontWeight: '600' }}>
+            Estimated savings this month
+          </div>
+          <div style={{ fontSize: '24px', fontWeight: '700', color: '#38a169' }}>
+            ${savedThisMonth}
+          </div>
+        </div>
+        
+        <TotalSavingsCard>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              📈 Total saved since starting
+            </div>
+            <div style={{ fontSize: '14px', color: '#4a5568', marginTop: '4px' }}>
+              Your cumulative savings
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: '28px', fontWeight: '700', color: '#38a169' }}>
+              ${totalSaved}
+            </div>
+            <div style={{ fontSize: '12px', color: '#4a5568' }}>
+              saved in total
+            </div>
+          </div>
+        </TotalSavingsCard>
+      </ProgressCard>
+
+      {/* Last Update - Standalone Block */}
+      <LastUpdate>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            width: '40px', 
+            height: '40px', 
+            backgroundColor: '#f7fafc', 
+            borderRadius: '8px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontSize: '18px'
+          }}>
+            📅
+          </div>
+          <div>
+            <div style={{ 
+              fontSize: '16px', 
+              fontWeight: '600', 
+              color: '#2d3748',
+              marginBottom: '2px'
+            }}>
+              Last Update
+            </div>
+            <div style={{ 
+              fontSize: '14px', 
+              color: '#718096'
+            }}>
+              Progress tracking updated
+            </div>
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ 
+            fontSize: '16px', 
+            fontWeight: '600', 
+            color: '#2d3748'
+          }}>
+            Apr 1
+          </div>
+          <div style={{ 
+            fontSize: '14px', 
+            color: '#718096'
+          }}>
+            2024
+          </div>
+        </div>
+      </LastUpdate>
     </SectionWrapper>
   );
 };

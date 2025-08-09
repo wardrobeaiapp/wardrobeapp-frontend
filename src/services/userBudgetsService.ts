@@ -19,7 +19,7 @@ export interface UserBudgetsData {
   // Shopping Limit fields
   shoppingLimitAmount?: number;
   shoppingLimitFrequency: 'monthly' | 'quarterly' | 'yearly';
-  shoppingCurrentSpent: number;
+  shoppingLimitUsed: number;
   
   // Clothing Budget fields
   clothingBudgetAmount: number;
@@ -33,7 +33,7 @@ export interface UserBudgetsData {
 export interface ShoppingLimitData {
   shoppingLimitAmount?: number;
   shoppingLimitFrequency: 'monthly' | 'quarterly' | 'yearly';
-  currentSpent: number;
+  shoppingLimitUsed: number;
   periodStartDate?: string;
   periodEndDate?: string;
 }
@@ -90,7 +90,7 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
           periodEndDate: undefined,
           shoppingLimitAmount: undefined,
           shoppingLimitFrequency: 'monthly',
-          shoppingCurrentSpent: 0,
+          shoppingLimitUsed: 0,
           clothingBudgetAmount: 0,
           clothingBudgetFrequency: 'monthly',
           clothingCurrentSpent: 0
@@ -105,7 +105,7 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
         periodEndDate: undefined,
         shoppingLimitAmount: undefined,
         shoppingLimitFrequency: 'monthly',
-        shoppingCurrentSpent: 0,
+        shoppingLimitUsed: 0,
         clothingBudgetAmount: 0,
         clothingBudgetFrequency: 'monthly',
         clothingCurrentSpent: 0
@@ -121,7 +121,7 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
         periodEndDate: undefined,
         shoppingLimitAmount: undefined,
         shoppingLimitFrequency: 'monthly',
-        shoppingCurrentSpent: 0,
+        shoppingLimitUsed: 0,
         clothingBudgetAmount: 0,
         clothingBudgetFrequency: 'monthly',
         clothingCurrentSpent: 0
@@ -138,7 +138,7 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
       periodEndDate: (record && typeof record.shopping_period_end_date === 'string') ? record.shopping_period_end_date : undefined,
       shoppingLimitAmount: (record && typeof record.shopping_limit_amount === 'number') ? record.shopping_limit_amount : undefined,
       shoppingLimitFrequency: (record?.shopping_limit_frequency as 'monthly' | 'quarterly' | 'yearly') || 'monthly',
-      shoppingCurrentSpent: 0,
+      shoppingLimitUsed: 0,
       clothingBudgetAmount: (record && typeof record.clothing_budget_amount === 'number') ? record.clothing_budget_amount : 0,
       clothingBudgetFrequency: 'monthly', // Default since we don't query this column
       clothingCurrentSpent: 0
@@ -204,7 +204,7 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
     // Use ID-based ordering for consistent results
     const { data, error } = await supabase
       .from('user_progress')
-      .select('shopping_limit_amount, shopping_limit_frequency, id')
+      .select('shopping_limit_amount, shopping_limit_frequency, shopping_limit_used, id')
       .eq('user_id', userId)
       .order('id', { ascending: false })
       .limit(1);
@@ -219,7 +219,7 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
         return {
           shoppingLimitAmount: undefined,
           shoppingLimitFrequency: 'monthly',
-          currentSpent: 0,
+          shoppingLimitUsed: 0,
           periodStartDate: undefined,
           periodEndDate: undefined
         };
@@ -234,7 +234,7 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
       return {
         shoppingLimitAmount: undefined,
         shoppingLimitFrequency: 'monthly',
-        currentSpent: 0,
+        shoppingLimitUsed: 0,
         periodStartDate: undefined,
         periodEndDate: undefined
       };
@@ -247,7 +247,7 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
     const mappedData: ShoppingLimitData = {
       shoppingLimitAmount: (record && typeof record.shopping_limit_amount === 'number') ? record.shopping_limit_amount : undefined,
       shoppingLimitFrequency: (record?.shopping_limit_frequency as 'monthly' | 'quarterly' | 'yearly') || 'monthly',
-      currentSpent: 0, // Default to 0 since we don't store this
+      shoppingLimitUsed: (record && typeof record.shopping_limit_used === 'number') ? record.shopping_limit_used : 0,
       periodStartDate: undefined,
       periodEndDate: undefined
     };
@@ -272,7 +272,7 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
     // Query only clothing budget specific columns - get most recent record if multiple exist
     const { data, error } = await supabase
       .from('user_progress')
-      .select('clothing_budget_amount, clothing_budget_currency, clothing_budget_frequency, id')
+      .select('clothing_budget_amount, clothing_budget_currency, clothing_budget_frequency, clothing_current_spent, id')
       .eq('user_id', userId)
       .order('id', { ascending: false })
       .limit(1);
@@ -318,7 +318,7 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
       amount: (record && typeof record.clothing_budget_amount === 'number') ? record.clothing_budget_amount : 0,
       currency: (record?.clothing_budget_currency as string) || 'USD',
       frequency: (record?.clothing_budget_frequency as 'monthly' | 'quarterly' | 'yearly') || 'monthly',
-      currentSpent: 0, // Default to 0 since we don't store this
+      currentSpent: (record && typeof record.clothing_current_spent === 'number') ? record.clothing_current_spent : 0,
       periodStartDate: undefined,
       periodEndDate: undefined
     };
@@ -512,7 +512,7 @@ export function extractShoppingLimitData(userBudgetsData: UserBudgetsData): Shop
   return {
     shoppingLimitAmount: userBudgetsData.shoppingLimitAmount,
     shoppingLimitFrequency: userBudgetsData.shoppingLimitFrequency,
-    currentSpent: userBudgetsData.shoppingCurrentSpent,
+    shoppingLimitUsed: userBudgetsData.shoppingLimitUsed,
     periodStartDate: userBudgetsData.periodStartDate,
     periodEndDate: userBudgetsData.periodEndDate
   };
@@ -544,7 +544,7 @@ export async function updateShoppingLimitData(userId: string, shoppingLimitData:
     ...existingData,
     shoppingLimitAmount: shoppingLimitData.shoppingLimitAmount,
     shoppingLimitFrequency: shoppingLimitData.shoppingLimitFrequency,
-    shoppingCurrentSpent: shoppingLimitData.currentSpent,
+    shoppingLimitUsed: shoppingLimitData.shoppingLimitUsed,
     periodStartDate: shoppingLimitData.periodStartDate,
     periodEndDate: shoppingLimitData.periodEndDate
   };
