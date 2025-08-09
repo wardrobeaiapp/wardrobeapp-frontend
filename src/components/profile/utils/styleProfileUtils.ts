@@ -129,7 +129,7 @@ export const toggleArrayField = (
   // Toggle the value - make sure currentArray is defined before using includes
   const newArray = currentArray && currentArray.includes(value)
     ? currentArray.filter(item => item !== value)
-    : [...new Set([...(currentArray || []), value])]; // Use Set to remove duplicates
+    : Array.from(new Set([...(currentArray || []), value])); // Use Set to remove duplicates
     
   // Update the field with the new array
   newProfileData[field] = newArray;

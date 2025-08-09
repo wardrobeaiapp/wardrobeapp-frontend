@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient';
-import { SaveResult } from '../components/profile/context/StyleProfileContext';
+import { SaveResult } from '../components/profile/types/StyleProfileTypes';
 import { ProfileSection, ClothingBudget, ShoppingLimit, StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../components/profile/sections/types';
 
 /**
