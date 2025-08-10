@@ -70,6 +70,7 @@ export const useHomePageData = () => {
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [seasonFilter, setSeasonFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
   const [outfitScenarioFilter, setOutfitScenarioFilter] = useState<string>('all');
   const [capsuleSeasonFilter, setCapsuleSeasonFilter] = useState<string>('all');
@@ -110,8 +111,12 @@ export const useHomePageData = () => {
   const filteredItems = useMemo(() => items.filter(item => {
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
     const matchesSeason = seasonFilter === 'all' || item.season.includes(seasonFilter as Season);
-    return matchesCategory && matchesSeason;
-  }), [items, categoryFilter, seasonFilter]);
+    const matchesSearch = searchQuery === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSeason && matchesSearch && !item.wishlist;
+  }), [items, categoryFilter, seasonFilter, searchQuery]);
   
   // Event handlers
   const handleAddItem = useCallback(() => {
@@ -307,6 +312,8 @@ export const useHomePageData = () => {
     setCategoryFilter,
     seasonFilter,
     setSeasonFilter,
+    searchQuery,
+    setSearchQuery,
     outfitSeasonFilter,
     setOutfitSeasonFilter,
     outfitScenarioFilter,

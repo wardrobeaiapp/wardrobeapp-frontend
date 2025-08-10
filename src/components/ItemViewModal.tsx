@@ -26,9 +26,10 @@ interface ItemViewModalProps {
   onClose: () => void;
   item: WardrobeItem | undefined;
   onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, onEdit }) => {
+const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, onEdit, onDelete }) => {
   const { updateItem } = useWardrobe();
   if (!item) return null;
   
@@ -39,6 +40,11 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
   
   const handleEdit = () => {
     onEdit(item.id);
+    onClose();
+  };
+  
+  const handleDelete = () => {
+    onDelete(item.id);
     onClose();
   };
   
@@ -189,6 +195,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         
         <ButtonsContainer>
           <Button outlined onClick={onClose}>Close</Button>
+          <Button onClick={handleDelete} style={{ backgroundColor: '#ef4444', color: 'white' }}>Delete</Button>
           <Button primary onClick={handleEdit}>Edit</Button>
         </ButtonsContainer>
       </ModalContent>

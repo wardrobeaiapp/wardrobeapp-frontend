@@ -1,17 +1,18 @@
 import React from 'react';
 import Header from '../components/Header/Header';
-import Button from '../components/Button';
 import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/HomePage';
 import WishlistTab from '../components/HomePage/WishlistTab';
 import HomePageModals from '../components/HomePage/HomePageModals';
 import { useHomePageData, TabType } from '../hooks/useHomePageData';
+import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
 import {
   PageContainer,
   PageHeader,
   Title,
   TabsContainer,
-  Tab
+  Tab,
+  AddButton
 } from './HomePage.styles';
 
 
@@ -36,6 +37,8 @@ const HomePage: React.FC = () => {
     setCategoryFilter,
     seasonFilter,
     setSeasonFilter,
+    searchQuery,
+    setSearchQuery,
     outfitSeasonFilter,
     setOutfitSeasonFilter,
     outfitScenarioFilter,
@@ -117,24 +120,28 @@ const HomePage: React.FC = () => {
         <PageHeader>
           <Title>My Wardrobe</Title>
           {activeTab === TabType.ITEMS && (
-            <Button primary onClick={handleAddItem}>
+            <AddButton onClick={handleAddItem}>
+              <MdAdd />
               Add Item
-            </Button>
+            </AddButton>
           )}
           {activeTab === TabType.OUTFITS && (
-            <Button primary onClick={() => setIsAddOutfitModalOpen(true)}>
+            <AddButton onClick={() => setIsAddOutfitModalOpen(true)}>
+              <MdAdd />
               Add Outfit
-            </Button>
+            </AddButton>
           )}
           {activeTab === TabType.CAPSULES && (
-            <Button primary onClick={() => setIsAddCapsuleModalOpen(true)}>
+            <AddButton onClick={() => setIsAddCapsuleModalOpen(true)}>
+              <MdAdd />
               Add Capsule
-            </Button>
+            </AddButton>
           )}
           {activeTab === TabType.WISHLIST && (
-            <Button primary onClick={handleAddItem}>
+            <AddButton onClick={handleAddItem}>
+              <MdAdd />
               Add Item
-            </Button>
+            </AddButton>
           )}
         </PageHeader>
         
@@ -142,25 +149,85 @@ const HomePage: React.FC = () => {
           <Tab 
             $active={activeTab === TabType.ITEMS} 
             onClick={() => setActiveTab(TabType.ITEMS)}
+            style={{
+              display: 'inline-flex !important',
+              alignItems: 'center !important',
+              gap: '8px !important',
+              padding: '12px 24px !important',
+              borderRadius: '25px !important',
+              border: 'none !important',
+              background: activeTab === TabType.ITEMS ? '#8B5CF6 !important' : 'transparent !important',
+              color: activeTab === TabType.ITEMS ? '#FFFFFF !important' : '#6B7280 !important',
+              fontWeight: '500 !important',
+              fontSize: '14px !important',
+              cursor: 'pointer !important',
+              transition: 'all 0.2s ease !important'
+            }}
           >
-            Items
+            <MdCheckroom style={{ marginRight: '8px', fontSize: '16px' }} />
+            Wardrobe Items
           </Tab>
           <Tab 
             $active={activeTab === TabType.OUTFITS} 
             onClick={() => setActiveTab(TabType.OUTFITS)}
+            style={{
+              display: 'inline-flex !important',
+              alignItems: 'center !important',
+              gap: '8px !important',
+              padding: '12px 24px !important',
+              borderRadius: '25px !important',
+              border: 'none !important',
+              background: activeTab === TabType.OUTFITS ? '#8B5CF6 !important' : 'transparent !important',
+              color: activeTab === TabType.OUTFITS ? '#FFFFFF !important' : '#6B7280 !important',
+              fontWeight: '500 !important',
+              fontSize: '14px !important',
+              cursor: 'pointer !important',
+              transition: 'all 0.2s ease !important'
+            }}
           >
+            <MdOutlineStyle style={{ marginRight: '8px', fontSize: '16px' }} />
             Outfits
           </Tab>
           <Tab 
             $active={activeTab === TabType.CAPSULES} 
             onClick={() => setActiveTab(TabType.CAPSULES)}
+            style={{
+              display: 'inline-flex !important',
+              alignItems: 'center !important',
+              gap: '8px !important',
+              padding: '12px 24px !important',
+              borderRadius: '25px !important',
+              border: 'none !important',
+              background: activeTab === TabType.CAPSULES ? '#8B5CF6 !important' : 'transparent !important',
+              color: activeTab === TabType.CAPSULES ? '#FFFFFF !important' : '#6B7280 !important',
+              fontWeight: '500 !important',
+              fontSize: '14px !important',
+              cursor: 'pointer !important',
+              transition: 'all 0.2s ease !important'
+            }}
           >
+            <MdOutlineWorkspaces style={{ marginRight: '8px', fontSize: '16px' }} />
             Capsules
           </Tab>
           <Tab 
             $active={activeTab === TabType.WISHLIST} 
             onClick={() => setActiveTab(TabType.WISHLIST)}
+            style={{
+              display: 'inline-flex !important',
+              alignItems: 'center !important',
+              gap: '8px !important',
+              padding: '12px 24px !important',
+              borderRadius: '25px !important',
+              border: 'none !important',
+              background: activeTab === TabType.WISHLIST ? '#8B5CF6 !important' : 'transparent !important',
+              color: activeTab === TabType.WISHLIST ? '#FFFFFF !important' : '#6B7280 !important',
+              fontWeight: '500 !important',
+              fontSize: '14px !important',
+              cursor: 'pointer !important',
+              transition: 'all 0.2s ease !important'
+            }}
           >
+            <MdFavoriteBorder style={{ marginRight: '8px', fontSize: '16px' }} />
             Wishlist
           </Tab>
         </TabsContainer>
@@ -177,6 +244,8 @@ const HomePage: React.FC = () => {
             setCategoryFilter={setCategoryFilter}
             seasonFilter={seasonFilter}
             setSeasonFilter={setSeasonFilter}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
             onViewItem={handleViewItem}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}

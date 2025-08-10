@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdSearch } from 'react-icons/md';
 import { ItemCategory, Season, WardrobeItem } from '../../types';
 import WardrobeItemCard from '../WardrobeItemCard';
 import Loader from '../Loader';
@@ -11,7 +12,10 @@ import {
   EmptyState,
   EmptyStateTitle,
   EmptyStateText,
-  ErrorContainer
+  ErrorContainer,
+  SearchContainer,
+  SearchInput,
+  SearchIcon
 } from '../../pages/HomePage.styles';
 
 interface ItemsTabProps {
@@ -22,6 +26,8 @@ interface ItemsTabProps {
   setCategoryFilter: (category: string) => void;
   seasonFilter: string;
   setSeasonFilter: (season: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   onViewItem?: (item: WardrobeItem) => void; // New prop for viewing items
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
@@ -35,6 +41,8 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
   setCategoryFilter,
   seasonFilter,
   setSeasonFilter,
+  searchQuery,
+  setSearchQuery,
   onViewItem,
   onEditItem,
   onDeleteItem
@@ -71,21 +79,23 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
       {/* Show loader when items are loading */}
       {externalIsLoading ? (
         <Loader text="Loading your wardrobe items..." />
-      ) : filteredItems.length === 0 ? (
-        <EmptyState>
-          <EmptyStateTitle>Your wardrobe is empty</EmptyStateTitle>
-          <EmptyStateText>
-            {items.length === 0
-              ? "You haven't added any items to your wardrobe yet."
-              : "No items match your current filters."}
-          </EmptyStateText>
-          {items.length === 0 && (
-            <p>Click the "Add Item" button in the top-right corner to get started.</p>
-          )}
-        </EmptyState>
       ) : (
         <>
           <FiltersContainer>
+            <FilterGroup>
+              <FilterLabel htmlFor="search-input">Search</FilterLabel>
+              <SearchContainer>
+                <SearchIcon><MdSearch /></SearchIcon>
+                <SearchInput
+                  id="search-input"
+                  type="text"
+                  placeholder="Search items..."
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                />
+              </SearchContainer>
+            </FilterGroup>
+            
             <FilterGroup>
               <FilterLabel htmlFor="category-filter">Category</FilterLabel>
               <Select
@@ -121,17 +131,31 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
             </FilterGroup>
           </FiltersContainer>
 
-          <ItemsGrid>
-            {filteredItems.map(item => (
-              <WardrobeItemCard
-                key={item.id}
-                item={item}
-                onView={onViewItem}
-                onEdit={() => onEditItem(item.id)}
-                onDelete={() => onDeleteItem(item.id)}
-              />
-            ))}
-          </ItemsGrid>
+          {filteredItems.length === 0 ? (
+            <EmptyState>
+              <EmptyStateTitle>Your wardrobe is empty</EmptyStateTitle>
+              <EmptyStateText>
+                {items.length === 0
+                  ? "You haven't added any items to your wardrobe yet."
+                  : "No items match your current filters."}
+              </EmptyStateText>
+              {items.length === 0 && (
+                <p>Click the "Add Item" button in the top-right corner to get started.</p>
+              )}
+            </EmptyState>
+          ) : (
+            <ItemsGrid>
+              {filteredItems.map(item => (
+                <WardrobeItemCard
+                  key={item.id}
+                  item={item}
+                  onView={onViewItem}
+                  onEdit={() => onEditItem(item.id)}
+                  onDelete={() => onDeleteItem(item.id)}
+                />
+              ))}
+            </ItemsGrid>
+          )}
         </>
       )}
     </>
