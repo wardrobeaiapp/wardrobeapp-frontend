@@ -6,7 +6,8 @@ import {
   ModalContent,
   ModalHeader,
   ModalTitle,
-  CloseButton
+  CloseButton,
+  ModalBody
 } from '../../../pages/HomePage.styles';
 
 interface CapsuleFormModalProps {
@@ -42,13 +43,15 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
           <ModalTitle>{isEditing ? 'Edit Capsule' : 'Create New Capsule'}</ModalTitle>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
-        <CapsuleForm
-          availableItems={availableItems}
-          editCapsule={editCapsule}
-          onSubmit={handleFormSubmit}
-          onGenerateWithAI={onGenerateWithAI}
-          onCancel={onClose}
-        />
+        <ModalBody>
+          <CapsuleForm
+            availableItems={availableItems}
+            editCapsule={editCapsule}
+            onSubmit={handleFormSubmit}
+            onGenerateWithAI={onGenerateWithAI}
+            onCancel={onClose}
+          />
+        </ModalBody>
       </ModalContent>
     </Modal>
   );

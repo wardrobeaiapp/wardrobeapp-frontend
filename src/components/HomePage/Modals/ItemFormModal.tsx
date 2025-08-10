@@ -6,6 +6,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalTitle,
+  ModalBody,
   CloseButton
 } from '../../../pages/HomePage.styles';
 
@@ -57,23 +58,25 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
           <ModalTitle>{isEditing ? 'Edit Item' : 'Add New Item'}</ModalTitle>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
-        <WardrobeItemForm
-          initialItem={initialItem ? {
-            ...initialItem,
-            wishlist: initialItem?.wishlist ?? defaultWishlist
-          } : undefined}
-          defaultWishlist={defaultWishlist}
-          onSubmit={(item) => {
-            if (isMounted) {
-              onSubmit(item);
-            }
-          }}
-          onCancel={() => {
-            if (isMounted) {
-              onClose();
-            }
-          }}
-        />
+        <ModalBody>
+          <WardrobeItemForm
+            initialItem={initialItem ? {
+              ...initialItem,
+              wishlist: initialItem?.wishlist ?? defaultWishlist
+            } : undefined}
+            defaultWishlist={defaultWishlist}
+            onSubmit={(item) => {
+              if (isMounted) {
+                onSubmit(item);
+              }
+            }}
+            onCancel={() => {
+              if (isMounted) {
+                onClose();
+              }
+            }}
+          />
+        </ModalBody>
       </ModalContent>
     </Modal>
   );

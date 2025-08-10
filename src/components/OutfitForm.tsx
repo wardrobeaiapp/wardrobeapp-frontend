@@ -1,9 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../types';
 import { fetchScenarios } from '../services/api';
 import { FALLBACK_SCENARIOS } from '../constants';
-import { FormContainer, FormGroup, Label, ButtonGroup } from './OutfitForm.styles';
-import Button from './Button';
+import { 
+  FormContainer, 
+  FormGroup, 
+  Label, 
+  ButtonGroup,
+  ModernCancelButton,
+  ModernSecondaryButton,
+  ModernSubmitButton
+} from './OutfitForm.styles';
 // ScenarioFixer removed as requested
 import SelectedItemsList from './outfit/SelectedItemsList';
 import ItemsModal from './outfit/ItemsModal';
@@ -28,7 +35,10 @@ interface OutfitFormProps {
 
 const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onCancel, availableItems, initialOutfit }) => {
   // Filter out wishlist items from available items
-  const nonWishlistItems = availableItems.filter(item => !item.wishlist);
+  const nonWishlistItems = useMemo(() => 
+    availableItems.filter(item => !item.wishlist), 
+    [availableItems]
+  );
   
   // Initialize state from initialOutfit if provided
   const [selectedScenarios, setSelectedScenarios] = useState<string[]>(initialOutfit?.scenarios || []);
@@ -272,34 +282,27 @@ return (
   <form onSubmit={handleSubmit}>
     <FormContainer>
       {/* Scenario selector */}
-      <FormGroup>
-        <Label>Scenarios</Label>
-        <ScenarioSelector
-          scenarios={scenarios}
-          selectedScenarios={selectedScenarios}
-          onScenarioChange={handleScenarioChange}
-          isLoading={scenariosLoading}
-        />
-        {/* ScenarioFixer button removed as requested */}
-      </FormGroup>
+      <ScenarioSelector
+        scenarios={scenarios}
+        selectedScenarios={selectedScenarios}
+        onScenarioChange={handleScenarioChange}
+        isLoading={scenariosLoading}
+      />
 
-      <FormGroup>
-        <Label>Seasons</Label>
-        <SeasonSelector
-          selectedSeasons={selectedSeasons}
-          onSeasonChange={handleSeasonChange}
-        />
-      </FormGroup>
+      <SeasonSelector
+        selectedSeasons={selectedSeasons}
+        onSeasonChange={handleSeasonChange}
+      />
       
       <FormGroup>
           <Label>Select Items</Label>
-          <Button 
+          <ModernSubmitButton 
             type="button" 
             onClick={openItemsModal}
             style={{ marginBottom: '0.5rem' }}
           >
             Select Wardrobe Items
-          </Button>
+          </ModernSubmitButton>
           
           {/* Selected items list component */}
           <SelectedItemsList
@@ -328,36 +331,12 @@ return (
         </FormGroup>
         
         <ButtonGroup>
-          <Button type="button" onClick={onCancel}>
+          <ModernCancelButton type="button" onClick={onCancel}>
             Cancel
-          </Button>
-          {!initialOutfit && onGenerateWithAI && (
-            <Button 
-              type="button" 
-              onClick={() => {
-                // Validate required fields
-                if (selectedItems.length === 0) {
-                  alert('Please select at least one item for your outfit');
-                  return;
-                }
-                
-                if (selectedSeasons.length === 0) {
-                  alert('Please select at least one season');
-                  return;
-                }
-                
-                // Prepare the form data same way as regular submission
-                const formData = prepareFormData();
-                // Call the onGenerateWithAI prop with the form data
-                onGenerateWithAI(formData);
-              }}
-            >
-              Generate with AI
-            </Button>
-          )}
-          <Button type="submit" primary>
+          </ModernCancelButton>
+          <ModernSubmitButton type="submit">
             Save Outfit
-          </Button>
+          </ModernSubmitButton>
         </ButtonGroup>
       </FormContainer>
     </form>

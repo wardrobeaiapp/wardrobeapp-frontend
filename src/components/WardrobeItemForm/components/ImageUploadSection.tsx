@@ -73,6 +73,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
           accept="image/*"
           onChange={handleFileChange}
           style={{ display: 'none' }}
+          aria-label="Upload wardrobe item image"
         />
       </PhotoUploadArea>
       

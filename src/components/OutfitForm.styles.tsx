@@ -4,7 +4,18 @@ export const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1rem 0;
+  width: 100%;
+  padding: 0;
+`;
+
+export const FormRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const FormGroup = styled.div`
@@ -14,32 +25,72 @@ export const FormGroup = styled.div`
 `;
 
 export const Label = styled.label`
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  display: block;
+  
+  &.required::after {
+    content: ' *';
+    color: #ef4444;
+  }
 `;
 
 export const Input = styled.input`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
 `;
 
 export const TextArea = styled.textarea`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  min-height: 5rem;
+  border-radius: 6px;
+  font-size: 14px;
   resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
 `;
 
 export const Select = styled.select`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
 `;
 
 export const ItemsModal = styled.div`
@@ -218,6 +269,13 @@ export const CheckboxItem = styled.div`
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0;
+  
+  /* Ensure any nested checkboxes get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const CheckboxLabel = styled.label`
@@ -232,6 +290,13 @@ export const SeasonCheckboxes = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  
+  /* Ensure all checkbox inputs within get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const SelectedItemsContainer = styled.div`
@@ -329,4 +394,73 @@ export const ButtonGroup = styled.div`
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1rem;
+`;
+
+// Modern Button Styles (matching WardrobeItemForm)
+export const ModernSubmitButton = styled.button`
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+export const ModernCancelButton = styled.button`
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #e5e7eb;
+  }
+`;
+
+export const ModernSecondaryButton = styled.button`
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;

@@ -15,44 +15,147 @@ export const FormGroup = styled.div`
 `;
 
 export const Label = styled.label`
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.25rem;
+  display: block;
+  
+  &.required::after {
+    content: ' *';
+    color: #ef4444;
+  }
 `;
 
 export const Input = styled.input`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
 `;
 
 export const TextArea = styled.textarea`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  min-height: 5rem;
+  border-radius: 6px;
+  font-size: 14px;
   resize: vertical;
+  min-height: 80px;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+  
+  &::placeholder {
+    color: #9ca3af;
+  }
 `;
 
 export const Select = styled.select`
-  padding: 0.625rem;
+  width: 100%;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  transition: border-color 0.2s ease;
+  
+  &:focus {
+    outline: none;
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+`;
+
+export const CheckboxGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  
+  /* Ensure all checkbox inputs within get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+    width: 16px;
+    height: 16px;
+  }
 `;
 
 export const SeasonCheckboxes = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-top: 0.5rem;
+  
+  /* Ensure all checkbox inputs within get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+    width: 16px;
+    height: 16px;
+  }
+`;
+
+export const CheckboxItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  
+  /* Ensure any nested checkboxes get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+  }
 `;
 
 export const CheckboxContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  
+  /* Ensure any nested checkboxes get purple styling */
+  input[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+  }
+`;
+
+export const CheckboxInput = styled.input.attrs({ type: 'checkbox' })`
+  width: 16px;
+  height: 16px;
+  accent-color: #8b5cf6;
+  
+  /* Force override any global checkbox styles */
+  &&& {
+    accent-color: #8b5cf6 !important;
+  }
+  
+  /* Target specifically checkbox input type */
+  &[type="checkbox"] {
+    accent-color: #8b5cf6 !important;
+    -webkit-appearance: checkbox;
+    appearance: checkbox;
+  }
+`;
+
+export const CheckboxLabel = styled.label`
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
 `;
 
 // Modal for item selection
@@ -262,14 +365,13 @@ export const NoResultsMessage = styled.div`
   padding: 1rem 0;
 `;
 
-export const CheckboxLabel = styled.label`
-  font-size: 0.875rem;
-  color: #4b5563;
-`;
+
 
 export const ButtonGroup = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
 `;
