@@ -64,6 +64,7 @@ interface HomePageModalsProps {
   
   // Item handlers
   handleEditItem: (id: string) => void;
+  handleDeleteItem: (id: string) => void;
   
   // Outfit handlers
   handleEditOutfit: (outfit: Outfit) => void;
@@ -133,6 +134,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   
   // Item handlers
   handleEditItem,
+  handleDeleteItem,
   
   // Outfit handlers
   handleEditOutfit,
@@ -169,9 +171,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         onClose={() => setIsViewItemModalOpen(false)}
         item={selectedItem}
         onEdit={handleEditItem}
-        onDelete={(id: string) => {
-          setIsDeleteConfirmModalOpen(true);
-        }}
+        onDelete={handleDeleteItem}
       />
 
       {/* Outfit Modals */}

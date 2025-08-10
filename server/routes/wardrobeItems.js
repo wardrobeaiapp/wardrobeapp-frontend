@@ -5,6 +5,7 @@ const WardrobeItem = require('../models/WardrobeItem');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '../uploads');
@@ -438,6 +439,73 @@ router.post('/test-image', async (req, res) => {
   }
 });
 
-module.exports = router;
+// @route   POST /api/wardrobe-items/download-image
+// @desc    Download external image and store it locally (bypasses CORS)
+// @access  Private
+router.post('/download-image', auth, async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    
+    if (!imageUrl) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
+    
+    console.log('[Server] Downloading image from URL:', imageUrl);
+    
+    // Download the image from external URL
+    const response = await fetch(imageUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+    
+    // Get the image buffer
+    const imageBuffer = await response.buffer();
+    
+    // Determine file extension from content type or URL
+    let fileExt = 'jpg'; // default
+    const contentType = response.headers.get('content-type');
+    if (contentType?.includes('image/png')) fileExt = 'png';
+    else if (contentType?.includes('image/gif')) fileExt = 'gif';
+    else if (contentType?.includes('image/webp')) fileExt = 'webp';
+    else if (contentType?.includes('image/jpeg')) fileExt = 'jpg';
+    else {
+      // Try to extract from URL
+      const urlExt = imageUrl.split('.').pop()?.split('?')[0]?.toLowerCase();
+      if (urlExt && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt)) {
+        fileExt = urlExt === 'jpeg' ? 'jpg' : urlExt;
+      }
+    }
+    
+    // Generate unique filename
+    const uniqueName = `downloaded-${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExt}`;
+    const filePath = path.join(uploadDir, uniqueName);
+    
+    // Save the image to disk
+    fs.writeFileSync(filePath, imageBuffer);
+    
+    // Return the relative URL path for the stored image
+    const imageUrlPath = `/uploads/${uniqueName}`;
+    
+    console.log('[Server] Image downloaded and saved successfully:', imageUrlPath);
+    
+    res.json({
+      success: true,
+      imageUrl: imageUrlPath,
+      originalUrl: imageUrl
+    });
+    
+  } catch (err) {
+    console.error('[Server] Error downloading image:', err);
+    res.status(500).json({
+      error: 'Failed to download image',
+      message: err.message
+    });
+  }
+});
 
 module.exports = router;

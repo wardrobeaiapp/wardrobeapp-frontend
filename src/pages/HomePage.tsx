@@ -355,6 +355,7 @@ const HomePage: React.FC = () => {
           
           // Item handlers
           handleEditItem={handleEditItem}
+          handleDeleteItem={handleDeleteItem}
           
           // Outfit handlers
           handleEditOutfit={handleEditOutfit}
