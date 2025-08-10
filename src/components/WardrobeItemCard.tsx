@@ -1,7 +1,18 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import { WardrobeItem, Season, WishlistStatus } from '../types';
-import Button from './Button';
+import { WardrobeItem, WishlistStatus } from '../types';
+import {
+  Card,
+  ImageContainer,
+  ItemImage,
+  PlaceholderImage,
+  StatusIcon,
+  CardContent,
+  ItemName,
+  TagsContainer,
+  Tag,
+  ButtonContainer,
+  ViewButton,
+} from './WardrobeItemCard.styles';
 
 interface WardrobeItemCardProps {
   item: WardrobeItem;
@@ -10,128 +21,9 @@ interface WardrobeItemCardProps {
   onDelete: (id: string) => void;
 }
 
-const Card = styled.div`
-  display: flex;
-  flex-direction: column;
-  border-radius: 0.5rem;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  transition: transform 0.2s, box-shadow 0.2s;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
-`;
 
-const ImageContainer = styled.div`
-  position: relative;
-  width: 100%;
-  height: 200px;
-  background-color: #f3f4f6;
-`;
-
-const StatusIcon = styled.div<{ $status: WishlistStatus }>`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  color: white;
-  background-color: ${props => {
-    switch (props.$status) {
-      case WishlistStatus.APPROVED:
-        return '#4ade80'; // green
-      case WishlistStatus.POTENTIAL_ISSUE:
-        return '#f59e0b'; // amber
-      case WishlistStatus.NOT_REVIEWED:
-      default:
-        return '#6b7280'; // gray
-    }
-  }};
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 10;
-`;
-
-
-
-const ItemImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const PlaceholderImage = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #9ca3af;
-  font-size: 1.5rem;
-`;
-
-const CardContent = styled.div`
-  padding: 1rem;
-`;
-
-const ItemName = styled.h3`
-  margin: 0 0 0.5rem;
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-`;
-
-const ItemDetails = styled.div`
-  margin-bottom: 1rem;
-`;
-
-const ItemDetail = styled.div`
-  display: flex;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-  
-  span:first-child {
-    width: 5rem;
-    font-weight: 500;
-  }
-`;
-
-const TagsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-const Tag = styled.span`
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  background-color: #e5e7eb;
-  color: #4b5563;
-  font-size: 0.75rem;
-  font-weight: 500;
-`;
-
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-`;
 
 const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete }) => {
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
-  };
   
   // Function to get the full image URL (prepend API_URL for relative paths)
   const getFullImageUrl = (url?: string) => {
@@ -274,54 +166,6 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
       <CardContent>
         <ItemName>{item.name}</ItemName>
         
-        <ItemDetails>
-          <ItemDetail>
-            <span>Category:</span>
-            <span>{item.category}</span>
-          </ItemDetail>
-          
-          <ItemDetail>
-            <span>Color:</span>
-            <span>{item.color.toLowerCase()}</span>
-          </ItemDetail>
-          
-          <ItemDetail>
-            <span>Season:</span>
-            <span>
-              {item.season.includes(Season.ALL_SEASON) && item.season.length === 1 
-                ? Season.ALL_SEASON
-                : item.season.filter(season => season !== Season.ALL_SEASON).join(', ')}
-            </span>
-          </ItemDetail>
-          
-          <ItemDetail>
-            <span>Added:</span>
-            <span>{formatDate(item.dateAdded)}</span>
-          </ItemDetail>
-          
-          <ItemDetail>
-            <span>Last worn:</span>
-            <span>{formatDate(item.lastWorn)}</span>
-          </ItemDetail>
-          
-          <ItemDetail>
-            <span>Times worn:</span>
-            <span>{item.timesWorn}</span>
-          </ItemDetail>
-          
-          {/* Display wishlist status text if it's a wishlist item */}
-          {item.wishlist && (
-            <ItemDetail>
-              <span>Status:</span>
-              <span>
-                {item.wishlistStatus === WishlistStatus.APPROVED ? 'Approved' : 
-                 item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? 'Potential issue' : 
-                 'Not reviewed'}
-              </span>
-            </ItemDetail>
-          )}
-        </ItemDetails>
-        
         {item.tags && item.tags.length > 0 && (
           <TagsContainer>
             {item.tags.map((tag, index) => (
@@ -331,25 +175,12 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         )}
         
         <ButtonContainer>
-          {onView ? (
-            <>
-              <Button small outlined onClick={() => onView(item)}>
-                View
-              </Button>
-              <Button small outlined onClick={() => onDelete(item.id)}>
-                Delete
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button small outlined onClick={() => onEdit(item.id)}>
-                Edit
-              </Button>
-              <Button small outlined onClick={() => onDelete(item.id)}>
-                Delete
-              </Button>
-            </>
+          {onView && (
+            <ViewButton onClick={() => onView(item)}>
+              View
+            </ViewButton>
           )}
+
         </ButtonContainer>
       </CardContent>
     </Card>

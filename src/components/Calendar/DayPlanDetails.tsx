@@ -306,6 +306,12 @@ const DayPlanDetails: React.FC<DayPlanDetailsProps> = ({
           item={viewItem}
           onClose={() => setViewItem(undefined)}
           onEdit={() => {}}
+          onDelete={(itemId: string) => {
+            if (onRemoveItem) {
+              onRemoveItem(itemId);
+            }
+            setViewItem(undefined);
+          }}
         />
       )}
       {viewOutfit && (

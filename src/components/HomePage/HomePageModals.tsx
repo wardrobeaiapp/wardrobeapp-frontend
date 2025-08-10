@@ -169,6 +169,9 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         onClose={() => setIsViewItemModalOpen(false)}
         item={selectedItem}
         onEdit={handleEditItem}
+        onDelete={(id: string) => {
+          setIsDeleteConfirmModalOpen(true);
+        }}
       />
 
       {/* Outfit Modals */}

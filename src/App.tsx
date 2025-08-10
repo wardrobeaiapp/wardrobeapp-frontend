@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import AIAssistantPage from './pages/AIAssistantPage';
 import CalendarPage from './pages/CalendarPage';
 import ProfilePage from './pages/ProfilePage';
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -162,6 +163,7 @@ function App() {
                 {/* Protected routes - require auth and completed onboarding */}
                 <Route path="/" element={<ProtectedRoute element={<HomePage />} />} />
                 <Route path="/ai-assistant" element={<ProtectedRoute element={<AIAssistantPage />} />} />
+
                 <Route path="/calendar" element={<ProtectedRoute element={<CalendarPage />} />} />
                 <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
                 
