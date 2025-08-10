@@ -6,6 +6,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalTitle,
+  ModalBody,
   CloseButton
 } from '../../../pages/HomePage.styles';
 
@@ -37,13 +38,15 @@ const OutfitFormModal: React.FC<OutfitFormModalProps> = ({
           <ModalTitle>{isEditing ? 'Edit Outfit' : 'Create New Outfit'}</ModalTitle>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
-        <OutfitForm
-          availableItems={availableItems}
-          initialOutfit={initialOutfit}
-          onSubmit={onSubmit}
-          onGenerateWithAI={onGenerateWithAI}
-          onCancel={onClose}
-        />
+        <ModalBody>
+          <OutfitForm
+            availableItems={availableItems}
+            initialOutfit={initialOutfit}
+            onSubmit={onSubmit}
+            onGenerateWithAI={onGenerateWithAI}
+            onCancel={onClose}
+          />
+        </ModalBody>
       </ModalContent>
     </Modal>
   );

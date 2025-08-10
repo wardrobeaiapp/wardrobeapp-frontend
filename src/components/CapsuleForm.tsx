@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Button from './Button';
 import { Season, WardrobeItem } from '../types';
 import { fetchScenarios, Scenario } from '../services/api';
 import useCapsuleItems from '../hooks/useCapsuleItems';
@@ -10,6 +9,10 @@ import {
   Input,
   ButtonGroup
 } from './CapsuleForm.styles';
+import {
+  ModernCancelButton,
+  ModernSubmitButton
+} from './OutfitForm.styles';
 import { Capsule } from '../types';
 import ScenarioSelector from './capsule/ScenarioSelector';
 import SeasonSelector from './capsule/SeasonSelector';
@@ -336,7 +339,9 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({ onSubmit, onGenerateWithAI, o
 
         <FormGroup>
           <Label>Selected Items ({selectedItems.length})</Label>
-          <Button type="button" onClick={openItemsModal}>Select Items</Button>
+          <ModernSubmitButton type="button" onClick={openItemsModal}>
+            Select Items
+          </ModernSubmitButton>
           
           <SelectedItemsList
             selectedItems={selectedItems}
@@ -346,37 +351,13 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({ onSubmit, onGenerateWithAI, o
         </FormGroup>
 
         <ButtonGroup>
-          <Button type="button" onClick={onCancel}>Cancel</Button>
-          {!editCapsule && onGenerateWithAI && (
-            <Button 
-              type="button" 
-              onClick={() => {
-                // Validate required fields
-                if (selectedItems.length === 0 && !mainItemId) {
-                  alert('Please select at least one item for your capsule');
-                  return;
-                }
-                
-                if (seasons.length === 0) {
-                  alert('Please select at least one season');
-                  return;
-                }
-                
-                // Prepare the form data same way as regular submission
-                const formData = prepareFormData();
-                // Call the onGenerateWithAI prop with the form data
-                // Note: onGenerateWithAI still uses the old signature with just the data parameter
-                if (onGenerateWithAI) {
-                  onGenerateWithAI(formData);
-                }
-              }}
-            >
-              Generate with AI
-            </Button>
-          )}
-          <Button type="submit" primary>
+          <ModernCancelButton type="button" onClick={onCancel}>
+            Cancel
+          </ModernCancelButton>
+
+          <ModernSubmitButton type="submit">
             {editCapsule ? 'Update Capsule' : 'Create Capsule'}
-          </Button>
+          </ModernSubmitButton>
         </ButtonGroup>
       </FormContainer>
 

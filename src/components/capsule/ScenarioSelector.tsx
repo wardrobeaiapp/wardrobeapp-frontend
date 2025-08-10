@@ -1,12 +1,6 @@
 import React from 'react';
 import { Scenario } from '../../services/api';
-import {
-  FormGroup,
-  Label,
-  SeasonCheckboxes,
-  CheckboxContainer,
-  CheckboxLabel
-} from '../CapsuleForm.styles';
+import { FormGroup, SeasonCheckboxes, CheckboxContainer, CheckboxLabel, CheckboxInput } from '../CapsuleForm.styles';
 
 interface ScenarioSelectorProps {
   scenarios: Scenario[];
@@ -28,27 +22,30 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   return (
     <>
       <FormGroup>
-        <Label>Scenarios</Label>
-        <SeasonCheckboxes>
-          {scenarios.length === 0 && isLoading ? (
-            <div>Loading scenarios...</div>
-          ) : scenarios.length === 0 ? (
-            <div>No scenarios available. Set them up in Scenario Settings.</div>
-          ) : (
-            scenarios.map(scenario => (
-              <CheckboxContainer key={scenario.id}>
-                <CheckboxLabel>
-                  <input
+        <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
+          <legend style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '0.25rem', padding: 0, display: 'block' }}>Scenarios</legend>
+          <SeasonCheckboxes>
+            {scenarios.length === 0 && isLoading ? (
+              <div>Loading scenarios...</div>
+            ) : scenarios.length === 0 ? (
+              <div>No scenarios available. Set them up in Scenario Settings.</div>
+            ) : (
+              scenarios.map(scenario => (
+                <CheckboxContainer key={scenario.id}>
+                  <CheckboxInput
                     type="checkbox"
+                    id={`capsule-scenario-${scenario.id}`}
                     checked={selectedScenarios.includes(scenario.id)}
                     onChange={() => onScenarioChange(scenario.id)}
                   />
-                  {scenario.name}
-                </CheckboxLabel>
-              </CheckboxContainer>
-            ))
-          )}
-        </SeasonCheckboxes>
+                  <CheckboxLabel htmlFor={`capsule-scenario-${scenario.id}`}>
+                    {scenario.name}
+                  </CheckboxLabel>
+                </CheckboxContainer>
+              ))
+            )}
+          </SeasonCheckboxes>
+        </fieldset>
       </FormGroup>
       
       {/* Custom Scenario field removed as requested */}

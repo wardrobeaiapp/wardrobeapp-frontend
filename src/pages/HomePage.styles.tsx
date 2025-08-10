@@ -194,25 +194,31 @@ export const Modal = styled.div`
 
 export const ModalContent = styled.div`
   background-color: white;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   width: 100%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  padding: 0 1.5rem 1.5rem 1.5rem;
+  padding: 0;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 `;
 
 export const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
   border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background-color: white;
+  border-radius: 12px 12px 0 0;
+  z-index: 1;
 `;
 
 export const ModalTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.375rem;
+  font-weight: 700;
   color: #1f2937;
   margin: 0;
 `;
@@ -223,10 +229,23 @@ export const CloseButton = styled.button`
   font-size: 1.5rem;
   cursor: pointer;
   color: #6b7280;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
   
   &:hover {
     color: #1f2937;
+    background-color: #f3f4f6;
   }
+  
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  }
+`;
+
+export const ModalBody = styled.div`
+  padding: 1.5rem;
 `;
 
 export const LoadingContainer = styled.div`
