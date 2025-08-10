@@ -61,7 +61,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
           initialItem={initialItem ? {
             ...initialItem,
             wishlist: initialItem?.wishlist ?? defaultWishlist
-          } : { wishlist: defaultWishlist } as any}
+          } : undefined}
+          defaultWishlist={defaultWishlist}
           onSubmit={(item) => {
             if (isMounted) {
               onSubmit(item);

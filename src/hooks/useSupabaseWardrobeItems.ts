@@ -111,6 +111,54 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
     }
   };
 
+  // Download image from URL using server-side endpoint (bypasses CORS)
+  const downloadAndStoreImage = async (imageUrl: string): Promise<string> => {
+    try {
+      console.log('[useSupabaseWardrobeItems] Downloading image via server endpoint:', imageUrl);
+      
+      // Get auth token for server request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token available');
+      }
+      
+      // Call server endpoint to download and store image
+      const response = await fetch('/api/wardrobe-items/download-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify({
+          imageUrl: imageUrl
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(`Server error: ${response.status} - ${errorData.error || errorData.message || 'Failed to download image'}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success || !result.imageUrl) {
+        throw new Error('Server did not return a valid image URL');
+      }
+      
+      // Convert relative path to full URL for frontend use
+      const fullImageUrl = `${window.location.origin}${result.imageUrl}`;
+      
+      console.log('[useSupabaseWardrobeItems] Image downloaded and stored successfully:', fullImageUrl);
+      console.log('[useSupabaseWardrobeItems] Original URL:', result.originalUrl);
+      
+      return fullImageUrl;
+      
+    } catch (error) {
+      console.error('[useSupabaseWardrobeItems] Error downloading/storing image:', error);
+      throw error;
+    }
+  };
+
   // Move an item from wishlist to wardrobe
   const moveToWardrobe = async (id: string) => {
     try {
@@ -141,6 +189,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
     updateItem,
     deleteItem,
     uploadImage,
+    downloadAndStoreImage,
     moveToWardrobe,
     updateWishlistStatus,
     error,

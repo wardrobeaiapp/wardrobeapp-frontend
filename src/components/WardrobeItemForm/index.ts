@@ -1,5 +1,12 @@
-export { default as ImageScreen } from './ImageScreen';
-export { default as CategoryScreen } from './CategoryScreen';
-export { default as SubcategoryScreen } from './SubcategoryScreen';
-export { default as ColorScreen } from './ColorScreen';
-export { default as DetailsScreen } from './DetailsScreen';
+// Export the main modular component
+export { default as WardrobeItemForm } from './WardrobeItemForm';
+
+// Export modular sub-components for potential reuse
+export { ImageUploadSection } from './components/ImageUploadSection';
+export { BasicInfoFields } from './components/BasicInfoFields';
+export { DetailsFields } from './components/DetailsFields';
+export { FormActions } from './components/FormActions';
+
+// Export hooks for potential reuse
+export { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
+export { useImageHandling } from './hooks/useImageHandling';
