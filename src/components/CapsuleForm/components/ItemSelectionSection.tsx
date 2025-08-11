@@ -32,6 +32,9 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
   onItemChange,
   onOpenItemsModal
 }) => {
+  // Calculate the count of supporting items (excluding main item)
+  const supportingItemsCount = selectedItems.filter(itemId => itemId !== mainItemId).length;
+  
   return (
     <>
       <FormGroup>
@@ -45,7 +48,7 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
       </FormGroup>
 
       <FormGroup>
-        <Label>Selected Items ({selectedItems.length})</Label>
+        <Label>Selected Items ({supportingItemsCount})</Label>
         <ModernSubmitButton type="button" onClick={onOpenItemsModal}>
           Select Items
         </ModernSubmitButton>
@@ -54,6 +57,7 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
           selectedItems={selectedItems}
           availableItems={availableItems}
           onItemRemove={onItemChange}
+          mainItemId={mainItemId}
         />
       </FormGroup>
     </>

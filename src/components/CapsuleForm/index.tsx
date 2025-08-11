@@ -187,7 +187,7 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
       <ItemsModal
         isOpen={isItemsModalOpen}
         onClose={() => setIsItemsModalOpen(false)}
-        items={filteredItems}
+        items={filteredItems.filter(item => item.id !== mainItemId)} // Exclude main item from selection
         selectedItems={selectedItems}
         onItemSelect={handleItemChange}
         searchQuery={searchQuery}

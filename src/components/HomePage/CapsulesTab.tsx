@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
-import { Capsule, Season } from '../../types';
+import { Season, Capsule, WardrobeItem } from '../../types';
 import { getScenarioNamesForFilters } from '../../utils/scenarioUtils';
 import CapsuleItemCounter from '../capsule/CapsuleItemCounter';
 import {
+  FiltersContainer,
+  FilterGroup,
+  FilterLabel,
+  Select,
+  SearchContainer,
+  SearchInput,
+  SearchIcon,
   ItemsGrid,
   EmptyState,
   EmptyStateTitle,
@@ -13,25 +20,20 @@ import {
   Spinner,
   ErrorContainer,
   CapsuleCard,
-  CapsuleHeader,
-  CapsuleSeasons,
   SeasonTag,
+  CapsuleSeasons,
   CapsuleDescription,
-  CapsuleFooter,
   CapsuleItemCount,
   CapsuleActions,
   ActionButton,
-  FiltersContainer,
-  FilterGroup,
-  FilterLabel,
-  Select,
-  SearchContainer,
-  SearchIcon,
-  SearchInput
+  CapsuleImagesGrid,
+  CapsuleImageSquare,
+  CapsuleImagePlaceholder
 } from '../../pages/HomePage.styles';
 
 interface CapsulesTabProps {
   capsules: Capsule[];
+  wardrobeItems: WardrobeItem[];
   isLoading: boolean;
   error: string | null;
   seasonFilter: string;
@@ -44,8 +46,13 @@ interface CapsulesTabProps {
   onDeleteCapsule: (id: string) => void;
 }
 
+const capitalizeFirstLetter = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 const CapsulesTab: React.FC<CapsulesTabProps> = ({
   capsules,
+  wardrobeItems,
   isLoading,
   error,
   seasonFilter,
@@ -55,7 +62,6 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
   searchQuery,
   setSearchQuery,
   onViewCapsule,
-  onDeleteCapsule
 }) => {
   const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
@@ -172,28 +178,52 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
             })
             .map(capsule => (
               <CapsuleCard key={capsule.id}>
-                <CapsuleHeader>
-                  <h3>{capsule.name}</h3>
-                  <CapsuleSeasons>
-                    {capsule.seasons.map(season => (
-                      <SeasonTag key={season}>{season}</SeasonTag>
-                    ))}
-                  </CapsuleSeasons>
-                </CapsuleHeader>
+                <h3 style={{ marginTop: '0', marginBottom: '0.5rem' }}>{capitalizeFirstLetter(capsule.name)}</h3>
+                
+                <CapsuleSeasons>
+                  {capsule.seasons.map(season => (
+                    <SeasonTag key={season}>{season}</SeasonTag>
+                  ))}
+                </CapsuleSeasons>
                 
                 {capsule.description && (
                   <CapsuleDescription>{capsule.description}</CapsuleDescription>
                 )}
                 
-                <CapsuleFooter>
-                  <CapsuleItemCount>
-                    <CapsuleItemCounter capsuleId={capsule.id} fallbackCount={capsule.selectedItems?.length || 0} />
-                  </CapsuleItemCount>
-                  <CapsuleActions>
-                    <ActionButton onClick={() => onViewCapsule(capsule)}>View</ActionButton>
-                    <ActionButton onClick={() => onDeleteCapsule(capsule.id)}>Delete</ActionButton>
-                  </CapsuleActions>
-                </CapsuleFooter>
+                <CapsuleItemCount>
+                  <CapsuleItemCounter capsuleId={capsule.id} fallbackCount={capsule.selectedItems?.length || 0} />
+                </CapsuleItemCount>
+                
+                {(() => {
+                  const capsuleItems = (capsule.selectedItems || []).slice(0, 4).map(itemId => 
+                    wardrobeItems.find(item => item.id === itemId)
+                  ).filter(item => item !== undefined) as WardrobeItem[];
+                  
+                  return (
+                    <CapsuleImagesGrid>
+                      {capsuleItems.map((item, index) => (
+                        <CapsuleImageSquare key={`${item.id}-${index}`}>
+                          {item.imageUrl ? (
+                            <img src={item.imageUrl} alt={item.name} />
+                          ) : (
+                            <CapsuleImagePlaceholder>
+                              {item.name.charAt(0).toUpperCase()}
+                            </CapsuleImagePlaceholder>
+                          )}
+                        </CapsuleImageSquare>
+                      ))}
+                      {Array.from({ length: Math.max(0, 4 - capsuleItems.length) }).map((_, index) => (
+                        <CapsuleImageSquare key={`empty-${index}`}>
+                          <CapsuleImagePlaceholder>+</CapsuleImagePlaceholder>
+                        </CapsuleImageSquare>
+                      ))}
+                    </CapsuleImagesGrid>
+                  );
+                })()}
+                
+                <CapsuleActions>
+                  <ActionButton onClick={() => onViewCapsule(capsule)}>View</ActionButton>
+                </CapsuleActions>
               </CapsuleCard>
             ))}
         </ItemsGrid>

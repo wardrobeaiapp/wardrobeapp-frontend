@@ -262,6 +262,7 @@ const HomePage: React.FC = () => {
         {activeTab === TabType.OUTFITS && (
           <OutfitsTab
             outfits={filteredOutfits}
+            wardrobeItems={items}
             isLoading={isLoading}
             error={error}
             seasonFilter={outfitSeasonFilter}
@@ -278,6 +279,7 @@ const HomePage: React.FC = () => {
         {activeTab === TabType.CAPSULES && (
           <CapsulesTab
             capsules={filteredCapsules}
+            wardrobeItems={items}
             isLoading={isLoading}
             error={error}
             seasonFilter={capsuleSeasonFilter}

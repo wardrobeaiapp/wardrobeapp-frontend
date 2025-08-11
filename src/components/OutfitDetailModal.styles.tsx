@@ -11,30 +11,34 @@ export const ModalOverlay = styled.div`
   align-items: center;
   justify-content: center;
   padding: 1rem;
-  z-index: 1000;
+  z-index: 60;
 `;
 
 export const ModalContent = styled.div`
-  background-color: white;
-  border-radius: 0.5rem;
-  width: 90%;
+  display: flex;
+  flex-direction: column;
   max-width: 800px;
+  width: 100%;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   max-height: 90vh;
   overflow-y: auto;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
 export const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
 `;
 
 export const ModalTitle = styled.h2`
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1f2937;
 `;
@@ -46,13 +50,21 @@ export const CloseButton = styled.button`
   cursor: pointer;
   padding: 0;
   color: #6b7280;
-  
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+
   &:hover {
+    background-color: #f3f4f6;
     color: #374151;
   }
 `;
 
-export const CapsuleInfo = styled.div`
+export const OutfitInfo = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -104,6 +116,23 @@ export const DetailValue = styled.span`
   }
 `;
 
+export const SeasonTags = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+export const SeasonTag = styled.span`
+  background-color: #8b5cf6;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+`;
+
 export const SeasonText = styled.span`
   color: #0f172a;
   font-weight: 500;
@@ -115,100 +144,14 @@ export const SeasonText = styled.span`
 `;
 
 export const ItemsSection = styled.div`
-  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
 `;
 
-export const MainItemSection = styled.div`
-  margin-top: 1.5rem;
-`;
-
-export const MainItemCard = styled.div`
-  display: flex;
-  gap: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 2px solid #8b5cf6;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
-  margin-bottom: 0.5rem;
-  position: relative;
-  
-  &::before {
-    content: '★';
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    color: #8b5cf6;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  @media (max-width: 640px) {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-`;
-
-export const MainItemImageContainer = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  
-  @media (max-width: 640px) {
-    width: 100px;
-    height: 100px;
-  }
-`;
-
-export const MainItemImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-export const MainItemContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 0.25rem;
-`;
-
-export const MainItemName = styled.h4`
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0;
-`;
-
-export const MainItemDetail = styled.p`
-  font-size: 14px;
-  color: #64748b;
-  margin: 0;
-`;
-
-export const MainItemBadge = styled.span`
-  display: inline-block;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
-  margin-top: 0.25rem;
-  align-self: flex-start;
-`;
-
-export const SectionTitle = styled.h4`
-  font-size: 1rem;
+export const SectionTitle = styled.h3`
+  font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 1rem;
+  margin: 0 0 1rem 0;
 `;
 
 export const ItemsGrid = styled.div`
@@ -248,24 +191,11 @@ export const ItemImage = styled.img`
 export const PlaceholderImage = styled.div`
   width: 100%;
   height: 100%;
-  background-color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #94a3b8;
-  font-size: 12px;
-`;
-
-export const MainItemPlaceholder = styled.div`
-  width: 100%;
-  height: 100%;
-  background-color: #f8fafc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #8b5cf6;
-  font-size: 12px;
-  font-weight: 500;
+  color: #9ca3af;
+  font-size: 0.75rem;
 `;
 
 export const ItemContent = styled.div`
@@ -282,6 +212,9 @@ export const ItemName = styled.div`
 export const ItemDetail = styled.div`
   font-size: 0.75rem;
   color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 export const ButtonGroup = styled.div`

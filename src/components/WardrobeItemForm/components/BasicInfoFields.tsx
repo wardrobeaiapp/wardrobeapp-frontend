@@ -16,6 +16,8 @@ interface BasicInfoFieldsProps {
   onCategoryChange: (category: ItemCategory | '') => void;
   subcategory: string;
   onSubcategoryChange: (subcategory: string) => void;
+  color: string;
+  onColorChange: (color: string) => void;
   errors: { [key: string]: string };
 }
 
@@ -26,6 +28,8 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   onCategoryChange,
   subcategory,
   onSubcategoryChange,
+  color,
+  onColorChange,
   errors
 }) => {
   const subcategoryOptions = getSubcategoryOptions(category);
@@ -83,7 +87,18 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
           </Select>
         </FormGroup>
         <FormGroup>
-          {/* Empty group to maintain 2-column layout */}
+          <Label>Color *</Label>
+          <Input
+            type="text"
+            value={color}
+            onChange={(e) => onColorChange(e.target.value)}
+            placeholder="Enter color"
+          />
+          {errors.color && (
+            <div style={{ color: 'red', fontSize: '0.875rem' }}>
+              {errors.color}
+            </div>
+          )}
         </FormGroup>
       </FormRow>
     </>

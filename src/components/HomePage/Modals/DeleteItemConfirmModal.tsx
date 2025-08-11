@@ -20,6 +20,10 @@ interface DeleteItemConfirmModalProps {
   item?: WardrobeItem;
 }
 
+const capitalizeFirstLetter = (str: string): string => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 const WarningText = styled.p`
   color: #d9534f;
   font-weight: bold;
@@ -206,7 +210,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
                   <AssociationsList>
                     {associatedCapsules.map(capsule => (
                       <AssociationItem key={capsule.id}>
-                        {capsule.name}
+                        {capitalizeFirstLetter(capsule.name)}
                       </AssociationItem>
                     ))}
                   </AssociationsList>

@@ -29,7 +29,7 @@ const CapsuleItemCounter: React.FC<CapsuleItemCounterProps> = ({
   }, [itemIds, loading, fallbackCount]);
 
   return (
-    <>{count} items</>
+    <>Items: {count}</>
   );
 };
 

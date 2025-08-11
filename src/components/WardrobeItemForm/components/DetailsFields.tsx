@@ -13,8 +13,6 @@ import {
 } from '../../../components/WardrobeItemForm.styles';
 
 interface DetailsFieldsProps {
-  color: string;
-  onColorChange: (color: string) => void;
   material: string;
   onMaterialChange: (material: string) => void;
   brand: string;
@@ -31,8 +29,6 @@ interface DetailsFieldsProps {
 }
 
 export const DetailsFields: React.FC<DetailsFieldsProps> = ({
-  color,
-  onColorChange,
   material,
   onMaterialChange,
   brand,
@@ -51,21 +47,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     <>
       <FormRow>
         <FormGroup>
-          <Label>Color *</Label>
-          <Input
-            type="text"
-            value={color}
-            onChange={(e) => onColorChange(e.target.value)}
-            placeholder="Enter color"
-          />
-          {errors.color && (
-            <div style={{ color: 'red', fontSize: '0.875rem' }}>
-              {errors.color}
-            </div>
-          )}
-        </FormGroup>
-        
-        <FormGroup>
           <Label>Material</Label>
           <Input
             type="text"
@@ -79,9 +60,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             </div>
           )}
         </FormGroup>
-      </FormRow>
-
-      <FormRow style={{ marginTop: '1.5rem' }}>
         <FormGroup>
           <Label>Brand</Label>
           <Input
@@ -91,7 +69,9 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             placeholder="Enter brand"
           />
         </FormGroup>
-        
+      </FormRow>
+
+      <FormRow style={{ marginTop: '1.5rem' }}>
         <FormGroup>
           <Label>Size</Label>
           <Input
@@ -101,9 +81,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             placeholder="e.g., S, M, L, XL, 32, 10"
           />
         </FormGroup>
-      </FormRow>
-
-      <FormRow style={{ marginTop: '1.5rem' }}>
         <FormGroup>
           <Label>Purchase Price</Label>
           <Input
@@ -112,9 +89,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             onChange={(e) => onPriceChange(e.target.value)}
             placeholder="Enter price"
           />
-        </FormGroup>
-        <FormGroup>
-          {/* Empty group to maintain 2-column layout */}
         </FormGroup>
       </FormRow>
 
