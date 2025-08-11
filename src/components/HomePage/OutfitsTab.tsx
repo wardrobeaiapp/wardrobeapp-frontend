@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
-import { Outfit, Season } from '../../types';
+import { Outfit, Season, WardrobeItem } from '../../types';
 import { getScenarioNamesForFilters } from '../../utils/scenarioUtils';
 import OutfitCard from '../OutfitCard';
 import {
@@ -23,6 +23,7 @@ import {
 
 interface OutfitsTabProps {
   outfits: Outfit[];
+  wardrobeItems: WardrobeItem[];
   isLoading: boolean;
   error: string | null;
   seasonFilter: string;
@@ -37,6 +38,7 @@ interface OutfitsTabProps {
 
 const OutfitsTab: React.FC<OutfitsTabProps> = ({
   outfits,
+  wardrobeItems,
   isLoading,
   error,
   seasonFilter,
@@ -168,6 +170,7 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
               <OutfitCard
                 key={outfit.id}
                 outfit={outfit}
+                wardrobeItems={wardrobeItems}
                 onView={() => onViewOutfit(outfit)}
                 onDelete={() => onDeleteOutfit(outfit.id)}
               />

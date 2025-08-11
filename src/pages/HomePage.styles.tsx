@@ -283,37 +283,34 @@ export const ErrorContainer = styled.div`
 
 // Styled components for capsules
 export const CapsuleCard = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border: 1px solid #f3f4f6;
+  transition: all 0.3s ease;
+  padding: 1.25rem;
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    border-color: #e5e7eb;
   }
 `;
 
-export const CapsuleHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-  
-  h3 {
-    margin: 0;
-    font-size: 18px;
-    color: #333;
-  }
+export const CapsuleTitle = styled.h3`
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: #333;
 `;
 
 export const CapsuleSeasons = styled.div`
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
+  margin-bottom: 0.5rem;
 `;
 
 export const SeasonTag = styled.span`
@@ -327,39 +324,80 @@ export const SeasonTag = styled.span`
 export const CapsuleDescription = styled.p`
   color: #666;
   font-size: 14px;
-  margin: 0 0 16px 0;
-  flex-grow: 1;
+  margin: 0 0 0.75rem 0;
 `;
 
-export const CapsuleFooter = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-`;
 
-export const CapsuleItemCount = styled.span`
-  font-size: 14px;
-  color: #888;
+
+export const CapsuleItemCount = styled.p`
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+  color: #4b5563;
 `;
 
 export const CapsuleActions = styled.div`
   display: flex;
-  gap: 8px;
+  gap: 0.5rem;
+  margin-top: 1rem;
 `;
 
 export const ActionButton = styled.button`
-  background: none;
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
   border: none;
-  color: #4a90e2;
-  font-size: 14px;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
   
   &:hover {
-    background-color: #f0f7ff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
   }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  }
+`;
+
+export const CapsuleImagesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin: 1rem 0;
+`;
+
+export const CapsuleImageSquare = styled.div`
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  position: relative;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+`;
+
+export const CapsuleImagePlaceholder = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 600;
 `;
 
 export const AddButton = styled.button`

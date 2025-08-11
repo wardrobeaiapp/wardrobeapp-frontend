@@ -10,20 +10,25 @@ interface SelectedItemsListProps {
   selectedItems: string[];
   availableItems: WardrobeItem[];
   onItemRemove: (itemId: string) => void;
+  mainItemId?: string; // ID of the main item to exclude from the list
 }
 
 const SelectedItemsList: React.FC<SelectedItemsListProps> = ({
   selectedItems,
   availableItems,
-  onItemRemove
+  onItemRemove,
+  mainItemId
 }) => {
-  if (selectedItems.length === 0) {
+  // Filter out the main item from the selected items list
+  const otherItems = selectedItems.filter(itemId => itemId !== mainItemId);
+  
+  if (otherItems.length === 0) {
     return null;
   }
 
   return (
     <SelectedItemsContainer>
-      {selectedItems.map(itemId => {
+      {otherItems.map(itemId => {
         const item = availableItems?.find(i => i.id === itemId);
         return item ? (
           <SelectedItemBadge key={itemId}>

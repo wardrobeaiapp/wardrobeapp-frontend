@@ -2,12 +2,18 @@ import React from 'react';
 import { WardrobeItem, Season, WishlistStatus } from '../types';
 import { formatCategory } from '../utils/textFormatting';
 import { useWardrobe } from '../context/WardrobeContext';
-import Button from './Button';
 import {
-  ModalOverlay,
+  Modal,
   ModalContent,
-  ItemHeader,
-  ItemTitle,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  CloseButton
+} from '../pages/HomePage.styles';
+import {
+  SubmitButton,
+} from './WardrobeItemForm.styles';
+import {
   ItemImageContainer,
   ItemImage,
   PlaceholderImage,
@@ -17,7 +23,8 @@ import {
   DetailValue,
   TagsContainer,
   Tag,
-  ButtonsContainer
+  ButtonsContainer,
+  DangerButton
 } from './ItemViewModal.styles';
 
 
@@ -98,11 +105,15 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
   if (!isOpen) return null;
   
   return (
-    <ModalOverlay onClick={onClose}>
+    <Modal onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ItemHeader>
-          <ItemTitle>{item.name}</ItemTitle>
-        </ItemHeader>
+        <ModalHeader>
+          <ModalTitle>{item.name}</ModalTitle>
+          <CloseButton onClick={onClose}>
+            ×
+          </CloseButton>
+        </ModalHeader>
+        <ModalBody>
         
         <ItemImageContainer>
           {imageUrl ? (
@@ -115,9 +126,9 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         {item.wishlist && (
           <ButtonsContainer style={{ marginTop: '10px', marginBottom: '20px' }}>
             {item.wishlistStatus === WishlistStatus.NOT_REVIEWED && (
-              <Button primary onClick={handleRunAICheck}>Run AI Check</Button>
+              <SubmitButton onClick={handleRunAICheck}>Run AI Check</SubmitButton>
             )}
-            <Button primary onClick={handleMoveToWardrobe}>Move to Wardrobe</Button>
+            <SubmitButton onClick={handleMoveToWardrobe}>Move to Wardrobe</SubmitButton>
           </ButtonsContainer>
         )}
         
@@ -141,30 +152,40 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             </DetailValue>
           </DetailRow>
           
-          <DetailRow>
-            <DetailLabel>Brand</DetailLabel>
-            <DetailValue>{item.brand || 'Not specified'}</DetailValue>
-          </DetailRow>
+          {item.brand && (
+            <DetailRow>
+              <DetailLabel>Brand</DetailLabel>
+              <DetailValue>{item.brand}</DetailValue>
+            </DetailRow>
+          )}
           
-          <DetailRow>
-            <DetailLabel>Price</DetailLabel>
-            <DetailValue>{item.price ? `$${item.price}` : 'Not specified'}</DetailValue>
-          </DetailRow>
+          {item.size && (
+            <DetailRow>
+              <DetailLabel>Size</DetailLabel>
+              <DetailValue>{item.size}</DetailValue>
+            </DetailRow>
+          )}
+          
+          {item.material && (
+            <DetailRow>
+              <DetailLabel>Material</DetailLabel>
+              <DetailValue>{item.material}</DetailValue>
+            </DetailRow>
+          )}
+          
+          {item.price && (
+            <DetailRow>
+              <DetailLabel>Price</DetailLabel>
+              <DetailValue>${item.price}</DetailValue>
+            </DetailRow>
+          )}
           
           <DetailRow>
             <DetailLabel>Added</DetailLabel>
             <DetailValue>{formatDate(item.dateAdded)}</DetailValue>
           </DetailRow>
           
-          <DetailRow>
-            <DetailLabel>Last worn</DetailLabel>
-            <DetailValue>{formatDate(item.lastWorn)}</DetailValue>
-          </DetailRow>
-          
-          <DetailRow>
-            <DetailLabel>Times worn</DetailLabel>
-            <DetailValue>{item.timesWorn}</DetailValue>
-          </DetailRow>
+
           
           {item.wishlist && (
             <>
@@ -195,12 +216,12 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         )}
         
         <ButtonsContainer>
-          <Button outlined onClick={onClose}>Close</Button>
-          <Button onClick={handleDelete} style={{ backgroundColor: '#ef4444', color: 'white' }}>Delete</Button>
-          <Button primary onClick={handleEdit}>Edit</Button>
+          <SubmitButton onClick={handleEdit}>Edit</SubmitButton>
+          <DangerButton onClick={handleDelete}>Delete</DangerButton>
         </ButtonsContainer>
+        </ModalBody>
       </ModalContent>
-    </ModalOverlay>
+    </Modal>
   );
 };
 

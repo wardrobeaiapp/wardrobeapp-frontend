@@ -1,6 +1,5 @@
 import React from 'react';
 import { WardrobeItem, ItemCategory } from '../../types';
-import { useSupabaseWardrobeItems } from '../../hooks/useSupabaseWardrobeItems';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { ImageUploadSection } from './components/ImageUploadSection';
@@ -44,7 +43,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     toggleSeason,
     isWishlistItem,
     setIsWishlistItem,
-    imageUrl,
     setImageUrl,
     errors,
     setErrors,
@@ -61,7 +59,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     handleFileSelect,
     handleDrop,
     handleDragOver,
-    handleUrlChange
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
     onImageError: (error) => setErrors(prev => ({ ...prev, image: error })),
@@ -136,15 +133,15 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             onCategoryChange={setCategory}
             subcategory={subcategory}
             onSubcategoryChange={setSubcategory}
+            color={color}
+            onColorChange={setColor}
             errors={errors}
           />
         </div>
         
         {/* Details Fields */}
-        <div style={{ marginTop: '2rem' }}>
+        <div style={{ marginTop: '1.5rem' }}>
           <DetailsFields
-            color={color}
-            onColorChange={setColor}
             material={material}
             onMaterialChange={setMaterial}
             brand={brand}

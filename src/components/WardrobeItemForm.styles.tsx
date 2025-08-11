@@ -1,5 +1,4 @@
 import styled from 'styled-components';
-import FormStyles from './Form';
 
 // Form Container Styles
 export const FormContainer = styled.div`
@@ -230,8 +229,8 @@ export const SubmitButton = styled.button`
 
 export const CancelButton = styled.button`
   background: #f3f4f6;
-  color: #374151;
-  border: none;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
   padding: 0.75rem 2rem;
   border-radius: 8px;
   font-size: 14px;
@@ -241,6 +240,13 @@ export const CancelButton = styled.button`
   
   &:hover {
     background: #e5e7eb;
+    color: #4b5563;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
   }
 `;
 

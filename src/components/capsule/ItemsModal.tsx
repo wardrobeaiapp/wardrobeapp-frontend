@@ -7,7 +7,6 @@ import {
   ItemsModalContent,
   ItemsModalHeader,
   ItemsModalTitle,
-  CloseButton,
   CheckboxContainer,
   ResultsCount,
   ButtonGroup,
@@ -75,7 +74,6 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
       <ItemsModalContent>
         <ItemsModalHeader>
           <ItemsModalTitle>{title}</ItemsModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
         </ItemsModalHeader>
         
         {items.length === 0 ? (
