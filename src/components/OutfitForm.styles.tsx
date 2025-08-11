@@ -209,6 +209,7 @@ export const ItemsGrid = styled.div`
 
 // Use transient props with $ prefix to prevent isSelected from being forwarded to the DOM
 export const ItemCard = styled.div<{ $isSelected: boolean }>`
+  position: relative; // Required for absolutely positioned SelectionIndicator
   border: 1px solid ${props => props.$isSelected ? '#4f46e5' : '#e5e7eb'};
   border-radius: 0.375rem;
   padding: 0.75rem;
