@@ -126,7 +126,7 @@ export const CalendarWrapper = styled.div`
   }
   
   .react-calendar__tile--active {
-    background-color: #3b82f6 !important;
+    background-color: #8b5cf6 !important;
     color: white !important;
   }
   
