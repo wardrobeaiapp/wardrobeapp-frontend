@@ -1,5 +1,6 @@
 import React from 'react';
 import { WardrobeItem, Season, WishlistStatus } from '../types';
+import { formatCategory } from '../utils/textFormatting';
 import { useWardrobe } from '../context/WardrobeContext';
 import Button from './Button';
 import {
@@ -123,7 +124,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         <ItemDetails>
           <DetailRow>
             <DetailLabel>Category</DetailLabel>
-            <DetailValue>{item.category}</DetailValue>
+            <DetailValue>{formatCategory(item.category)}</DetailValue>
           </DetailRow>
           
           <DetailRow>

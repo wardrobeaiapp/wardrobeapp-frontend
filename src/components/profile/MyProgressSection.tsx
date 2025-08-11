@@ -101,7 +101,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
   };
 
   // Calculate AI usage limit based on subscription plan
-  const aiUsageLimit = subscriptionPlan === 'pro' ? 50 : 3;
+  const aiUsageLimit = subscriptionPlan === 'pro' ? 100 : 3;
   const aiUsageUsed = aiUsageData?.aiChecksUsed || 0; // Real data from database
   const aiUsagePercentage = (aiUsageUsed / aiUsageLimit) * 100;
 

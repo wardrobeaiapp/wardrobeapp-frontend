@@ -1,6 +1,5 @@
 import React from 'react';
 import { WardrobeItem } from '../../types';
-import Button from '../Button';
 import FiltersPanel from './FiltersPanel';
 import ItemsGrid from './ItemsGrid';
 import {
@@ -9,9 +8,11 @@ import {
   ItemsModalHeader,
   ItemsModalTitle,
   CloseButton,
+  CheckboxContainer,
+  ResultsCount,
   ButtonGroup,
-  ResultsCount
-} from '../CapsuleForm.styles';
+  ModernSubmitButton
+} from '../OutfitForm.styles';
 
 interface ItemsModalProps {
   isOpen: boolean;
@@ -77,31 +78,40 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ItemsModalHeader>
         
-        <FiltersPanel
-          searchQuery={searchQuery}
-          categoryFilter={categoryFilter}
-          colorFilter={colorFilter}
-          seasonFilter={seasonFilter}
-          categories={categories}
-          colors={colors}
-          onSearchChange={onSearchChange}
-          onCategoryChange={onCategoryChange}
-          onColorChange={onColorChange}
-          onSeasonChange={onSeasonChange}
-        />
+        {items.length === 0 ? (
+          <p>No items available. Add some items to your wardrobe first.</p>
+        ) : (
+          <>
+            <FiltersPanel
+              searchQuery={searchQuery}
+              categoryFilter={categoryFilter}
+              colorFilter={colorFilter}
+              seasonFilter={seasonFilter}
+              colors={colors}
+              onSearchChange={onSearchChange}
+              onCategoryChange={onCategoryChange}
+              onColorChange={onColorChange}
+              onSeasonChange={onSeasonChange}
+            />
+            
+            <ResultsCount>
+              {items.length} {items.length === 1 ? 'item' : 'items'} found
+            </ResultsCount>
+            
+            <CheckboxContainer>
+              <ItemsGrid
+                items={items}
+                selectedItems={selectedItems}
+                onItemSelect={handleItemSelect}
+              />
+            </CheckboxContainer>
+          </>
+        )}
         
-        <ResultsCount>
-          {items.length} {items.length === 1 ? 'item' : 'items'} found
-        </ResultsCount>
-        
-        <ItemsGrid
-          items={items}
-          selectedItems={selectedItems}
-          onItemSelect={handleItemSelect}
-        />
-        
-        <ButtonGroup>
-          <Button onClick={onClose}>Done</Button>
+        <ButtonGroup style={{ marginTop: '1.5rem' }}>
+          <ModernSubmitButton type="button" onClick={onClose}>
+            Done
+          </ModernSubmitButton>
         </ButtonGroup>
       </ItemsModalContent>
     </StyledItemsModal>

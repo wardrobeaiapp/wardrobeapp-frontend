@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Outfit, Capsule, WardrobeItem, Season } from '../types';
+import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types';
 import { useWardrobe } from '../context/WardrobeContext';
 import { useOutfits } from '../hooks/useOutfits';
 import useCapsules from '../hooks/useCapsules';
@@ -73,8 +73,11 @@ export const useHomePageData = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
   const [outfitScenarioFilter, setOutfitScenarioFilter] = useState<string>('all');
+  const [outfitSearchQuery, setOutfitSearchQuery] = useState<string>('');
   const [capsuleSeasonFilter, setCapsuleSeasonFilter] = useState<string>('all');
   const [capsuleScenarioFilter, setCapsuleScenarioFilter] = useState<string>('all');
+  const [capsuleSearchQuery, setCapsuleSearchQuery] = useState<string>('');
+  const [wishlistSearchQuery, setWishlistSearchQuery] = useState<string>('');
   const [wishlistStatusFilter, setWishlistStatusFilter] = useState<string>('all');
   
   // Modal states
@@ -117,6 +120,44 @@ export const useHomePageData = () => {
       item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSeason && matchesSearch && !item.wishlist;
   }), [items, categoryFilter, seasonFilter, searchQuery]);
+  
+  // Filter outfits based on selected filters
+  const filteredOutfits = useMemo(() => outfits.filter(outfit => {
+    const matchesSeason = outfitSeasonFilter === 'all' || outfit.season.includes(outfitSeasonFilter as Season);
+    const matchesScenario = outfitScenarioFilter === 'all' || (outfit.scenarios && outfit.scenarios.includes(outfitScenarioFilter));
+    const matchesSearch = outfitSearchQuery === '' || 
+      outfit.name.toLowerCase().includes(outfitSearchQuery.toLowerCase()) ||
+      (outfit.scenarios && outfit.scenarios.some(scenario => scenario.toLowerCase().includes(outfitSearchQuery.toLowerCase())));
+    return matchesSeason && matchesScenario && matchesSearch;
+  }), [outfits, outfitSeasonFilter, outfitScenarioFilter, outfitSearchQuery]);
+
+  // Filter capsules based on selected filters
+  const filteredCapsules = useMemo(() => capsules.filter(capsule => {
+    const matchesSeason = capsuleSeasonFilter === 'all' || capsule.seasons.includes(capsuleSeasonFilter as Season);
+    const matchesScenario = capsuleScenarioFilter === 'all' || (capsule.scenarios && capsule.scenarios.includes(capsuleScenarioFilter));
+    const matchesSearch = capsuleSearchQuery === '' || 
+      capsule.name.toLowerCase().includes(capsuleSearchQuery.toLowerCase()) ||
+      (capsule.scenarios && capsule.scenarios.some(scenario => scenario.toLowerCase().includes(capsuleSearchQuery.toLowerCase())));
+    return matchesSeason && matchesScenario && matchesSearch;
+  }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
+
+  // Filter wishlist items based on selected filters
+  const filteredWishlistItems = useMemo(() => items.filter(item => {
+    if (!item.wishlist) return false; // Only show wishlist items
+    
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesSeason = seasonFilter === 'all' || item.season.includes(seasonFilter as Season);
+    const matchesStatus = wishlistStatusFilter === 'all' || 
+      (wishlistStatusFilter === WishlistStatus.APPROVED && item.wishlistStatus === WishlistStatus.APPROVED) ||
+      (wishlistStatusFilter === WishlistStatus.POTENTIAL_ISSUE && item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE) ||
+      (wishlistStatusFilter === WishlistStatus.NOT_REVIEWED && item.wishlistStatus === WishlistStatus.NOT_REVIEWED);
+    const matchesSearch = wishlistSearchQuery === '' || 
+      item.name.toLowerCase().includes(wishlistSearchQuery.toLowerCase()) ||
+      item.category?.toLowerCase().includes(wishlistSearchQuery.toLowerCase()) ||
+      item.brand?.toLowerCase().includes(wishlistSearchQuery.toLowerCase());
+    
+    return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
+  }), [items, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
   
   // Event handlers
   const handleAddItem = useCallback(() => {
@@ -299,7 +340,10 @@ export const useHomePageData = () => {
     items,
     filteredItems,
     outfits,
+    filteredOutfits,
     capsules,
+    filteredCapsules,
+    filteredWishlistItems,
     isLoading,
     error,
     
@@ -318,10 +362,16 @@ export const useHomePageData = () => {
     setOutfitSeasonFilter,
     outfitScenarioFilter,
     setOutfitScenarioFilter,
+    outfitSearchQuery,
+    setOutfitSearchQuery,
     capsuleSeasonFilter,
     setCapsuleSeasonFilter,
     capsuleScenarioFilter,
     setCapsuleScenarioFilter,
+    capsuleSearchQuery,
+    setCapsuleSearchQuery,
+    wishlistSearchQuery,
+    setWishlistSearchQuery,
     wishlistStatusFilter,
     setWishlistStatusFilter,
     

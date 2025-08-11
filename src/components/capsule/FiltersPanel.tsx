@@ -1,19 +1,20 @@
 import React from 'react';
-import { Season } from '../../types';
+import { ItemCategory, Season } from '../../types';
+import { formatCategoryForFilter } from '../../utils/textFormatting';
 import {
-  FiltersContainer,
-  FilterGroup,
-  FilterLabel,
-  FilterSelect,
-  FilterInput
-} from '../CapsuleForm.styles';
+  FormContainer,
+  ThreeColumnRow,
+  FormGroup,
+  Label,
+  Select,
+  Input,
+} from '../OutfitForm.styles';
 
 interface FiltersPanelProps {
   searchQuery: string;
   categoryFilter: string;
   colorFilter: string;
   seasonFilter: string;
-  categories: string[];
   colors: string[];
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
@@ -26,68 +27,69 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   categoryFilter,
   colorFilter,
   seasonFilter,
-  categories,
   colors,
   onSearchChange,
   onCategoryChange,
   onColorChange,
-  onSeasonChange
+  onSeasonChange,
 }) => {
   return (
-    <FiltersContainer>
-      <FilterGroup>
-        <FilterLabel htmlFor="category-filter">Category</FilterLabel>
-        <FilterSelect
-          id="category-filter"
-          value={categoryFilter}
-          onChange={(e) => onCategoryChange(e.target.value)}
-        >
-          <option value="all">All Categories</option>
-          {categories.map(category => (
-            <option key={category} value={category}>{category}</option>
-          ))}
-        </FilterSelect>
-      </FilterGroup>
-      
-      <FilterGroup>
-        <FilterLabel htmlFor="color-filter">Color</FilterLabel>
-        <FilterSelect
-          id="color-filter"
-          value={colorFilter}
-          onChange={(e) => onColorChange(e.target.value)}
-        >
-          <option value="">All Colors</option>
-          {colors.map(color => (
-            <option key={color} value={color}>{color}</option>
-          ))}
-        </FilterSelect>
-      </FilterGroup>
-      
-      <FilterGroup>
-        <FilterLabel htmlFor="season-filter">Season</FilterLabel>
-        <FilterSelect
-          id="season-filter"
-          value={seasonFilter}
-          onChange={(e) => onSeasonChange(e.target.value)}
-        >
-          <option value="all">All Seasons</option>
-          {Object.values(Season).map(season => (
-            <option key={season} value={season}>{season}</option>
-          ))}
-        </FilterSelect>
-      </FilterGroup>
-      
-      <FilterGroup>
-        <FilterLabel htmlFor="search-query">Search</FilterLabel>
-        <FilterInput
+    <FormContainer>
+      {/* Search Field - Full Width */}
+      <FormGroup>
+        <Label htmlFor="search-query">Search</Label>
+        <Input
           id="search-query"
           type="text"
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search items..."
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onSearchChange(e.target.value)}
+          placeholder="Search by name, brand, material..."
         />
-      </FilterGroup>
-    </FiltersContainer>
+      </FormGroup>
+      
+      {/* Filters Row - Category, Color, and Season in balanced layout */}
+      <ThreeColumnRow>
+        <FormGroup>
+          <Label>Category</Label>
+          <Select
+            value={categoryFilter}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onCategoryChange(e.target.value)}
+          >
+            <option value="all">All Categories</option>
+            {Object.values(ItemCategory).map(category => (
+              <option key={category} value={category}>
+                {formatCategoryForFilter(category)}
+              </option>
+            ))}
+          </Select>
+        </FormGroup>
+        
+        <FormGroup>
+          <Label>Color</Label>
+          <Input
+            type="text"
+            placeholder="Enter color"
+            value={colorFilter}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onColorChange(e.target.value)}
+          />
+        </FormGroup>
+        
+        <FormGroup>
+          <Label>Season</Label>
+          <Select
+            value={seasonFilter}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onSeasonChange(e.target.value)}
+          >
+            <option value="all">All Seasons</option>
+            {Object.values(Season).filter(season => season !== Season.ALL_SEASON).map(season => (
+              <option key={season} value={season}>
+                {season}
+              </option>
+            ))}
+          </Select>
+        </FormGroup>
+      </ThreeColumnRow>
+    </FormContainer>
   );
 };
 

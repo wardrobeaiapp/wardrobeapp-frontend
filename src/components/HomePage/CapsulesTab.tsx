@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MdSearch } from 'react-icons/md';
 import { Capsule, Season } from '../../types';
 import { getScenarioNamesForFilters } from '../../utils/scenarioUtils';
 import CapsuleItemCounter from '../capsule/CapsuleItemCounter';
@@ -23,7 +24,10 @@ import {
   FiltersContainer,
   FilterGroup,
   FilterLabel,
-  Select
+  Select,
+  SearchContainer,
+  SearchIcon,
+  SearchInput
 } from '../../pages/HomePage.styles';
 
 interface CapsulesTabProps {
@@ -34,6 +38,8 @@ interface CapsulesTabProps {
   setSeasonFilter: (season: string) => void;
   scenarioFilter: string;
   setScenarioFilter: (scenario: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   onViewCapsule: (capsule: Capsule) => void;
   onDeleteCapsule: (id: string) => void;
 }
@@ -46,6 +52,8 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
   setSeasonFilter,
   scenarioFilter,
   setScenarioFilter,
+  searchQuery,
+  setSearchQuery,
   onViewCapsule,
   onDeleteCapsule
 }) => {
@@ -85,6 +93,22 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
       )}
 
       <FiltersContainer>
+        <FilterGroup>
+          <FilterLabel htmlFor="capsule-search-input">Search</FilterLabel>
+          <SearchContainer>
+            <SearchIcon>
+              <MdSearch />
+            </SearchIcon>
+            <SearchInput
+              id="capsule-search-input"
+              type="text"
+              placeholder="Search capsules by name, scenario..."
+              value={searchQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            />
+          </SearchContainer>
+        </FilterGroup>
+
         <FilterGroup>
           <FilterLabel htmlFor="capsule-season-filter">Season</FilterLabel>
           <Select

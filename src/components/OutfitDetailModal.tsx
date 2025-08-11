@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Outfit, WardrobeItem } from '../types';
+import { formatCategory } from '../utils/textFormatting';
 import Button from './Button';
 
 // Styled components
@@ -124,7 +125,7 @@ const ItemImageContainer = styled.div`
 const ItemImage = styled.img`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 `;
 
 const PlaceholderImage = styled.div`
@@ -261,7 +262,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
                   </ItemImageContainer>
                   <ItemContent>
                     <ItemName>{item.name}</ItemName>
-                    <ItemDetail>{item.category}, {item.color.toLowerCase()}</ItemDetail>
+                    <ItemDetail>{formatCategory(item.category)}, {item.color.toLowerCase()}</ItemDetail>
                   </ItemContent>
                 </ItemCard>
               ))}

@@ -18,6 +18,24 @@ export const FormRow = styled.div`
   }
 `;
 
+export const ThreeColumnRow = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+  
+  @media (max-width: 1024px) and (min-width: 769px) {
+    grid-template-columns: 1fr 1fr;
+    
+    & > :last-child {
+      grid-column: span 2;
+    }
+  }
+`;
+
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
@@ -206,8 +224,8 @@ export const ItemCard = styled.div<{ $isSelected: boolean }>`
 
 export const ItemImage = styled.img`
   width: 100%;
-  height: 120px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
   border-radius: 0.25rem;
   margin-bottom: 0.5rem;
 `;
@@ -379,6 +397,7 @@ export const SearchInput = styled(FilterInput)`
 export const ResultsCount = styled.div`
   font-size: 0.875rem;
   color: #6b7280;
+  margin-top: 1.5rem;
   margin-bottom: 0.75rem;
 `;
 

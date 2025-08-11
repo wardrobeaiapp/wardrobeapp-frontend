@@ -1,5 +1,6 @@
 import React from 'react';
 import { Capsule, WardrobeItem } from '../types';
+import { formatCategory } from '../utils/textFormatting';
 import Button from './Button';
 import useCapsuleItems from '../hooks/useCapsuleItems';
 import {
@@ -128,7 +129,7 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
                   </ItemImageContainer>
                   <ItemContent>
                     <ItemName>{item.name}</ItemName>
-                    <ItemDetail>{item.category}, {item.color.toLowerCase()}</ItemDetail>
+                    <ItemDetail>{formatCategory(item.category)}, {item.color.toLowerCase()}</ItemDetail>
                   </ItemContent>
                 </ItemCard>
               ))}

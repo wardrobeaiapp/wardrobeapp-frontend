@@ -8,7 +8,6 @@ import {
   Label, 
   ButtonGroup,
   ModernCancelButton,
-  ModernSecondaryButton,
   ModernSubmitButton
 } from './OutfitForm.styles';
 // ScenarioFixer removed as requested
@@ -53,7 +52,7 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
   const [colorFilter, setColorFilter] = useState<string>('');
   const [seasonFilter, setSeasonFilter] = useState<Season | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filteredItems, setFilteredItems] = useState<WardrobeItem[]>(availableItems);
+  const [filteredItems, setFilteredItems] = useState<WardrobeItem[]>(nonWishlistItems);
   
   const handleSeasonChange = (season: Season) => {
     setSelectedSeasons(prev => 
@@ -241,7 +240,7 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
   
   // Filter items for the modal
   useEffect(() => {
-    let filtered = [...availableItems];
+    let filtered = [...nonWishlistItems];
     
     // Apply category filter
   if (categoryFilter !== 'all') {
@@ -273,7 +272,7 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
   }
   
   setFilteredItems(filtered);
-}, [availableItems, categoryFilter, colorFilter, seasonFilter, searchQuery]);
+}, [nonWishlistItems, categoryFilter, colorFilter, seasonFilter, searchQuery]);
 
 
 // handleSubmit is already defined above
@@ -315,7 +314,7 @@ return (
           <ItemsModal
             isOpen={isItemsModalOpen}
             onClose={() => setIsItemsModalOpen(false)}
-            availableItems={availableItems}
+            availableItems={nonWishlistItems}
             filteredItems={filteredItems}
             selectedItems={selectedItems}
             searchQuery={searchQuery}
