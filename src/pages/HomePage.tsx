@@ -23,8 +23,9 @@ const HomePage: React.FC = () => {
     // Data
     items,
     filteredItems,
-    outfits,
-    capsules,
+    filteredOutfits,
+    filteredCapsules,
+    filteredWishlistItems,
     isLoading,
     error,
     
@@ -43,10 +44,16 @@ const HomePage: React.FC = () => {
     setOutfitSeasonFilter,
     outfitScenarioFilter,
     setOutfitScenarioFilter,
+    outfitSearchQuery,
+    setOutfitSearchQuery,
     capsuleSeasonFilter,
     setCapsuleSeasonFilter,
     capsuleScenarioFilter,
     setCapsuleScenarioFilter,
+    capsuleSearchQuery,
+    setCapsuleSearchQuery,
+    wishlistSearchQuery,
+    setWishlistSearchQuery,
     wishlistStatusFilter,
     setWishlistStatusFilter,
     
@@ -254,13 +261,15 @@ const HomePage: React.FC = () => {
         
         {activeTab === TabType.OUTFITS && (
           <OutfitsTab
-            outfits={outfits}
+            outfits={filteredOutfits}
             isLoading={isLoading}
             error={error}
             seasonFilter={outfitSeasonFilter}
             setSeasonFilter={setOutfitSeasonFilter}
             scenarioFilter={outfitScenarioFilter}
             setScenarioFilter={setOutfitScenarioFilter}
+            searchQuery={outfitSearchQuery}
+            setSearchQuery={setOutfitSearchQuery}
             onViewOutfit={handleViewOutfit}
             onDeleteOutfit={handleDeleteOutfit}
           />
@@ -268,13 +277,15 @@ const HomePage: React.FC = () => {
         
         {activeTab === TabType.CAPSULES && (
           <CapsulesTab
-            capsules={capsules}
+            capsules={filteredCapsules}
             isLoading={isLoading}
             error={error}
             seasonFilter={capsuleSeasonFilter}
             setSeasonFilter={setCapsuleSeasonFilter}
             scenarioFilter={capsuleScenarioFilter}
             setScenarioFilter={setCapsuleScenarioFilter}
+            searchQuery={capsuleSearchQuery}
+            setSearchQuery={setCapsuleSearchQuery}
             onViewCapsule={handleViewCapsule}
             onDeleteCapsule={handleDeleteCapsule}
           />
@@ -282,7 +293,7 @@ const HomePage: React.FC = () => {
         
         {activeTab === TabType.WISHLIST && (
           <WishlistTab
-            items={items}
+            items={filteredWishlistItems}
             isLoading={isLoading}
             error={error}
             categoryFilter={categoryFilter}
@@ -291,6 +302,8 @@ const HomePage: React.FC = () => {
             setSeasonFilter={setSeasonFilter}
             statusFilter={wishlistStatusFilter}
             setStatusFilter={setWishlistStatusFilter}
+            searchQuery={wishlistSearchQuery}
+            setSearchQuery={setWishlistSearchQuery}
             onViewItem={handleViewItem}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteItem}

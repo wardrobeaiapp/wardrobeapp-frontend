@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdSearch } from 'react-icons/md';
 import { WardrobeItem, ItemCategory, Season, WishlistStatus } from '../../types';
 import {
   FiltersContainer,
@@ -12,7 +13,10 @@ import {
   LoadingContainer,
   LoadingText,
   Spinner,
-  ErrorContainer
+  ErrorContainer,
+  SearchContainer,
+  SearchIcon,
+  SearchInput
 } from '../../pages/HomePage.styles';
 import WardrobeItemCard from '../WardrobeItemCard';
 
@@ -26,6 +30,8 @@ interface WishlistTabProps {
   setSeasonFilter: (season: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   onViewItem?: (item: WardrobeItem) => void; // New prop for viewing items
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
@@ -42,6 +48,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   setSeasonFilter,
   statusFilter,
   setStatusFilter,
+  searchQuery,
+  setSearchQuery,
   onViewItem,
   onEditItem,
   onDeleteItem,
@@ -86,6 +94,22 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   return (
     <>
       <FiltersContainer>
+        <FilterGroup>
+          <FilterLabel htmlFor="wishlist-search-input">Search</FilterLabel>
+          <SearchContainer>
+            <SearchIcon>
+              <MdSearch />
+            </SearchIcon>
+            <SearchInput
+              id="wishlist-search-input"
+              type="text"
+              placeholder="Search wishlist by name, category, brand..."
+              value={searchQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            />
+          </SearchContainer>
+        </FilterGroup>
+
         <FilterGroup>
           <FilterLabel htmlFor="category-filter">Category</FilterLabel>
           <Select 

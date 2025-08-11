@@ -1,5 +1,6 @@
 import React from 'react';
 import { WardrobeItem, Season } from '../../types';
+import { formatCategory } from '../../utils/textFormatting';
 import {
   ItemsGrid as StyledItemsGrid,
   ItemCard,
@@ -11,7 +12,7 @@ import {
   ItemDetail,
   SelectionIndicator,
   NoResultsMessage
-} from '../CapsuleForm.styles';
+} from '../OutfitForm.styles';
 
 interface ItemsGridProps {
   items: WardrobeItem[];
@@ -56,7 +57,7 @@ const ItemsGrid: React.FC<ItemsGridProps> = ({
             </ItemImageContainer>
             <ItemContent>
               <ItemName>{item.name}</ItemName>
-              <ItemDetail>{item.category}, {item.color.toLowerCase()}</ItemDetail>
+              <ItemDetail>{formatCategory(item.category)}, {item.color.toLowerCase()}</ItemDetail>
               <ItemDetail>
                 {item.season.includes(Season.ALL_SEASON) && item.season.length === 1 
                   ? Season.ALL_SEASON

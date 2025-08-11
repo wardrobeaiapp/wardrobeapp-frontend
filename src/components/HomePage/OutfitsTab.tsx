@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MdSearch } from 'react-icons/md';
 import { Outfit, Season } from '../../types';
 import { getScenarioNamesForFilters } from '../../utils/scenarioUtils';
 import OutfitCard from '../OutfitCard';
@@ -14,7 +15,10 @@ import {
   FiltersContainer,
   FilterGroup,
   FilterLabel,
-  Select
+  Select,
+  SearchContainer,
+  SearchInput,
+  SearchIcon
 } from '../../pages/HomePage.styles';
 
 interface OutfitsTabProps {
@@ -25,6 +29,8 @@ interface OutfitsTabProps {
   setSeasonFilter: (season: string) => void;
   scenarioFilter: string;
   setScenarioFilter: (scenario: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
   onViewOutfit: (outfit: Outfit) => void;
   onDeleteOutfit: (id: string) => void;
 }
@@ -37,6 +43,8 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
   setSeasonFilter,
   scenarioFilter,
   setScenarioFilter,
+  searchQuery,
+  setSearchQuery,
   onViewOutfit,
   onDeleteOutfit
 }) => {
@@ -76,6 +84,22 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
       )}
 
       <FiltersContainer>
+        <FilterGroup>
+          <FilterLabel htmlFor="outfit-search-input">Search</FilterLabel>
+          <SearchContainer>
+            <SearchIcon>
+              <MdSearch />
+            </SearchIcon>
+            <SearchInput
+              id="outfit-search-input"
+              type="text"
+              placeholder="Search outfits by name, scenario..."
+              value={searchQuery}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            />
+          </SearchContainer>
+        </FilterGroup>
+
         <FilterGroup>
           <FilterLabel htmlFor="outfit-season-filter">Season</FilterLabel>
           <Select
