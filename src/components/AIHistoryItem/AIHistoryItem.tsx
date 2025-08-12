@@ -1,0 +1,100 @@
+import React from 'react';
+import { FaSearch, FaMagic, FaClipboardList, FaStar } from 'react-icons/fa';
+import { WishlistStatus } from '../../types';
+import {
+  HistoryItem,
+  CardIcon,
+  HistoryContent,
+  HistoryItemTitle,
+  HistoryItemDescription,
+  HistoryTime,
+  StatusBadge,
+  DashboardHistoryItem,
+  HistoryItemMeta,
+  TagsContainer,
+  ScenarioTag,
+  SeasonTag,
+} from '../../pages/AIAssistantPage.styles';
+
+interface HistoryItemData {
+  id: string;
+  type: 'check' | 'recommendation';
+  title: string;
+  description: string;
+  time: string;
+  status?: WishlistStatus;
+  score?: number;
+  season?: string;
+  scenario?: string;
+}
+
+interface AIHistoryItemProps {
+  item: HistoryItemData;
+  variant?: 'section' | 'dashboard';
+}
+
+const AIHistoryItem: React.FC<AIHistoryItemProps> = ({ 
+  item, 
+  variant = 'section' 
+}) => {
+  // Get history icon based on type
+  const getHistoryIcon = (type: string) => {
+    switch (type) {
+      case 'check':
+        return <FaSearch size={16} />;
+      case 'recommendation':
+        return <FaMagic size={16} />;
+      default:
+        return <FaClipboardList size={16} />;
+    }
+  };
+
+  const ItemWrapper = variant === 'dashboard' ? DashboardHistoryItem : HistoryItem;
+  const TimeWrapper = variant === 'dashboard' ? HistoryItemMeta : React.Fragment;
+
+  return (
+    <ItemWrapper>
+      <CardIcon className={item.type}>{getHistoryIcon(item.type)}</CardIcon>
+      <HistoryContent>
+        <HistoryItemTitle>
+          {item.title}
+          {item.type === 'check' && item.status && (
+            <StatusBadge $status={item.status}>
+              {item.status.replace('_', ' ')}
+            </StatusBadge>
+          )}
+        </HistoryItemTitle>
+        <HistoryItemDescription>{item.description}</HistoryItemDescription>
+        {item.type === 'check' && item.score && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <FaStar size={14} color="#f59e0b" />
+              <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                {item.score}/10
+              </span>
+            </div>
+          </div>
+        )}
+        {item.type === 'recommendation' && variant === 'dashboard' && (item.scenario || item.season) && (
+          <TagsContainer>
+            {item.scenario && (
+              <ScenarioTag>
+                {item.scenario}
+              </ScenarioTag>
+            )}
+            {item.season && (
+              <SeasonTag>
+                {item.season}
+              </SeasonTag>
+            )}
+          </TagsContainer>
+        )}
+      </HistoryContent>
+      <TimeWrapper>
+        <HistoryTime>{item.time}</HistoryTime>
+      </TimeWrapper>
+    </ItemWrapper>
+  );
+};
+
+export default AIHistoryItem;
