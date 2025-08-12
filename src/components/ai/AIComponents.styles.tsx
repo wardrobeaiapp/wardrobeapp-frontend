@@ -167,27 +167,47 @@ export const ButtonGroup = styled.div`
 `;
 
 export const Button = styled.button`
-  padding: 10px 15px;
+  padding: 0.75rem 1rem;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
 `;
 
 export const PrimaryButton = styled(Button)`
-  background-color: #4a90e2;
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  
   &:hover {
-    background-color: #3a80d2;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
   }
 `;
 
 export const SecondaryButton = styled(Button)`
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+  
   &:hover {
-    background-color: #e0e0e0;
+    background-color: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 `;
 
