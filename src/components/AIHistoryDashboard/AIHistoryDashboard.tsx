@@ -26,9 +26,11 @@ interface HistoryItem {
   type: 'check' | 'recommendation';
   title: string;
   description: string;
-  time: string;
+  date: Date;
   status?: WishlistStatus;
   score?: number;
+  season?: string;
+  scenario?: string;
 }
 
 interface AIHistoryDashboardProps {
