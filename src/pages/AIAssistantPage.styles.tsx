@@ -67,13 +67,13 @@ export const CardIcon = styled.div`
   flex-grow: 0;
   
   &.check {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    color: white;
+    background-color: #e6f2ff;
+    color: #3b82f6;
   }
   
   &.recommendation {
-    background: linear-gradient(135deg, #10b981, #047857);
-    color: white;
+    background-color: #e6fff4;
+    color: #10b981;
   }
 `;
 
@@ -431,18 +431,19 @@ export const DashboardTopBar = styled.div`
 `;
 
 export const FilterDropdown = styled.select`
-  padding: 0.5rem 1rem;
+  padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
   background: white;
   font-size: 0.875rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
   
   &:focus {
     outline: none;
     border-color: #8b5cf6;
-    ring: 2px;
-    ring-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
 
@@ -488,33 +489,33 @@ export const StatIcon = styled.div`
   flex-shrink: 0;
   
   &.check {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    color: white;
+    background-color: #e6f2ff;
+    color: #3b82f6;
   }
   
   &.recommendation {
-    background: linear-gradient(135deg, #10b981, #047857);
-    color: white;
+    background-color: #e6fff4;
+    color: #10b981;
   }
   
   &.score {
-    background: linear-gradient(135deg, #f59e0b, #d97706);
-    color: white;
+    background-color: #fff5e6;
+    color: #f59e0b;
   }
   
   &.calendar {
-    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-    color: white;
+    background-color: #f5e6ff;
+    color: #9c27b0;
   }
   
   &.wishlist {
-    background: linear-gradient(135deg, #ec4899, #be185d);
-    color: white;
+    background-color: #ffe6f4;
+    color: #ec4899;
   }
   
   &.discarded {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    color: white;
+    background-color: #ffe6e6;
+    color: #ef4444;
   }
 `;
 
@@ -597,4 +598,64 @@ export const NoHistoryMessage = styled.p`
   text-align: center;
   color: #6b7280;
   padding: 2rem;
+`;
+
+export const StatusBadge = styled.div<{ $status: string }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  margin-left: 0.5rem;
+  background-color: ${props => {
+    switch (props.$status) {
+      case 'approved':
+        return '#dcfce7'; // green-100
+      case 'potential_issue':
+        return '#fef3c7'; // amber-100  
+      case 'not_reviewed':
+      default:
+        return '#f3f4f6'; // gray-100
+    }
+  }};
+  color: ${props => {
+    switch (props.$status) {
+      case 'approved':
+        return '#16a34a'; // green-600
+      case 'potential_issue':
+        return '#d97706'; // amber-600
+      case 'not_reviewed':
+      default:
+        return '#4b5563'; // gray-600
+    }
+  }};
+`;
+
+// Tag containers for recommendation items
+export const TagsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+`;
+
+export const ScenarioTag = styled.span`
+  font-size: 0.75rem;
+  background: #dbeafe;
+  color: #2563eb;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+`;
+
+export const SeasonTag = styled.span`
+  font-size: 0.75rem;
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
 `;
