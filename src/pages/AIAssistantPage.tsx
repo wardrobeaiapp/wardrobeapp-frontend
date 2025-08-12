@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WishlistStatus } from '../types';
+import { WishlistStatus, WardrobeItem } from '../types';
 import { useWardrobe } from '../context/WardrobeContext';
 import { claudeService } from '../services/claudeService';
 import { getScenarioNamesForFilters } from '../utils/scenarioUtils';
@@ -8,6 +8,7 @@ import AIHistoryDashboard from '../components/AIHistoryDashboard/AIHistoryDashbo
 import AICheckCard from '../components/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/AIHistorySection/AIHistorySection';
+import WishlistSelectionModal from '../components/WishlistSelectionModal/WishlistSelectionModal';
 import {
   PageContainer,
   CardsContainer,
@@ -19,6 +20,10 @@ const AIAssistantPage: React.FC = () => {
   // State for AI Check
   const [imageLink, setImageLink] = useState('');
   const [itemCheckResponse, setItemCheckResponse] = useState<string | null>(null);
+
+  
+  // State for Wishlist Selection Modal
+  const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
   
   // State for AI Recommendation
   // Removed unused state variables: occasion, season, preferences
@@ -62,7 +67,7 @@ const AIAssistantPage: React.FC = () => {
       title: 'Outfit Check: Casual Friday',
       description: '"Great color harmony!"',
       score: 8.5,
-      time: '2 hours ago',
+      date: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: WishlistStatus.APPROVED
     },
     {
@@ -70,7 +75,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'Recommendation: Weekend Getaway',
       description: '3 outfits suggested',
-      time: 'Yesterday',
+      date: new Date(Date.now() - 24 * 60 * 60 * 1000),
       season: 'Spring',
       scenario: 'Casual'
     },
@@ -80,7 +85,7 @@ const AIAssistantPage: React.FC = () => {
       title: 'Outfit Check: Formal Event',
       description: '"Perfect for the occasion."',
       score: 9.2,
-      time: '3 days ago',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       status: WishlistStatus.POTENTIAL_ISSUE
     },
     {
@@ -88,7 +93,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'AI Recommendation: Winter Formal',
       description: '2 elegant outfit options for formal winter events',
-      time: '4 days ago',
+      date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       season: 'Winter',
       scenario: 'Formal'
     },
@@ -97,7 +102,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'AI Recommendation: Summer Vacation',
       description: '5 outfits for summer beach activities',
-      time: '1 week ago',
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       season: 'Summer',
       scenario: 'Vacation'
     }
@@ -191,6 +196,24 @@ const AIAssistantPage: React.FC = () => {
   // Get filtered history items for dashboard view
   const filteredHistoryItems = getFilteredHistoryItems(historyItems);
 
+  // Wishlist modal handlers
+  const handleOpenWishlistModal = () => {
+    setIsWishlistModalOpen(true);
+  };
+
+  const handleCloseWishlistModal = () => {
+    setIsWishlistModalOpen(false);
+  };
+
+  const handleSelectWishlistItem = (item: WardrobeItem) => {
+    if (item.imageUrl) {
+      setImageLink(item.imageUrl);
+    }
+    // Clear any previous check response when selecting new item
+    setItemCheckResponse(null);
+    setError('');
+  };
+
   return (
     <>
       <PageHeader title="AI Wardrobe Assistant" />
@@ -211,6 +234,7 @@ const AIAssistantPage: React.FC = () => {
                 onImageLinkChange={setImageLink}
                 onFileUpload={handleFileUpload}
                 onCheckItem={handleCheckItem}
+                onOpenWishlistModal={handleOpenWishlistModal}
                 isLoading={isLoading}
                 error={error}
                 itemCheckResponse={itemCheckResponse}
@@ -237,6 +261,14 @@ const AIAssistantPage: React.FC = () => {
           </>
         )}
       </PageContainer>
+      
+      {/* Wishlist Selection Modal */}
+      <WishlistSelectionModal
+        isOpen={isWishlistModalOpen}
+        onClose={handleCloseWishlistModal}
+        items={items}
+        onSelectItem={handleSelectWishlistItem}
+      />
     </>
   );
 };

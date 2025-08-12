@@ -133,7 +133,8 @@ export const UploadArea = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 120px;
+  height: 200px; /* Fixed height to prevent growing */
+  overflow: hidden; /* Prevent content from overflowing */
   
   &:hover {
     border-color: #8b5cf6;

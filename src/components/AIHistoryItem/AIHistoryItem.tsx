@@ -21,7 +21,7 @@ interface HistoryItemData {
   type: 'check' | 'recommendation';
   title: string;
   description: string;
-  time: string;
+  date: Date;
   status?: WishlistStatus;
   score?: number;
   season?: string;
@@ -32,6 +32,15 @@ interface AIHistoryItemProps {
   item: HistoryItemData;
   variant?: 'section' | 'dashboard';
 }
+
+// Helper function to format date into readable date string
+const formatDate = (date: Date): string => {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
 
 const AIHistoryItem: React.FC<AIHistoryItemProps> = ({ 
   item, 
@@ -91,7 +100,7 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
         )}
       </HistoryContent>
       <TimeWrapper>
-        <HistoryTime>{item.time}</HistoryTime>
+        <HistoryTime>{formatDate(item.date)}</HistoryTime>
       </TimeWrapper>
     </ItemWrapper>
   );
