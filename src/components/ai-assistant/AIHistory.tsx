@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ContentContainer,
+  HistoryList,
   HistoryItem,
   HistoryDate,
   HistoryTitle,
@@ -22,7 +22,7 @@ interface AIHistoryProps {
 
 const AIHistory: React.FC<AIHistoryProps> = ({ historyItems }) => {
   return (
-    <ContentContainer>
+    <HistoryList>
       {historyItems.length > 0 ? (
         historyItems.map(item => (
           <HistoryItem key={item.id}>
@@ -34,7 +34,7 @@ const AIHistory: React.FC<AIHistoryProps> = ({ historyItems }) => {
       ) : (
         <NoHistoryMessage>No AI check history yet. Try using some of the AI features!</NoHistoryMessage>
       )}
-    </ContentContainer>
+    </HistoryList>
   );
 };
 
