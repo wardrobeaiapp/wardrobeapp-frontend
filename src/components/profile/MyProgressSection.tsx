@@ -264,8 +264,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
         )}
       </ProgressCard>
 
-      {/* Impulse Buy Tracker - Only show if activated */}
-      {impulseBuyTrackerData?.isSet && (
+      {/* Impulse Buy Tracker */}
       <ProgressCard theme="linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%)">
         <CardTitle>
           🎯 Impulse Buy Tracker
@@ -294,9 +293,9 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           <StreakMessage>Keep it up!</StreakMessage>
         </ImpulseTracker>
       </ProgressCard>
-      )}
 
-      {/* Savings This Month */}
+      {/* Savings This Month - Only show if clothing budget is set */}
+      {!!(clothingBudgetData?.amount && clothingBudgetData.amount > 0) && (
       <ProgressCard theme="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
         <CardTitle>
           💰 Saved {getPeriodText(clothingBudgetFrequency)}
@@ -336,9 +335,9 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           </div>
         </TotalSavingsCard>
       </ProgressCard>
+      )}
 
-      {/* Last Update - Standalone Block - Only show if impulse buy tracker is set */}
-      {impulseBuyTrackerData?.isSet && (
+      {/* Last Update - Standalone Block */}
       <LastUpdate>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ 
@@ -386,7 +385,6 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
           </div>
         </div>
       </LastUpdate>
-      )}
     </SectionWrapper>
   );
 };
