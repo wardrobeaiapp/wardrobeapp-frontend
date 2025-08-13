@@ -432,7 +432,7 @@ export const homeActivityOptions = [
   { id: 'outdoor', label: 'Outdoor work around the house (gardening, yard care, etc.)' },
   { id: 'driving', label: 'Driving kids (to school, activities, errands)' },
   { id: 'events', label: 'Attending events at kids\' school (meetings, performances, etc.)' },
-  { id: 'playtime', label: 'Playtime with kids' },
+  { id: 'playtime', label: 'Playground activities with kids' },
   { id: 'other', label: 'Other' }
 ];
 

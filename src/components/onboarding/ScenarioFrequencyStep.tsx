@@ -70,13 +70,36 @@ const parseFrequency = (frequency: string): { value: string; period: string } =>
   if (parts.length >= 2) {
     // Check for 'times per week/month' format
     if (parts.includes('times') && parts.includes('per')) {
+      let valueStr = parts[0];
+      
+      // Handle range values like "1-2", "2-3", etc. - use the first number
+      if (valueStr.includes('-')) {
+        valueStr = valueStr.split('-')[0];
+      }
+      
+      // Ensure we have a valid number, fallback to '1' if not
+      const numValue = parseInt(valueStr, 10);
+      const finalValue = isNaN(numValue) ? '1' : numValue.toString();
+      
       return {
-        value: parts[0],
+        value: finalValue,
         period: parts[parts.length - 1] // Get the last part (week/month)
       };
     }
+    
+    let valueStr = parts[0];
+    
+    // Handle range values in other formats too
+    if (valueStr.includes('-')) {
+      valueStr = valueStr.split('-')[0];
+    }
+    
+    // Ensure we have a valid number, fallback to '1' if not
+    const numValue = parseInt(valueStr, 10);
+    const finalValue = isNaN(numValue) ? '1' : numValue.toString();
+    
     return {
-      value: parts[0],
+      value: finalValue,
       period: parts.slice(1).join(' ')
     };
   }

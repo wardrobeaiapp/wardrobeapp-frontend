@@ -243,7 +243,9 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
             onboardingState.outdoorFrequency,
             onboardingState.outdoorPeriod,
             onboardingState.travelFrequency,
-            onboardingState.remoteWorkPriority
+            onboardingState.remoteWorkPriority,
+            onboardingState.otherActivityDescription,
+            onboardingState.otherLeisureActivityDescription
           );
           
           if (generatedScenarios && generatedScenarios.length > 0) {
