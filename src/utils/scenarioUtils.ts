@@ -112,12 +112,40 @@ export const generateScenariosFromLifestyle = (
     });
   }
 
-  // Home-related scenarios from DailyActivitiesStep
+  // Home-related scenarios from DailyActivitiesStep - break into specific activities
   if (dailyActivities.includes('family')) {
+    // These scenarios are generated based on the home activity subquestions
+    // For now, we'll generate all common family care scenarios
+    // In the future, this could be refined based on specific home activity selections
+    
     scenarios.push({
       id: uuidv4(),
-      name: 'Family Care Activities',
-      frequency: '7 times per week'
+      name: 'Housekeeping at Home',
+      frequency: '5-7 times per week'
+    });
+    
+    scenarios.push({
+      id: uuidv4(),
+      name: 'School Drop-off & Pickup',
+      frequency: '5 times per week'
+    });
+    
+    scenarios.push({
+      id: uuidv4(),
+      name: 'Playground Activities with Kids',
+      frequency: '2-3 times per week'
+    });
+    
+    scenarios.push({
+      id: uuidv4(),
+      name: 'Outdoor Home Projects',
+      frequency: '1-2 times per week'
+    });
+    
+    scenarios.push({
+      id: uuidv4(),
+      name: 'School Events & Meetings',
+      frequency: '1-2 times per month'
     });
   }
 
@@ -271,7 +299,11 @@ export const getScenarioNamesForFilters = async (): Promise<string[]> => {
       'Staying at Home (Casual)',
       'Creative Work',
       'School/University',
-      'Family Care Activities',
+      'Housekeeping at Home',
+      'School Drop-off & Pickup',
+      'Playground Activities with Kids',
+      'Outdoor Home Projects',
+      'School Events & Meetings',
       'Physical Work',
       'Light Outdoor Activities',
       'Social Outings',
