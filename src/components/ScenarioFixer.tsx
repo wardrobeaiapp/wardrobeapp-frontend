@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { fixUserScenarios } from '../services/fixScenarios';
-import Button from './Button';
+import Button from './common/Button';
 
 interface ScenarioFixerProps {
   onScenariosFixed?: () => void;

@@ -1,11 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import Header from '../components/Header/Header';
+import Header from '../components/layout/Header/Header';
 import { useOnboardingState } from '../hooks/useOnboardingState';
 import { useOnboardingEventAdapters } from '../hooks/useOnboardingEventAdapters';
 import { useOnboardingNavigation } from '../hooks/useOnboardingNavigation';
-import OnboardingStepRenderer from '../components/onboarding/OnboardingStepRenderer';
+import OnboardingStepRenderer from '../components/features/onboarding/OnboardingStepRenderer';
 
 // Import styled components
 import {
@@ -19,7 +19,7 @@ import {
   NextButton,
   LoadingMessage
 } from './OnboardingPage.styles';
-import { PageWrapper } from '../components/Layout.styles';
+import { PageWrapper } from '../components/layout/Layout';
 
 const OnboardingPage: React.FC = () => {
   const { user, isAuthenticated } = useSupabaseAuth();

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import styled from 'styled-components';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer';
-import { useProfileSections } from '../components/profile/ProfileSections';
+import Header from '../components/layout/Header/Header';
+import Footer from '../components/layout/Footer';
+import { useProfileSections } from '../components/features/profile/ProfileSections';
 import { useProfileData } from '../hooks/useProfileData';
 import { ProfileCategory, CATEGORIES } from '../types/profile';
 import { FaPalette, FaCrown, FaChartLine, FaBell, FaCog } from 'react-icons/fa';
