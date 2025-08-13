@@ -510,8 +510,8 @@ export const StatIcon = styled.div`
   }
   
   &.wishlist {
-    background-color: #ffe6f4;
-    color: #ec4899;
+    background-color: #f3e8ff;
+    color: #9c27b0;
   }
   
   &.discarded {
