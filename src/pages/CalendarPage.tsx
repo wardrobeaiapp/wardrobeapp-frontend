@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PageHeader from '../components/Header/Header';
+import PageHeader from '../components/layout/Header/Header';
 import { 
   PageContainer,
   CalendarLayout,
@@ -14,11 +14,11 @@ import {
 } from './CalendarPage.styles';
 
 // Import calendar components
-import CalendarView from '../components/Calendar/CalendarView';
-import OutfitSelectionPopup from '../components/Calendar/OutfitSelectionPopup';
-import ItemSelectionPopup from '../components/Calendar/ItemSelectionPopup';
-import DateSelectionPopup from '../components/Calendar/DateSelectionPopup';
-import EditOutfitPopup from '../components/Calendar/EditOutfitPopup';
+import CalendarView from '../components/features/calendar/CalendarView';
+import OutfitSelectionPopup from '../components/features/calendar/OutfitSelectionPopup';
+import ItemSelectionPopup from '../components/features/calendar/ItemSelectionPopup';
+import DateSelectionPopup from '../components/features/calendar/DateSelectionPopup';
+import EditOutfitPopup from '../components/features/calendar/EditOutfitPopup';
 import { useWardrobe } from '../context/WardrobeContext';
 import useCalendar from '../hooks/useCalendar';
 import { WardrobeItem } from '../types';

@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
-import { SaveResult } from '../components/profile/types/StyleProfileTypes';
-import { ProfileSection, ClothingBudget, ShoppingLimit, StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../components/profile/sections/types';
+import { SaveResult } from '../components/features/profile/types/StyleProfileTypes';
+import { ProfileSection, ClothingBudget, ShoppingLimit, StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../components/features/profile/sections/types';
 
 /**
  * Get the current user ID from storage
