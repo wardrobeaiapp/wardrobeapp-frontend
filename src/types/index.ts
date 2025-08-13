@@ -4,6 +4,12 @@ export enum WishlistStatus {
   NOT_REVIEWED = 'not_reviewed'
 }
 
+export enum UserActionStatus {
+  SAVED = 'saved',
+  DISMISSED = 'dismissed', 
+  PENDING = 'pending'
+}
+
 export interface WardrobeItem {
   id: string;
   userId?: string; // Added for database association

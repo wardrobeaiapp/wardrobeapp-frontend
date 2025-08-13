@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 import { ProfileData } from '../../../types';
 import StylePreferencesSection from '../sections/StylePreferencesSection';
 import { StylePreferencesData, ArrayFieldsOfProfileData } from '../sections/types';
@@ -20,7 +20,9 @@ const StylePreferencesSectionWrapper = React.forwardRef<
   { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   StylePreferencesSectionWrapperProps
 >((props, ref) => {
-  const defaultStylePreferencesData: StylePreferencesData = {
+  const { onSave } = props;
+  
+  const defaultStylePreferencesData = useMemo<StylePreferencesData>(() => ({
     preferredStyles: [],
     stylePreferences: {
       comfortVsStyle: 50,
@@ -28,10 +30,9 @@ const StylePreferencesSectionWrapper = React.forwardRef<
       basicsVsStatements: 50,
       additionalNotes: ''
     }
-  };
+  }), []);
 
   const [localData, setLocalData] = useState<StylePreferencesData>(defaultStylePreferencesData);
-  const [isLoading, setIsLoading] = useState(true);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -45,7 +46,6 @@ const StylePreferencesSectionWrapper = React.forwardRef<
     const fetchStylePreferences = async () => {
       if (!user?.id) {
         console.log('StylePreferencesSectionWrapper - No user ID, using default data');
-        setIsLoading(false);
         return;
       }
 
@@ -63,13 +63,11 @@ const StylePreferencesSectionWrapper = React.forwardRef<
       } catch (error) {
         console.error('StylePreferencesSectionWrapper - Error fetching style preferences:', error);
         setLocalData(defaultStylePreferencesData);
-      } finally {
-        setIsLoading(false);
       }
     };
 
     fetchStylePreferences();
-  }, [user?.id]);
+  }, [user?.id, defaultStylePreferencesData]);
 
   const saveDirectly = useCallback(async (): Promise<SaveResult> => {
     console.log('StylePreferencesSectionWrapper - Saving directly to Supabase:', localData);
@@ -97,7 +95,7 @@ const StylePreferencesSectionWrapper = React.forwardRef<
         setTimeout(() => {
           console.info('DEVELOPMENT MODE: Mock save completed successfully');
           setIsModalOpen(true);
-          props.onSave();
+          onSave();
           setIsSaving(false);
         }, 1000);
         return { success: true };
@@ -121,7 +119,7 @@ const StylePreferencesSectionWrapper = React.forwardRef<
 
       if (result.success) {
         setIsModalOpen(true);
-        props.onSave();
+        onSave();
       } else {
         setSaveError(result.error ? String(result.error) : 'Unknown error occurred while saving');
       }
@@ -134,7 +132,7 @@ const StylePreferencesSectionWrapper = React.forwardRef<
       setIsSaving(false);
       return { success: false, error };
     }
-  }, [localData, props.onSave, user, defaultStylePreferencesData]);
+  }, [localData, onSave, user]);
 
   useImperativeHandle(ref, () => ({
     saveDirectly,
@@ -186,10 +184,6 @@ const StylePreferencesSectionWrapper = React.forwardRef<
         };
       });
     }
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setIsModalOpen(false);
   }, []);
 
   const ErrorMessage = saveError ? (

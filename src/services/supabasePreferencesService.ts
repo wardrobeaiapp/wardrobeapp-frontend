@@ -159,37 +159,27 @@ export const supabasePreferencesService = {
         .eq('user_id', userId)
         .single();
       
-      let result;
-      
       if (existingData) {
         // Update existing preferences
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('user_preferences')
           .update(dbPreferences)
-          .eq('user_id', userId)
-          .select('*')
-          .single();
+          .eq('user_id', userId);
         
         if (error) {
           console.error('Error updating user preferences:', error);
           return null;
         }
-        
-        result = data;
       } else {
         // Insert new preferences
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('user_preferences')
-          .insert(dbPreferences)
-          .select('*')
-          .single();
+          .insert(dbPreferences);
         
         if (error) {
           console.error('Error inserting user preferences:', error);
           return null;
         }
-        
-        result = data;
       }
       
       // Return the updated preferences

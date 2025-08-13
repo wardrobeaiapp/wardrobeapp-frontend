@@ -24,11 +24,13 @@ interface HistoryItemType {
 interface AIHistorySectionProps {
   historyItems: HistoryItemType[];
   onViewAllHistory: () => void;
+  onHistoryItemClick?: (item: HistoryItemType) => void;
 }
 
 const AIHistorySection: React.FC<AIHistorySectionProps> = ({
   historyItems,
   onViewAllHistory,
+  onHistoryItemClick,
 }) => {
   // Limit history items to first 3 for preview
   const limitedHistoryItems = historyItems.slice(0, 3);
@@ -42,7 +44,12 @@ const AIHistorySection: React.FC<AIHistorySectionProps> = ({
       
       <HistoryList>
         {limitedHistoryItems.map((item) => (
-          <AIHistoryItem key={item.id} item={item} variant="section" />
+          <AIHistoryItem 
+            key={item.id} 
+            item={item} 
+            variant="section" 
+            onClick={onHistoryItemClick}
+          />
         ))}
       </HistoryList>
     </HistorySection>

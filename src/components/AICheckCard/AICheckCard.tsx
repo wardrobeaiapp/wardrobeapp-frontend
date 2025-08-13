@@ -142,6 +142,7 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
               <PrimaryButton
                 onClick={onCheckItem}
                 disabled={isLoading || (!imageLink.trim())}
+                title={!imageLink.trim() ? 'Please enter an image URL first' : ''}
               >
                 {isLoading ? 'Analyzing...' : '📷 Start AI Check'}
               </PrimaryButton>

@@ -19,6 +19,8 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
   { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   ClothingBudgetSectionWrapperProps
 >((props, ref) => {
+  const { onSave } = props;
+  
   const defaultClothingBudgetData: ClothingBudgetData = {
     amount: 0,
     currency: 'USD',
@@ -31,7 +33,6 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
   const [localData, setLocalData] = useState<ClothingBudgetData>(defaultClothingBudgetData);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useSupabaseAuth();
 
@@ -45,7 +46,6 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
 
     try {
       setIsLoading(true);
-      setError(null);
       console.log('👔 ClothingBudgetSectionWrapper - Fetching clothing budget data for user:', user.id);
       
       const clothingBudgetData = await getClothingBudgetData(user.id);
@@ -54,7 +54,6 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
       setLocalData(clothingBudgetData);
     } catch (error) {
       console.error('👔 ClothingBudgetSectionWrapper - Error fetching clothing budget data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch clothing budget data');
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +73,6 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
 
     try {
       setIsSaving(true);
-      setError(null);
       console.log('👔 ClothingBudgetSectionWrapper - Saving clothing budget data for user:', user.id, localData);
       
       // Save only clothing budget data (no impact on shopping limit)
@@ -89,18 +87,17 @@ const ClothingBudgetSectionWrapper = React.forwardRef<
       setIsModalOpen(true);
       
       // Call parent onSave callback
-      props.onSave();
+      onSave();
       
       return { success: true };
     } catch (error) {
       console.error('👔 ClothingBudgetSectionWrapper - Error saving clothing budget data:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to save clothing budget data';
-      setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
       setIsSaving(false);
     }
-  }, [user?.id, localData, props]);
+  }, [user?.id, localData, onSave, fetchClothingBudgetData]);
 
   // Expose saveDirectly and isSaving methods via ref
   useImperativeHandle(ref, () => ({

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 import { ProfileData, ClimateData } from '../../../types';
 import ClimateSection from '../sections/ClimateSection';
 import { getClimateData, saveClimateData } from '../../../services/climateService';
@@ -19,9 +19,11 @@ const ClimateSectionWrapper = React.forwardRef<
   { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   ClimateSectionWrapperProps
 >((props, ref) => {
-  const defaultClimateData: ClimateData = {
+  const { onSave } = props;
+  
+  const defaultClimateData = useMemo<ClimateData>(() => ({
     localClimate: ''
-  };
+  }), []);
 
   const [localData, setLocalData] = useState<ClimateData>(defaultClimateData);
   const [isLoading, setIsLoading] = useState(true);
@@ -61,7 +63,7 @@ const ClimateSectionWrapper = React.forwardRef<
     };
 
     fetchClimateData();
-  }, [user?.id]);
+  }, [user?.id, defaultClimateData]);
 
   const saveDirectly = useCallback(async (): Promise<SaveResult> => {
     console.log('ClimateSectionWrapper - Saving directly to Supabase:', localData);
@@ -84,7 +86,7 @@ const ClimateSectionWrapper = React.forwardRef<
       setIsModalOpen(true);
       
       // Call parent onSave if provided
-      props.onSave?.();
+      onSave?.();
       
       return { success: true };
     } catch (error: any) {
@@ -95,7 +97,7 @@ const ClimateSectionWrapper = React.forwardRef<
     } finally {
       setIsSaving(false);
     }
-  }, [localData, props.onSave, user]);
+  }, [localData, onSave, user]);
 
   useImperativeHandle(ref, () => ({
     saveDirectly,
