@@ -30,7 +30,7 @@ const WardrobeGoalsSection: React.FC<WardrobeGoalsSectionProps> = ({
   showSaveButton = true
 }) => {
   // Use wardrobeGoalsData if provided, otherwise fall back to profileData
-  const data = wardrobeGoalsData || profileData || {};
+  const data = useMemo(() => wardrobeGoalsData || profileData || {}, [wardrobeGoalsData, profileData]);
   
   // Get context hook at component top level
   const { handleSave } = useStyleProfile();

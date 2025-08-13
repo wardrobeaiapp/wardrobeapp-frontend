@@ -38,6 +38,7 @@ interface AIHistoryDashboardProps {
   onFilterChange: (value: string) => void;
   filteredHistoryItems: HistoryItem[];
   onBackToMain: () => void;
+  onHistoryItemClick?: (item: HistoryItem) => void;
 }
 
 const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
@@ -45,6 +46,7 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
   onFilterChange,
   filteredHistoryItems,
   onBackToMain,
+  onHistoryItemClick,
 }) => {
   return (
     <DashboardContainer>
@@ -101,7 +103,7 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         <StatCard>
           <StatContent>
             <StatValue>8</StatValue>
-            <StatLabel>Discarded</StatLabel>
+            <StatLabel>Dismissed Items</StatLabel>
           </StatContent>
           <StatIcon className="discarded">
             <FaTrash size={20} />
@@ -122,7 +124,12 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
             </div>
           ) : (
             filteredHistoryItems.map((item) => (
-              <AIHistoryItem key={item.id} item={item} variant="dashboard" />
+              <AIHistoryItem 
+                key={item.id} 
+                item={item} 
+                variant="dashboard" 
+                onClick={onHistoryItemClick}
+              />
             ))
           )}
         </div>

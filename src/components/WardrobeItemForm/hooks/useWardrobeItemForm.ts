@@ -154,7 +154,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setIsSubmitting,
     handleSubmit,
     getFormData,
-    validateForm
+    validateForm,
+    resetForm
   };
 };
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
+import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 import { ProfileData, WardrobeGoalsData } from '../../../types';
 import WardrobeGoalsSection from '../sections/WardrobeGoalsSection';
 import { getWardrobeGoalsData, saveWardrobeGoalsData } from '../../../services/wardrobeGoalsService';
@@ -19,10 +19,12 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
   { saveDirectly: () => Promise<SaveResult>; isSaving: boolean },
   WardrobeGoalsSectionWrapperProps
 >((props, ref) => {
-  const defaultWardrobeGoalsData: WardrobeGoalsData = {
+  const { onSave } = props;
+  
+  const defaultWardrobeGoalsData = useMemo<WardrobeGoalsData>(() => ({
     wardrobeGoals: [],
     otherWardrobeGoal: undefined
-  };
+  }), []);
 
   const [localData, setLocalData] = useState<WardrobeGoalsData>(defaultWardrobeGoalsData);
   const [isLoading, setIsLoading] = useState(true);
@@ -62,7 +64,7 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
     };
 
     fetchWardrobeGoalsData();
-  }, [user?.id]);
+  }, [user?.id, defaultWardrobeGoalsData]);
 
   const saveDirectly = useCallback(async (): Promise<SaveResult> => {
     console.log('WardrobeGoalsSectionWrapper - Saving directly to Supabase:', localData);
@@ -85,7 +87,7 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
       setIsModalOpen(true);
       
       // Call parent onSave if provided
-      props.onSave?.();
+      onSave?.();
       
       return { success: true };
     } catch (error: any) {
@@ -96,7 +98,7 @@ const WardrobeGoalsSectionWrapper = React.forwardRef<
     } finally {
       setIsSaving(false);
     }
-  }, [localData, props.onSave, user]);
+  }, [localData, onSave, user]);
   useImperativeHandle(ref, () => ({
     saveDirectly,
     isSaving

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaSearch, FaMagic, FaClipboardList, FaStar } from 'react-icons/fa';
-import { WishlistStatus } from '../../types';
+import { WishlistStatus, UserActionStatus } from '../../types';
 import {
   HistoryItem,
   CardIcon,
@@ -23,6 +23,7 @@ interface HistoryItemData {
   description: string;
   date: Date;
   status?: WishlistStatus;
+  userActionStatus?: UserActionStatus;
   score?: number;
   season?: string;
   scenario?: string;
@@ -31,6 +32,7 @@ interface HistoryItemData {
 interface AIHistoryItemProps {
   item: HistoryItemData;
   variant?: 'section' | 'dashboard';
+  onClick?: (item: HistoryItemData) => void;
 }
 
 // Helper function to format date into readable date string
@@ -44,7 +46,8 @@ const formatDate = (date: Date): string => {
 
 const AIHistoryItem: React.FC<AIHistoryItemProps> = ({ 
   item, 
-  variant = 'section' 
+  variant = 'section',
+  onClick 
 }) => {
   // Get history icon based on type
   const getHistoryIcon = (type: string) => {
@@ -61,8 +64,17 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
   const ItemWrapper = variant === 'dashboard' ? DashboardHistoryItem : HistoryItem;
   const TimeWrapper = variant === 'dashboard' ? HistoryItemMeta : React.Fragment;
 
+  const handleClick = () => {
+    if (onClick) {
+      onClick(item);
+    }
+  };
+
   return (
-    <ItemWrapper>
+    <ItemWrapper 
+      onClick={handleClick}
+      style={{ cursor: onClick ? 'pointer' : 'default' }}
+    >
       <CardIcon className={item.type}>{getHistoryIcon(item.type)}</CardIcon>
       <HistoryContent>
         <HistoryItemTitle>
@@ -70,6 +82,13 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
           {item.type === 'check' && item.status && (
             <StatusBadge $status={item.status}>
               {item.status.replace('_', ' ')}
+            </StatusBadge>
+          )}
+          {item.userActionStatus && (
+            <StatusBadge $status={item.userActionStatus === 'saved' ? 'approved' : 
+                                   item.userActionStatus === 'dismissed' ? 'potential_issue' : 'not_reviewed'}>
+              {item.userActionStatus === 'saved' ? '💾 Saved' :
+               item.userActionStatus === 'dismissed' ? '❌ Dismissed' : '⏳ Pending'}
             </StatusBadge>
           )}
         </HistoryItemTitle>

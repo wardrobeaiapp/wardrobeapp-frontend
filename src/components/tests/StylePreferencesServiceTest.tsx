@@ -11,7 +11,6 @@ import {
   ResultPre,
   SuccessText,
   ErrorText,
-  InfoText
 } from './StylePreferencesServiceTest.styles';
 
 /**
