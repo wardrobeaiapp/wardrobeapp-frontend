@@ -1,8 +1,7 @@
 import React from 'react';
 import { FaSearch, FaMagic, FaClipboardList, FaStar } from 'react-icons/fa';
-import { WishlistStatus, UserActionStatus } from '../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../types';
 import {
-  HistoryItem,
   CardIcon,
   HistoryContent,
   HistoryItemTitle,
@@ -14,25 +13,14 @@ import {
   TagsContainer,
   ScenarioTag,
   SeasonTag,
+  ScoreContainer,
+  ScoreDisplay,
+  ScoreText,
 } from '../../pages/AIAssistantPage.styles';
 
-interface HistoryItemData {
-  id: string;
-  type: 'check' | 'recommendation';
-  title: string;
-  description: string;
-  date: Date;
-  status?: WishlistStatus;
-  userActionStatus?: UserActionStatus;
-  score?: number;
-  season?: string;
-  scenario?: string;
-}
-
 interface AIHistoryItemProps {
-  item: HistoryItemData;
-  variant?: 'section' | 'dashboard';
-  onClick?: (item: HistoryItemData) => void;
+  item: AIHistoryItemType;
+  onClick?: (item: AIHistoryItemType) => void;
 }
 
 // Helper function to format date into readable date string
@@ -44,9 +32,10 @@ const formatDate = (date: Date): string => {
   });
 };
 
+
+
 const AIHistoryItem: React.FC<AIHistoryItemProps> = ({ 
   item, 
-  variant = 'section',
   onClick 
 }) => {
   // Get history icon based on type
@@ -61,8 +50,7 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
     }
   };
 
-  const ItemWrapper = variant === 'dashboard' ? DashboardHistoryItem : HistoryItem;
-  const TimeWrapper = variant === 'dashboard' ? HistoryItemMeta : React.Fragment;
+  // Always use dashboard implementation for consistency
 
   const handleClick = () => {
     if (onClick) {
@@ -71,7 +59,7 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
   };
 
   return (
-    <ItemWrapper 
+    <DashboardHistoryItem 
       onClick={handleClick}
       style={{ cursor: onClick ? 'pointer' : 'default' }}
     >
@@ -92,18 +80,10 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
             </StatusBadge>
           )}
         </HistoryItemTitle>
-        <HistoryItemDescription>{item.description}</HistoryItemDescription>
-        {item.type === 'check' && item.score && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              <FaStar size={14} color="#f59e0b" />
-              <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
-                {item.score}/10
-              </span>
-            </div>
-          </div>
-        )}
-        {item.type === 'recommendation' && variant === 'dashboard' && (item.scenario || item.season) && (
+        {/* Show summary for check items, styled tags for recommendations */}
+        {item.type === 'check' ? (
+          <HistoryItemDescription>{item.summary}</HistoryItemDescription>
+        ) : (
           <TagsContainer>
             {item.scenario && (
               <ScenarioTag>
@@ -117,11 +97,21 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
             )}
           </TagsContainer>
         )}
+        {item.type === 'check' && item.score && (
+          <ScoreContainer>
+            <ScoreDisplay>
+              <FaStar size={14} color="#f59e0b" />
+              <ScoreText>
+                {item.score}/10
+              </ScoreText>
+            </ScoreDisplay>
+          </ScoreContainer>
+        )}
       </HistoryContent>
-      <TimeWrapper>
+      <HistoryItemMeta>
         <HistoryTime>{formatDate(item.date)}</HistoryTime>
-      </TimeWrapper>
-    </ItemWrapper>
+      </HistoryItemMeta>
+    </DashboardHistoryItem>
   );
 };
 

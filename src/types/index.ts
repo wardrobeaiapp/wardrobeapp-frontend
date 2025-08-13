@@ -7,7 +7,8 @@ export enum WishlistStatus {
 export enum UserActionStatus {
   SAVED = 'saved',
   DISMISSED = 'dismissed', 
-  PENDING = 'pending'
+  PENDING = 'pending',
+  APPLIED = 'applied'
 }
 
 export interface WardrobeItem {
@@ -254,3 +255,37 @@ export interface Scenario {
   created_at?: string;
   updated_at?: string;
 }
+
+// AI History Types - Using discriminated unions for type safety and scalability
+interface BaseAIHistoryItem {
+  id: string;
+  title: string;
+  description: string;
+  summary: string;
+  date: Date;
+  status?: WishlistStatus;
+  userActionStatus?: UserActionStatus;
+}
+
+export interface AICheckHistoryItem extends BaseAIHistoryItem {
+  type: 'check';
+  score?: number;
+  itemsChecked?: number;
+  image?: string;
+  analysisResults?: {
+    recommendations: string[];
+    issues: string[];
+    suggestions?: string[];
+  };
+}
+
+export interface AIRecommendationHistoryItem extends BaseAIHistoryItem {
+  type: 'recommendation';
+  season?: string;
+  scenario?: string;
+  outfitDetails?: string[];
+  recommendedItems?: string[];
+}
+
+// Discriminated union type for all AI history items
+export type AIHistoryItem = AICheckHistoryItem | AIRecommendationHistoryItem;

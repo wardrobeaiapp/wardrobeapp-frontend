@@ -2,19 +2,22 @@ import React from 'react';
 import { FaTimes, FaCheckCircle, FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../types';
 import {
-  ModalOverlay,
+  Modal,
   ModalContent,
   ModalHeader,
   ModalTitle,
   CloseButton,
-  ModalBody,
-  AnalysisText,
-  ScoreStatusContainer,
-  ScoreDisplay,
-  ScoreText,
-  StatusBadge,
-  ActionButtonsContainer,
-  PrimaryActionButton,
+  ModalBody
+} from '../../pages/HomePage.styles';
+import {
+  ItemDetails,
+  DetailRow,
+  DetailLabel,
+  DetailValue,
+  ButtonsContainer
+} from '../ItemViewModal.styles';
+import {
+  ActionButton,
   SecondaryActionButton,
   TertiaryActionButton
 } from './AICheckResultModal.styles';
@@ -43,7 +46,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay onClick={onClose}>
+    <Modal onClick={onClose}>
       <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>
@@ -56,32 +59,42 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
         </ModalHeader>
         
         <ModalBody>
-          <AnalysisText>{analysisResult}</AnalysisText>
+          <div style={{ 
+            fontSize: '1rem', 
+            color: '#374151', 
+            lineHeight: 1.6, 
+            marginBottom: '1.5rem' 
+          }}>
+            {analysisResult}
+          </div>
           
-          {/* Score and Status Display */}
-          {(score !== undefined || status) && (
-            <ScoreStatusContainer>
-              {score !== undefined && (
-                <ScoreDisplay>
+          <ItemDetails>
+            {score !== undefined && (
+              <DetailRow>
+                <DetailLabel>Score:</DetailLabel>
+                <DetailValue style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   <FaStar size={14} color="#f59e0b" />
-                  <ScoreText>{score}/10</ScoreText>
-                </ScoreDisplay>
-              )}
-              {status && (
-                <StatusBadge $status={status}>
+                  {score}/10
+                </DetailValue>
+              </DetailRow>
+            )}
+            {status && (
+              <DetailRow>
+                <DetailLabel>Status:</DetailLabel>
+                <DetailValue>
                   {status.replace('_', ' ')}
-                </StatusBadge>
-              )}
-            </ScoreStatusContainer>
-          )}
+                </DetailValue>
+              </DetailRow>
+            )}
+          </ItemDetails>
           
-          <ActionButtonsContainer>
-            <PrimaryActionButton onClick={() => {
+          <ButtonsContainer>
+            <ActionButton onClick={() => {
               onAddToWishlist?.();
               onClose();
             }}>
               Add to wishlist
-            </PrimaryActionButton>
+            </ActionButton>
             <SecondaryActionButton onClick={() => {
               onSkip?.();
               onClose();
@@ -94,10 +107,10 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
             }}>
               Decide later
             </TertiaryActionButton>
-          </ActionButtonsContainer>
+          </ButtonsContainer>
         </ModalBody>
       </ModalContent>
-    </ModalOverlay>
+    </Modal>
   );
 };
 
