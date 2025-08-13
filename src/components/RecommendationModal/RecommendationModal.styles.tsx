@@ -68,8 +68,8 @@ export const ActionButtonsContainer = styled.div`
   margin-top: 1rem;
 `;
 
-export const SaveButton = styled.button`
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+export const ActionButton = styled.button`
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -81,8 +81,9 @@ export const SaveButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   }
 
   &:active {
@@ -90,7 +91,7 @@ export const SaveButton = styled.button`
   }
 `;
 
-export const SkipButton = styled.button`
+export const DismissButton = styled.button`
   background: #f8fafc;
   color: #475569;
   border: 1px solid #e2e8f0;

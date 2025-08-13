@@ -585,6 +585,24 @@ export const HistoryItemMeta = styled.div`
   gap: 0.25rem;
 `;
 
+export const ScoreContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+export const ScoreDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+export const ScoreText = styled.span`
+  font-size: 0.875rem;
+  font-weight: 600;
+`;
+
 export const LoadMoreButton = styled.button`
   width: 100%;
   padding: 0.75rem;

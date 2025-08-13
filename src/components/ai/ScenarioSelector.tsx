@@ -3,7 +3,6 @@ import { Scenario } from '../../services/api';
 import {
   FormGroup,
   Label,
-  TextArea,
   SeasonCheckboxes as ScenarioCheckboxes,
   CheckboxItem,
   CheckboxLabel
@@ -21,9 +20,7 @@ interface ScenarioSelectorProps {
 const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   scenarios,
   selectedScenarios,
-  customScenario,
   onScenarioChange,
-  onCustomScenarioChange,
   isLoading
 }) => {
   return (

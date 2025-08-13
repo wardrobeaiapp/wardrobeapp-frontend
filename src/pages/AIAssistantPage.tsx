@@ -56,6 +56,8 @@ const AIAssistantPage: React.FC = () => {
   
   // State for filtering activities
   const [activityFilter, setActivityFilter] = useState('all');
+  const [checkStatusFilter, setCheckStatusFilter] = useState('all');
+  const [userActionFilter, setUserActionFilter] = useState('all');
   
   // Load scenario options when component mounts
   useEffect(() => {
@@ -81,7 +83,9 @@ const AIAssistantPage: React.FC = () => {
       type: 'check' as const,
       title: 'Outfit Check: Casual Friday',
       description: '"Great color harmony!"',
+      summary: 'Score: 8.5/10',
       score: 8.5,
+      image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400',
       date: new Date(Date.now() - 2 * 60 * 60 * 1000),
       status: WishlistStatus.APPROVED,
       userActionStatus: UserActionStatus.SAVED
@@ -91,6 +95,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'Recommendation: Weekend Getaway',
       description: '3 outfits suggested',
+      summary: 'Spring • Casual',
       date: new Date(Date.now() - 24 * 60 * 60 * 1000),
       season: 'Spring',
       scenario: 'Casual',
@@ -101,7 +106,9 @@ const AIAssistantPage: React.FC = () => {
       type: 'check' as const,
       title: 'Outfit Check: Formal Event',
       description: '"Perfect for the occasion."',
+      summary: 'Score: 9.2/10',
       score: 9.2,
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
       date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       status: WishlistStatus.POTENTIAL_ISSUE,
       userActionStatus: UserActionStatus.DISMISSED
@@ -111,6 +118,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'AI Recommendation: Winter Formal',
       description: '2 elegant outfit options for formal winter events',
+      summary: 'Winter • Formal',
       date: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       season: 'Winter',
       scenario: 'Formal',
@@ -121,11 +129,161 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'AI Recommendation: Summer Vacation',
       description: '5 outfits for summer beach activities',
+      summary: 'Summer • Vacation',
       date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       season: 'Summer',
       scenario: 'Vacation',
       userActionStatus: UserActionStatus.SAVED
-    }
+    },
+    {
+      id: '6',
+      type: 'check' as const,
+      title: 'Outfit Check: Formal Event',
+      description: '"Perfect for the occasion."',
+      summary: 'Score: 9.2/10',
+      score: 9.2,
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.POTENTIAL_ISSUE,
+      userActionStatus: UserActionStatus.PENDING
+    },
+    {
+      id: '7',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Spring Wedding',
+      description: '4 elegant outfit options for spring wedding season',
+      summary: 'Spring • Formal',
+      date: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+      season: 'Spring',
+      scenario: 'Formal',
+      userActionStatus: UserActionStatus.APPLIED
+    },
+    {
+      id: '8',
+      type: 'check' as const,
+      title: 'Outfit Check: Business Meeting',
+      description: '"Professional and polished look"',
+      summary: 'Score: 8.8/10',
+      score: 8.8,
+      image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400',
+      date: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.APPROVED,
+      userActionStatus: UserActionStatus.SAVED
+    },
+    {
+      id: '9',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Fall Layers',
+      description: '6 layering combinations for autumn weather',
+      summary: 'Fall • Casual',
+      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      season: 'Fall',
+      scenario: 'Casual',
+      userActionStatus: UserActionStatus.DISMISSED
+    },
+    {
+      id: '10',
+      type: 'check' as const,
+      title: 'Outfit Check: Date Night',
+      description: '"Romantic and stylish combination"',
+      summary: 'Score: 9.0/10',
+      score: 9.0,
+      image: 'https://images.unsplash.com/photo-1494790108755-2616c-b6e?w=400',
+      date: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.APPROVED,
+      userActionStatus: UserActionStatus.APPLIED
+    },
+    {
+      id: '11',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Weekend Brunch',
+      description: '3 comfortable yet chic outfits for brunch dates',
+      summary: 'Spring • Casual',
+      date: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+      season: 'Spring',
+      scenario: 'Casual',
+      userActionStatus: UserActionStatus.SAVED
+    },
+    {
+      id: '12',
+      type: 'check' as const,
+      title: 'Outfit Check: Job Interview',
+      description: '"Confident and professional appearance"',
+      summary: 'Score: 9.5/10',
+      score: 9.5,
+      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
+      date: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.APPROVED,
+      userActionStatus: UserActionStatus.DISMISSED
+    },
+    {
+      id: '13',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Holiday Party',
+      description: '5 festive outfit ideas for holiday celebrations',
+      summary: 'Winter • Party',
+      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      season: 'Winter',
+      scenario: 'Party',
+      userActionStatus: UserActionStatus.PENDING
+    },
+    {
+      id: '14',
+      type: 'check' as const,
+      title: 'Outfit Check: Gym Session',
+      description: '"Great activewear coordination"',
+      summary: 'Score: 7.5/10',
+      score: 7.5,
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400',
+      date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.POTENTIAL_ISSUE,
+      userActionStatus: UserActionStatus.SAVED
+    },
+    {
+      id: '15',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Travel Outfits',
+      description: '8 versatile outfits for your upcoming trip',
+      summary: 'Summer • Travel',
+      date: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000),
+      season: 'Summer',
+      scenario: 'Travel',
+      userActionStatus: UserActionStatus.APPLIED
+    },
+    {
+      id: '16',
+      type: 'check' as const,
+      title: 'Outfit Check: Concert Night',
+      description: '"Perfect for the music festival vibe"',
+      summary: 'Score: 8.2/10',
+      score: 8.2,
+      image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=400',
+      date: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.APPROVED,
+      userActionStatus: UserActionStatus.PENDING
+    },
+    {
+      id: '17',
+      type: 'recommendation' as const,
+      title: 'AI Recommendation: Office Casual',
+      description: '4 smart casual looks for flexible work days',
+      summary: 'Fall • Business',
+      date: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+      season: 'Fall',
+      scenario: 'Business',
+      userActionStatus: UserActionStatus.SAVED
+    },
+    {
+      id: '18',
+      type: 'check' as const,
+      title: 'Outfit Check: Garden Party',
+      description: '"Elegant and garden-appropriate styling"',
+      summary: 'Score: 8.9/10',
+      score: 8.9,
+      image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=400',
+      date: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+      status: WishlistStatus.APPROVED,
+      userActionStatus: UserActionStatus.APPLIED
+    },
   ]);
 
   const handleCheckItem = async () => {
@@ -227,8 +385,31 @@ const AIAssistantPage: React.FC = () => {
 
   // Filter history items based on selected filter
   const getFilteredHistoryItems = (items: typeof historyItems) => {
-    if (activityFilter === 'all') return items;
-    return items.filter(item => item.type === activityFilter);
+    let filtered = items;
+    
+    // Filter by activity type
+    if (activityFilter !== 'all') {
+      filtered = filtered.filter(item => item.type === activityFilter);
+    }
+    
+    // Filter by check status (only applies to check items)
+    if (checkStatusFilter !== 'all') {
+      filtered = filtered.filter(item => {
+        // Only show check items with matching status
+        if (item.type === 'check') {
+          return item.status === checkStatusFilter;
+        }
+        // Hide recommendation items when check status filter is active
+        return false;
+      });
+    }
+    
+    // Filter by user action status (applies to all items)
+    if (userActionFilter !== 'all') {
+      filtered = filtered.filter(item => item.userActionStatus === userActionFilter);
+    }
+    
+    return filtered;
   };
   
   // Get filtered history items for dashboard view
@@ -306,7 +487,9 @@ const AIAssistantPage: React.FC = () => {
       type: 'check' as const,
       title: 'Outfit Check: Current Analysis',
       description: `"${itemCheckResponse}"`,
+      summary: `Score: ${itemCheckScore}/10`,
       score: itemCheckScore,
+      image: imageLink || undefined,
       date: new Date(),
       status: itemCheckStatus,
       userActionStatus: userActionStatus
@@ -341,6 +524,7 @@ const AIAssistantPage: React.FC = () => {
       type: 'recommendation' as const,
       title: 'AI Recommendation: Current Suggestion',
       description: description,
+      summary: 'All Season • General',
       date: new Date(),
       season: 'All Season',
       scenario: 'General',
@@ -401,6 +585,10 @@ const AIAssistantPage: React.FC = () => {
           <AIHistoryDashboard
             activityFilter={activityFilter}
             onFilterChange={setActivityFilter}
+            checkStatusFilter={checkStatusFilter}
+            onCheckStatusFilterChange={setCheckStatusFilter}
+            userActionFilter={userActionFilter}
+            onUserActionFilterChange={setUserActionFilter}
             filteredHistoryItems={filteredHistoryItems}
             onBackToMain={handleBackToMain}
             onHistoryItemClick={handleHistoryItemClick}

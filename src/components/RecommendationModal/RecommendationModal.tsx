@@ -1,31 +1,39 @@
 import React, { MouseEvent } from 'react';
+import { UserActionStatus } from '../../types';
 import {
-  ModalOverlay,
-  ModalContainer,
+  Modal,
+  ModalContent,
   ModalHeader,
   ModalTitle,
-  ModalBody,
-  ModalText,
-  ActionButtonsContainer,
-  SaveButton,
-  SkipButton,
-  CloseButton
+  CloseButton,
+  ModalBody
+} from '../../pages/HomePage.styles';
+import {
+  ButtonsContainer
+} from '../ItemViewModal.styles';
+import {
+  ActionButton,
+  DismissButton
 } from './RecommendationModal.styles';
 
 interface RecommendationModalProps {
   isOpen: boolean;
   onClose: () => void;
   recommendation: string;
+  userActionStatus?: UserActionStatus;
   onSave: () => void;
   onSkip: () => void;
+  onApply?: () => void;
 }
 
 const RecommendationModal: React.FC<RecommendationModalProps> = ({
   isOpen,
   onClose,
   recommendation,
+  userActionStatus,
   onSave,
-  onSkip
+  onSkip,
+  onApply
 }) => {
   if (!isOpen) return null;
 
@@ -39,9 +47,16 @@ const RecommendationModal: React.FC<RecommendationModalProps> = ({
     onClose();
   };
 
+  const handleApply = () => {
+    onApply?.();
+    onClose();
+  };
+
+  const isSavedRecommendation = userActionStatus === UserActionStatus.SAVED;
+
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContainer onClick={(e: MouseEvent) => e.stopPropagation()}>
+    <Modal onClick={onClose}>
+      <ModalContent onClick={(e: MouseEvent) => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>🎯 AI Recommendation</ModalTitle>
           <CloseButton onClick={onClose} aria-label="Close modal">
@@ -50,19 +65,39 @@ const RecommendationModal: React.FC<RecommendationModalProps> = ({
         </ModalHeader>
         
         <ModalBody>
-          <ModalText>{recommendation}</ModalText>
+          <div style={{ 
+            fontSize: '1rem', 
+            color: '#374151', 
+            lineHeight: 1.6, 
+            marginBottom: '2rem' 
+          }}>
+            {recommendation}
+          </div>
           
-          <ActionButtonsContainer>
-            <SaveButton onClick={handleSave}>
-              💾 Save
-            </SaveButton>
-            <SkipButton onClick={handleSkip}>
-              ⏭️ Dismiss
-            </SkipButton>
-          </ActionButtonsContainer>
+          <ButtonsContainer>
+            {isSavedRecommendation ? (
+              <>
+                <ActionButton onClick={handleApply}>
+                  Applied
+                </ActionButton>
+                <DismissButton onClick={handleSkip}>
+                  Dismiss
+                </DismissButton>
+              </>
+            ) : (
+              <>
+                <ActionButton onClick={handleSave}>
+                  Save
+                </ActionButton>
+                <DismissButton onClick={handleSkip}>
+                  Dismiss
+                </DismissButton>
+              </>
+            )}
+          </ButtonsContainer>
         </ModalBody>
-      </ModalContainer>
-    </ModalOverlay>
+      </ModalContent>
+    </Modal>
   );
 };
 

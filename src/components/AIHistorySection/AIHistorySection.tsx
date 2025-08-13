@@ -1,5 +1,5 @@
 import React from 'react';
-import { WishlistStatus } from '../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../types';
 import AIHistoryItem from '../AIHistoryItem/AIHistoryItem';
 import {
   HistorySection,
@@ -9,22 +9,10 @@ import {
   HistoryList,
 } from '../../pages/AIAssistantPage.styles';
 
-interface HistoryItemType {
-  id: string;
-  type: 'check' | 'recommendation';
-  title: string;
-  description: string;
-  date: Date;
-  status?: WishlistStatus;
-  score?: number;
-  season?: string;
-  scenario?: string;
-}
-
 interface AIHistorySectionProps {
-  historyItems: HistoryItemType[];
+  historyItems: AIHistoryItemType[];
   onViewAllHistory: () => void;
-  onHistoryItemClick?: (item: HistoryItemType) => void;
+  onHistoryItemClick?: (item: AIHistoryItemType) => void;
 }
 
 const AIHistorySection: React.FC<AIHistorySectionProps> = ({
@@ -47,7 +35,6 @@ const AIHistorySection: React.FC<AIHistorySectionProps> = ({
           <AIHistoryItem 
             key={item.id} 
             item={item} 
-            variant="section" 
             onClick={onHistoryItemClick}
           />
         ))}

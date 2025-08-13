@@ -140,7 +140,7 @@ export const ActionButtonsContainer = styled.div`
 `;
 
 export const ActionButton = styled.button`
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -152,8 +152,9 @@ export const ActionButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   }
 
   &:active {

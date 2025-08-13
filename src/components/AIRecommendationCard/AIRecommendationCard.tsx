@@ -109,7 +109,7 @@ const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
             disabled={isLoading}
             style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
           >
-            {isLoading ? 'Generating...' : '📍 Get a Recommendation'}
+            {isLoading ? 'Generating...' : 'Get a Recommendation'}
           </PrimaryButton>
         </ButtonGroup>
       </CardContent>

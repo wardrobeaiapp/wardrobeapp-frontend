@@ -137,14 +137,14 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
             {/* Action Buttons */}
             <ButtonGroup>
               <SecondaryButton onClick={onOpenWishlistModal}>
-                ❤️ Select from Wishlist
+                Select from Wishlist
               </SecondaryButton>
               <PrimaryButton
                 onClick={onCheckItem}
                 disabled={isLoading || (!imageLink.trim())}
                 title={!imageLink.trim() ? 'Please enter an image URL first' : ''}
               >
-                {isLoading ? 'Analyzing...' : '📷 Start AI Check'}
+                {isLoading ? 'Analyzing...' : 'Start AI Check'}
               </PrimaryButton>
             </ButtonGroup>
           </ControlsArea>
