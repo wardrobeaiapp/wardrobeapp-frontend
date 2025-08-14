@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { WardrobeItem, ItemCategory, Season } from '../../../types';
+import { WardrobeItem, ItemCategory, Season } from '../../../../../types';
 
 interface FormErrors {
   [key: string]: string;

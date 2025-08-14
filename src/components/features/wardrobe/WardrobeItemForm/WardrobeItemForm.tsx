@@ -1,5 +1,5 @@
 import React from 'react';
-import { WardrobeItem, ItemCategory } from '../../types';
+import { WardrobeItem, ItemCategory } from '../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { ImageUploadSection } from './components/ImageUploadSection';
