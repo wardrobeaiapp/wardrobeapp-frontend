@@ -1,5 +1,5 @@
 import React from 'react';
-import { Season } from '../../../types';
+import { Season } from '../../../../../types';
 import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 import {
   FormRow,
@@ -10,7 +10,7 @@ import {
   CheckboxItem,
   CheckboxInput,
   CheckboxLabel
-} from '../../../components/WardrobeItemForm.styles';
+} from '../../WardrobeItemForm.styles';
 
 interface DetailsFieldsProps {
   material: string;

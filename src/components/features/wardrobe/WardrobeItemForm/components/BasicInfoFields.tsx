@@ -1,5 +1,5 @@
 import React from 'react';
-import { ItemCategory } from '../../../types';
+import { ItemCategory } from '../../../../../types';
 import { getSubcategoryOptions } from '../utils/formHelpers';
 import {
   FormRow,
@@ -7,7 +7,7 @@ import {
   Label,
   Input,
   Select
-} from '../../../components/WardrobeItemForm.styles';
+} from '../../WardrobeItemForm.styles';
 
 interface BasicInfoFieldsProps {
   name: string;

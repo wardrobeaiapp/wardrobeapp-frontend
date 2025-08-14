@@ -12,7 +12,7 @@ import {
 } from '../pages/HomePage.styles';
 import {
   SubmitButton,
-} from './WardrobeItemForm.styles';
+} from './features/wardrobe/WardrobeItemForm.styles';
 import {
   ItemImageContainer,
   ItemImage,

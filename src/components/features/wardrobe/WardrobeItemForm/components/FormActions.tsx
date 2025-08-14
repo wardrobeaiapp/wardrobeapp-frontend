@@ -3,7 +3,7 @@ import {
   ButtonContainer,
   SubmitButton,
   CancelButton
-} from '../../../components/WardrobeItemForm.styles';
+} from '../../WardrobeItemForm.styles';
 
 interface FormActionsProps {
   onSubmit: () => void;

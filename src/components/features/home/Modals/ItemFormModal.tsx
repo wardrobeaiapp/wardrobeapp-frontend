@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WardrobeItem } from '../../../../types';
-import WardrobeItemForm from '../../../WardrobeItemForm';
+import WardrobeItemForm from '../../wardrobe/WardrobeItemForm';
 import {
   Modal,
   ModalContent,

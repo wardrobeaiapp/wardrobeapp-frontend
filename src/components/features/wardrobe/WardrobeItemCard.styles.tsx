@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { WishlistStatus } from '../types';
+import { WishlistStatus } from '../../../types';
 
 export const Card = styled.div`
   display: flex;
