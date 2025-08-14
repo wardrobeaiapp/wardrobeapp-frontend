@@ -1,5 +1,6 @@
 import React from 'react';
-import { WardrobeItem } from '../../types';
+import { WardrobeItem } from '../../../../types';
+import { formatCategory } from '../../../../utils/textFormatting';
 import {
   SelectedItemsContainer,
   SelectedItemBadge,

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import { Season, Outfit, WardrobeItem } from '../../../../types';
 import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
-import OutfitCard from '../../../OutfitCard';
+import OutfitCard from '../OutfitCard';
 import {
   ItemsGrid,
   EmptyState,

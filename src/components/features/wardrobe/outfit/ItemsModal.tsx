@@ -1,5 +1,6 @@
 import React from 'react';
-import { WardrobeItem, ItemCategory, Season } from '../../types';
+import { WardrobeItem, Season, ItemCategory } from '../../../../types';
+import { formatCategory } from '../../../../utils/textFormatting';
 import FiltersPanel from './FiltersPanel';
 import ItemsGrid from './ItemsGrid';
 import {
