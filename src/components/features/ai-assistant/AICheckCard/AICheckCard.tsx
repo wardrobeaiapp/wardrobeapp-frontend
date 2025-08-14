@@ -16,9 +16,8 @@ import {
   InputLabel,
   TextInput,
   ButtonGroup,
-  PrimaryButton,
-  SecondaryButton,
 } from '../../../../pages/AIAssistantPage.styles';
+import Button from '../../../common/Button';
 
 interface AICheckCardProps {
   imageLink: string;
@@ -38,7 +37,6 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
   onCheckItem,
   onOpenWishlistModal,
   isLoading,
-  error,
   itemCheckResponse
 }) => {
   return (
@@ -136,27 +134,13 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
             
             {/* Action Buttons */}
             <ButtonGroup>
-              <SecondaryButton onClick={onOpenWishlistModal}>
-                Select from Wishlist
-              </SecondaryButton>
-              <PrimaryButton
-                onClick={onCheckItem}
-                disabled={isLoading || (!imageLink.trim())}
-                title={!imageLink.trim() ? 'Please enter an image URL first' : ''}
-              >
-                {isLoading ? 'Analyzing...' : 'Start AI Check'}
-              </PrimaryButton>
+              <Button variant="secondary" onClick={onOpenWishlistModal}>Select from Wishlist</Button>
+              <Button variant="primary" onClick={onCheckItem}
+                disabled={isLoading || (!imageLink.trim())}>
+                {isLoading ? 'Analyzing...' : 'Start AI Check'}</Button>
             </ButtonGroup>
           </ControlsArea>
         </AICheckContent>
-        
-        {/* Error Message */}
-        {error && (
-          <div style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '1rem' }}>
-            {error}
-          </div>
-        )}
-        
 
       </CardContent>
     </AICard>

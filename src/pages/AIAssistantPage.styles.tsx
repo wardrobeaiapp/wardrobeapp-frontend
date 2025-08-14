@@ -126,7 +126,7 @@ export const UploadArea = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 200px; /* Fixed height to prevent growing */
+  height: 180px; /* Fixed height to prevent growing */
   overflow: hidden; /* Prevent content from overflowing */
   
   &:hover {
@@ -223,69 +223,6 @@ export const DropdownContainer = styled.div`
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
     gap: 0.75rem;
-  }
-`;
-
-// Button styles
-
-export const PrimaryButton = styled.button`
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  }
-  
-  &.green {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
-    
-    &:hover {
-      background: linear-gradient(135deg, #047857 0%, #065f46 100%);
-      box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);
-    }
-  }
-`;
-
-export const SecondaryButton = styled.button`
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: #f9fafb;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #f3f4f6;
-    border-color: ${theme.colors.primary};
-    color: ${theme.colors.primary};
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -611,12 +548,6 @@ export const LoadMoreButton = styled.button`
     background: #f9fafb;
     border-color: ${theme.colors.primary};
   }
-`;
-
-export const NoHistoryMessage = styled.p`
-  text-align: center;
-  color: #6b7280;
-  padding: 2rem;
 `;
 
 export const StatusBadge = styled.div<{ $status: string }>`

@@ -63,7 +63,7 @@ const StyledButton = styled.button<StyledButtonProps>`
       case 'md':
         return `
           padding: ${theme.spacing.sm} ${theme.spacing.md};
-          font-size: ${theme.typography.fontSize.md};
+          font-size: ${theme.typography.fontSize.sm};
           min-height: 40px;
         `;
       case 'lg':
@@ -81,7 +81,7 @@ const StyledButton = styled.button<StyledButtonProps>`
       default:
         return `
           padding: ${theme.spacing.sm} ${theme.spacing.md};
-          font-size: ${theme.typography.fontSize.md};
+          font-size: ${theme.typography.fontSize.sm};
           min-height: 40px;
         `;
     }
@@ -142,7 +142,7 @@ const StyledButton = styled.button<StyledButtonProps>`
       if (outlined) {
         return `
           background-color: transparent;
-          color: ${theme.colors.gray[700]};
+          color: ${theme.colors.gray[500]};
           border-color: ${theme.colors.gray[300]};
           
           &:hover:not(:disabled) {
@@ -157,7 +157,7 @@ const StyledButton = styled.button<StyledButtonProps>`
       } else {
         return `
           background-color: ${theme.colors.gray[100]};
-          color: ${theme.colors.gray[700]};
+          color: ${theme.colors.gray[500]};
           border-color: ${theme.colors.gray[200]};
           
           &:hover:not(:disabled) {

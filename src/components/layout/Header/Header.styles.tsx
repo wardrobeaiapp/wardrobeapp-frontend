@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { theme } from '../../../styles/theme';
 
 export const HeaderContainer = styled.header`
   display: flex;
@@ -29,7 +30,7 @@ export const LogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
@@ -50,12 +51,12 @@ export const Nav = styled.nav`
 
 export const NavLink = styled(Link)<{ $active?: boolean }>`
   margin-right: 1.5rem;
-  color: ${props => props.$active ? '#6366f1' : '#4b5563'};
+  color: ${props => props.$active ? theme.colors.primary : theme.colors.gray[600]};
   text-decoration: none;
   font-weight: ${props => props.$active ? '600' : '500'};
   
   &:hover {
-    color: #6366f1;
+    color: ${theme.colors.primary};
   }
 `;
 
@@ -67,26 +68,26 @@ export const AuthButtons = styled.div`
 export const SignInButton = styled(Link)`
   display: inline-block;
   padding: 0.5rem 1rem;
-  color: #6366f1;
+  color: ${theme.colors.primary};
   font-weight: 600;
   text-decoration: none;
   
   &:hover {
-    color: #4f46e5;
+    color: ${theme.colors.primaryHover};
   }
 `;
 
 export const SignUpButton = styled(Link)`
   display: inline-block;
   padding: 0.5rem 1rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   font-weight: 600;
   text-decoration: none;
   border-radius: 0.25rem;
   
   &:hover {
-    background-color: #4f46e5;
+    background-color: ${theme.colors.primaryHover};
   }
 `;
 

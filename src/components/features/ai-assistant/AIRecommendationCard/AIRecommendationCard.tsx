@@ -13,8 +13,8 @@ import {
   InputLabel,
   Select,
   ButtonGroup,
-  PrimaryButton,
 } from '../../../../pages/AIAssistantPage.styles';
+import Button from '../../../common/Button';
 
 interface AIRecommendationCardProps {
   selectedSeason: string;
@@ -104,13 +104,11 @@ const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
         
         {/* Single Green Button - Moved to Bottom */}
         <ButtonGroup>
-          <PrimaryButton
-            onClick={onGetRecommendation}
-            disabled={isLoading}
-            style={{ backgroundColor: '#10b981', borderColor: '#10b981' }}
-          >
-            {isLoading ? 'Generating...' : 'Get a Recommendation'}
-          </PrimaryButton>
+          <Button variant="primary" 
+            onClick={onGetRecommendation} 
+            disabled={isLoading}>
+              {isLoading ? 'Generating...' : 'Get a Recommendation'}
+            </Button>
         </ButtonGroup>
       </CardContent>
     </AICard>
