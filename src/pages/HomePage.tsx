@@ -1,8 +1,8 @@
 import React from 'react';
 import Header from '../components/layout/Header/Header';
-import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/home';
-import WishlistTab from '../components/features/home/WishlistTab';
-import HomePageModals from '../components/features/home/HomePageModals';
+import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
+import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
+import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData, TabType } from '../hooks/useHomePageData';
 import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
