@@ -15,6 +15,7 @@ import {
   Tab,
   AddButton
 } from './HomePage.styles';
+import Button from '../components/common/Button';
 
 
 
@@ -128,28 +129,28 @@ const HomePage: React.FC = () => {
         <PageHeader>
           <Title>My Wardrobe</Title>
           {activeTab === TabType.ITEMS && (
-            <AddButton onClick={handleAddItem}>
+            <Button size="lg" onClick={handleAddItem}>
               <MdAdd />
               Add Item
-            </AddButton>
+            </Button>
           )}
           {activeTab === TabType.OUTFITS && (
-            <AddButton onClick={() => setIsAddOutfitModalOpen(true)}>
+            <Button size="lg" onClick={() => setIsAddOutfitModalOpen(true)}>
               <MdAdd />
               Add Outfit
-            </AddButton>
+            </Button>
           )}
           {activeTab === TabType.CAPSULES && (
-            <AddButton onClick={() => setIsAddCapsuleModalOpen(true)}>
+            <Button size="lg" onClick={() => setIsAddCapsuleModalOpen(true)}>
               <MdAdd />
               Add Capsule
-            </AddButton>
+            </Button>
           )}
           {activeTab === TabType.WISHLIST && (
-            <AddButton onClick={handleAddItem}>
+            <Button size="lg" onClick={handleAddItem}>
               <MdAdd />
               Add Item
-            </AddButton>
+            </Button>
           )}
         </PageHeader>
         

@@ -300,13 +300,6 @@ export const CapsuleCard = styled.div`
   }
 `;
 
-export const CapsuleTitle = styled.h3`
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.1rem;
-  color: #333;
-`;
-
 export const CapsuleSeasons = styled.div`
   display: flex;
   gap: 4px;
@@ -401,34 +394,3 @@ export const CapsuleImagePlaceholder = styled.div`
   font-weight: 600;
 `;
 
-export const AddButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: white;
-  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
-  border: none;
-  border-radius: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
-  
-  &:hover {
-    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
-  }
-  
-  svg {
-    font-size: 1.1rem;
-  }
-`;
