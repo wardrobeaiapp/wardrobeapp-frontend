@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { theme } from '../styles/theme';
 
 export const PageContainer = styled.div`
   padding: 2rem;
@@ -137,7 +138,7 @@ export const UploadArea = styled.div`
   overflow: hidden; /* Prevent content from overflowing */
   
   &:hover {
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     background-color: #faf5ff;
   }
 `;
@@ -193,7 +194,7 @@ export const TextInput = styled.input`
   
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
   
@@ -215,7 +216,7 @@ export const Select = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
@@ -238,7 +239,7 @@ export const DropdownContainer = styled.div`
 export const PrimaryButton = styled.button`
   width: 100%;
   padding: 0.875rem 1.5rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -251,7 +252,7 @@ export const PrimaryButton = styled.button`
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
   }
   
   &:active {
@@ -284,8 +285,8 @@ export const SecondaryButton = styled.button`
   
   &:hover {
     background: #f3f4f6;
-    border-color: #8b5cf6;
-    color: #8b5cf6;
+    border-color: ${theme.colors.primary};
+    color: ${theme.colors.primary};
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
@@ -369,7 +370,7 @@ export const HistoryTime = styled.span`
 export const ViewAllButton = styled.button`
   background: none;
   border: none;
-  color: #8b5cf6;
+  color: ${theme.colors.primary};
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -377,7 +378,7 @@ export const ViewAllButton = styled.button`
   transition: color 0.2s ease;
   
   &:hover {
-    color: #7c3aed;
+    color: ${theme.colors.purple[600]};
   }
 `;
 
@@ -443,14 +444,14 @@ export const FilterDropdown = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
 
 export const ExportButton = styled.button`
   padding: 0.5rem 1rem;
-  background: #8b5cf6;
+  background: ${theme.colors.primary};
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -458,7 +459,7 @@ export const ExportButton = styled.button`
   cursor: pointer;
   
   &:hover {
-    background: #7c3aed;
+    background: ${theme.colors.purple[600]};
   }
 `;
 
@@ -609,14 +610,14 @@ export const LoadMoreButton = styled.button`
   background: none;
   border: 1px solid #d1d5db;
   border-radius: 0.5rem;
-  color: #8b5cf6;
+  color: ${theme.colors.primary};
   font-weight: 500;
   cursor: pointer;
   margin-top: 1rem;
   
   &:hover {
     background: #f9fafb;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
   }
 `;
 

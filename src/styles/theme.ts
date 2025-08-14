@@ -1,27 +1,54 @@
 // Central theme file with design tokens
 export const theme = {
   colors: {
-    primary: '#3f51b5',
-    secondary: '#f50057',
-    background: '#f5f5f5',
-    text: '#333333',
-    lightText: '#757575',
-    error: '#f44336',
+    // Purple scale (primary brand colors)
+    purple: {
+      50: '#f3e8fd',   // Very light background tint
+      100: '#e6d7fc',  // Light background
+      200: '#d4b4fb',  // Subtle accents
+      300: '#c084f5',  // Light interactive elements
+      400: '#a855f7',  // Secondary purple
+      500: '#8b5cf6',  // PRIMARY purple (main brand color)
+      600: '#7c3aed',  // Hover states
+      700: '#6d28d9',  // Active/pressed states
+      800: '#5b21b6',  // Dark purple
+      900: '#4c1d95',  // Very dark purple
+    },
+    
+    // Gray scale (matching actual app usage)
+    gray: {
+      50: '#f9fafb',   // Lightest background
+      100: '#f3f4f6',  // Light background
+      200: '#e5e7eb',  // Light borders
+      300: '#d1d5db',  // Medium borders
+      400: '#9ca3af',  // Placeholder text
+      500: '#6b7280',  // Light text
+      600: '#4b5563',  // Medium text
+      700: '#374151',  // Dark text
+      800: '#1f2937',  // Very dark text
+      900: '#111827',  // Darkest text
+    },
+    
+    // Semantic colors
+    primary: '#8b5cf6',      // Purple 500
+    primaryHover: '#7c3aed', // Purple 600
+    primaryActive: '#6d28d9', // Purple 700
+    secondary: '#f50057',    // Keep existing secondary
+    
+    // Status colors
     success: '#4caf50',
-    warning: '#ff9800',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    info: '#3b82f6',
+    
+    // Neutral colors
     white: '#ffffff',
     black: '#000000',
-    gray: {
-      100: '#f5f5f5',
-      200: '#eeeeee',
-      300: '#e0e0e0',
-      400: '#bdbdbd',
-      500: '#9e9e9e',
-      600: '#757575',
-      700: '#616161',
-      800: '#424242',
-      900: '#212121',
-    }
+    background: '#f9fafb',   // Gray 50
+    text: '#1f2937',         // Gray 800
+    textSecondary: '#6b7280', // Gray 500
+    border: '#e5e7eb',       // Gray 200
+    borderFocus: '#8b5cf6',  // Purple 500
   },
   spacing: {
     xs: '4px',

@@ -9,6 +9,7 @@ import {
 import { getScenariosForUser, createScenario, updateScenario, deleteScenario } from '../../../services/scenariosService';
 import { supabase } from '../../../services/supabase';
 import { FaPlus } from 'react-icons/fa';
+import { theme } from '../../../styles/theme';
 import {
   ScenarioList,
   SaveButton,
@@ -330,7 +331,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
                 />
                 <button
                   onClick={handleCreateScenario}
-                  style={{ marginLeft: '0.5rem', padding: '0.5rem 1rem', borderRadius: '4px', backgroundColor: '#4f46e5', color: 'white', border: '1px solid #4f46e5', cursor: 'pointer' }}
+                  style={{ marginLeft: '0.5rem', padding: '0.5rem 1rem', borderRadius: '4px', backgroundColor: theme.colors.primary, color: 'white', border: `1px solid ${theme.colors.primary}`, cursor: 'pointer' }}
                 >
                   Add
                 </button>

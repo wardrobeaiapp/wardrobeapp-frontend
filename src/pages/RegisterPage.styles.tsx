@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { theme } from '../styles/theme';
 
 export const AuthContainer = styled.div`
   display: flex;
@@ -33,7 +34,7 @@ export const LogoCircle = styled.div`
   justify-content: center;
   width: 3.5rem;
   height: 3.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   border-radius: 50%;
   margin-bottom: 0.75rem;
 `;
@@ -168,7 +169,7 @@ export const FormInput = styled.input`
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
 `;
@@ -226,7 +227,7 @@ export const CheckboxLabel = styled.label`
 `;
 
 export const TermsLink = styled.a`
-  color: #6366f1;
+  color: ${theme.colors.primary};
   text-decoration: none;
   font-weight: 500;
   
@@ -238,7 +239,7 @@ export const TermsLink = styled.a`
 export const SubmitButton = styled.button`
   width: 100%;
   padding: 0.75rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -248,7 +249,7 @@ export const SubmitButton = styled.button`
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: #4f46e5;
+    background-color: ${theme.colors.primaryHover};
   }
   
   &:disabled {
@@ -265,7 +266,7 @@ export const LoginPrompt = styled.div`
 `;
 
 export const LoginLink = styled(Link)`
-  color: #6366f1;
+  color: ${theme.colors.primary};
   text-decoration: none;
   font-weight: 500;
   margin-left: 0.25rem;

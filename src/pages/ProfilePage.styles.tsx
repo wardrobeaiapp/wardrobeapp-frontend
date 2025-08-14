@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import FormStyles from '../components/forms/styles';
+import { theme } from '../styles/theme';
 
 // Consistent width wrapper for all profile sections - acts as a layout container only
 export const SectionWrapper = styled.div`
@@ -93,7 +94,7 @@ export const CategoryItem = styled.li<{ $active?: boolean }>`
   cursor: pointer;
   font-weight: ${props => props.$active ? '600' : '400'};
   background-color: ${props => props.$active ? '#f3f4f6' : 'transparent'};
-  color: ${props => props.$active ? '#4f46e5' : '#4b5563'};
+  color: ${props => props.$active ? theme.colors.primary : theme.colors.gray[600]};
   transition: all 0.2s ease;
   
   &:hover {
@@ -297,7 +298,7 @@ export const ToggleSwitch = styled.label`
   }
   
   input:checked + span {
-    background-color: #6366f1;
+    background-color: ${theme.colors.primary};
   }
   
   input:checked + span:before {
@@ -331,7 +332,7 @@ export const RangeSlider = styled.input.attrs({ type: 'range' })`
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #6366f1;
+    background: ${theme.colors.primary};
     cursor: pointer;
   }
   
@@ -339,7 +340,7 @@ export const RangeSlider = styled.input.attrs({ type: 'range' })`
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #6366f1;
+    background: ${theme.colors.primary};
     cursor: pointer;
     border: none;
   }

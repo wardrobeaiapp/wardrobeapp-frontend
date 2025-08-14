@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { theme } from '../styles/theme';
 
 export const WardrobeContainer = styled.div`
   min-height: 100vh;
@@ -98,8 +99,8 @@ export const FilterSelect = styled.select`
   &:focus {
     outline: none;
     ring: 2px;
-    ring-color: #8b5cf6;
-    border-color: #8b5cf6;
+    ring-color: ${theme.colors.primary};
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
@@ -126,8 +127,8 @@ export const SearchInput = styled.input`
   &:focus {
     outline: none;
     ring: 2px;
-    ring-color: #8b5cf6;
-    border-color: #8b5cf6;
+    ring-color: ${theme.colors.primary};
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
   
@@ -161,7 +162,7 @@ export const AddItemButton = styled.button`
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background-color: #8b5cf6;
+  background-color: ${theme.colors.primary};
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -172,7 +173,7 @@ export const AddItemButton = styled.button`
   box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
   
   &:hover {
-    background-color: #7c3aed;
+    background-color: ${theme.colors.purple[600]};
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   }
@@ -180,7 +181,7 @@ export const AddItemButton = styled.button`
   &:focus {
     outline: none;
     ring: 2px;
-    ring-color: #8b5cf6;
+    ring-color: ${theme.colors.primary};
     ring-offset: 2px;
   }
 `;
@@ -306,7 +307,7 @@ export const SeasonTag = styled.span<{ $season?: string }>`
 export const ViewButton = styled.button`
   width: 100%;
   padding: 0.75rem;
-  background-color: #8b5cf6;
+  background-color: ${theme.colors.primary};
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -320,7 +321,7 @@ export const ViewButton = styled.button`
   gap: 0.5rem;
   
   &:hover {
-    background-color: #7c3aed;
+    background-color: ${theme.colors.purple[600]};
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
   }
@@ -328,7 +329,7 @@ export const ViewButton = styled.button`
   &:focus {
     outline: none;
     ring: 2px;
-    ring-color: #8b5cf6;
+    ring-color: ${theme.colors.primary};
     ring-offset: 2px;
   }
 `;

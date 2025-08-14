@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { WishlistStatus } from '../../../../types';
+import { theme } from '../../../../styles/theme';
 
 export const Card = styled.div`
   display: flex;
@@ -136,7 +137,7 @@ export const TagsContainer = styled.div`
 export const Tag = styled.span`
   padding: 0.375rem 0.75rem;
   border-radius: 0.5rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
   color: white;
   font-size: 0.75rem;
   font-weight: 600;
@@ -156,7 +157,7 @@ export const ButtonContainer = styled.div`
 export const ViewButton = styled.button`
   flex: 1;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -169,7 +170,7 @@ export const ViewButton = styled.button`
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
   }
   
   &:active {
