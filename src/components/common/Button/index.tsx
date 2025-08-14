@@ -69,13 +69,13 @@ const StyledButton = styled.button<StyledButtonProps>`
       case 'lg':
         return `
           padding: ${theme.spacing.sm} ${theme.spacing.lg};
-          font-size: ${theme.typography.fontSize.lg};
+          font-size: ${theme.typography.fontSize.md};
           min-height: 48px;
         `;
       case 'xl':
         return `
           padding: ${theme.spacing.md} ${theme.spacing.xl};
-          font-size: ${theme.typography.fontSize.xl};
+          font-size: ${theme.typography.fontSize.lg};
           min-height: 56px;
         `;
       default:
