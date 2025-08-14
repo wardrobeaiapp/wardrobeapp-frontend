@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { theme } from '../styles/theme';
 
 export const PageContainer = styled.div`
   max-width: 1200px;
@@ -126,7 +127,7 @@ export const CalendarWrapper = styled.div`
   }
   
   .react-calendar__tile--active {
-    background-color: #8b5cf6 !important;
+    background-color: ${theme.colors.primary} !important;
     color: white !important;
   }
   
@@ -218,7 +219,7 @@ export const Select = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
 `;
@@ -235,7 +236,7 @@ export const Textarea = styled.textarea`
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
 `;
@@ -246,7 +247,7 @@ export const ActionButton = styled.button`
   justify-content: center;
   width: 100%;
   padding: 0.75rem 1rem;
-  background-color: #8b5cf6;
+  background-color: ${theme.colors.primary};
   color: white;
   font-weight: 500;
   border: none;
@@ -256,7 +257,7 @@ export const ActionButton = styled.button`
   margin-bottom: 0.75rem;
   
   &:hover {
-    background-color: #7c3aed;
+    background-color: ${theme.colors.purple[600]};
   }
   
   svg {

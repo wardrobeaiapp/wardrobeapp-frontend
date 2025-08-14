@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import FormStyles from '../components/forms/styles';
+import { theme } from '../styles/theme';
 
 // Reuse form container and card styles from shared Form styles
 export const OnboardingContainer = styled(FormStyles.FormContainer)`
@@ -32,7 +33,7 @@ export const ProgressContainer = styled.div<{ $currentStep: number; $totalSteps:
     left: 0;
     width: ${props => `${(props.$currentStep / props.$totalSteps) * 100}%`};
     height: 6px;
-    background-color: #6366f1;
+    background-color: ${theme.colors.primary};
     border-radius: 4px;
   }
   
@@ -91,16 +92,16 @@ export const ActivityChip = styled.div<{ selected: boolean }>`
   align-items: center;
   padding: 16px 20px;
   border-radius: 12px;
-  border: 2px solid ${props => props.selected ? '#6366f1' : '#e0e0e0'};
+  border: 2px solid ${props => props.selected ? theme.colors.primary : '#e0e0e0'};
   background-color: ${props => props.selected ? 'rgba(99, 102, 241, 0.1)' : 'white'};
-  color: ${props => props.selected ? '#6366f1' : '#333'};
+  color: ${props => props.selected ? theme.colors.primary : '#333'};
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin-bottom: 8px;
   
   &:hover {
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     background-color: ${props => props.selected ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)'};
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
@@ -148,15 +149,15 @@ export const OptionsGrid = styled.div`
 export const OptionButton = styled.button<{ selected: boolean }>`
   padding: 12px;
   border-radius: 6px;
-  border: 2px solid ${props => props.selected ? '#6366f1' : '#e0e0e0'};
+  border: 2px solid ${props => props.selected ? theme.colors.primary : '#e0e0e0'};
   background-color: ${props => props.selected ? 'rgba(99, 102, 241, 0.1)' : 'white'};
-  color: ${props => props.selected ? '#6366f1' : '#333'};
+  color: ${props => props.selected ? theme.colors.primary : '#333'};
   font-weight: ${props => props.selected ? '600' : '400'};
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     background-color: ${props => props.selected ? 'rgba(99, 102, 241, 0.1)' : 'rgba(99, 102, 241, 0.05)'};
   }
 `;
@@ -175,15 +176,15 @@ export const OptionChip = styled.div<{ $selected: boolean }>`
   align-items: center;
   padding: 0.75rem;
   border-radius: 0.5rem;
-  border: 1px solid ${props => props.$selected ? '#6366f1' : '#e5e7eb'};
+  border: 1px solid ${props => props.$selected ? theme.colors.primary : '#e5e7eb'};
   background-color: ${props => props.$selected ? '#f5f3ff' : 'white'};
-  color: ${props => props.$selected ? '#6366f1' : '#374151'};
+  color: ${props => props.$selected ? theme.colors.primary : '#374151'};
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
   
   &:hover {
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     background-color: ${props => props.$selected ? '#f5f3ff' : '#f9fafb'};
   }
 `;
@@ -242,7 +243,7 @@ export const NextButton = styled.button<{ $isComplete?: boolean }>`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
   &:hover {
-    background-color: #6366f1;
+    background-color: ${theme.colors.primary};
   }
   
   &::after {

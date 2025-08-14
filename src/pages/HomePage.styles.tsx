@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components';
+import { theme } from '../styles/theme';
 
 export const PageContainer = styled.div`
   max-width: 1200px;
@@ -30,15 +31,15 @@ export const Tab = styled.button<{ $active: boolean }>`
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
   font-weight: ${props => (props.$active ? '600' : '400')};
-  color: ${props => (props.$active ? '#4f46e5' : '#6b7280')};
+  color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[500])};
   background: transparent;
   border: none;
-  border-bottom: 2px solid ${props => (props.$active ? '#4f46e5' : 'transparent')};
+  border-bottom: 2px solid ${props => (props.$active ? theme.colors.primary : 'transparent')};
   cursor: pointer;
   transition: all 0.2s ease;
   
   &:hover {
-    color: ${props => (props.$active ? '#4f46e5' : '#4b5563')};
+    color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[600])};
   }
   
   &:focus {
@@ -83,7 +84,7 @@ export const Select = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
@@ -116,7 +117,7 @@ export const SearchInput = styled.input`
   
   &:focus {
     outline: none;
-    border-color: #8b5cf6;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
 `;
@@ -344,20 +345,20 @@ export const CapsuleActions = styled.div`
 export const ActionButton = styled.button`
   flex: 1;
   padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
   color: white;
   border: none;
   border-radius: 0.5rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
   
   &:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
   }
   
   &:active {
@@ -409,7 +410,7 @@ export const AddButton = styled.button`
   font-size: 1rem;
   font-weight: 500;
   color: white;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
   border: none;
   border-radius: 0.75rem;
   cursor: pointer;
@@ -417,7 +418,7 @@ export const AddButton = styled.button`
   box-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
   
   &:hover {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
   }

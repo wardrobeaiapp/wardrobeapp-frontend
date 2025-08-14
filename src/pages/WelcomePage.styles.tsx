@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { theme } from '../styles/theme';
 
 // Mobile-first design with desktop overrides
 export const PageContainer = styled.div`
@@ -39,7 +40,7 @@ export const LogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
@@ -62,7 +63,7 @@ export const NavLink = styled.a`
   font-weight: 500;
   
   &:hover {
-    color: #6366f1;
+    color: ${theme.colors.primary};
   }
 `;
 
@@ -72,7 +73,7 @@ export const SignInButton = styled(Link)`
   @media (min-width: 768px) {
     display: inline-block;
     padding: 0.5rem 1rem;
-    background-color: #6366f1;
+    background-color: ${theme.colors.primary};
     color: white;
     border-radius: 0.25rem;
     font-weight: 500;
@@ -80,7 +81,7 @@ export const SignInButton = styled(Link)`
     text-decoration: none;
     
     &:hover {
-      background-color: #4f46e5;
+      background-color: ${theme.colors.primaryHover};
     }
   }
 `;
@@ -124,7 +125,7 @@ export const HeroTitle = styled.h1`
 
 export const PurpleText = styled.span`
   display: block;
-  color: #6366f1;
+  color: ${theme.colors.primary};
 `;
 
 export const HeroDescription = styled.p`
@@ -153,7 +154,7 @@ export const ButtonGroup = styled.div`
 export const PrimaryButton = styled(Link)`
   display: inline-block;
   padding: 0.75rem 1.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 0.25rem;
   font-weight: 500;
@@ -161,7 +162,7 @@ export const PrimaryButton = styled(Link)`
   text-decoration: none;
   
   &:hover {
-    background-color: #4f46e5;
+    background-color: ${theme.colors.primaryHover};
   }
 `;
 
@@ -169,8 +170,8 @@ export const SecondaryButton = styled.a`
   display: inline-block;
   padding: 0.75rem 1.5rem;
   background-color: white;
-  color: #6366f1;
-  border: 1px solid #6366f1;
+  color: ${theme.colors.primary};
+  border: 1px solid ${theme.colors.primary};
   border-radius: 0.25rem;
   font-weight: 500;
   text-align: center;
@@ -262,7 +263,7 @@ export const FeatureIcon = styled.div`
   width: 3rem;
   height: 3rem;
   background-color: #eef2ff;
-  color: #6366f1;
+  color: ${theme.colors.primary};
   border-radius: 0.5rem;
   font-size: 1.5rem;
   margin-bottom: 1.5rem;
@@ -316,7 +317,7 @@ export const StepNumber = styled.div`
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 9999px;
   font-size: 1.25rem;
@@ -327,7 +328,7 @@ export const StepNumber = styled.div`
 // CTA Section
 export const CTASection = styled.section`
   padding: 4rem 1.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   text-align: center;
   
@@ -363,7 +364,7 @@ export const CTAButton = styled(Link)`
   display: inline-block;
   padding: 0.75rem 1.5rem;
   background-color: white;
-  color: #6366f1;
+  color: ${theme.colors.primary};
   border-radius: 0.25rem;
   font-weight: 600;
   text-decoration: none;
@@ -412,7 +413,7 @@ export const FooterLogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
@@ -476,7 +477,7 @@ export const MobileLogo = styled.div`
   margin-bottom: 2rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #6366f1;
+  color: ${theme.colors.primary};
 `;
 
 export const MobileLogoIcon = styled.span`
@@ -486,7 +487,7 @@ export const MobileLogoIcon = styled.span`
   width: 2rem;
   height: 2rem;
   margin-right: 0.5rem;
-  color: #6366f1;
+  color: ${theme.colors.primary};
   font-size: 1.25rem;
 `;
 
@@ -516,7 +517,7 @@ export const MobileButton = styled(Link)`
   display: block;
   width: 100%;
   padding: 0.875rem;
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   border-radius: 9999px;
   font-weight: 600;
@@ -524,6 +525,6 @@ export const MobileButton = styled(Link)`
   text-decoration: none;
   
   &:hover {
-    background-color: #4f46e5;
+    background-color: ${theme.colors.primaryHover};
   }
 `;

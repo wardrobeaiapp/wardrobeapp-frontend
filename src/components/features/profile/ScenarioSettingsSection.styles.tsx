@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { theme } from '../../../styles/theme';
 
 export const ScenarioList = styled.div`
   margin-top: 1.25rem;
@@ -103,7 +104,7 @@ export const TimeInput = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
 `;
@@ -126,13 +127,13 @@ export const FrequencySelect = styled.select`
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
+    border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
   }
 `;
 
 export const AddButton = styled.button`
-  background-color: #6366f1;
+  background-color: ${theme.colors.primary};
   color: white;
   display: inline-flex;
   align-items: center;
@@ -144,11 +145,11 @@ export const AddButton = styled.button`
   border-radius: 0.375rem;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  border: 1px solid #6366f1;
+  border: 1px solid ${theme.colors.primary};
   transition: background-color 0.2s;
   
   &:hover {
-    background-color: #4f46e5;
+    background-color: ${theme.colors.primary};
   }
 `;
 
