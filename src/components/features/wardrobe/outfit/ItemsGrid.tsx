@@ -1,6 +1,6 @@
 import React from 'react';
-import { WardrobeItem, Season } from '../../types';
-import { formatCategory } from '../../utils/textFormatting';
+import { WardrobeItem, Season } from '../../../../types';
+import { formatCategory } from '../../../../utils/textFormatting';
 import {
   ItemsGrid as StyledItemsGrid,
   ItemCard,

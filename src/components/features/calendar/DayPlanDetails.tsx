@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outfit, WardrobeItem } from '../../../types';
 import { useWardrobe } from '../../../context/WardrobeContext';
 import ItemViewModal from '../../ItemViewModal';
-import OutfitDetailModal from '../../OutfitDetailModal';
+import OutfitDetailModal from '../wardrobe/OutfitDetailModal';
 import { FaTrash } from 'react-icons/fa';
 import {
   DetailsPanel,

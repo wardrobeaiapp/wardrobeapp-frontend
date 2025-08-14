@@ -5,7 +5,7 @@ import {
 import {
   ModernCancelButton,
   ModernSubmitButton
-} from '../../../../OutfitForm.styles';
+} from '../../OutfitForm.styles';
 
 export interface FormActionsProps {
   onCancel: () => void;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../types';
-import { fetchScenarios } from '../services/api';
-import { FALLBACK_SCENARIOS } from '../constants';
+import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../types';
+import { fetchScenarios } from '../../../services/api';
+import { FALLBACK_SCENARIOS } from '../../../constants';
 import { 
   FormContainer, 
   FormGroup, 

@@ -1,6 +1,6 @@
 import React from 'react';
-import { ItemCategory, Season } from '../../types';
-import { formatCategoryForFilter } from '../../utils/textFormatting';
+import { Season, ItemCategory } from '../../../../types';
+import { formatCategoryForFilter } from '../../../../utils/textFormatting';
 import {
   FormContainer,
   ThreeColumnRow,

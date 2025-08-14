@@ -1,6 +1,6 @@
 import React from 'react';
-import { Outfit, WardrobeItem } from '../types';
-import { formatCategory } from '../utils/textFormatting';
+import { Outfit, WardrobeItem } from '../../../types';
+import { formatCategory } from '../../../utils/textFormatting';
 
 import {
   ModalOverlay,

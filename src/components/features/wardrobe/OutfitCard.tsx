@@ -12,7 +12,7 @@ import {
   ItemImageSquare,
   ItemImagePlaceholder
 } from './OutfitCard.styles';
-import { Outfit, WardrobeItem } from '../types';
+import { Outfit, WardrobeItem } from '../../../types';
 
 interface OutfitCardProps {
   outfit: Outfit;

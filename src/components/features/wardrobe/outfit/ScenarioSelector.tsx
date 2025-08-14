@@ -1,5 +1,6 @@
 import React from 'react';
-import { Scenario } from '../../services/api';
+import { Season } from '../../../../types';
+import { Scenario } from '../../../../services/api';
 import {
   FormGroup,
   SeasonCheckboxes,

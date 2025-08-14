@@ -5,7 +5,7 @@ import {
   SelectedItemBadge,
   RemoveItemButton
 } from '../CapsuleForm.styles';
-import { ModernSubmitButton } from '../../../OutfitForm.styles';
+import { ModernSubmitButton } from '../OutfitForm.styles';
 
 interface MainItemSelectorProps {
   mainItemId: string;

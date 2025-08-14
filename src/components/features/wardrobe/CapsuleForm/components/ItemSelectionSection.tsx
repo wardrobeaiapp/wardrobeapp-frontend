@@ -6,7 +6,7 @@ import {
 } from '../../CapsuleForm.styles';
 import {
   ModernSubmitButton
-} from '../../../../OutfitForm.styles';
+} from '../../OutfitForm.styles';
 import MainItemSelector from '../../capsule/MainItemSelector';
 import SelectedItemsList from '../../capsule/SelectedItemsList';
 

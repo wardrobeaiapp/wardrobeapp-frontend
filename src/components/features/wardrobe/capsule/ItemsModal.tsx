@@ -11,7 +11,7 @@ import {
   ResultsCount,
   ButtonGroup,
   ModernSubmitButton
-} from '../../../OutfitForm.styles';
+} from '../OutfitForm.styles';
 
 interface ItemsModalProps {
   isOpen: boolean;
