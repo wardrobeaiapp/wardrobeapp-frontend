@@ -1,7 +1,7 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../types';
-import FiltersPanel from './FiltersPanel';
-import ItemsGrid from './ItemsGrid';
+import FiltersPanel from '../capsule/FiltersPanel';
+import ItemsGrid from '../capsule/ItemsGrid';
 import {
   ItemsModal as StyledItemsModal,
   ItemsModalContent,
@@ -11,7 +11,7 @@ import {
   ResultsCount,
   ButtonGroup,
   ModernSubmitButton
-} from '../OutfitForm.styles';
+} from '../forms/OutfitForm.styles';
 
 interface ItemsModalProps {
   isOpen: boolean;

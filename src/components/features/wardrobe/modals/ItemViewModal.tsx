@@ -1,7 +1,7 @@
 import React from 'react';
-import { WardrobeItem, Season, WishlistStatus } from '../types';
-import { formatCategory } from '../utils/textFormatting';
-import { useWardrobe } from '../context/WardrobeContext';
+import { WardrobeItem, Season, WishlistStatus } from '../../../../types';
+import { formatCategory } from '../../../../utils/textFormatting';
+import { useWardrobe } from '../../../../context/WardrobeContext';
 import {
   Modal,
   ModalContent,
@@ -9,10 +9,10 @@ import {
   ModalTitle,
   ModalBody,
   CloseButton
-} from '../pages/HomePage.styles';
+} from '../../../../pages/HomePage.styles';
 import {
   SubmitButton,
-} from './features/wardrobe/WardrobeItemForm.styles';
+} from '../forms/WardrobeItemForm.styles';
 import {
   ItemImageContainer,
   ItemImage,

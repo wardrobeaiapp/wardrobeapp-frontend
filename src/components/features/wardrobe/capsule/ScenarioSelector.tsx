@@ -1,6 +1,6 @@
 import React from 'react';
 import { Scenario } from '../../../../services/api';
-import { FormGroup, SeasonCheckboxes, CheckboxContainer, CheckboxLabel, CheckboxInput } from '../CapsuleForm.styles';
+import { FormGroup, SeasonCheckboxes, CheckboxContainer, CheckboxLabel, CheckboxInput } from '../forms/CapsuleForm.styles';
 
 interface ScenarioSelectorProps {
   scenarios: Scenario[];

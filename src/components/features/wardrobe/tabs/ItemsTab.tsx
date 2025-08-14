@@ -1,7 +1,7 @@
 import React from 'react';
 import { MdSearch } from 'react-icons/md';
 import { ItemCategory, Season, WardrobeItem } from '../../../../types';
-import WardrobeItemCard from '../WardrobeItemCard';
+import WardrobeItemCard from '../cards/WardrobeItemCard';
 import Loader from '../../../common/Loader';
 import {
   FiltersContainer,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { WardrobeItem } from '../../../../../types';
+import { WardrobeItem } from '../../../../../../types';
 import {
   FormGroup,
   Label
@@ -7,8 +7,8 @@ import {
 import {
   ModernSubmitButton
 } from '../../OutfitForm.styles';
-import MainItemSelector from '../../capsule/MainItemSelector';
-import SelectedItemsList from '../../capsule/SelectedItemsList';
+import MainItemSelector from '../../../capsule/MainItemSelector';
+import SelectedItemsList from '../../../capsule/SelectedItemsList';
 
 export interface ItemSelectionSectionProps {
   // Main item props

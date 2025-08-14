@@ -18,7 +18,7 @@ import {
   SearchIcon,
   SearchInput
 } from '../../../../pages/HomePage.styles';
-import WardrobeItemCard from '../WardrobeItemCard';
+import WardrobeItemCard from '../cards/WardrobeItemCard';
 
 interface WishlistTabProps {
   items: WardrobeItem[];

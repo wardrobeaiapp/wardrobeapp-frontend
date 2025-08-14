@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { formTokens, createFocusStyles, createButtonStyles } from '../../../styles/tokens/forms';
+import { formTokens, createFocusStyles, createButtonStyles } from '../../../../styles/tokens/forms';
 
 // Form Container Styles
 export const FormContainer = styled.div`

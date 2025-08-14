@@ -1,6 +1,6 @@
 import React from 'react';
 import { WardrobeItem, Capsule } from '../../../../types';
-import CapsuleForm, { CapsuleFormData } from '../../wardrobe/CapsuleForm';
+import CapsuleForm, { CapsuleFormData } from '../forms/CapsuleForm';
 import {
   Modal,
   ModalContent,

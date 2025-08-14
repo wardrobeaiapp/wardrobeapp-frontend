@@ -1,5 +1,5 @@
-import { Season } from '../../../../../types';
-import { Scenario } from '../../../../../services/api';
+import { Season } from '../../../../../../types';
+import { Scenario } from '../../../../../../services/api';
 
 export interface CapsuleFormData {
   name: string;

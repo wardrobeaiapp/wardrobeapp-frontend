@@ -1,6 +1,6 @@
 import React from 'react';
-import { WardrobeItem } from '../../../../types';
-import { Capsule } from '../../../../types';
+import { WardrobeItem } from '../../../../../types';
+import { Capsule } from '../../../../../types';
 import {
   FormContainer
 } from '../CapsuleForm.styles';
@@ -17,9 +17,9 @@ import ItemSelectionSection from './components/ItemSelectionSection';
 import FormActions from './components/FormActions';
 
 // Existing components
-import ScenarioSelector from '../capsule/ScenarioSelector';
-import SeasonSelector from '../capsule/SeasonSelector';
-import ItemsModal from '../capsule/ItemsModal';
+import ScenarioSelector from '../../capsule/ScenarioSelector';
+import SeasonSelector from '../../capsule/SeasonSelector';
+import ItemsModal from '../../modals/ItemsModal';
 
 // Re-export the interface for external use
 export type { CapsuleFormData } from './utils/formHelpers';

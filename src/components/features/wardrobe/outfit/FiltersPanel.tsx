@@ -8,7 +8,7 @@ import {
   Label,
   Select,
   Input
-} from '../OutfitForm.styles';
+} from '../forms/OutfitForm.styles';
 
 interface FiltersPanelProps {
   searchQuery: string;

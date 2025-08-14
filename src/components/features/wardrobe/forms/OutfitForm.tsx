@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../types';
-import { fetchScenarios } from '../../../services/api';
-import { FALLBACK_SCENARIOS } from '../../../constants';
+import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../../types';
+import { fetchScenarios } from '../../../../services/api';
+import { FALLBACK_SCENARIOS } from '../../../../constants';
 import { 
   FormContainer, 
   FormGroup, 
@@ -11,12 +11,12 @@ import {
   ModernSubmitButton
 } from './OutfitForm.styles';
 // ScenarioFixer removed as requested
-import SelectedItemsList from './outfit/SelectedItemsList';
-import ItemsModal from './outfit/ItemsModal';
+import SelectedItemsList from '../outfit/SelectedItemsList';
+import ItemsModal from '../outfit/ItemsModal';
 
 // Import the extracted components
-import ScenarioSelector from './outfit/ScenarioSelector';
-import SeasonSelector from './outfit/SeasonSelector';
+import ScenarioSelector from '../outfit/ScenarioSelector';
+import SeasonSelector from '../outfit/SeasonSelector';
 
 // Using Scenario interface imported from '../types'
 

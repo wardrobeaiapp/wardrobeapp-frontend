@@ -1,4 +1,4 @@
-import { Season, WardrobeItem } from '../../../../../types';
+import { Season, WardrobeItem } from '../../../../../../types';
 
 /**
  * Get unique categories from available items
