@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { WardrobeItem, WishlistStatus, ItemCategory, Season } from '../../types';
+import { WardrobeItem, WishlistStatus, ItemCategory, Season } from '../../../../../types';
 import { FaTimes, FaSearch } from 'react-icons/fa';
 import {
   ModalOverlay,

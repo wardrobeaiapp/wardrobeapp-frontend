@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import FormStyles from '../components/Form';
+import FormStyles from '../components/forms/styles';
 
 // Consistent width wrapper for all profile sections - acts as a layout container only
 export const SectionWrapper = styled.div`

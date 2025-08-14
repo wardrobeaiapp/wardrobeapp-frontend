@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import FormStyles from '../components/Form';
+import FormStyles from '../components/forms/styles';
 
 // Reuse form container and card styles from shared Form styles
 export const OnboardingContainer = styled(FormStyles.FormContainer)`
