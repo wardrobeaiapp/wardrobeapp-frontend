@@ -13,7 +13,6 @@ import {
   Title,
   TabsContainer,
   Tab,
-  AddButton
 } from './HomePage.styles';
 import Button from '../components/common/Button';
 

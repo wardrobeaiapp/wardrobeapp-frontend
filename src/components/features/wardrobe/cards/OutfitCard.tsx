@@ -4,7 +4,6 @@ import {
   OutfitName,
   OutfitDetail,
   ButtonsContainer,
-  EditButton,
   SeasonTag,
   TagsContainer,
   OccasionTag,
@@ -13,6 +12,7 @@ import {
   ItemImagePlaceholder
 } from './OutfitCard.styles';
 import { Outfit, WardrobeItem } from '../../../../types';
+import Button from '../../../common/Button';
 
 interface OutfitCardProps {
   outfit: Outfit;
@@ -69,7 +69,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, onView, onDelete, wardr
       </ItemImagesGrid>
       
       <ButtonsContainer>
-        <EditButton onClick={() => onView(outfit)}>View</EditButton>
+        <Button fullWidth onClick={() => onView(outfit)}>View</Button>
       </ButtonsContainer>
     </Card>
   );
