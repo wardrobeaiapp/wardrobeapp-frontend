@@ -1,6 +1,7 @@
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
 import { theme } from '../styles/theme';
+import { FeatureCard as BaseFeatureCard, Card } from '../components/cards/Card.styles';
+import { Link } from 'react-router-dom';
 
 // Mobile-first design with desktop overrides
 export const PageContainer = styled.div`
@@ -248,13 +249,8 @@ export const FeatureGrid = styled.div`
   }
 `;
 
-export const FeatureCard = styled.div`
-  background-color: white;
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  text-align: center;
-`;
+// Use centralized FeatureCard with theme integration
+export const FeatureCard = BaseFeatureCard;
 
 export const FeatureIcon = styled.div`
   display: inline-flex;
@@ -303,12 +299,9 @@ export const StepsContainer = styled.div`
   }
 `;
 
-export const StepCard = styled.div`
-  padding: 2rem;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+// Use centralized Card with appropriate variant and styling
+export const StepCard = styled(Card).attrs({ $variant: 'default', $padding: 'xl', $size: 'md' })`
   text-align: center;
-  background-color: white;
 `;
 
 export const StepNumber = styled.div`

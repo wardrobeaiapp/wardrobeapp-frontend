@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
+import Button from '../../common/Button';
 import {
   HeaderContainer,
   Logo,
@@ -9,13 +10,11 @@ import {
   Nav,
   NavLink,
   AuthButtons,
-  SignInButton,
-  SignUpButton,
   UserMenu,
-  LogoutButton,
   MobileMenuButton,
   BackButton,
-  HeaderTitle
+  HeaderTitle,
+  OnboardingStepIndicator
 } from './Header.styles';
 
 interface HeaderProps {
@@ -76,8 +75,12 @@ const Header: React.FC<HeaderProps> = ({
           </Nav>
 
           <AuthButtons>
-            <SignInButton to="/login">Sign In</SignInButton>
-            <SignUpButton to="/register">Sign Up</SignUpButton>
+            <Link to="/login" style={{ textDecoration: 'none' }}>
+              <Button variant="ghost">Sign In</Button>
+            </Link>
+            <Link to="/register" style={{ textDecoration: 'none' }}>
+              <Button variant="primary">Sign Up</Button>
+            </Link>
           </AuthButtons>
         </>
       ) : (
@@ -93,23 +96,24 @@ const Header: React.FC<HeaderProps> = ({
           {isAuthenticated ? (
             <UserMenu>
               {isOnboarding ? (
-                <div style={{ 
-                  fontSize: '16px', 
-                  fontWeight: 'bold',
-                  color: '#333',
-                  padding: '8px 16px'
-                }}>
+                <OnboardingStepIndicator>
                   Step {currentStep} of {totalSteps}
-                </div>
+                </OnboardingStepIndicator>
               ) : (
                 <NavLink to="/profile" $active={isActive('/profile')}>Profile</NavLink>
               )}
-              <LogoutButton onClick={logout}>Logout</LogoutButton>
+              <Button variant="ghost" size="sm" onClick={logout}>
+                Logout
+              </Button>
             </UserMenu>
           ) : (
             <AuthButtons>
-              <SignInButton to="/login">Sign In</SignInButton>
-              <SignUpButton to="/register">Sign Up</SignUpButton>
+              <Link to="/login" style={{ textDecoration: 'none' }}>
+                <Button variant="ghost">Sign In</Button>
+              </Link>
+              <Link to="/register" style={{ textDecoration: 'none' }}>
+                <Button variant="primary">Sign Up</Button>
+              </Link>
             </AuthButtons>
           )}
         </>

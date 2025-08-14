@@ -100,7 +100,7 @@ const NotificationsSection: React.FC<NotificationsProps> = ({ initialData, onSav
       
       <ButtonContainer>
         <Button>Cancel</Button>
-        <Button primary onClick={handleSave}>Save Changes</Button>
+        <Button variant="primary" onClick={handleSave}>Save Changes</Button>
       </ButtonContainer>
     </SectionWrapper>
   );

@@ -29,17 +29,45 @@ export const theme = {
       900: '#111827',  // Darkest text
     },
     
+    // Blue scale (standardized)
+    blue: {
+      50: '#eff6ff',   // Light blue backgrounds
+      100: '#dbeafe',  // Very light blue
+      200: '#bfdbfe',  // Light blue accents
+      300: '#93c5fd',  // Medium light blue
+      400: '#60a5fa',  // Medium blue
+      500: '#3b82f6',  // Primary blue (info color)
+      600: '#2563eb',  // Darker blue
+      700: '#1d4ed8',  // Dark blue
+      800: '#1e40af',  // Very dark blue
+      900: '#1e3a8a',  // Darkest blue
+    },
+    
+    // Green scale (standardized)
+    green: {
+      50: '#f0fdf4',   // Light green backgrounds
+      100: '#dcfce7',  // Very light green
+      200: '#bbf7d0',  // Light green accents
+      300: '#86efac',  // Medium light green
+      400: '#4ade80',  // Medium green
+      500: '#22c55e',  // Primary green (success color)
+      600: '#16a34a',  // Darker green
+      700: '#15803d',  // Dark green
+      800: '#166534',  // Very dark green
+      900: '#14532d',  // Darkest green
+    },
+    
     // Semantic colors
     primary: '#8b5cf6',      // Purple 500
     primaryHover: '#7c3aed', // Purple 600
     primaryActive: '#6d28d9', // Purple 700
     secondary: '#f50057',    // Keep existing secondary
     
-    // Status colors
-    success: '#4caf50',
-    error: '#ef4444',
-    warning: '#f59e0b',
-    info: '#3b82f6',
+    // Status colors (updated to use standardized scales)
+    success: '#22c55e',      // Green 500
+    error: '#ef4444',        // Keep existing red
+    warning: '#f59e0b',      // Keep existing amber
+    info: '#3b82f6',         // Blue 500
     
     // Neutral colors
     white: '#ffffff',

@@ -163,3 +163,10 @@ export const HeaderTitle = styled.h1`
   color: #1f2937;
   margin: 0;
 `;
+
+export const OnboardingStepIndicator = styled.div`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 16px;
+`;

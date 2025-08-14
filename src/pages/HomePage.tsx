@@ -1,5 +1,6 @@
 import React from 'react';
 import Header from '../components/layout/Header/Header';
+import Footer from '../components/layout/Footer/Footer';
 import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
@@ -385,6 +386,7 @@ const HomePage: React.FC = () => {
         />
 
     </PageContainer>
+    <Footer variant="simple" />
     </>
   );
 };

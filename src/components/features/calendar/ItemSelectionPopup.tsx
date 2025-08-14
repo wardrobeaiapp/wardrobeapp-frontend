@@ -77,7 +77,7 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = ({
         </SelectionGrid>
         <ButtonContainer>
           <Button onClick={() => onClose()}>Cancel</Button>
-          <Button primary onClick={() => {
+          <Button variant="primary" onClick={() => {
             // Save selections and close
             onSave(localSelectedIds);
             onClose();

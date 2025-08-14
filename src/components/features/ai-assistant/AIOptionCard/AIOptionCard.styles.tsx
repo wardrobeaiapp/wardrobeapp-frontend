@@ -1,30 +1,28 @@
 import styled from 'styled-components';
+import { theme } from '../../../../styles/theme';
+import { Card as BaseCard } from '../../../cards/Card.styles';
 
-export const Card = styled.div<{ $active: boolean }>`
-  background-color: ${props => props.$active ? '#8b5cf611' : '#f9fafb'};
-  border: 2px solid ${props => props.$active ? '#8b5cf6' : '#e5e7eb'};
-  border-radius: 0.5rem;
-  padding: 1.5rem;
+export const Card = styled(BaseCard).attrs({ $variant: 'outline', $padding: 'lg', $interactive: true })<{ $active: boolean }>`
+  background-color: ${props => props.$active ? `${theme.colors.purple[500]}11` : theme.colors.gray[50]};
+  border: 2px solid ${props => props.$active ? theme.colors.purple[500] : theme.colors.gray[200]};
   cursor: pointer;
-  transition: all 0.2s ease;
   
   &:hover {
-    border-color: #8b5cf6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    border-color: ${theme.colors.purple[500]};
+    box-shadow: 0 4px 12px ${theme.colors.purple[500]}26;
   }
 `;
 
 export const Title = styled.h3`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: ${theme.typography.fontSize.lg};
+  font-weight: ${theme.typography.fontWeight.bold};
+  color: ${theme.colors.gray[900]};
   margin: 0 0 0.5rem;
 `;
 
 export const Description = styled.p`
-  font-size: 0.875rem;
-  color: #6b7280;
+  font-size: ${theme.typography.fontSize.sm};
+  color: ${theme.colors.gray[500]};
   margin: 0;
-  line-height: 1.4;
+  line-height: ${theme.typography.lineHeight.normal};
 `;

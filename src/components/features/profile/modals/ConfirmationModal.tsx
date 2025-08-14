@@ -43,27 +43,37 @@ const ButtonContainer = styled.div`
   margin-top: 24px;
 `;
 
-const Button = styled.button<{ primary?: boolean }>`
+const ConfirmButton = styled.button<{ variant?: 'danger' | 'secondary' }>`
   padding: 12px 32px;
   font-size: 16px;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  background-color: ${props => props.primary ? '#EF4444' : '#f3f4f6'};
-  color: ${props => props.primary ? '#ffffff' : '#1f2937'};
-  border: 1px solid ${props => props.primary ? '#EF4444' : '#e5e7eb'};
+  background-color: ${props => 
+    props.variant === 'danger' ? '#EF4444' : '#f3f4f6'
+  };
+  color: ${props => 
+    props.variant === 'danger' ? '#ffffff' : '#1f2937'
+  };
+  border: 1px solid ${props => 
+    props.variant === 'danger' ? '#EF4444' : '#e5e7eb'
+  };
   min-width: 120px;
   
   &:hover {
-    background-color: ${props => props.primary ? '#DC2626' : '#e5e7eb'};
+    background-color: ${props => 
+      props.variant === 'danger' ? '#DC2626' : '#e5e7eb'
+    };
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
   
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 0 3px ${props => 
+      props.variant === 'danger' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(156, 163, 175, 0.25)'
+    };
   }
   
   &:active {
@@ -138,11 +148,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Title>Confirmation Required</Title>
           <Message>{message}</Message>
           <ButtonContainer>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button primary onClick={() => {
+            <ConfirmButton variant="secondary" onClick={onClose}>Cancel</ConfirmButton>
+            <ConfirmButton variant="danger" onClick={() => {
               onConfirm();
               onClose();
-            }}>Confirm</Button>
+            }}>Confirm</ConfirmButton>
           </ButtonContainer>
         </ModalBody>
       </EnhancedModalContent>

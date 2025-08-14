@@ -1,21 +1,15 @@
 import styled from 'styled-components';
 import { theme } from '../../../../styles/theme';
+import { Card as BaseCard } from '../../../cards/Card.styles';
 
-export const Card = styled.div`
+export const Card = styled(BaseCard).attrs({ $variant: 'default', $padding: 'lg', $hoverable: true })`
   display: flex;
   flex-direction: column;
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
-  padding: 1.25rem;
   position: relative;
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    border-color: #e5e7eb;
   }
 `;
 
@@ -28,7 +22,7 @@ export const OutfitName = styled.h3`
 export const OutfitDetail = styled.p`
   margin: 0.25rem 0;
   font-size: 0.9rem;
-  color: #4b5563;
+  color: ${theme.colors.gray[600]};
 `;
 
 export const ButtonsContainer = styled.div`
@@ -39,7 +33,7 @@ export const ButtonsContainer = styled.div`
 
 export const ActionButton = styled.button`
   background: none;
-  border: 1px solid #e5e7eb;
+  border: 1px solid ${theme.colors.gray[200]};
   border-radius: 0.25rem;
   padding: 0.25rem 0.5rem;
   font-size: 0.8rem;
@@ -47,7 +41,7 @@ export const ActionButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background-color: #f3f4f6;
+    background-color: ${theme.colors.gray[100]};
   }
 `;
 
@@ -77,8 +71,8 @@ export const EditButton = styled.button`
 `;
 
 export const DeleteButton = styled(ActionButton)`
-  color: #dc2626;
-  border-color: #dc2626;
+  color: ${theme.colors.error};
+  border-color: ${theme.colors.error};
 
   &:hover {
     background-color: #fee2e2;
@@ -87,7 +81,7 @@ export const DeleteButton = styled(ActionButton)`
 
 export const SeasonTag = styled.span`
   display: inline-block;
-  background-color: #f3f4f6;
+  background-color: ${theme.colors.gray[100]};
   border-radius: 9999px;
   padding: 0.2rem 0.5rem;
   font-size: 0.75rem;

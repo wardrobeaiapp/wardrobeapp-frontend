@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { Card } from '../../cards/Card.styles';
+import { FormInput as BaseFormInput } from '../../forms/styles/base.styles';
 
 export const PageContainer = styled.div`
   max-width: 700px;
@@ -13,21 +15,11 @@ export const ScenarioList = styled.div`
   gap: 8px;
 `;
 
-export const ScenarioItem = styled.div`
+// Use centralized Card with hover effects and appropriate spacing
+export const ScenarioItem = styled(Card).attrs({ $variant: 'default', $padding: 'md', $hoverable: true })`
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  border: 1px solid #eaeaea;
   margin-bottom: 10px;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-  }
 `;
 
 export const ScenarioIcon = styled.div`
@@ -255,20 +247,8 @@ export const FormLabel = styled.label`
   margin-bottom: 0.5rem;
 `;
 
-export const FormInput = styled.input`
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
-  background-color: #f8f9fa;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #4285f4;
-    background-color: white;
-  }
-`;
+// Use centralized FormInput with theme integration
+export const FormInput = BaseFormInput;
 
 export const ButtonGroup = styled.div`
   display: flex;

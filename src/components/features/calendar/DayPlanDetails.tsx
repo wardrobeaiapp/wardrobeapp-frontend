@@ -193,7 +193,7 @@ const DayPlanDetails: React.FC<DayPlanDetailsProps> = ({
               
               <ButtonContainer>
                 <Button onClick={onRemovePlan}>Remove Plan</Button>
-                <Button primary onClick={onSavePlan}>Save Changes</Button>
+                <Button variant="primary" onClick={onSavePlan}>Save Changes</Button>
               </ButtonContainer>
             </>
           )}
@@ -290,7 +290,7 @@ const DayPlanDetails: React.FC<DayPlanDetailsProps> = ({
           
           <ButtonContainer>
             <Button 
-              primary 
+              variant="primary" 
               onClick={onSavePlan} 
               disabled={selectedOutfitIds.length === 0 && selectedItemIds.length === 0}
             >
