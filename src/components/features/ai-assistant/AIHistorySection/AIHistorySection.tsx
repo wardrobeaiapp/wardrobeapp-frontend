@@ -8,7 +8,6 @@ import {
   ViewAllButton,
   HistoryList,
 } from '../../../../pages/AIAssistantPage.styles';
-import Button from '../../../common/Button';
 
 interface AIHistorySectionProps {
   historyItems: AIHistoryItemType[];

@@ -11,8 +11,8 @@ import {
   TagsContainer,
   Tag,
   ButtonContainer,
-  ViewButton,
 } from './WardrobeItemCard.styles';
+import Button from '../../../common/Button';
 
 interface WardrobeItemCardProps {
   item: WardrobeItem;
@@ -20,8 +20,6 @@ interface WardrobeItemCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
-
-
 
 const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete }) => {
   
@@ -176,9 +174,9 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         
         <ButtonContainer>
           {onView && (
-            <ViewButton onClick={() => onView(item)}>
+            <Button fullWidth onClick={() => onView(item)}>
               View
-            </ViewButton>
+            </Button>
           )}
 
         </ButtonContainer>
