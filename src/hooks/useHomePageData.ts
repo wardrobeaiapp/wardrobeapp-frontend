@@ -3,7 +3,7 @@ import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types'
 import { useWardrobe } from '../context/WardrobeContext';
 import { useOutfits } from '../hooks/useOutfits';
 import useCapsules from '../hooks/useCapsules';
-import { CapsuleFormData } from '../components/CapsuleForm';
+import { CapsuleFormData } from '../components/features/wardrobe/CapsuleForm';
 
 export enum TabType {
   ITEMS = 'items',
