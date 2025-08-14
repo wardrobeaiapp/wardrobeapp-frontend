@@ -37,7 +37,7 @@ const StyledButton = styled.button<StyledButtonProps>`
   justify-content: center;
   gap: ${theme.spacing.xs};
   font-family: ${theme.typography.fontFamily};
-  font-weight: ${theme.typography.fontWeight.medium};
+  font-weight: ${theme.typography.fontWeight.semiBold};
   border-radius: ${theme.borderRadius.md};
   cursor: pointer;
   transition: ${theme.transitions.fast};
