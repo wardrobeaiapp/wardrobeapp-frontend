@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaTimes, FaCheckCircle, FaStar } from 'react-icons/fa';
-import { WishlistStatus } from '../../types';
+import { WishlistStatus } from '../../../../../types';
 import {
   Modal,
   ModalContent,
@@ -8,14 +8,14 @@ import {
   ModalTitle,
   CloseButton,
   ModalBody
-} from '../../pages/HomePage.styles';
+} from '../../../../../pages/HomePage.styles';
 import {
   ItemDetails,
   DetailRow,
   DetailLabel,
   DetailValue,
   ButtonsContainer
-} from '../ItemViewModal.styles';
+} from '../../../../ItemViewModal.styles';
 import {
   ActionButton,
   SecondaryActionButton,

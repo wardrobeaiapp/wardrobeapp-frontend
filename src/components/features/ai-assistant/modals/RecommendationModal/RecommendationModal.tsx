@@ -1,5 +1,5 @@
 import React, { MouseEvent } from 'react';
-import { UserActionStatus } from '../../types';
+import { UserActionStatus } from '../../../../../types';
 import {
   Modal,
   ModalContent,
@@ -7,10 +7,10 @@ import {
   ModalTitle,
   CloseButton,
   ModalBody
-} from '../../pages/HomePage.styles';
+} from '../../../../../pages/HomePage.styles';
 import {
   ButtonsContainer
-} from '../ItemViewModal.styles';
+} from '../../../../ItemViewModal.styles';
 import {
   ActionButton,
   DismissButton
