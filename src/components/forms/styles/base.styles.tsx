@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
+import { theme } from '../../../styles/theme';
 
 // Form Container Styles
 export const FormContainer = styled.div`
@@ -160,57 +161,96 @@ export const FormLabel = styled.label`
 
 export const FormInput = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
+  padding: ${theme.spacing.md};
+  border: 1px solid ${theme.colors.gray[300]};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.sm};
+  font-family: ${theme.typography.fontFamily};
+  color: ${theme.colors.gray[900]};
+  background-color: white;
+  transition: ${theme.transitions.fast};
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    border-color: ${theme.colors.purple[500]};
+    box-shadow: 0 0 0 2px ${theme.colors.purple[200]};
+  }
+  
+  &:hover:not(:focus) {
+    border-color: ${theme.colors.gray[400]};
+  }
+  
+  &:disabled {
+    background-color: ${theme.colors.gray[50]};
+    color: ${theme.colors.gray[500]};
+    cursor: not-allowed;
+  }
+  
+  &::placeholder {
+    color: ${theme.colors.gray[400]};
   }
 `;
 
 export const FormSelect = styled.select`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
+  padding: ${theme.spacing.md};
+  border: 1px solid ${theme.colors.gray[300]};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.sm};
+  font-family: ${theme.typography.fontFamily};
+  color: ${theme.colors.gray[900]};
   background-color: white;
-  position: relative;
-  z-index: 10;
   cursor: pointer;
+  transition: ${theme.transitions.fast};
   appearance: auto !important; /* Force native appearance */
   -webkit-appearance: auto !important;
   -moz-appearance: auto !important;
-  pointer-events: auto !important; /* Ensure clicks are registered */
   
   &:focus, &:hover, &:active {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-    z-index: 1000; /* Ensure dropdown appears above other elements */
+    border-color: ${theme.colors.purple[500]};
+    box-shadow: 0 0 0 2px ${theme.colors.purple[200]};
+  }
+  
+  &:disabled {
+    background-color: ${theme.colors.gray[50]};
+    color: ${theme.colors.gray[500]};
+    cursor: not-allowed;
   }
 `;
 
 export const FormTextarea = styled.textarea`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
+  padding: ${theme.spacing.md};
+  border: 1px solid ${theme.colors.gray[300]};
+  border-radius: ${theme.borderRadius.md};
+  font-size: ${theme.typography.fontSize.sm};
+  font-family: ${theme.typography.fontFamily};
+  color: ${theme.colors.gray[900]};
+  background-color: white;
   min-height: 100px;
   resize: vertical;
+  transition: ${theme.transitions.fast};
   
   &:focus {
     outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+    border-color: ${theme.colors.purple[500]};
+    box-shadow: 0 0 0 2px ${theme.colors.purple[200]};
+  }
+  
+  &:hover:not(:focus) {
+    border-color: ${theme.colors.gray[400]};
+  }
+  
+  &:disabled {
+    background-color: ${theme.colors.gray[50]};
+    color: ${theme.colors.gray[500]};
+    cursor: not-allowed;
+    resize: none;
+  }
+  
+  &::placeholder {
+    color: ${theme.colors.gray[400]};
   }
 `;
 

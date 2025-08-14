@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import { theme } from '../../../styles/theme';
+import { Card as BaseCard } from '../../cards/Card.styles';
 
 // Grid layout for option cards
 export const OptionsGrid = styled.div`
@@ -8,23 +10,21 @@ export const OptionsGrid = styled.div`
   margin: 24px 0;
 `;
 
-// Option card component
-export const OptionCard = styled.div<{ $selected: boolean }>`
+// Option card component using centralized Card with selection states
+export const OptionCard = styled(BaseCard).attrs({ $variant: 'outline', $padding: 'md', $interactive: true })<{ $selected: boolean }>`
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding: 16px;
-  background-color: ${props => props.$selected ? '#f0eaff' : 'white'};
-  border: 1px solid ${props => props.$selected ? '#6c5ce7' : '#eaeaea'};
+  background-color: ${props => props.$selected ? theme.colors.purple[50] : theme.colors.white};
+  border: 1px solid ${props => props.$selected ? theme.colors.purple[500] : theme.colors.gray[200]};
   border-radius: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: ${props => props.$selected ? '0 4px 8px rgba(108, 92, 231, 0.15)' : '0 2px 4px rgba(0, 0, 0, 0.05)'};
+  box-shadow: ${props => props.$selected ? `0 4px 8px ${theme.colors.purple[500]}26` : `0 2px 4px ${theme.colors.gray[900]}0D`};
   
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-color: ${props => props.$selected ? '#6c5ce7' : '#d0d0d0'};
+    box-shadow: 0 4px 8px ${theme.colors.gray[900]}1A;
+    border-color: ${props => props.$selected ? theme.colors.purple[500] : theme.colors.gray[300]};
   }
 `;
 

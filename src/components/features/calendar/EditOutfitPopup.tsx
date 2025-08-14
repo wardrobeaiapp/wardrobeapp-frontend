@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { theme } from '../../../styles/theme';
 import { WardrobeItem } from '../../../types';
 
 const PopupOverlay = styled.div`
@@ -97,14 +98,25 @@ const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
-const Button = styled.button<{ primary?: boolean }>`
+const EditButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   padding: 10px 20px;
   border-radius: 6px;
   border: none;
   font-weight: 500;
   cursor: pointer;
-  background-color: ${props => props.primary ? '#7c3aed' : '#f3f4f6'};
-  color: ${props => props.primary ? 'white' : '#374151'};
+  transition: ${theme.transitions.normal};
+  background-color: ${props => 
+    props.variant === 'primary' ? theme.colors.purple[500] : theme.colors.gray[100]
+  };
+  color: ${props => 
+    props.variant === 'primary' ? 'white' : theme.colors.gray[700]
+  };
+  
+  &:hover {
+    background-color: ${props => 
+      props.variant === 'primary' ? theme.colors.purple[600] : theme.colors.gray[200]
+    };
+  }
 `;
 
 interface EditOutfitPopupProps {
@@ -178,8 +190,8 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
         </ItemList>
 
         <ButtonContainer>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button primary onClick={handleSaveChanges}>Save Changes</Button>
+          <EditButton variant="secondary" onClick={onClose}>Cancel</EditButton>
+          <EditButton variant="primary" onClick={handleSaveChanges}>Save Changes</EditButton>
         </ButtonContainer>
       </PopupContent>
     </PopupOverlay>

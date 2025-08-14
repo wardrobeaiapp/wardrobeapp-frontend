@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
+import { Card } from '../components/cards/Card.styles';
 
 export const PageContainer = styled.div`
   max-width: 1200px;
@@ -160,10 +161,8 @@ export const NoOutfitMessage = styled.p`
   padding: 2rem 0;
 `;
 
-export const OutfitCard = styled.div`
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
+// Use centralized Card with flat variant for subtle background
+export const OutfitCard = styled(Card).attrs({ $variant: 'flat', $padding: 'lg' })`
   margin-bottom: 1.5rem;
 `;
 
@@ -289,7 +288,7 @@ export const SecondaryButton = styled.button`
   }
 `;
 
-export const Button = styled.button<{ primary?: boolean }>`
+export const CalendarButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
   padding: 0.625rem 1.25rem;
   border: none;
   border-radius: 0.375rem;
@@ -297,16 +296,24 @@ export const Button = styled.button<{ primary?: boolean }>`
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: ${props => props.primary ? '#3b82f6' : '#f3f4f6'};
-  color: ${props => props.primary ? 'white' : '#4b5563'};
+  background-color: ${props => 
+    props.variant === 'primary' ? '#8b5cf6' : '#f3f4f6'
+  };
+  color: ${props => 
+    props.variant === 'primary' ? 'white' : '#4b5563'
+  };
   
   &:hover {
-    background-color: ${props => props.primary ? '#2563eb' : '#e5e7eb'};
+    background-color: ${props => 
+      props.variant === 'primary' ? '#7c3aed' : '#e5e7eb'
+    };
   }
   
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 2px ${props => 
+      props.variant === 'primary' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(156, 163, 175, 0.4)'
+    };
   }
 `;
 

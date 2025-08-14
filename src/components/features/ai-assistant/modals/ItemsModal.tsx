@@ -84,7 +84,7 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
             
             <ButtonGroup>
               <Button onClick={onClose}>Cancel</Button>
-              <Button primary={true} onClick={onClose}>Done</Button>
+              <Button variant="primary" onClick={onClose}>Done</Button>
             </ButtonGroup>
           </>
         )}

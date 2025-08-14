@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { theme } from '../styles/theme';
+import { FormInput as BaseFormInput } from '../components/forms/styles/base.styles';
+import { AuthCard as BaseAuthCard } from '../components/cards/Card.styles';
 
 export const AuthContainer = styled.div`
   display: flex;
@@ -11,15 +13,8 @@ export const AuthContainer = styled.div`
   background-color: #f9fafb;
 `;
 
-export const AuthCard = styled.div`
-  background-color: white;
-  border-radius: 1rem;
-  padding: 2rem;
-  width: 100%;
-  max-width: 450px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-  text-align: center;
-`;
+// Use centralized AuthCard with theme integration
+export const AuthCard = BaseAuthCard;
 
 export const LogoContainer = styled.div`
   display: flex;
@@ -160,19 +155,8 @@ export const FormLabel = styled.label`
   font-size: 0.875rem;
 `;
 
-export const FormInput = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-  }
-`;
+// Use centralized FormInput with theme integration
+export const FormInput = BaseFormInput;
 
 export const HelperText = styled.div`
   font-size: 12px;

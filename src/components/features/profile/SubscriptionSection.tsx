@@ -262,7 +262,7 @@ const SubscriptionSection: React.FC<SubscriptionProps> = ({
             </ul>
             
             <ButtonContainer>
-              <Button primary onClick={handleUpgrade}>Upgrade Now</Button>
+              <Button variant="primary" onClick={handleUpgrade}>Upgrade Now</Button>
             </ButtonContainer>
           </Card>
         )}

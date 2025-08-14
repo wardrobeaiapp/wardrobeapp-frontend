@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaCalendarAlt } from 'react-icons/fa';
 import SimpleDatePicker from './SimpleDatePicker';
-import { Button } from '../../../pages/CalendarPage.styles';
+import { CalendarButton } from '../../../pages/CalendarPage.styles';
 
 interface DateSelectionPopupProps {
   isVisible: boolean;
@@ -120,13 +120,14 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
         </DatePickerContainer>
         
         <ButtonContainer>
-          <Button onClick={onClose} style={{ backgroundColor: '#6c757d' }}>Cancel</Button>
-          <Button 
+          <CalendarButton variant="secondary" onClick={onClose}>Cancel</CalendarButton>
+          <CalendarButton 
+            variant="primary"
             onClick={handleConfirm} 
             disabled={!selectedDate}
           >
             Copy
-          </Button>
+          </CalendarButton>
         </ButtonContainer>
       </PopupContent>
     </PopupOverlay>

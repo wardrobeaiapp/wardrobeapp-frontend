@@ -180,7 +180,7 @@ const StyleProfileContent: React.FC = () => {
                     }
                   }} 
                   disabled={stylePreferencesSectionRef.current?.isSaving}
-                  success
+                  variant="primary"
                 >
                   {stylePreferencesSectionRef.current?.isSaving ? 'Saving...' : 'Save Style Preferences'}
                 </Button>
@@ -206,7 +206,7 @@ const StyleProfileContent: React.FC = () => {
                       console.error('Failed to save climate data:', result.error);
                     }
                   }
-                }} disabled={climateSectionRef.current?.isSaving} success>Save Climate</Button>
+                }} disabled={climateSectionRef.current?.isSaving} variant="primary">Save Climate</Button>
               </ButtonContainer>
             </>
           )}
@@ -227,7 +227,7 @@ const StyleProfileContent: React.FC = () => {
                   } else {
                     handleSave('wardrobeGoals');
                   }
-                }} success>Save Wardrobe Goals</Button>
+                }} variant="primary">Save Wardrobe Goals</Button>
               </ButtonContainer>
             </>
           )}
@@ -254,7 +254,7 @@ const StyleProfileContent: React.FC = () => {
                       }
                     }
                   }}
-                  success
+                  variant="primary"
                   disabled={shoppingLimitSectionRef.current?.isSaving}
                 >
                   {shoppingLimitSectionRef.current?.isSaving ? 'Saving...' : 'Save Shopping Limit'}
@@ -289,7 +289,7 @@ const StyleProfileContent: React.FC = () => {
                       }
                     }
                   }}
-                  success
+                  variant="primary"
                   disabled={clothingBudgetSectionRef.current?.isSaving}
                 >
                   {clothingBudgetSectionRef.current?.isSaving ? 'Saving...' : 'Save Clothing Budget'}

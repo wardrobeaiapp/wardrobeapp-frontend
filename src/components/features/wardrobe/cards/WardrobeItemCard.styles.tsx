@@ -1,22 +1,18 @@
 import styled from 'styled-components';
 import { WishlistStatus } from '../../../../types';
 import { theme } from '../../../../styles/theme';
+import { Card as BaseCard } from '../../../cards/Card.styles';
 
-export const Card = styled.div`
+export const Card = styled(BaseCard).attrs({ $variant: 'default', $hoverable: true })`
+  padding: 0;
   display: flex;
   flex-direction: column;
   border-radius: 0.75rem;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  background-color: white;
-  border: 1px solid #f3f4f6;
-  transition: all 0.3s ease;
   position: relative;
   
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-    border-color: #e5e7eb;
   }
 `;
 
@@ -45,7 +41,7 @@ export const PlaceholderImage = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #9ca3af;
+  color: ${theme.colors.gray[400]};
   font-size: 1.25rem;
   font-weight: 500;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -67,12 +63,12 @@ export const StatusIcon = styled.div<{ $status: WishlistStatus }>`
   background-color: ${props => {
     switch (props.$status) {
       case WishlistStatus.APPROVED:
-        return '#10b981'; // emerald-500
+        return theme.colors.green[500];
       case WishlistStatus.POTENTIAL_ISSUE:
-        return '#f59e0b'; // amber-500
+        return theme.colors.warning;
       case WishlistStatus.NOT_REVIEWED:
       default:
-        return '#6b7280'; // gray-500
+        return theme.colors.gray[500];
     }
   }};
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -92,7 +88,7 @@ export const ItemName = styled.h3`
   margin: 0 0 0.75rem;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #111827;
+  color: ${theme.colors.gray[900]};
   line-height: 1.4;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,13 +110,13 @@ export const ItemDetail = styled.div`
   font-size: 0.875rem;
   
   span:first-child {
-    color: #6b7280;
+    color: ${theme.colors.gray[500]};
     font-weight: 500;
     min-width: fit-content;
   }
   
   span:last-child {
-    color: #374151;
+    color: ${theme.colors.gray[700]};
     font-weight: 600;
     text-align: right;
     text-transform: capitalize;
@@ -181,9 +177,9 @@ export const ViewButton = styled.button`
 
 export const ActionButton = styled.button`
   padding: 0.75rem;
-  background: white;
-  color: #6b7280;
-  border: 1px solid #e5e7eb;
+  background: ${theme.colors.white};
+  color: ${theme.colors.gray[500]};
+  border: 1px solid ${theme.colors.gray[200]};
   border-radius: 0.5rem;
   font-size: 0.875rem;
   cursor: pointer;
@@ -194,9 +190,9 @@ export const ActionButton = styled.button`
   justify-content: center;
   
   &:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
-    color: #374151;
+    background: ${theme.colors.gray[50]};
+    border-color: ${theme.colors.gray[300]};
+    color: ${theme.colors.gray[700]};
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }

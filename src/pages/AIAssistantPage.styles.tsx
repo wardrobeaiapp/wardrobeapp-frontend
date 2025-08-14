@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
+import { Card } from '../components/cards/Card.styles';
 
 export const PageContainer = styled.div`
   padding: 2rem;
@@ -21,19 +22,10 @@ export const CardsContainer = styled.div`
   }
 `;
 
-export const AICard = styled.div`
-  background: #ffffff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s ease;
+// Use centralized Card with hover effects
+export const AICard = styled(Card).attrs({ $variant: 'default', $padding: 'lg', $hoverable: true })`
   display: flex;
   flex-direction: column;
-  
-  &:hover {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  }
 `;
 
 // Card header with horizontal icon + title layout
