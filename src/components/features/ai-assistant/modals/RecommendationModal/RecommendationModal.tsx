@@ -10,7 +10,7 @@ import {
 } from '../../../../../pages/HomePage.styles';
 import {
   ButtonsContainer
-} from '../../../../ItemViewModal.styles';
+} from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
   ActionButton,
   DismissButton

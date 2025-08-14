@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Outfit, WardrobeItem } from '../../../types';
 import { useWardrobe } from '../../../context/WardrobeContext';
-import ItemViewModal from '../../ItemViewModal';
-import OutfitDetailModal from '../wardrobe/OutfitDetailModal';
+import ItemViewModal from '../wardrobe/modals/ItemViewModal';
+import OutfitDetailModal from '../wardrobe/modals/OutfitDetailModal';
 import { FaTrash } from 'react-icons/fa';
 import {
   DetailsPanel,

@@ -6,7 +6,7 @@ import {
   SeasonCheckboxes,
   CheckboxItem,
   CheckboxLabel
-} from '../OutfitForm.styles';
+} from '../forms/OutfitForm.styles';
 
 interface ScenarioSelectorProps {
   scenarios: Scenario[];

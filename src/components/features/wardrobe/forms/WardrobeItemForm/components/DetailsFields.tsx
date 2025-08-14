@@ -1,5 +1,5 @@
 import React from 'react';
-import { Season } from '../../../../../types';
+import { Season } from '../../../../../../types';
 import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 import {
   FormRow,

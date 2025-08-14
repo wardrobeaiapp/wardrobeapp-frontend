@@ -1,4 +1,4 @@
-import { ItemCategory } from '../../../../../types';
+import { ItemCategory } from '../../../../../../types';
 
 // Subcategory options based on category
 export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Season, WardrobeItem } from '../../../../../types';
+import { Season, WardrobeItem } from '../../../../../../types';
 
 export interface UseItemFilteringProps {
   availableItems: WardrobeItem[];

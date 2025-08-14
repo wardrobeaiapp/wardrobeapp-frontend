@@ -1,8 +1,8 @@
 import React from 'react';
-import { Capsule, WardrobeItem } from '../../../types';
-import { formatCategory } from '../../../utils/textFormatting';
+import { Capsule, WardrobeItem } from '../../../../types';
+import { formatCategory } from '../../../../utils/textFormatting';
 
-import useCapsuleItems from '../../../hooks/useCapsuleItems';
+import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
   ModalOverlay,
   ModalContent,

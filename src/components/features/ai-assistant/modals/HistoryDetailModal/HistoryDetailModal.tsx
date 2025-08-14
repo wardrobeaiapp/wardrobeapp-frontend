@@ -17,7 +17,7 @@ import {
   DetailLabel,
   DetailValue,
   ButtonsContainer
-} from '../../../../ItemViewModal.styles';
+} from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
   ActionButton,
   DismissButton

@@ -6,7 +6,7 @@ import {
   CheckboxContainer,
   CheckboxLabel,
   CheckboxInput
-} from '../CapsuleForm.styles';
+} from '../forms/CapsuleForm.styles';
 
 interface SeasonSelectorProps {
   selectedSeasons: Season[];

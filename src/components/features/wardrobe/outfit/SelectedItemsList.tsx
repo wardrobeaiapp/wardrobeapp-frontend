@@ -5,7 +5,7 @@ import {
   SelectedItemsContainer,
   SelectedItemBadge,
   RemoveItemButton
-} from '../OutfitForm.styles';
+} from '../forms/OutfitForm.styles';
 
 interface SelectedItemsListProps {
   selectedItems: string[];

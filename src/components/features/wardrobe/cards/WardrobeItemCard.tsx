@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WardrobeItem, WishlistStatus } from '../../../types';
+import { WardrobeItem, WishlistStatus } from '../../../../types';
 import {
   Card,
   ImageContainer,

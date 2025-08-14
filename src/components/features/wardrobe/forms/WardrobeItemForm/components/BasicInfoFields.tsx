@@ -1,5 +1,5 @@
 import React from 'react';
-import { ItemCategory } from '../../../../../types';
+import { ItemCategory } from '../../../../../../types';
 import { getSubcategoryOptions } from '../utils/formHelpers';
 import {
   FormRow,

@@ -8,7 +8,7 @@ import {
   Label,
   Select,
   Input,
-} from '../OutfitForm.styles';
+} from '../forms/OutfitForm.styles';
 
 interface FiltersPanelProps {
   searchQuery: string;
@@ -27,7 +27,6 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   categoryFilter,
   colorFilter,
   seasonFilter,
-  colors,
   onSearchChange,
   onCategoryChange,
   onColorChange,

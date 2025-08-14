@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { fetchScenarios, Scenario } from '../../../../../services/api';
-import { Capsule } from '../../../../../types';
+import { fetchScenarios, Scenario } from '../../../../../../services/api';
+import { Capsule } from '../../../../../../types';
 
 export interface UseScenarioHandlingProps {
   editCapsule?: Capsule;

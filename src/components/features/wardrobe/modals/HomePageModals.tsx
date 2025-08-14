@@ -2,11 +2,11 @@ import React from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
 // AI generation functionality is now integrated into the forms
-import CapsuleDetailModal from '../CapsuleDetailModal';
-import OutfitDetailModal from '../OutfitDetailModal';
-import ItemViewModal from '../../../ItemViewModal';
+import CapsuleDetailModal from './CapsuleDetailModal';
+import OutfitDetailModal from './OutfitDetailModal';
+import ItemViewModal from './ItemViewModal';
 import DeleteItemConfirmModal from './DeleteItemConfirmModal';
-import { CapsuleFormData } from '../CapsuleForm';
+import { CapsuleFormData } from '../forms/CapsuleForm';
 
 interface HomePageModalsProps {
   // Items

@@ -4,7 +4,7 @@ import {
   SelectedItemsContainer,
   SelectedItemBadge,
   RemoveItemButton
-} from '../CapsuleForm.styles';
+} from '../forms/CapsuleForm.styles';
 
 interface SelectedItemsListProps {
   selectedItems: string[];
