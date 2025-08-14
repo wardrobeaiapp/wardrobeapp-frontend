@@ -11,7 +11,7 @@ import {
   CardLabel,
   CardDescription
 } from './OnboardingCardComponents.styles';
-import { FormTextarea } from '../../../components/Form/Form.styles';
+import { FormTextarea } from '../../../components/forms/styles/base.styles';
 import { wardrobeGoalOptionsWithDetails, wardrobeGoalsStepContent } from '../../../data/onboardingOptions';
 
 interface WardrobeGoalsStepProps {

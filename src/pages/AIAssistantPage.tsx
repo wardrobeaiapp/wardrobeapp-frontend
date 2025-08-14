@@ -7,7 +7,7 @@ import AIHistoryDashboard from '../components/features/ai-assistant/AIHistoryDas
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
-import WishlistSelectionModal from '../components/WishlistSelectionModal/WishlistSelectionModal';
+import WishlistSelectionModal from '../components/features/ai-assistant/modals/WishlistSelectionModal/WishlistSelectionModal';
 import AICheckResultModal from '../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
 import RecommendationModal from '../components/features/ai-assistant/modals/RecommendationModal/RecommendationModal';
 import HistoryDetailModal from '../components/features/ai-assistant/modals/HistoryDetailModal/HistoryDetailModal';

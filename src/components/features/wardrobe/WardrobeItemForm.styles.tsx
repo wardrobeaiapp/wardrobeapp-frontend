@@ -1,27 +1,28 @@
 import styled from 'styled-components';
+import { formTokens, createFocusStyles, createButtonStyles } from '../../../styles/tokens/forms';
 
 // Form Container Styles
 export const FormContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: ${formTokens.spacing.xl};
   width: 100%;
   padding: 0;
 `;
 
 // Photo Upload Area
 export const PhotoUploadArea = styled.div`
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  padding: 2rem;
+  border: 2px dashed ${formTokens.colors.border};
+  border-radius: ${formTokens.borderRadius.md};
+  padding: ${formTokens.spacing.xxl};
   text-align: center;
-  background-color: #f9fafb;
-  transition: all 0.2s ease;
+  background-color: ${formTokens.colors.background.upload};
+  transition: ${formTokens.transitions.all};
   cursor: pointer;
   
   &:hover {
-    border-color: #8b5cf6;
-    background-color: #f5f3ff;
+    border-color: ${formTokens.colors.primary};
+    background-color: ${formTokens.colors.background.uploadHover};
   }
 `;
 
@@ -29,13 +30,13 @@ export const PhotoUploadContent = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: ${formTokens.spacing.lg};
 `;
 
 export const UploadIcon = styled.div`
   width: 48px;
   height: 48px;
-  color: #9ca3af;
+  color: ${formTokens.colors.textPlaceholder};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,35 +48,19 @@ export const UploadIcon = styled.div`
 `;
 
 export const UploadText = styled.p`
-  color: #6b7280;
-  font-size: 16px;
+  color: ${formTokens.colors.textMuted};
+  font-size: ${formTokens.typography.fontSizes.base};
   margin: 0;
 `;
 
 export const BrowseButton = styled.button`
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
+  ${createButtonStyles('primary')}
+  padding: ${formTokens.spacing.md} ${formTokens.spacing.xl};
 `;
 
 export const FileInfo = styled.p`
-  color: #6b7280;
-  font-size: 12px;
+  color: ${formTokens.colors.textMuted};
+  font-size: ${formTokens.typography.fontSizes.xs};
   margin: 0;
 `;
 
@@ -83,9 +68,9 @@ export const FileInfo = styled.p`
 export const FormRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: ${formTokens.spacing.lg};
   
-  @media (max-width: 768px) {
+  @media (max-width: ${formTokens.form.breakpoints.mobile}) {
     grid-template-columns: 1fr;
   }
 `;
@@ -93,54 +78,50 @@ export const FormRow = styled.div`
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: ${formTokens.spacing.sm};
 `;
 
 export const Label = styled.label`
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.25rem;
+  font-size: ${formTokens.typography.fontSizes.sm};
+  font-weight: ${formTokens.typography.fontWeights.semibold};
+  color: ${formTokens.colors.text};
+  margin-bottom: ${formTokens.spacing.xs};
   display: block;
   
   &.required::after {
     content: ' *';
-    color: #ef4444;
+    color: ${formTokens.colors.error};
   }
 `;
 
 export const Input = styled.input`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s ease;
+  padding: ${formTokens.form.inputPadding};
+  border: 1px solid ${formTokens.colors.border};
+  border-radius: ${formTokens.borderRadius.base};
+  font-size: ${formTokens.typography.fontSizes.sm};
+  transition: ${formTokens.transitions.colors};
   
   &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    ${createFocusStyles()}
   }
   
   &::placeholder {
-    color: #9ca3af;
+    color: ${formTokens.colors.textPlaceholder};
   }
 `;
 
 export const Select = styled.select`
   width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  background-color: white;
-  transition: border-color 0.2s ease;
+  padding: ${formTokens.form.inputPadding};
+  border: 1px solid ${formTokens.colors.border};
+  border-radius: ${formTokens.borderRadius.base};
+  font-size: ${formTokens.typography.fontSizes.sm};
+  background-color: ${formTokens.colors.background.primary};
+  transition: ${formTokens.transitions.colors};
   
   &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    ${createFocusStyles()}
   }
 `;
 

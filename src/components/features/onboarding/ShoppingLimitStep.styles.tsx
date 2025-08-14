@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { FormInput, FormSelect } from '../../../components/Form/Form.styles';
+import { FormInput, FormSelect } from '../../../components/forms/styles/base.styles';
 
 export const ShoppingLimitContainer = styled.div`
   background-color: #F0E7FF;
