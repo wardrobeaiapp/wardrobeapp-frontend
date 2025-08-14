@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaSearch, FaMagic, FaTshirt } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../types';
-import AIHistoryItemComponent from '../../../AIHistoryItem/AIHistoryItem';
+import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import {
   DashboardContainer,
   DashboardTopBar,

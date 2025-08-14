@@ -1,8 +1,8 @@
 import React from 'react';
-import { WardrobeItem, Season, ItemCategory } from '../../../types';
-import Button from '../../common/Button';
-import FiltersPanel from './FiltersPanel';
-import ItemsGrid from './ItemsGrid';
+import { WardrobeItem, Season, ItemCategory } from '../../../../types';
+import Button from '../../../common/Button';
+import FiltersPanel from '../FiltersPanel';
+import ItemsGrid from '../ItemsGrid';
 import {
   Modal as StyledItemsModal,
   ModalContent as ItemsModalContent,
@@ -12,7 +12,7 @@ import {
   ButtonGroup,
   ResultsCount,
   CheckboxContainer
-} from './AIComponents.styles';
+} from '../AIComponents.styles';
 
 interface ItemsModalProps {
   isOpen: boolean;

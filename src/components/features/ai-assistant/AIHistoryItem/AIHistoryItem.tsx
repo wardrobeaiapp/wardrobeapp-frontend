@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaSearch, FaMagic, FaClipboardList, FaStar } from 'react-icons/fa';
-import { AIHistoryItem as AIHistoryItemType } from '../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../../../types';
 import {
   CardIcon,
   HistoryContent,
@@ -16,7 +16,7 @@ import {
   ScoreContainer,
   ScoreDisplay,
   ScoreText,
-} from '../../pages/AIAssistantPage.styles';
+} from '../../../../pages/AIAssistantPage.styles';
 
 interface AIHistoryItemProps {
   item: AIHistoryItemType;

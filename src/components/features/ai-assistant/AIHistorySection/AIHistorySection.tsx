@@ -1,5 +1,5 @@
 import React from 'react';
-import { AIHistoryItem as AIHistoryItemType } from '../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../../../types';
 import AIHistoryItem from '../AIHistoryItem/AIHistoryItem';
 import {
   HistorySection,
@@ -7,7 +7,7 @@ import {
   HistoryTitle,
   ViewAllButton,
   HistoryList,
-} from '../../pages/AIAssistantPage.styles';
+} from '../../../../pages/AIAssistantPage.styles';
 
 interface AIHistorySectionProps {
   historyItems: AIHistoryItemType[];

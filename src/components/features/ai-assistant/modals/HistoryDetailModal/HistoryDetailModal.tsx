@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
-import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../types';
+import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../../types';
 import {
   Modal,
   ModalContent,
@@ -8,7 +8,7 @@ import {
   ModalTitle,
   ModalBody,
   CloseButton
-} from '../../pages/HomePage.styles';
+} from '../../../../../pages/HomePage.styles';
 import {
   ItemImageContainer,
   ItemImage,
@@ -17,7 +17,7 @@ import {
   DetailLabel,
   DetailValue,
   ButtonsContainer
-} from '../ItemViewModal.styles';
+} from '../../../../ItemViewModal.styles';
 import {
   ActionButton,
   DismissButton
