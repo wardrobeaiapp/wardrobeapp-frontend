@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import Header from '../components/layout/Header/Header';
-import Footer from '../components/layout/Footer';
 import {
   AuthContainer,
   AuthCard,
@@ -249,7 +248,6 @@ export const RegisterPage: React.FC = () => {
         </LoginPrompt>
       </AuthCard>
     </AuthContainer>
-    <Footer variant="simple" />
   </PageWrapper>
   );
 };

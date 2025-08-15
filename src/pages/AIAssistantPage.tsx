@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { WishlistStatus, WardrobeItem, UserActionStatus } from '../types';
 import { useWardrobe } from '../context/WardrobeContext';
 import { getScenarioNamesForFilters } from '../utils/scenarioUtils';

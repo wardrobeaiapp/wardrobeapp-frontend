@@ -577,36 +577,1372 @@ When creating new components, document spacing decisions:
 
 ## Components
 
-### Buttons
-#### Primary Button
-```scss
-// Standard purple gradient button
-background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
-color: white;
-border: none;
-border-radius: 0.5rem;
-padding: 0.75rem 1rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.2s ease;
+### Button Component System
 
-&:hover {
-  background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
-  transform: translateY(-1px);
+The Button component is the primary interactive element with comprehensive variants, sizes, and states. Import from `components/common/Button`.
+
+#### Variants
+
+**Primary** - Main actions (Save, Submit, Create)
+- Uses brand purple color (#8b5cf6)
+- Default variant for primary actions
+
+```tsx
+<Button variant="primary">Save Changes</Button>
+<Button variant="primary" outlined>Cancel</Button>
+```
+
+**Secondary** - Secondary actions
+- Gray styling for less prominent actions
+
+```tsx
+<Button variant="secondary">Cancel</Button>
+<Button variant="secondary" outlined>Reset</Button>
+```
+
+**Success** - Success feedback states only
+- Green styling (#22c55e)
+- Reserved for actual success feedback, not primary actions
+
+```tsx
+<Button variant="success">✓ Completed</Button>
+```
+
+**Error** - Destructive actions
+- Red styling for dangerous operations
+
+```tsx
+<Button variant="error">Delete Item</Button>
+<Button variant="error" outlined>Remove</Button>
+```
+
+**Warning** - Warning states
+```tsx
+<Button variant="warning">Archive</Button>
+```
+
+**Info** - Informational actions
+```tsx
+<Button variant="info">Learn More</Button>
+```
+
+**Ghost** - Minimal styling
+```tsx
+<Button variant="ghost">Skip</Button>
+```
+
+**Link** - Link-style button
+```tsx
+<Button variant="link">View Details</Button>
+```
+
+#### Sizes
+- `xs` (24px height), `sm` (32px), `md` (40px - default), `lg` (48px), `xl` (56px)
+
+```tsx
+<Button size="lg">Large Button</Button>
+```
+
+#### Props & States
+```tsx
+<Button loading>Saving...</Button>
+<Button disabled>Cannot Save</Button>
+<Button fullWidth>Full Width Button</Button>
+```
+
+#### Usage Guidelines
+**✅ Do:**
+- Use `variant="primary"` for main actions (Save, Submit, Create)  
+- Use `fullWidth` in modals and forms for consistent layout
+- Use `variant="success"` only for actual success feedback
+- Use appropriate sizes based on context
+- Handle loading/disabled states
+
+**❌ Don't:**
+- Use `variant="success"` for primary save/submit actions  
+- Mix too many variants in the same interface
+- Use `variant="link"` for primary actions
+
+#### Common Patterns
+**Modal Actions:**
+```tsx
+<Button variant="secondary" outlined onClick={onCancel}>Cancel</Button>
+<Button variant="primary" fullWidth onClick={onSave}>Save Changes</Button>
+```
+
+### Form System
+
+The form system provides consistent layout, validation, and interaction patterns. Import from `components/forms/common/`.
+
+#### Form Structure
+
+**FormSection** - Organizes form content into logical sections
+```tsx
+import { FormSection } from '../components/forms/common/FormSection';
+
+<FormSection 
+  title="Basic Information"
+  subtitle="Required details for your item"
+  layout="double"
+  spacing="md"
+>
+  {/* Form fields */}
+</FormSection>
+```
+
+**Layout Options:**
+- `single` - Single column layout (default)
+- `double` - Two-column grid (responsive, collapses on mobile)
+
+**Spacing Options:**
+- `sm` - Tight spacing for compact forms
+- `md` - Standard spacing (default)
+- `lg` - Generous spacing for complex forms
+
+#### Input Components
+
+**FormField** - Wrapper for all form inputs with labels and validation
+```tsx
+import { FormField, BaseInput, BaseSelect, BaseTextarea } from '../components/forms/common/FormField';
+
+<FormField label="Item Name" required error={errors.name}>
+  <BaseInput
+    type="text"
+    placeholder="Enter item name"
+    value={formData.name}
+    onChange={(e) => setFormData({...formData, name: e.target.value})}
+  />
+</FormField>
+
+<FormField label="Category" required>
+  <BaseSelect value={formData.category} onChange={handleCategoryChange}>
+    <option value="">Select category</option>
+    <option value="tops">Tops</option>
+    <option value="bottoms">Bottoms</option>
+  </BaseSelect>
+</FormField>
+
+<FormField label="Notes">
+  <BaseTextarea
+    placeholder="Additional notes..."
+    value={formData.notes}
+    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+  />
+</FormField>
+```
+
+#### Form Actions
+
+**FormActions** - Standardized submit/cancel button layout
+```tsx
+import { FormActions } from '../components/forms/common/FormActions';
+
+<FormActions
+  onSubmit={handleSubmit}
+  onCancel={handleCancel}
+  submitText="Save Item"
+  cancelText="Cancel"
+  isSubmitting={isLoading}
+  isDisabled={!isValid}
+  submitVariant="primary"
+  layout="row"
+  align="right"
+/>
+```
+
+**Action Variants:**
+- `primary` - Standard save actions (default)
+- `secondary` - Less prominent actions  
+- `danger` - Destructive actions (delete, remove)
+
+**Layout Options:**
+- `row` - Horizontal layout with configurable alignment
+- `column` - Vertical stacked layout (mobile-friendly)
+
+#### Validation Patterns
+
+**Field-level validation:**
+```tsx
+const [errors, setErrors] = useState({});
+
+<FormField label="Email" required error={errors.email}>
+  <BaseInput
+    type="email"
+    value={formData.email}
+    onChange={(e) => {
+      setFormData({...formData, email: e.target.value});
+      if (errors.email) {
+        setErrors({...errors, email: ''});
+      }
+    }}
+  />
+</FormField>
+```
+
+**Form-level validation:**
+```tsx
+const validateForm = () => {
+  const newErrors = {};
+  
+  if (!formData.name?.trim()) {
+    newErrors.name = 'Name is required';
+  }
+  
+  if (!formData.category) {
+    newErrors.category = 'Category is required';
+  }
+  
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+```
+
+#### Image Upload Patterns
+
+**Image drop zone with preview:**
+```tsx
+const ImageUploadField = ({ imageUrl, onImageChange }) => (
+  <FormField label="Item Image">
+    <ImageDropZone
+      onDrop={onImageChange}
+      imageUrl={imageUrl}
+      placeholder="Drop image here or click to upload"
+    />
+  </FormField>
+);
+```
+
+#### Usage Guidelines
+
+**✅ Do:**
+- Use FormSection to organize complex forms into logical groups
+- Always include labels with FormField for accessibility
+- Show validation errors immediately on field blur/submit
+- Use appropriate input types (email, tel, etc.)
+- Provide clear placeholder text
+- Use double layout for related fields (name/email, width/height)
+- Handle loading/submitting states in FormActions
+- Use consistent spacing between form sections
+
+**❌ Don't:**
+- Mix form components from different systems
+- Skip validation error handling
+- Use generic placeholder text like "Enter text"
+- Forget to disable submit button during submission
+- Make forms too wide on desktop (max-width recommended)
+- Skip required field indicators
+
+#### Complete Form Example
+```tsx
+<form onSubmit={handleSubmit}>
+  <FormSection title="Item Details" layout="double">
+    <FormField label="Name" required error={errors.name}>
+      <BaseInput type="text" value={name} onChange={handleNameChange} />
+    </FormField>
+    
+    <FormField label="Category" required error={errors.category}>
+      <BaseSelect value={category} onChange={handleCategoryChange}>
+        <option value="">Select category</option>
+        {categories.map(cat => (
+          <option key={cat.value} value={cat.value}>{cat.label}</option>
+        ))}
+      </BaseSelect>
+    </FormField>
+  </FormSection>
+
+  <FormSection title="Additional Information" layout="single">
+    <FormField label="Notes">
+      <BaseTextarea value={notes} onChange={handleNotesChange} />
+    </FormField>
+  </FormSection>
+
+  <FormActions
+    onSubmit={handleSubmit}
+    onCancel={handleCancel}
+    isSubmitting={isSubmitting}
+    submitText="Save Item"
+  />
+</form>
+```
+
+### Modal System
+
+The modal system provides consistent overlay dialogs with standardized structure and behavior patterns. Modals are organized by feature in `features/[feature]/modals/`.
+
+#### Modal Structure
+
+**Base Modal Components** - Import from `pages/HomePage.styles`
+```tsx
+import {
+  Modal,
+  ModalContent, 
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  CloseButton
+} from '../../../pages/HomePage.styles';
+
+<Modal>
+  <ModalContent>
+    <ModalHeader>
+      <ModalTitle>Modal Title</ModalTitle>
+      <CloseButton onClick={onClose}>&times;</CloseButton>
+    </ModalHeader>
+    <ModalBody>
+      {/* Modal content */}
+    </ModalBody>
+  </ModalContent>
+</Modal>
+```
+
+#### Modal Types & Patterns
+
+**Form Modals** - For create/edit operations
+```tsx
+interface FormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+  initialData?: any;
+  isEditing: boolean;
+}
+
+const FormModal: React.FC<FormModalProps> = ({
+  isOpen, onClose, onSubmit, initialData, isEditing
+}) => {
+  if (!isOpen) return null;
+  
+  return (
+    <Modal>
+      <ModalContent>
+        <ModalHeader>
+          <ModalTitle>{isEditing ? 'Edit Item' : 'Add New Item'}</ModalTitle>
+          <CloseButton onClick={onClose}>&times;</CloseButton>
+        </ModalHeader>
+        <ModalBody>
+          <FormComponent
+            initialData={initialData}
+            onSubmit={onSubmit}
+            onCancel={onClose}
+          />
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
+```
+
+**Detail/View Modals** - For displaying item details
+```tsx
+interface DetailModalProps {
+  item: Item;
+  onClose: () => void;
+  onEdit: (item: Item) => void;
+  onDelete: (id: string) => void;
+}
+
+<Modal>
+  <ModalContent>
+    <ModalHeader>
+      <ModalTitle>{item.name}</ModalTitle>
+      <CloseButton onClick={onClose}>&times;</CloseButton>
+    </ModalHeader>
+    <ModalBody>
+      {/* Item details */}
+      <ButtonGroup>
+        <Button variant="primary" fullWidth onClick={() => onEdit(item)}>
+          Edit
+        </Button>
+        <Button variant="secondary" fullWidth onClick={() => onDelete(item.id)}>
+          Delete
+        </Button>
+      </ButtonGroup>
+    </ModalBody>
+  </ModalContent>
+</Modal>
+```
+
+**Confirmation Modals** - For destructive actions
+```tsx
+interface ConfirmModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText?: string;
+  isDestructive?: boolean;
+}
+
+<Modal>
+  <ModalContent>
+    <ModalHeader>
+      <ModalTitle>{title}</ModalTitle>
+      <CloseButton onClick={onClose}>&times;</CloseButton>
+    </ModalHeader>
+    <ModalBody>
+      <MessageText>{message}</MessageText>
+      <ButtonsContainer>
+        <Button variant="secondary" fullWidth onClick={onClose}>
+          Cancel
+        </Button>
+        <Button 
+          variant={isDestructive ? "error" : "primary"} 
+          fullWidth 
+          onClick={onConfirm}
+        >
+          {confirmText || 'Confirm'}
+        </Button>
+      </ButtonsContainer>
+    </ModalBody>
+  </ModalContent>
+</Modal>
+```
+
+#### Modal Sizing & Behavior
+
+**Standard Sizing:**
+- **Small** - 400px max-width for simple confirmations
+- **Medium** - 500px max-width for forms (default)
+- **Large** - 700px max-width for complex detail views
+- **Full width** - 90vw max-width on mobile
+
+**Responsive Behavior:**
+```scss
+// Default modal content sizing
+max-width: 500px;
+width: 90vw;
+max-height: 90vh;
+overflow-y: auto;
+
+@media (max-width: 768px) {
+  width: 95vw;
+  margin: 1rem;
 }
 ```
 
-#### Secondary Button
-```scss
-background-color: transparent;
-color: ${theme.colors.primary};
-border: 1px solid ${theme.colors.primary};
-border-radius: 0.5rem;
-padding: 0.75rem 1rem;
+#### Button Layout Patterns
 
-&:hover {
-  background-color: ${theme.colors.purple[50]};
+**Form Actions** - Right-aligned, Cancel + Primary
+```tsx
+<ButtonGroup>
+  <Button variant="secondary" onClick={onCancel}>Cancel</Button>
+  <Button variant="primary" onClick={onSave}>Save Changes</Button>
+</ButtonGroup>
+```
+
+**Detail Actions** - Full-width stacked buttons  
+```tsx
+<ButtonGroup>
+  <Button variant="primary" fullWidth onClick={onEdit}>Edit</Button>
+  <Button variant="secondary" fullWidth onClick={onDelete}>Delete</Button>
+</ButtonGroup>
+```
+
+**Confirmation Actions** - Full-width side-by-side
+```tsx
+<ButtonsContainer>
+  <Button variant="secondary" fullWidth onClick={onCancel}>Cancel</Button>
+  <Button variant="error" fullWidth onClick={onConfirm}>Delete</Button>
+</ButtonsContainer>
+```
+
+#### State Management
+
+**Mounting/Unmounting Protection:**
+```tsx
+const [isMounted, setIsMounted] = useState(true);
+
+useEffect(() => {
+  setIsMounted(true);
+  return () => setIsMounted(false);
+}, []);
+
+// Prevent state updates after unmount
+const handleSubmit = (data) => {
+  if (isMounted) {
+    onSubmit(data);
+  }
+};
+
+if (!isOpen || !isMounted) return null;
+```
+
+**Loading States:**
+```tsx
+const [isLoading, setIsLoading] = useState(false);
+
+{isLoading ? (
+  <MessageText>Loading...</MessageText>
+) : (
+  // Modal content
+)}
+```
+
+#### Usage Guidelines
+
+**✅ Do:**
+- Always include a close button (×) in the header
+- Use conditional rendering with `if (!isOpen) return null`
+- Implement escape key and overlay click to close
+- Use appropriate button variants (primary for save, error for delete)
+- Include loading states for async operations
+- Prevent state updates after component unmount
+- Use fullWidth buttons in mobile layouts
+- Group related actions together
+
+**❌ Don't:**
+- Nest modals (use single modal with content switching instead)
+- Use modals for complex multi-step flows (use dedicated pages)
+- Forget to handle form validation in form modals
+- Use too many buttons in the action area (max 3 recommended)
+- Make modals too wide on desktop (maintain readability)
+- Skip confirmation for destructive actions
+
+#### Feature Organization
+
+**Wardrobe Modals** - `features/wardrobe/modals/`
+- `ItemFormModal.tsx` - Add/edit wardrobe items
+- `ItemViewModal.tsx` - View item details
+- `CapsuleDetailModal.tsx` - View capsule details  
+- `OutfitDetailModal.tsx` - View outfit details
+- `DeleteItemConfirmModal.tsx` - Confirm item deletion
+
+**Profile Modals** - `features/profile/modals/`
+- `ConfirmationModal.tsx` - Generic confirmations
+- `SaveConfirmationModal.tsx` - Save confirmations
+
+## Architecture Guidelines
+
+### Feature-Based Organization
+
+The app follows a feature-based architecture where related functionality is grouped by business domain rather than technical layers. This approach improves maintainability, scalability, and developer experience.
+
+#### Directory Structure
+
+```
+src/
+├── components/
+│   ├── common/           # Reusable UI components
+│   │   ├── Button/
+│   │   ├── Loader/
+│   │   └── auth/
+│   ├── features/         # Feature-specific components
+│   │   ├── ai-assistant/
+│   │   ├── calendar/
+│   │   ├── onboarding/
+│   │   ├── profile/
+│   │   └── wardrobe/
+│   ├── forms/           # Form system components
+│   │   ├── common/
+│   │   └── styles/
+│   ├── layout/          # Layout components
+│   │   ├── Header/
+│   │   ├── Footer/
+│   │   └── Layout/
+│   └── cards/           # Generic card components
+├── hooks/               # Shared custom hooks
+├── services/            # API and data services
+├── types/               # TypeScript type definitions
+├── utils/               # Utility functions
+├── styles/              # Theme tokens and global styles
+└── context/             # React context providers
+```
+
+#### Feature Structure Pattern
+
+Each feature follows a consistent internal organization:
+
+```
+features/[feature-name]/
+├── components/          # Feature-specific UI components
+├── modals/             # Feature-specific modals
+├── forms/              # Feature-specific forms (if complex)
+├── hooks/              # Feature-specific hooks
+├── services/           # Feature-specific API calls
+├── types/              # Feature-specific types (if needed)
+├── utils/              # Feature-specific utilities
+└── context/            # Feature-specific context (if needed)
+```
+
+**Example - Wardrobe Feature:**
+```
+features/wardrobe/
+├── cards/              # WardrobeItemCard, etc.
+├── forms/              # WardrobeItemForm + components
+├── modals/             # ItemFormModal, ItemViewModal, etc.
+├── outfit/             # Outfit-related components
+├── capsule/            # Capsule-related components
+└── tabs/               # Tab components
+```
+
+#### Import Path Conventions
+
+**Feature to Common Components:**
+```tsx
+// ✅ Correct - Reference common components
+import Button from '../../../common/Button';
+import { FormField } from '../../../forms/common/FormField';
+```
+
+**Feature to Shared Resources:**
+```tsx
+// ✅ Correct - Reference shared resources
+import { WardrobeItem } from '../../../../types';
+import { wardrobeService } from '../../../../services/api';
+import { useWardrobeItems } from '../../../../hooks/useWardrobeItems';
+```
+
+**Internal Feature References:**
+```tsx
+// ✅ Correct - Reference within same feature
+import { ItemFormModal } from './modals/ItemFormModal';
+import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
+```
+
+**Cross-Feature References:**
+```tsx
+// ⚠️ Avoid direct cross-feature imports when possible
+// Use shared components or services instead
+import { CalendarModal } from '../calendar/modals/CalendarModal'; // Avoid
+
+// ✅ Better - Use shared service or context
+import { useCalendarService } from '../../../services/calendarService';
+```
+
+#### Component Organization Principles
+
+**1. Single Responsibility**
+- Each component should have one clear purpose
+- Complex components should be broken into smaller sub-components
+
+**2. Co-location**
+- Keep related files together (component + styles + tests)
+- Place feature-specific code within the feature directory
+
+**3. Consistent Naming**
+- Use descriptive, feature-prefixed names
+- Example: `WardrobeItemCard`, `AIRecommendationModal`
+
+**4. Clear Dependencies**
+- Minimize cross-feature dependencies
+- Use shared services for cross-cutting concerns
+
+#### File Naming Conventions
+
+**Components:**
+- PascalCase: `ComponentName.tsx`
+- Styled components: `ComponentName.styles.tsx`
+- Index files: `index.tsx` (for barrel exports)
+
+**Utilities and Services:**
+- camelCase: `formatHelpers.ts`, `apiService.ts`
+- Hooks: `useFeatureName.ts`
+
+**Types:**
+- PascalCase interfaces: `interface UserProfile {}`
+- Centralized in `src/types/index.ts`
+
+#### Migration Strategy
+
+When adding new features or refactoring:
+
+**1. Create Feature Directory**
+```bash
+mkdir -p src/components/features/new-feature/{components,modals,hooks}
+```
+
+**2. Move Related Components**
+```bash
+# Move feature-specific components
+mv src/components/SomeFeatureComponent.tsx src/components/features/new-feature/components/
+```
+
+**3. Update Import Paths**
+```tsx
+// Update all references to the moved component
+import { SomeFeatureComponent } from '../features/new-feature/components/SomeFeatureComponent';
+```
+
+**4. Organize Subdirectories**
+```
+new-feature/
+├── components/     # Main feature components
+├── modals/        # Feature modals
+├── forms/         # Complex forms (if needed)
+└── utils/         # Feature-specific utilities
+```
+
+#### Benefits of This Architecture
+
+**✅ Maintainability**
+- Easy to locate feature-related code
+- Changes are isolated to feature boundaries
+- Clear ownership and responsibility
+
+**✅ Scalability**
+- New features can be added without affecting existing ones
+- Team members can work on different features independently
+- Easier to test and deploy features incrementally
+
+**✅ Developer Experience**
+- Intuitive code organization
+- Faster navigation and debugging
+- Clearer mental model of the application
+
+**✅ Code Reusability**
+- Common components are easily shareable
+- Feature-specific logic stays encapsulated
+- Clear separation between shared and feature code
+
+#### Best Practices
+
+**✅ Do:**
+- Group related functionality by feature
+- Keep shared utilities in `utils/` and `hooks/`
+- Use consistent directory structures across features
+- Maintain clear import/export patterns
+- Document feature boundaries and responsibilities
+
+**❌ Don't:**
+- Mix feature-specific code in common directories
+- Create deep nesting (max 3-4 levels recommended)
+- Use unclear or generic component names
+- Allow circular dependencies between features
+- Skip organizing new features properly from the start
+
+### Layout Components
+
+The layout system provides consistent page structure and responsive behavior across the application using centralized components in `components/layout/`.
+
+#### PageContainer
+
+The primary container for all main application pages providing consistent max-width, centering, and responsive padding.
+
+```tsx
+import PageContainer from '../components/layout/PageContainer';
+
+// Usage in pages
+<PageContainer>
+  <PageHeader>
+    <Title>Page Title</Title>
+  </PageHeader>
+  {/* Page content */}
+</PageContainer>
+```
+
+**Specifications:**
+```scss
+max-width: 1200px;
+margin: 0 auto;
+padding: 2rem 1rem;
+
+// Mobile responsive
+@media (max-width: 768px) {
+  padding: 1rem;
 }
+```
+
+**Used across:**
+- AIAssistant page
+- Home page  
+- Calendar page
+- Profile page
+
+#### Header Component
+
+Adaptive header with multiple variants supporting navigation, authentication, and onboarding states.
+
+**Variants:**
+
+**App Header** - Default authenticated app navigation
+```tsx
+import Header from '../components/layout/Header';
+
+<Header variant="app" />
+```
+
+**Welcome Header** - Marketing/landing page navigation
+```tsx
+<Header variant="welcome" />
+```
+
+**Onboarding Header** - Step indicator and back navigation
+```tsx
+<Header 
+  variant="app"
+  isOnboarding={true}
+  currentStep={3}
+  totalSteps={8}
+  showBackButton={true}
+  onBackClick={handleBack}
+  title="Profile Setup"
+/>
+```
+
+**Props Interface:**
+```tsx
+interface HeaderProps {
+  variant?: 'welcome' | 'app';
+  title?: string;
+  showBackButton?: boolean;
+  onBackClick?: () => void | Promise<void>;
+  isOnboarding?: boolean;
+  currentStep?: number;
+  totalSteps?: number;
+}
+```
+
+**Responsive Behavior:**
+- Desktop: Full navigation visible
+- Mobile: Hamburger menu with toggle
+- Logo adapts to context (brand logo vs back button + title)
+
+#### Footer Component
+
+Multi-variant footer supporting marketing and app contexts.
+
+**Full Footer** - Marketing pages with comprehensive links
+```tsx
+import Footer from '../components/layout/Footer';
+
+<Footer variant="full" />
+```
+
+**Simple Footer** - App pages with minimal footprint
+```tsx
+<Footer variant="simple" />
+```
+
+**Structure:**
+```tsx
+// Full footer - 4 columns
+- Logo & tagline column
+- Product links column  
+- Company links column
+- Legal links column
+
+// Simple footer - Single row
+- Copyright | Privacy | Terms | Contact
+```
+
+#### Responsive Design Patterns
+
+**Breakpoints:**
+```scss
+// Mobile first approach
+@media (max-width: 768px) {
+  // Mobile styles
+}
+
+@media (min-width: 768px) {
+  // Tablet and desktop styles
+}
+
+@media (min-width: 1024px) {
+  // Desktop styles
+}
+```
+
+**Layout Patterns:**
+
+**Page Layout:**
+```tsx
+<Header variant="app" />
+<PageContainer>
+  {/* Page content with consistent spacing */}
+</PageContainer>
+<Footer variant="simple" />
+```
+
+**Grid Layouts:**
+```scss
+// Responsive grid
+.items-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+```
+
+**Flex Layouts:**
+```scss
+// Responsive flex containers
+.flex-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+```
+
+#### Navigation Patterns
+
+**Primary Navigation** - Main app sections
+```tsx
+// Desktop: Horizontal nav bar
+<Nav>
+  <NavLink to="/" $active={isActive('/')}>My Wardrobe</NavLink>
+  <NavLink to="/calendar" $active={isActive('/calendar')}>Calendar</NavLink>
+  <NavLink to="/ai-assistant" $active={isActive('/ai-assistant')}>AI Assistant</NavLink>
+</Nav>
+
+// Mobile: Hidden, accessible via hamburger menu
+```
+
+**Contextual Navigation** - Feature-specific navigation
+```tsx
+// Tabs within pages
+<TabsContainer>
+  <Tab $active={activeTab === 'items'}>Items</Tab>
+  <Tab $active={activeTab === 'outfits'}>Outfits</Tab>
+  <Tab $active={activeTab === 'wishlist'}>Wishlist</Tab>
+</TabsContainer>
+```
+
+#### Spacing System
+
+**Container Spacing:**
+```scss
+// Page containers
+padding: 2rem 1rem; // Desktop
+padding: 1rem;      // Mobile
+
+// Section spacing
+margin-bottom: 2rem;   // Between major sections
+margin-bottom: 1.5rem; // Between subsections
+margin-bottom: 1rem;   // Between related elements
+```
+
+**Component Spacing:**
+```scss
+// Form sections
+gap: 1.5rem;        // Between form sections
+gap: 1rem;          // Between form fields
+
+// Grid layouts
+gap: 1.5rem;        // Card grids
+gap: 1rem;          // Compact lists
+
+// Button groups
+gap: 0.75rem;       // Button spacing
+```
+
+#### Usage Guidelines
+
+**✅ Do:**
+- Use PageContainer for all main content areas
+- Implement mobile-first responsive design
+- Use consistent breakpoints (768px, 1024px)
+- Test layouts across all device sizes
+- Use semantic HTML elements (header, nav, main, footer)
+- Maintain consistent spacing using the spacing system
+- Use appropriate header variant for each context
+
+**❌ Don't:**
+- Create custom page containers (use PageContainer)
+- Mix breakpoint values across components
+- Use fixed pixel widths for content areas
+- Forget mobile navigation states
+- Skip testing responsive behavior
+- Use inconsistent spacing values
+- Override layout component core styles
+
+#### Component Import Paths
+
+```tsx
+// Layout components
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';  
+import PageContainer from '../components/layout/PageContainer';
+
+// Page structure components (from HomePage.styles)
+import {
+  PageHeader,
+  Title, 
+  TabsContainer,
+  Tab,
+  FiltersContainer
+} from '../pages/HomePage.styles';
+```
+
+## Icon System
+
+The application uses a standardized icon system built on `react-icons` with consistent patterns for icon usage, sizing, colors, and contexts.
+
+### Icon Libraries
+
+**Primary Libraries:**
+- **FontAwesome (`react-icons/fa`)** - General purpose icons, scenario icons, social icons
+- **Material Design (`react-icons/md`)** - Navigation icons, action icons, UI elements
+- **FontAwesome 6 (`react-icons/fa6`)** - Modern variants and newer icons
+
+### Icon Categories and Usage
+
+#### Navigation Icons
+```tsx
+import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder } from 'react-icons/md';
+
+// Tab navigation
+<Tab $active={activeTab === 'items'}>
+  <MdCheckroom />
+  Items
+</Tab>
+<Tab $active={activeTab === 'outfits'}>
+  <MdOutlineWorkspaces />
+  Outfits
+</Tab>
+```
+
+#### Action Icons
+```tsx
+import { MdAdd, MdSearch, MdCloudUpload } from 'react-icons/md';
+import { FaTrash, FaPlus } from 'react-icons/fa';
+
+// Action buttons
+<Button variant="primary">
+  <MdAdd />
+  Add Item
+</Button>
+
+// Search functionality
+<SearchIcon>
+  <MdSearch />
+</SearchIcon>
+```
+
+#### Status and Feedback Icons
+```tsx
+import { FaCheckCircle, FaExclamationTriangle, FaStar } from 'react-icons/fa';
+
+// Success states
+<FaCheckCircle style={{ color: '#22c55e' }} />
+
+// Warning states  
+<FaExclamationTriangle style={{ color: '#f59e0b' }} />
+
+// Rating/scoring
+<FaStar style={{ color: '#fbbf24' }} />
+```
+
+### Scenario Icon System
+
+The app includes a dedicated scenario icon system with contextual colors and backgrounds.
+
+**Implementation:**
+```tsx
+import { getScenarioIcon } from '../utils/scenarioIconUtils';
+
+// Usage in components
+const { Icon, color, bgColor } = getScenarioIcon(scenario.type);
+
+<IconContainer style={{ backgroundColor: bgColor }}>
+  <Icon style={{ color }} />
+</IconContainer>
+```
+
+**Scenario Icon Mappings:**
+```tsx
+// Work contexts
+'office' → FaBriefcase (blue)
+'remote' → FaLaptop (green)
+
+// Social contexts  
+'social' → FaUsers (orange)
+'party' → FaUsers (orange)
+
+// Activity contexts
+'workout' → FaRunning (red)
+'outdoor' → FaWalking (green)
+'travel' → FaPlane (purple)
+
+// Personal contexts
+'casual' → FaHome (green)
+'date' → FaHeart (pink)
+'formal' → FaGlassCheers (orange)
+```
+
+**Color Scheme:**
+```tsx
+// Icon and background color pairs
+office: { color: '#4285f4', bgColor: '#e8f0fe' }    // Blue
+remote: { color: '#34a853', bgColor: '#e6f4ea' }    // Green  
+social: { color: '#f59e0b', bgColor: '#fff8f0' }    // Orange
+workout: { color: '#ef4444', bgColor: '#fee2e2' }   // Red
+travel: { color: '#8b5cf6', bgColor: '#f8f0ff' }    // Purple
+default: { color: '#6b7280', bgColor: '#f3f4f6' }   // Gray
+```
+
+### Icon Sizing Standards
+
+**Size Variants:**
+```tsx
+// Small icons (16px) - Inline with text, compact UI
+<Icon style={{ fontSize: '1rem' }} />
+
+// Medium icons (20px) - Standard buttons, cards
+<Icon style={{ fontSize: '1.25rem' }} />
+
+// Large icons (24px) - Header icons, prominent actions  
+<Icon style={{ fontSize: '1.5rem' }} />
+
+// Extra large (32px) - Hero sections, empty states
+<Icon style={{ fontSize: '2rem' }} />
+```
+
+**Responsive Sizing:**
+```scss
+.icon {
+  font-size: 1.25rem; // 20px default
+  
+  @media (max-width: 768px) {
+    font-size: 1rem; // 16px mobile
+  }
+}
+```
+
+### Icon Container Patterns
+
+#### Circular Icon Containers
+```tsx
+const IconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background-color: ${props => props.bgColor || '#f3f4f6'};
+`;
+
+// Usage
+<IconContainer bgColor="#e8f0fe">
+  <FaBriefcase style={{ color: '#4285f4' }} />
+</IconContainer>
+```
+
+#### Logo Icon Pattern
+```tsx
+const LogoIcon = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-right: 0.5rem;
+  background-color: ${theme.colors.primary};
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+`;
+
+// Usage - Emoji or icon
+<LogoIcon>👔</LogoIcon>
+```
+
+### Icon Usage Guidelines
+
+#### Contextual Icon Selection
+
+**✅ Do:**
+```tsx
+// Use Material Design for navigation
+import { MdCheckroom } from 'react-icons/md';
+
+// Use FontAwesome for descriptive/semantic icons  
+import { FaBriefcase, FaHeart } from 'react-icons/fa';
+
+// Match icon context to content
+<Button variant="primary">
+  <MdAdd /> Add Item  // Addition action
+</Button>
+
+<ScenarioIcon>
+  <FaBriefcase /> Office // Work context
+</ScenarioIcon>
+```
+
+**❌ Don't:**
+```tsx
+// Don't mix icon styles inconsistently
+<Tab><FaHome />Home</Tab>           // FontAwesome  
+<Tab><MdOutlineStyle />Style</Tab>  // Material Design - inconsistent
+
+// Don't use unclear icon metaphors
+<FaRocket /> Save  // Confusing metaphor
+
+// Don't ignore semantic meaning
+<FaTrash /> Edit   // Wrong semantic association
+```
+
+#### Icon and Text Combinations
+
+**Icon with Text:**
+```tsx
+// Standard spacing
+<Button>
+  <MdAdd style={{ marginRight: '0.5rem' }} />
+  Add Item
+</Button>
+
+// Using Flexbox
+<ButtonContent>
+  <MdAdd />
+  <span>Add Item</span>
+</ButtonContent>
+
+const ButtonContent = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+```
+
+**Icon-Only Buttons:**
+```tsx
+// Ensure accessibility
+<IconButton 
+  aria-label="Delete item"
+  title="Delete item"
+>
+  <FaTrash />
+</IconButton>
+```
+
+### Icon Color Patterns
+
+#### Brand Colors
+```tsx
+// Primary brand purple
+<Icon style={{ color: '#8b5cf6' }} />
+
+// Secondary actions - gray
+<Icon style={{ color: '#6b7280' }} />
+```
+
+#### Semantic Colors
+```tsx
+// Success/positive actions
+<Icon style={{ color: '#22c55e' }} />
+
+// Warning/caution
+<Icon style={{ color: '#f59e0b' }} />
+
+// Error/destructive actions  
+<Icon style={{ color: '#ef4444' }} />
+
+// Information/neutral
+<Icon style={{ color: '#3b82f6' }} />
+```
+
+#### State-Based Colors
+```tsx
+// Active/selected state
+<Icon style={{ 
+  color: isActive ? '#8b5cf6' : '#6b7280' 
+}} />
+
+// Disabled state
+<Icon style={{ 
+  color: isDisabled ? '#d1d5db' : '#374151',
+  opacity: isDisabled ? 0.5 : 1
+}} />
+```
+
+### Implementation Examples
+
+#### Tab Icon Integration
+```tsx
+const TabIcon = ({ icon: Icon, active }) => (
+  <Icon style={{ 
+    fontSize: '1.25rem',
+    color: active ? '#8b5cf6' : '#6b7280',
+    marginRight: '0.5rem'
+  }} />
+);
+
+// Usage in tabs
+<Tab $active={activeTab === 'items'}>
+  <TabIcon icon={MdCheckroom} active={activeTab === 'items'} />
+  Items
+</Tab>
+```
+
+#### Search Icon Pattern
+```tsx
+const SearchContainer = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+`;
+
+const SearchIcon = styled.div`
+  position: absolute;
+  left: 0.75rem;
+  color: #6b7280;
+  font-size: 1.25rem;
+  pointer-events: none;
+`;
+
+// Usage
+<SearchContainer>
+  <SearchIcon>
+    <MdSearch />
+  </SearchIcon>
+  <SearchInput placeholder="Search items..." />
+</SearchContainer>
+```
+
+### Import Patterns
+
+```tsx
+// Group imports by library
+import { 
+  FaBriefcase, 
+  FaHeart, 
+  FaTrash, 
+  FaPlus 
+} from 'react-icons/fa';
+
+import { 
+  MdCheckroom, 
+  MdSearch, 
+  MdAdd 
+} from 'react-icons/md';
+
+// Import scenario utility
+import { getScenarioIcon } from '../utils/scenarioIconUtils';
+```
+
+### Accessibility Considerations
+
+```tsx
+// Provide meaningful labels
+<button aria-label="Delete item">
+  <FaTrash />
+</button>
+
+// Use title attributes for tooltips
+<Icon title="Office scenario" />
+
+// Ensure sufficient color contrast
+<Icon style={{ 
+  color: '#374151', // Meets WCAG AA standards
+  fontSize: '1.25rem' // Minimum 19.2px for touch targets
+}} />
 ```
 
 ### Cards
@@ -699,6 +2035,286 @@ When updating existing components:
 - ✅ **Documented:** Color systems (purple, grays, blues, status colors)
 - ✅ **Documented:** Component examples with theme integration
 - ✅ **Created:** Developer migration patterns and best practices
+
+---
+
+## State Management Patterns
+
+The Wardrobe App uses a layered state management approach combining React Context, custom hooks, and local state patterns for optimal performance and maintainability.
+
+### Context Providers
+
+#### Primary Contexts
+- **`WardrobeContext`** - Core wardrobe data (items, outfits, capsules)
+- **`SupabaseAuthContext`** - Authentication state and user management
+- **`StyleProfileContext`** - User preferences and profile data
+
+```tsx
+// Context usage pattern
+import { useWardrobe } from '../context/WardrobeContext';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
+
+const MyComponent = () => {
+  const { items, outfits, addItem } = useWardrobe();
+  const { user, isAuthenticated } = useSupabaseAuth();
+  
+  return (
+    // Component JSX
+  );
+};
+```
+
+#### Context Provider Structure
+```tsx
+// Provider wrapping pattern in App.tsx
+<SupabaseAuthProvider>
+  <WardrobeProvider>
+    <StyleProfileProvider>
+      <Routes />
+    </StyleProfileProvider>
+  </WardrobeProvider>
+</SupabaseAuthProvider>
+```
+
+### Custom Data Hooks
+
+#### Page-Level Data Hooks
+- **`useHomePageData`** - Complex state management for main wardrobe interface
+- **`useProfileData`** - User preferences and settings management
+- **`useCalendar`** - Calendar and outfit planning data
+
+#### Entity-Specific Hooks
+- **`useWardrobeItemsDB`** - Database-synchronized wardrobe items
+- **`useOutfits`** - Outfit management with local fallbacks
+- **`useCapsules`** - Capsule collections with relationships
+- **`useSupabaseWardrobeItems`** - Database integration for items
+
+#### Form-Specific Hooks
+- **`useWardrobeItemForm`** - Complex form state with validation
+- **`useCapsuleFormState`** - Capsule creation form management
+- **`useImageHandling`** - File upload and image processing
+
+### State Management Patterns
+
+#### 1. Hybrid Storage Pattern
+Combines database storage with localStorage fallbacks:
+
+```tsx
+// Example from WardrobeContext
+const addItem = async (itemData) => {
+  try {
+    if (isAuthenticated) {
+      // Try database first
+      const newItem = await api.createItem(itemData);
+      setItems(prev => [...prev, newItem]);
+    } else {
+      // Fall back to localStorage
+      const newItem = { ...itemData, id: uuidv4() };
+      const updatedItems = [...items, newItem];
+      setItems(updatedItems);
+      localStorage.setItem(`wardrobe-items-${userId}`, JSON.stringify(updatedItems));
+    }
+  } catch (error) {
+    // Graceful fallback to localStorage on API failure
+    console.error('API error, falling back to localStorage');
+  }
+};
+```
+
+#### 2. Derived State with Memoization
+Heavy use of `useMemo` for computed values:
+
+```tsx
+// Example from useHomePageData
+const filteredItems = useMemo(() => 
+  items.filter(item => {
+    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const matchesSeason = seasonFilter === 'all' || item.season.includes(seasonFilter);
+    const matchesSearch = searchQuery === '' || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSeason && matchesSearch;
+  }), 
+  [items, categoryFilter, seasonFilter, searchQuery]
+);
+```
+
+#### 3. Modal State Management
+Centralized modal state patterns:
+
+```tsx
+// Modal state pattern from useHomePageData
+const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
+
+// Event handlers for modal management
+const handleViewItem = useCallback((item: WardrobeItem) => {
+  setSelectedItem(item);
+  setIsViewModalOpen(true);
+}, []);
+
+const handleEditItem = useCallback((id: string) => {
+  setCurrentItemId(id);
+  setIsEditModalOpen(true);
+}, []);
+```
+
+#### 4. Filter State Management
+Dedicated state for complex filtering:
+
+```tsx
+// Filter state pattern
+const [categoryFilter, setCategoryFilter] = useState<string>('all');
+const [seasonFilter, setSeasonFilter] = useState<string>('all');
+const [searchQuery, setSearchQuery] = useState<string>('');
+
+// Separate filters for different entities
+const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
+const [capsuleSearchQuery, setCapsuleSearchQuery] = useState<string>('');
+```
+
+#### 5. Form State with Validation
+Complex form state management:
+
+```tsx
+// Example from form hooks
+const useWardrobeItemForm = (initialItem) => {
+  const [formData, setFormData] = useState(initialItem || defaultFormData);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const validateForm = useCallback(() => {
+    const newErrors = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.category) newErrors.category = 'Category is required';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
+  
+  return { formData, setFormData, errors, validateForm, isSubmitting };
+};
+```
+
+#### 6. Loading State Management
+Coordinated loading states across data sources:
+
+```tsx
+// Example from useHomePageData
+const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+const isLoading = useMemo(() => {
+  if (initialLoadComplete) return false;
+  return itemsLoading || outfitsLoading || capsulesLoading;
+}, [itemsLoading, outfitsLoading, capsulesLoading, initialLoadComplete]);
+
+useEffect(() => {
+  if (!itemsLoading && !outfitsLoading && !capsulesLoading && !initialLoadComplete) {
+    const timer = setTimeout(() => setInitialLoadComplete(true), 500);
+    return () => clearTimeout(timer);
+  }
+}, [itemsLoading, outfitsLoading, capsulesLoading, initialLoadComplete]);
+```
+
+### Data Synchronization Patterns
+
+#### Database + Local Storage Sync
+```tsx
+// Save data to both database and localStorage
+useEffect(() => {
+  if (isLoading) return;
+  
+  if (isAuthenticated && userId !== 'guest') {
+    // Save to database for authenticated users
+    localStorage.setItem(`items-${userId}`, JSON.stringify(items));
+  } else {
+    // Save to guest storage
+    localStorage.setItem('wardrobe-items-guest', JSON.stringify(items));
+  }
+}, [items, isLoading, isAuthenticated, userId]);
+```
+
+#### Event-Based Communication
+```tsx
+// Cross-component communication via custom events
+const handleItemDeleted = (event: Event) => {
+  const customEvent = event as CustomEvent;
+  if (customEvent.detail?.updatedOutfits) {
+    setOutfits(customEvent.detail.updatedOutfits);
+  }
+};
+
+window.addEventListener('wardrobeItemDeleted', handleItemDeleted);
+```
+
+### State Performance Optimization
+
+#### Callback Memoization
+```tsx
+// Memoize event handlers to prevent unnecessary re-renders
+const handleAddItem = useCallback(() => {
+  setIsAddModalOpen(true);
+}, []);
+
+const handleSubmitEdit = useCallback((item: any) => {
+  if (currentItemId) {
+    updateItem(currentItemId, item);
+    setIsEditModalOpen(false);
+    setCurrentItemId(null);
+  }
+}, [currentItemId, updateItem]);
+```
+
+#### Selective Re-renders
+```tsx
+// Use specific dependencies to control re-renders
+const currentItem = useMemo(() => 
+  currentItemId ? items.find(item => item.id === currentItemId) : undefined,
+  [items, currentItemId]
+);
+```
+
+### Error State Management
+
+#### Graceful Error Handling
+```tsx
+// Error state with fallback patterns
+const error = itemsError || outfitsError || capsuleError;
+
+// Only show errors if we don't have data loaded
+const displayError = items.length > 0 ? null : error;
+```
+
+### Best Practices
+
+#### Do's
+- **Use custom hooks** for complex state logic
+- **Memoize derived state** with `useMemo` and `useCallback`
+- **Implement fallback strategies** for database failures
+- **Separate concerns** between different state domains
+- **Use TypeScript interfaces** for state shape validation
+- **Implement loading states** for better UX
+
+#### Don'ts
+- **Don't put everything in Context** - use local state when appropriate
+- **Don't ignore loading states** - always provide feedback
+- **Don't mutate state directly** - use immutable updates
+- **Don't forget cleanup** - remove event listeners and timers
+- **Don't over-optimize** - measure before optimizing
+
+### Import Patterns
+```tsx
+// Context hooks
+import { useWardrobe } from '../context/WardrobeContext';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
+
+// Custom data hooks
+import { useHomePageData } from '../hooks/useHomePageData';
+import { useProfileData } from '../hooks/useProfileData';
+
+// Form hooks
+import { useWardrobeItemForm } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
+import { useCapsuleFormState } from '../components/features/wardrobe/forms/CapsuleForm/hooks/useCapsuleFormState';
+```
 
 ---
 
