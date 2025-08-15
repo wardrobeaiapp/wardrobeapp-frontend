@@ -42,7 +42,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     if (formState.validateForm()) {
       const formData = formState.getFormData();
       const item: WardrobeItem = {
-        id: initialItem?.id || '',
+        ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
         name: formData.name,
         category: formData.category as any,
         subcategory: formData.subcategory,
@@ -56,7 +56,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         imageUrl: formData.imageUrl || previewImage || '',
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
         timesWorn: initialItem?.timesWorn || 0
-      };
+      } as WardrobeItem;
       onSubmit(item);
     }
   };
@@ -101,7 +101,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         />
 
         <FormActions
-          onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
           onCancel={onCancel}
           isSubmitting={formState.isSubmitting}
         />

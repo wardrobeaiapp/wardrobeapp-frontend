@@ -79,10 +79,17 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const generateAutoName = (): string => {
     if (name.trim()) return name.trim();
     
-    if (color && category) {
+    if (color && (subcategory || category)) {
       const capitalizedColor = color.charAt(0).toUpperCase() + color.slice(1);
-      const formattedCategory = formatCategoryName(category as ItemCategory);
-      return `${capitalizedColor} ${formattedCategory}`;
+      
+      // Use subcategory if available and not "other", otherwise use category
+      if (subcategory && subcategory.toLowerCase() !== 'other') {
+        const formattedSubcategory = subcategory.charAt(0).toUpperCase() + subcategory.slice(1);
+        return `${capitalizedColor} ${formattedSubcategory}`;
+      } else {
+        const formattedCategory = formatCategoryName(category as ItemCategory);
+        return `${capitalizedColor} ${formattedCategory}`;
+      }
     }
     
     return '';

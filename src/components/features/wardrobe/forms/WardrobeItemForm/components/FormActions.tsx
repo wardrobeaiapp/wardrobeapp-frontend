@@ -5,14 +5,12 @@ import {
 import Button from '../../../../../common/Button';
 
 interface FormActionsProps {
-  onSubmit: () => void;
   onCancel: () => void;
   isSubmitting: boolean;
   isDownloadingImage?: boolean;
 }
 
 export const FormActions: React.FC<FormActionsProps> = ({
-  onSubmit,
   onCancel,
   isSubmitting,
   isDownloadingImage = false
@@ -27,8 +25,7 @@ export const FormActions: React.FC<FormActionsProps> = ({
       <Button 
         fullWidth
         variant="primary"
-        type="submit" 
-        onClick={onSubmit}
+        type="submit"
         disabled={isDisabled}
       >
         {isDownloadingImage ? 'Downloading Image...' : isSubmitting ? 'Saving...' : 'Save Item'}
