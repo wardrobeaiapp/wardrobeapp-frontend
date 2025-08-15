@@ -198,11 +198,6 @@ export const ButtonContainer = styled.div`
   margin-top: 2rem;
 `;
 
-export const SaveButton = styled(FormStyles.FormButton)`
-  padding: 0.625rem 1.25rem;
-  width: auto;
-`;
-
 export const Card = styled.div`
   background-color: #f9fafb;
   border-radius: 0.5rem;
@@ -233,31 +228,6 @@ export const Badge = styled.span`
   background-color: #e0f2fe;
   color: #0369a1;
   border-radius: 9999px;
-`;
-
-// Section-specific save button that matches the regular Save Profile button
-export const SectionSaveButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  background-color: #f3f4f6;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  
-  &:hover:not(:disabled) {
-    background-color: #e5e7eb;
-  }
-  
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-  }
 `;
 
 export const PremiumBadge = styled(Badge)`

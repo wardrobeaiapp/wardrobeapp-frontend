@@ -7,12 +7,12 @@ import {
   CheckboxLabel,
   SectionDivider,
   ButtonContainer,
-  SectionSaveButton
 } from '../../../../pages/ProfilePage.styles';
 import { SectionProps } from './types';
 import { WardrobeGoalsData } from '../../../../types';
 import { wardrobeGoalOptionsWithDetails } from '../../../../data/onboardingOptions';
 import { useStyleProfile } from '../context/StyleProfileContext';
+import Button from '../../../common/Button';
 
 // Define a more specific props interface using WardrobeGoalsData
 interface WardrobeGoalsSectionProps extends Omit<SectionProps, 'profileData'> {
@@ -232,12 +232,11 @@ const WardrobeGoalsSection: React.FC<WardrobeGoalsSectionProps> = ({
       
       {showSaveButton && (
         <ButtonContainer>
-          <SectionSaveButton
+          <Button
             onClick={handleSaveSection}
-            className="btn btn-primary"
           >
             Save Wardrobe Goals
-          </SectionSaveButton>
+          </Button>
         </ButtonContainer>
       )}
     </>

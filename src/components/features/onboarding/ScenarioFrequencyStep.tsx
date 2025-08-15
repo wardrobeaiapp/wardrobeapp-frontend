@@ -1,8 +1,9 @@
-import React, { useState, useEffect, ChangeEvent } from 'react';
+import React, { useState, useEffect } from 'react';
 import { frequencyOptions, periodOptions } from '../../../data/onboardingOptions';
 import { StepTitle, StepDescription } from '../../../pages/OnboardingPage.styles';
 import { FaLaptop, FaHome, FaWalking, FaUsers, FaCalendarAlt, FaTrashAlt, FaPlus } from 'react-icons/fa';
 import Button from '../../common/Button';
+import AddScenarioModal from './AddScenarioModal';
 import {
   PageContainer,
   ScenarioList,
@@ -12,16 +13,7 @@ import {
   ScenarioName,
   FrequencyControls,
   FrequencyInput,
-  FrequencySelect,
-  ModalOverlay,
-  ModalContent,
-  ModalTitle,
-  ModalForm,
-  FormGroup,
-  FormLabel,
-  FormInput,
-  ButtonGroup,
-  ModalFrequencyControls
+  FrequencySelect
 } from './ScenarioFrequencyStep.styles';
 
 // Types
@@ -109,9 +101,6 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
 }) => {
   const [localScenarios, setLocalScenarios] = useState<Scenario[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [newScenarioName, setNewScenarioName] = useState('');
-  const [newFrequencyValue, setNewFrequencyValue] = useState('3');
-  const [newFrequencyPeriod, setNewFrequencyPeriod] = useState('week');
   
   useEffect(() => {
     setLocalScenarios(scenarios);
@@ -154,48 +143,13 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setNewScenarioName('');
-    setNewFrequencyValue('3');
-    setNewFrequencyPeriod('week');
   };
 
-  const handleSubmitNewScenario = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!newScenarioName.trim()) {
-      return; // Don't add empty scenarios
-    }
-    
-    // Format the frequency string based on the period option
-    const frequencyText = `${newFrequencyValue} ${newFrequencyPeriod}`;
-    
-    const newScenario: Scenario = {
-      id: `scenario-${Date.now()}`,
-      name: newScenarioName.trim(),
-      frequency: frequencyText
-    };
-    
+  const handleAddScenario = (newScenario: Scenario) => {
     const updatedScenarios = [...localScenarios, newScenario];
     setLocalScenarios(updatedScenarios);
     onScenariosChange(updatedScenarios);
-    
-    // Reset form and close modal
-    setNewScenarioName('');
-    setNewFrequencyValue('3');
-    setNewFrequencyPeriod('week');
     setShowModal(false);
-  };
-
-  const handleNewScenarioNameChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewScenarioName(e.target.value);
-  };
-
-  const handleNewFrequencyValueChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewFrequencyValue(e.target.value);
-  };
-
-  const handleNewFrequencyPeriodChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setNewFrequencyPeriod(e.target.value);
   };
 
   return (
@@ -281,63 +235,20 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
       </ScenarioList>
       
       <Button 
+        fullWidth
         variant="secondary" 
+        outlined
+        size="lg"
         onClick={handleAddNewScenario}
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', padding: '16px', marginTop: '20px', border: '2px dashed #ccc', backgroundColor: 'transparent', borderRadius: '12px' }}
       >
         <FaPlus /> Add New Scenario
       </Button>
 
-      {showModal && (
-        <ModalOverlay>
-          <ModalContent>
-            <ModalTitle>Add New Scenario</ModalTitle>
-            <ModalForm onSubmit={handleSubmitNewScenario}>
-              <FormGroup>
-                <FormLabel htmlFor="scenarioName">Scenario Name</FormLabel>
-                <FormInput
-                  id="scenarioName"
-                  type="text"
-                  placeholder="e.g., Weekend Outing"
-                  value={newScenarioName}
-                  onChange={handleNewScenarioNameChange}
-                  autoFocus
-                />
-              </FormGroup>
-              
-              <FormGroup>
-                <FormLabel htmlFor="scenarioFrequency">Frequency</FormLabel>
-                <ModalFrequencyControls>
-                  <FrequencyInput 
-                    type="number" 
-                    min="1"
-                    id="frequencyValue"
-                    value={newFrequencyValue}
-                    onChange={handleNewFrequencyValueChange}
-                    style={{ width: '80px' }}
-                  />
-                  
-                  <FrequencySelect
-                    id="frequencyPeriod"
-                    value={newFrequencyPeriod}
-                    onChange={handleNewFrequencyPeriodChange}
-                    style={{ flex: 1 }}
-                  >
-                    {periodOptions.map(option => (
-                      <option key={option.id} value={option.id}>{option.label}</option>
-                    ))}
-                  </FrequencySelect>
-                </ModalFrequencyControls>
-              </FormGroup>
-              
-              <ButtonGroup>
-                <Button variant="secondary" type="button" onClick={handleCloseModal}>Cancel</Button>
-                <Button variant="primary" type="submit">Add Scenario</Button>
-              </ButtonGroup>
-            </ModalForm>
-          </ModalContent>
-        </ModalOverlay>
-      )}
+      <AddScenarioModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        onSubmit={handleAddScenario}
+      />
     </PageContainer>
   );
 };

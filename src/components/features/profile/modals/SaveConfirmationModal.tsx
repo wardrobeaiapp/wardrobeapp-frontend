@@ -8,6 +8,7 @@ import {
   ModalTitle,
   CloseButton
 } from '../../../../pages/HomePage.styles';
+import Button from '../../../common/Button';
 
 interface SaveConfirmationModalProps {
   isOpen: boolean;
@@ -33,35 +34,6 @@ const SuccessIcon = styled.div`
   height: 80px;
   background-color: rgba(52, 168, 83, 0.1);
   border-radius: 50%;
-`;
-
-const Button = styled.button`
-  padding: 12px 32px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: #f3f4f6;
-  color: #1f2937;
-  border: 1px solid #e5e7eb;
-  min-width: 120px;
-  
-  &:hover {
-    background-color: #e5e7eb;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
 `;
 
 // Secondary button removed - no longer needed
@@ -122,7 +94,7 @@ const SaveConfirmationModal: React.FC<SaveConfirmationModalProps> = ({
             <FaCheckCircle />
           </SuccessIcon>
           <Title>{message}</Title>
-          <Button onClick={onClose}>OK</Button>
+          <Button variant="primary" fullWidth onClick={onClose}>OK</Button>
         </ModalBody>
       </EnhancedModalContent>
     </Modal>

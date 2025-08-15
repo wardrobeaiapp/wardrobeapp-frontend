@@ -158,41 +158,6 @@ export const Button = styled.button`
   transition: all 0.2s ease;
 `;
 
-export const PrimaryButton = styled(Button)`
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  }
-`;
-
-export const SecondaryButton = styled(Button)`
-  background-color: #f9fafb;
-  color: #4b5563;
-  border: 1px solid #e5e7eb;
-  
-  &:hover {
-    background-color: #f3f4f6;
-    border-color: #d1d5db;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-  }
-`;
-
 // Modal styles
 export const ModalOverlay = styled.div`
   position: fixed;
