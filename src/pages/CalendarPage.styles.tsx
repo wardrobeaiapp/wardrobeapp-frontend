@@ -234,87 +234,12 @@ export const Textarea = styled.textarea`
   }
 `;
 
-export const ActionButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: ${theme.colors.primary};
-  color: white;
-  font-weight: 500;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 0.75rem;
-  
-  &:hover {
-    background-color: ${theme.colors.purple[600]};
-  }
-  
-  svg {
-    margin-right: 0.5rem;
-  }
-`;
-
-export const SecondaryButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: #f3f4f6;
-  color: #374151;
-  font-weight: 500;
-  border: none;
-  border-radius: 0.375rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  margin-bottom: 0.75rem;
-  
-  &:hover {
-    background-color: #e5e7eb;
-  }
-  
-  svg {
-    margin-right: 0.5rem;
-  }
-`;
-
-export const CalendarButton = styled.button<{ variant?: 'primary' | 'secondary' }>`
-  padding: 0.625rem 1.25rem;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  background-color: ${props => 
-    props.variant === 'primary' ? '#8b5cf6' : '#f3f4f6'
-  };
-  color: ${props => 
-    props.variant === 'primary' ? 'white' : '#4b5563'
-  };
-  
-  &:hover {
-    background-color: ${props => 
-      props.variant === 'primary' ? '#7c3aed' : '#e5e7eb'
-    };
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px ${props => 
-      props.variant === 'primary' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(156, 163, 175, 0.4)'
-    };
-  }
-`;
 
 export const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   margin-top: 1.5rem;
+  gap: 1rem;
 `;
 
 export const SelectionGrid = styled.div`

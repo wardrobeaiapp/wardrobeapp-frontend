@@ -6,18 +6,17 @@ import {
   SidebarCard,
   SidebarTitle,
   SidebarDate,
-  ActionButton,
-  SecondaryButton,
   OutfitContainer,
   QuickActionsContainer
 } from './CalendarPage.styles';
+import Button from '../components/common/Button';
 
 // Import calendar components
 import CalendarView from '../components/features/calendar/CalendarView';
-import OutfitSelectionPopup from '../components/features/calendar/OutfitSelectionPopup';
-import ItemSelectionPopup from '../components/features/calendar/ItemSelectionPopup';
-import DateSelectionPopup from '../components/features/calendar/DateSelectionPopup';
-import EditOutfitPopup from '../components/features/calendar/EditOutfitPopup';
+import OutfitSelectionPopup from '../components/features/calendar/modals/OutfitSelectionPopup';
+import ItemSelectionPopup from '../components/features/calendar/modals/ItemSelectionPopup';
+import DateSelectionPopup from '../components/features/calendar/modals/DateSelectionPopup';
+import EditOutfitPopup from '../components/features/calendar/modals/EditOutfitPopup';
 import { useWardrobe } from '../context/WardrobeContext';
 import useCalendar from '../hooks/useCalendar';
 import { WardrobeItem } from '../types';
@@ -98,7 +97,7 @@ const CalendarPage: React.FC = () => {
           ) : error ? (
             <div>
               <p>Error loading calendar: {error}</p>
-              <button onClick={() => window.location.reload()}>Retry</button>
+              <Button variant="primary" onClick={() => window.location.reload()}>Retry</Button>
             </div>
           ) : (
             <CalendarView 
@@ -185,36 +184,32 @@ const CalendarPage: React.FC = () => {
                 );
               })()}
               
-              <button 
-                style={{ 
-                  width: '100%', 
-                  padding: '0.5rem', 
-                  backgroundColor: 'white', 
-                  border: '1px solid #e5e7eb', 
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer'
-                }}
+              <Button 
+                fullWidth
+                variant="secondary"
                 onClick={() => setEditOutfitPopupVisible(true)}
               >
                 Edit Outfit
-              </button>
+              </Button>
             </SidebarCard>
             
             {/* Quick Actions Block */}
             <QuickActionsContainer>
               <SidebarTitle>Quick Actions</SidebarTitle>
               
-              <ActionButton onClick={() => setOutfitPopupVisible(true)}>
-                <span>+</span> Add Outfit
-              </ActionButton>
-              
-              <SecondaryButton onClick={() => setItemPopupVisible(true)}>
-                <span>+</span> Add Item
-              </SecondaryButton>
-              
-              <SecondaryButton onClick={() => setDatePopupVisible(true)}>
-                <span>↺</span> Copy from Date
-              </SecondaryButton>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <Button fullWidth variant="primary" onClick={() => setOutfitPopupVisible(true)}>
+                  <span>+</span> Add Outfit
+                </Button>
+                
+                <Button fullWidth variant="secondary" onClick={() => setItemPopupVisible(true)}>
+                  <span>+</span> Add Item
+                </Button>
+                
+                <Button fullWidth variant="secondary" onClick={() => setDatePopupVisible(true)}>
+                  <span>↺</span> Copy from Date
+                </Button>
+              </div>
             </QuickActionsContainer>
           </SidebarContainer>
         </CalendarLayout>

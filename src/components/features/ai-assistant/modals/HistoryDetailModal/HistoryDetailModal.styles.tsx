@@ -139,52 +139,6 @@ export const ActionButtonsContainer = styled.div`
   border-top: 1px solid #e5e7eb;
 `;
 
-export const ActionButton = styled.button`
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  flex: 1;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
-export const DismissButton = styled.button`
-  background: #f8fafc;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  flex: 1;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background: #f1f5f9;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(71, 85, 105, 0.1);
-  }
-
-  &:active {
-    transform: translateY(0);
-  }
-`;
-
 export const TagsContainer = styled.div`
   display: flex;
   gap: 0.5rem;

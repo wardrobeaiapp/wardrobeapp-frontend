@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Outfit } from '../../../types';
-import Button from '../../common/Button';
+import { Outfit } from '../../../../types';
+import Button from '../../../common/Button';
 import {
   PopupContainer,
   PopupContent,
@@ -12,7 +12,7 @@ import {
   SelectionItemName,
   SelectionItemCategory,
   ButtonContainer,
-} from './Calendar.styles';
+} from '../Calendar.styles';
 
 interface OutfitSelectionPopupProps {
   visible: boolean;
@@ -86,8 +86,8 @@ const OutfitSelectionPopup: React.FC<OutfitSelectionPopupProps> = ({
           ))}
         </SelectionGrid>
         <ButtonContainer>
-          <Button onClick={() => onClose()}>Cancel</Button>
-          <Button variant="primary" onClick={() => {
+          <Button variant="secondary" fullWidth onClick={() => onClose()}>Cancel</Button>
+          <Button variant="primary" fullWidth onClick={() => {
             // Save selections and close
             onSave(localSelectedIds);
             onClose();
