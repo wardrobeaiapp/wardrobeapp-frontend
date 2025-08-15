@@ -198,6 +198,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
 
       {isViewOutfitModalOpen && selectedOutfit && (
         <OutfitDetailModal
+          isOpen={isViewOutfitModalOpen}
           outfit={selectedOutfit}
           items={items}
           onClose={() => {
@@ -232,6 +233,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
 
       {isViewCapsuleModalOpen && selectedCapsule && (
         <CapsuleDetailModal
+          isOpen={isViewCapsuleModalOpen}
           capsule={selectedCapsule}
           items={items}
           onClose={() => {

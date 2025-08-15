@@ -1,14 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { WardrobeItem, Outfit, Capsule } from '../../../../types';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton
-} from '../../../../pages/HomePage.styles';
+import { Modal, ModalAction } from '../../../common/Modal';
 import styled from 'styled-components';
-import Button from '../../../common/Button';
 import * as outfitItemsService from '../../../../services/outfitItemsService';
 import * as outfitsService from '../../../../services/outfitsService';
 import * as capsuleItemsService from '../../../../services/capsuleItemsService';
@@ -22,6 +15,7 @@ interface DeleteItemConfirmModalProps {
 }
 
 const capitalizeFirstLetter = (str: string): string => {
+  if (!str || typeof str !== 'string') return str || '';
   return str.charAt(0).toUpperCase() + str.slice(1);
 };
 
@@ -39,14 +33,7 @@ const MessageText = styled.p`
 `;
 
 const ModalBody = styled.div`
-  padding: 16px;
-`;
-
-const ModalFooter = styled.div`
-  padding: 16px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
+  padding: 0;
 `;
 
 const AssociationsList = styled.ul`
@@ -63,12 +50,6 @@ const AssociationItem = styled.li`
   font-size: 14px;
 `;
 
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  width: 100%;
-`;
 
 const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
   isOpen,
@@ -131,14 +112,30 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
   const hasCapsuleAssociations = associatedCapsules.length > 0;
   const hasAssociations = hasOutfitAssociations || hasCapsuleAssociations || isInWishlist;
 
+  const actions: ModalAction[] = [
+    {
+      label: 'Cancel',
+      onClick: onClose,
+      variant: 'secondary',
+      fullWidth: true
+    },
+    {
+      label: 'Delete',
+      onClick: onConfirm,
+      variant: 'danger',
+      fullWidth: true
+    }
+  ];
+
   return (
-    <Modal>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>Confirm Delete</ModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ModalHeader>
-        <ModalBody>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Confirm Delete"
+      actions={actions}
+      size="md"
+    >
+      <ModalBody>
           <MessageText>
             Are you sure you want to delete the item "{item.name}"?
           </MessageText>
@@ -161,7 +158,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
                   <AssociationsList>
                     {associatedOutfits.map(outfit => (
                       <AssociationItem key={outfit.id}>
-                        {outfit.name}
+                        {outfit.name || `Outfit ${outfit.id}`}
                       </AssociationItem>
                     ))}
                   </AssociationsList>
@@ -179,7 +176,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
                   <AssociationsList>
                     {associatedCapsules.map(capsule => (
                       <AssociationItem key={capsule.id}>
-                        {capitalizeFirstLetter(capsule.name)}
+                        {capitalizeFirstLetter(capsule.name || `Capsule ${capsule.id}`)}
                       </AssociationItem>
                     ))}
                   </AssociationsList>
@@ -201,22 +198,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
               )}
             </>
           )}
-        </ModalBody>
-        <ModalFooter>
-          <ButtonsContainer>
-            <Button fullWidth variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              fullWidth
-              onClick={onConfirm}
-            >
-              Delete
-            </Button>
-          </ButtonsContainer>
-        </ModalFooter>
-      </ModalContent>
+      </ModalBody>
     </Modal>
   );
 };

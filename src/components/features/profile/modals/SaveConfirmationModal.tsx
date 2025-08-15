@@ -1,14 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaCheckCircle } from 'react-icons/fa';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton
-} from '../../../../pages/HomePage.styles';
-import Button from '../../../common/Button';
+import { Modal, ModalAction } from '../../../common/Modal';
 
 interface SaveConfirmationModalProps {
   isOpen: boolean;
@@ -17,11 +10,11 @@ interface SaveConfirmationModalProps {
 }
 
 const ModalBody = styled.div`
-  padding: 24px 32px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
+  padding: 16px 0;
 `;
 
 const SuccessIcon = styled.div`
@@ -36,42 +29,12 @@ const SuccessIcon = styled.div`
   border-radius: 50%;
 `;
 
-// Secondary button removed - no longer needed
 
-const EnhancedModalContent = styled(ModalContent)`
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  max-width: 450px;
-  animation: modalFadeIn 0.3s ease-out;
-  
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const EnhancedModalHeader = styled(ModalHeader)`
-  padding: 20px 32px;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-const EnhancedModalTitle = styled(ModalTitle)`
-  font-size: 20px;
+const Message = styled.p`
+  font-size: 18px;
   color: #1a1a1a;
-  font-weight: 600;
-`;
-
-const Title = styled.h2`
-  font-size: 20px;
-  color: #1a1a1a;
-  font-weight: 600;
-  margin-bottom: 16px;
+  font-weight: 500;
+  margin: 16px 0 0 0;
 `;
 
 const SaveConfirmationModal: React.FC<SaveConfirmationModalProps> = ({
@@ -79,24 +42,29 @@ const SaveConfirmationModal: React.FC<SaveConfirmationModalProps> = ({
   onClose,
   message = 'Profile Saved!'
 }) => {
-
-  if (!isOpen) return null;
+  const actions: ModalAction[] = [
+    {
+      label: 'OK',
+      onClick: onClose,
+      variant: 'primary',
+      fullWidth: true
+    }
+  ];
 
   return (
-    <Modal>
-      <EnhancedModalContent>
-        <EnhancedModalHeader>
-          <EnhancedModalTitle>Success</EnhancedModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </EnhancedModalHeader>
-        <ModalBody>
-          <SuccessIcon>
-            <FaCheckCircle />
-          </SuccessIcon>
-          <Title>{message}</Title>
-          <Button variant="primary" fullWidth onClick={onClose}>OK</Button>
-        </ModalBody>
-      </EnhancedModalContent>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Success"
+      actions={actions}
+      size="sm"
+    >
+      <ModalBody>
+        <SuccessIcon>
+          <FaCheckCircle />
+        </SuccessIcon>
+        <Message>{message}</Message>
+      </ModalBody>
     </Modal>
   );
 };

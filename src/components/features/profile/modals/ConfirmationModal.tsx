@@ -1,14 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { FaExclamationTriangle } from 'react-icons/fa';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton
-} from '../../../../pages/HomePage.styles';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -18,8 +11,7 @@ interface ConfirmationModalProps {
   message?: string;
 }
 
-const ModalBody = styled.div`
-  padding: 24px 32px;
+const StyledModalBody = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -38,54 +30,20 @@ const WarningIcon = styled.div`
   border-radius: 50%;
 `;
 
-const ButtonContainer = styled.div`
-  width: 100%;
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-`;
 
-const Title = styled.h2`
-  font-size: 20px;
+const SubTitle = styled.h3`
+  font-size: 18px;
   color: #1a1a1a;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin: 16px 0 8px;
 `;
 
 const Message = styled.p`
   font-size: 16px;
   color: #4b5563;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 `;
 
-const EnhancedModalContent = styled(ModalContent)`
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-  max-width: 450px;
-  animation: modalFadeIn 0.3s ease-out;
-  
-  @keyframes modalFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-`;
-
-const EnhancedModalHeader = styled(ModalHeader)`
-  padding: 20px 32px;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-const EnhancedModalTitle = styled(ModalTitle)`
-  font-size: 20px;
-  color: #1a1a1a;
-  font-weight: 600;
-`;
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,
@@ -94,31 +52,41 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   title = 'Confirm Action',
   message = 'Are you sure you want to proceed with this action?'
 }) => {
-
-  if (!isOpen) return null;
+  const actions: ModalAction[] = [
+    {
+      label: 'Cancel',
+      onClick: onClose,
+      variant: 'secondary',
+      fullWidth: true
+    },
+    {
+      label: 'Confirm',
+      onClick: () => {
+        onConfirm();
+        onClose();
+      },
+      variant: 'primary',
+      fullWidth: true
+    }
+  ];
 
   return (
-    <Modal>
-      <EnhancedModalContent>
-        <EnhancedModalHeader>
-          <EnhancedModalTitle>{title}</EnhancedModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </EnhancedModalHeader>
-        <ModalBody>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      actions={actions}
+      size="sm"
+    >
+      <ModalBody>
+        <StyledModalBody>
           <WarningIcon>
             <FaExclamationTriangle />
           </WarningIcon>
-          <Title>Confirmation Required</Title>
+          <SubTitle>Confirmation Required</SubTitle>
           <Message>{message}</Message>
-          <ButtonContainer>
-            <Button variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
-            <Button variant="primary" fullWidth onClick={() => {
-              onConfirm();
-              onClose();
-            }}>Confirm</Button>
-          </ButtonContainer>
-        </ModalBody>
-      </EnhancedModalContent>
+        </StyledModalBody>
+      </ModalBody>
     </Modal>
   );
 };

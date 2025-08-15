@@ -1,22 +1,14 @@
 import React from 'react';
-import { FaTimes, FaCheckCircle, FaStar } from 'react-icons/fa';
+import { FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
-import Button from '../../../../common/Button';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton,
-  ModalBody
-} from '../../../../../pages/HomePage.styles';
+import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
 import {
   ItemDetails,
   DetailRow,
   DetailLabel,
-  DetailValue,
-  ButtonsContainer
+  DetailValue
 } from '../../../wardrobe/modals/ItemViewModal.styles';
+import { AnalysisText } from './AICheckResultModal.styles';
 
 interface AICheckResultModalProps {
   isOpen: boolean;
@@ -39,86 +31,75 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   onSkip,
   onDecideLater
 }) => {
-  if (!isOpen) return null;
+  const handleAddToWishlist = () => {
+    onAddToWishlist?.();
+    onClose();
+  };
+
+  const handleSkip = () => {
+    onSkip?.();
+    onClose();
+  };
+
+  const handleDecideLater = () => {
+    onDecideLater?.();
+    onClose();
+  };
+
+  const actions: ModalAction[] = [
+    {
+      label: 'Add to wishlist',
+      onClick: handleAddToWishlist,
+      variant: 'primary',
+      fullWidth: true
+    },
+    {
+      label: 'Dismiss',
+      onClick: handleSkip,
+      variant: 'secondary',
+      fullWidth: true
+    },
+    {
+      label: 'Decide later',
+      onClick: handleDecideLater,
+      variant: 'secondary',
+      fullWidth: true
+    }
+  ];
 
   return (
-    <Modal onClick={onClose}>
-      <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>
-            <FaCheckCircle style={{ color: '#10b981', marginRight: '0.5rem' }} />
-            AI Analysis Complete
-          </ModalTitle>
-          <CloseButton onClick={onClose}>
-            <FaTimes />
-          </CloseButton>
-        </ModalHeader>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="AI Analysis Complete"
+      actions={actions}
+      size="md"
+    >
+      <ModalBody>
+        <AnalysisText>
+          {analysisResult}
+        </AnalysisText>
         
-        <ModalBody>
-          <div style={{ 
-            fontSize: '1rem', 
-            color: '#374151', 
-            lineHeight: 1.6, 
-            marginBottom: '1.5rem' 
-          }}>
-            {analysisResult}
-          </div>
-          
-          <ItemDetails>
-            {score !== undefined && (
-              <DetailRow>
-                <DetailLabel>Score:</DetailLabel>
-                <DetailValue style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <FaStar size={14} color="#f59e0b" />
-                  {score}/10
-                </DetailValue>
-              </DetailRow>
-            )}
-            {status && (
-              <DetailRow>
-                <DetailLabel>Status:</DetailLabel>
-                <DetailValue>
-                  {status.replace('_', ' ')}
-                </DetailValue>
-              </DetailRow>
-            )}
-          </ItemDetails>
-          
-          <ButtonsContainer>
-            <Button 
-              variant="primary"
-              fullWidth 
-              onClick={() => {
-                onAddToWishlist?.();
-                onClose();
-              }}
-            >
-              Add to wishlist
-            </Button>
-            <Button 
-              variant="secondary" 
-              fullWidth 
-              onClick={() => {
-                onSkip?.();
-                onClose();
-              }}
-            >
-              Dismiss
-            </Button>
-            <Button 
-              variant="secondary" 
-              outlined
-              fullWidth 
-              onClick={() => {
-                onDecideLater?.();
-                onClose();
-              }}
-            >
-              Decide later
-            </Button>
-          </ButtonsContainer>
-        </ModalBody>
-      </ModalContent>
+        <ItemDetails>
+          {score !== undefined && (
+            <DetailRow>
+              <DetailLabel>Score:</DetailLabel>
+              <DetailValue style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <FaStar size={14} color="#f59e0b" />
+                {score}/10
+              </DetailValue>
+            </DetailRow>
+          )}
+          {status && (
+            <DetailRow>
+              <DetailLabel>Status:</DetailLabel>
+              <DetailValue>
+                {status.replace('_', ' ')}
+              </DetailValue>
+            </DetailRow>
+          )}
+        </ItemDetails>
+      </ModalBody>
     </Modal>
   );
 };

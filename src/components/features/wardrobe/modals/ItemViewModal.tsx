@@ -2,14 +2,7 @@ import React from 'react';
 import { WardrobeItem, Season, WishlistStatus } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import Button from '../../../common/Button';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-  CloseButton
-} from '../../../../pages/HomePage.styles';
+import { Modal, ModalAction } from '../../../common/Modal';
 import {
   ItemImageContainer,
   ItemImage,
@@ -98,18 +91,30 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
   
   const imageUrl = item.imageUrl ? getFullImageUrl(item.imageUrl) : '';
   
-  if (!isOpen) return null;
-  
+  // Build modal actions
+  const actions: ModalAction[] = [
+    {
+      label: 'Edit',
+      onClick: handleEdit,
+      variant: 'primary',
+      fullWidth: true
+    },
+    {
+      label: 'Delete',
+      onClick: handleDelete,
+      variant: 'danger',
+      fullWidth: true
+    }
+  ];
+
   return (
-    <Modal onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>{item.name}</ModalTitle>
-          <CloseButton onClick={onClose}>
-            ×
-          </CloseButton>
-        </ModalHeader>
-        <ModalBody>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={item.name}
+      actions={actions}
+      size='md'
+    >
         
         <ItemImageContainer>
           {imageUrl ? (
@@ -119,14 +124,14 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
           )}
         </ItemImageContainer>
         
-        {item.wishlist && (
+        {item.wishlist ? (
           <ButtonsContainer style={{ marginTop: '10px', marginBottom: '20px' }}>
-            {item.wishlistStatus === WishlistStatus.NOT_REVIEWED && (
+            {item.wishlistStatus === WishlistStatus.NOT_REVIEWED ? (
               <Button variant="primary" onClick={handleRunAICheck}>Run AI Check</Button>
-            )}
+            ) : null}
             <Button variant="primary" onClick={handleMoveToWardrobe}>Move to Wardrobe</Button>
           </ButtonsContainer>
-        )}
+        ) : null}
         
         <ItemDetails>
           <DetailRow>
@@ -134,12 +139,12 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             <DetailValue>{item.category ? item.category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : ''}</DetailValue>
           </DetailRow>
           
-          {item.subcategory && item.subcategory !== item.category && (
+          {item.subcategory && item.subcategory !== item.category ? (
             <DetailRow>
               <DetailLabel>Subcategory</DetailLabel>
               <DetailValue>{item.subcategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}</DetailValue>
             </DetailRow>
-          )}
+          ) : null}
           
           <DetailRow>
             <DetailLabel>Color</DetailLabel>
@@ -155,33 +160,33 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             </DetailValue>
           </DetailRow>
           
-          {item.brand && (
+          {item.brand && item.brand !== '0' ? (
             <DetailRow>
               <DetailLabel>Brand</DetailLabel>
               <DetailValue>{item.brand}</DetailValue>
             </DetailRow>
-          )}
+          ) : null}
           
-          {item.size && (
+          {item.size && item.size !== '0' ? (
             <DetailRow>
               <DetailLabel>Size</DetailLabel>
               <DetailValue>{item.size}</DetailValue>
             </DetailRow>
-          )}
+          ) : null}
           
-          {item.material && (
+          {item.material && item.material !== '0' ? (
             <DetailRow>
               <DetailLabel>Material</DetailLabel>
               <DetailValue>{item.material}</DetailValue>
             </DetailRow>
-          )}
+          ) : null}
           
-          {item.price && (
+          {item.price && item.price > 0 ? (
             <DetailRow>
               <DetailLabel>Price</DetailLabel>
               <DetailValue>${item.price}</DetailValue>
             </DetailRow>
-          )}
+          ) : null}
           
           <DetailRow>
             <DetailLabel>Added</DetailLabel>
@@ -190,7 +195,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
           
 
           
-          {item.wishlist && (
+          {item.wishlist ? (
             <>
               <DetailRow>
                 <DetailLabel>Wishlist</DetailLabel>
@@ -204,10 +209,10 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
                 </DetailValue>
               </DetailRow>
             </>
-          )}
+          ) : null}
         </ItemDetails>
         
-        {item.tags && item.tags.length > 0 && (
+        {item.tags && item.tags.length > 0 ? (
           <>
             <h3>Tags</h3>
             <TagsContainer>
@@ -216,14 +221,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
               ))}
             </TagsContainer>
           </>
-        )}
-        
-        <ButtonsContainer>
-          <Button fullWidth variant="primary" onClick={handleEdit}>Edit</Button>
-          <Button fullWidth variant="secondary" onClick={handleDelete}>Delete</Button>
-        </ButtonsContainer>
-        </ModalBody>
-      </ModalContent>
+        ) : null}
     </Modal>
   );
 };
