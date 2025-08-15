@@ -2,6 +2,7 @@ import React from 'react';
 import { WardrobeItem, Season, WishlistStatus } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { useWardrobe } from '../../../../context/WardrobeContext';
+import Button from '../../../common/Button';
 import {
   Modal,
   ModalContent,
@@ -10,9 +11,6 @@ import {
   ModalBody,
   CloseButton
 } from '../../../../pages/HomePage.styles';
-import {
-  SubmitButton,
-} from '../forms/WardrobeItemForm.styles';
 import {
   ItemImageContainer,
   ItemImage,
@@ -23,8 +21,7 @@ import {
   DetailValue,
   TagsContainer,
   Tag,
-  ButtonsContainer,
-  DangerButton
+  ButtonsContainer
 } from './ItemViewModal.styles';
 
 
@@ -126,9 +123,9 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         {item.wishlist && (
           <ButtonsContainer style={{ marginTop: '10px', marginBottom: '20px' }}>
             {item.wishlistStatus === WishlistStatus.NOT_REVIEWED && (
-              <SubmitButton onClick={handleRunAICheck}>Run AI Check</SubmitButton>
+              <Button variant="primary" onClick={handleRunAICheck}>Run AI Check</Button>
             )}
-            <SubmitButton onClick={handleMoveToWardrobe}>Move to Wardrobe</SubmitButton>
+            <Button variant="primary" onClick={handleMoveToWardrobe}>Move to Wardrobe</Button>
           </ButtonsContainer>
         )}
         
@@ -216,8 +213,8 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         )}
         
         <ButtonsContainer>
-          <SubmitButton onClick={handleEdit}>Edit</SubmitButton>
-          <DangerButton onClick={handleDelete}>Delete</DangerButton>
+          <Button fullWidth variant="primary" onClick={handleEdit}>Edit</Button>
+          <Button fullWidth variant="secondary" onClick={handleDelete}>Delete</Button>
         </ButtonsContainer>
         </ModalBody>
       </ModalContent>

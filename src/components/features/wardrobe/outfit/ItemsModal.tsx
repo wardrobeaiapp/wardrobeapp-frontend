@@ -1,6 +1,5 @@
 import React from 'react';
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
-import { formatCategory } from '../../../../utils/textFormatting';
 import FiltersPanel from './FiltersPanel';
 import ItemsGrid from './ItemsGrid';
 import {
@@ -11,9 +10,9 @@ import {
   CloseButton,
   CheckboxContainer,
   ResultsCount,
-  ButtonGroup,
-  ModernSubmitButton
-} from '../forms/OutfitForm.styles';
+  ButtonGroup
+} from '../forms/OutfitForm/OutfitForm.styles';
+import Button from '../../../common/Button';
 
 interface ItemsModalProps {
   isOpen: boolean;
@@ -88,9 +87,9 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
         )}
         
         <ButtonGroup style={{ marginTop: '1.5rem' }}>
-          <ModernSubmitButton type="button" onClick={onClose}>
+          <Button variant="primary" type="button" onClick={onClose}>
             Done
-          </ModernSubmitButton>
+          </Button>
         </ButtonGroup>
       </ItemsModalContent>
     </StyledItemsModal>

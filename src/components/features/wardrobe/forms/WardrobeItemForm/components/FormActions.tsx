@@ -1,9 +1,8 @@
 import React from 'react';
 import {
-  ButtonContainer,
-  SubmitButton,
-  CancelButton
-} from '../../WardrobeItemForm.styles';
+  ButtonContainer
+} from '../WardrobeItemForm.styles';
+import Button from '../../../../../common/Button';
 
 interface FormActionsProps {
   onSubmit: () => void;
@@ -22,16 +21,18 @@ export const FormActions: React.FC<FormActionsProps> = ({
 
   return (
     <ButtonContainer>
-      <CancelButton type="button" onClick={onCancel}>
+      <Button fullWidth variant="secondary" type="button" onClick={onCancel}>
         Cancel
-      </CancelButton>
-      <SubmitButton 
+      </Button>
+      <Button 
+        fullWidth
+        variant="primary"
         type="submit" 
         onClick={onSubmit}
         disabled={isDisabled}
       >
         {isDownloadingImage ? 'Downloading Image...' : isSubmitting ? 'Saving...' : 'Save Item'}
-      </SubmitButton>
+      </Button>
     </ButtonContainer>
   );
 };

@@ -7,7 +7,7 @@ import {
   Label,
   Input,
   Select
-} from '../../WardrobeItemForm.styles';
+} from '../WardrobeItemForm.styles';
 
 interface BasicInfoFieldsProps {
   name: string;

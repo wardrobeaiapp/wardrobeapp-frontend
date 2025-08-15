@@ -1,12 +1,11 @@
 import React from 'react';
-import { Season } from '../../../../types';
 import { Scenario } from '../../../../services/api';
 import {
   FormGroup,
   SeasonCheckboxes,
   CheckboxItem,
   CheckboxLabel
-} from '../forms/OutfitForm.styles';
+} from '../forms/OutfitForm/OutfitForm.styles';
 
 interface ScenarioSelectorProps {
   scenarios: Scenario[];

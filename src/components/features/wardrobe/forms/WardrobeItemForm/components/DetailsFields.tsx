@@ -10,7 +10,7 @@ import {
   CheckboxItem,
   CheckboxInput,
   CheckboxLabel
-} from '../../WardrobeItemForm.styles';
+} from '../WardrobeItemForm.styles';
 
 interface DetailsFieldsProps {
   material: string;

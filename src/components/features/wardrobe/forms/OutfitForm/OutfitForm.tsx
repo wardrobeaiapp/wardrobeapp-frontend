@@ -1,22 +1,21 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../../types';
-import { fetchScenarios } from '../../../../services/api';
-import { FALLBACK_SCENARIOS } from '../../../../constants';
+import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../../../types';
+import { fetchScenarios } from '../../../../../services/api';
+import { FALLBACK_SCENARIOS } from '../../../../../constants';
 import { 
   FormContainer, 
   FormGroup, 
   Label, 
-  ButtonGroup,
-  ModernCancelButton,
-  ModernSubmitButton
+  ButtonGroup
 } from './OutfitForm.styles';
+import Button from '../../../../../components/common/Button';
 // ScenarioFixer removed as requested
-import SelectedItemsList from '../outfit/SelectedItemsList';
-import ItemsModal from '../outfit/ItemsModal';
+import SelectedItemsList from '../../outfit/SelectedItemsList';
+import ItemsModal from '../../outfit/ItemsModal';
 
 // Import the extracted components
-import ScenarioSelector from '../outfit/ScenarioSelector';
-import SeasonSelector from '../outfit/SeasonSelector';
+import ScenarioSelector from '../../outfit/ScenarioSelector';
+import SeasonSelector from '../../outfit/SeasonSelector';
 
 // Using Scenario interface imported from '../types'
 
@@ -295,13 +294,14 @@ return (
       
       <FormGroup>
           <Label>Select Items</Label>
-          <ModernSubmitButton 
+          <Button 
+            variant="primary"
             type="button" 
             onClick={openItemsModal}
             style={{ marginBottom: '0.5rem' }}
           >
             Select Wardrobe Items
-          </ModernSubmitButton>
+          </Button>
           
           {/* Selected items list component */}
           <SelectedItemsList
@@ -330,12 +330,12 @@ return (
         </FormGroup>
         
         <ButtonGroup>
-          <ModernCancelButton type="button" onClick={onCancel}>
+          <Button fullWidth variant="secondary" type="button" onClick={onCancel}>
             Cancel
-          </ModernCancelButton>
-          <ModernSubmitButton type="submit">
+          </Button>
+          <Button fullWidth variant="primary" type="submit">
             Save Outfit
-          </ModernSubmitButton>
+          </Button>
         </ButtonGroup>
       </FormContainer>
     </form>

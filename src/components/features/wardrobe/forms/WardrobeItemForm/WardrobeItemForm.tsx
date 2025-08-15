@@ -1,179 +1,110 @@
 import React from 'react';
-import { WardrobeItem, ItemCategory } from '../../../../../types';
+import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { ImageUploadSection } from './components/ImageUploadSection';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { DetailsFields } from './components/DetailsFields';
 import { FormActions } from './components/FormActions';
-import { FormContainer } from '../WardrobeItemForm.styles';
+import { FormContainer } from './WardrobeItemForm.styles';
 
 interface WardrobeItemFormProps {
-  initialItem?: Partial<WardrobeItem>;
-  onSubmit: (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => void;
-  onCancel: () => void;
+  initialItem?: WardrobeItem;
   defaultWishlist?: boolean;
+  onSubmit: (item: WardrobeItem) => void;
+  onCancel: () => void;
 }
 
 const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   initialItem,
+  defaultWishlist = false,
   onSubmit,
-  onCancel,
-  defaultWishlist = false
+  onCancel
 }) => {
-  // Custom hooks for form management
-  const {
-    name,
-    setName,
-    category,
-    setCategory,
-    subcategory,
-    setSubcategory,
-    color,
-    setColor,
-    material,
-    setMaterial,
-    brand,
-    setBrand,
-    size,
-    setSize,
-    price,
-    setPrice,
-    seasons,
-    toggleSeason,
-    isWishlistItem,
-    setIsWishlistItem,
-    setImageUrl,
-    errors,
-    setErrors,
-    isSubmitting,
-    setIsSubmitting,
-    validateForm,
-    getFormData
-  } = useWardrobeItemForm({ initialItem, defaultWishlist });
+  const formState = useWardrobeItemForm({
+    initialItem,
+    defaultWishlist
+  });
 
-  // Image handling hook
-  const {
-    previewImage,
-    isDownloadingImage,
-    handleFileSelect,
+  const { 
+    previewImage, 
+    handleFileSelect, 
     handleDrop,
     handleDragOver,
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
-    onImageError: (error) => setErrors(prev => ({ ...prev, image: error })),
-    onImageSuccess: () => setErrors(prev => ({ ...prev, image: '' }))
+    onImageError: (error: string) => formState.setErrors(prev => ({ ...prev, image: error })),
+    onImageSuccess: () => formState.setErrors(prev => ({ ...prev, image: '' }))
   });
 
-  // Handle form submission
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    
-    if (!validateForm() || isSubmitting || isDownloadingImage) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const formData = getFormData();
-      
-      // TODO: Re-implement automatic image download when server-side endpoint is fixed
-      // For now, just use the imageUrl as-is (works fine for file uploads)
-      // External URLs will be saved directly (not ideal but functional)
-      
-      const itemData = {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formState.validateForm()) {
+      const formData = formState.getFormData();
+      const item: WardrobeItem = {
+        id: initialItem?.id || '',
         name: formData.name,
-        category: formData.category as ItemCategory, // Safe cast since validation ensures it's valid
+        category: formData.category as any,
         subcategory: formData.subcategory,
         color: formData.color,
         material: formData.material,
-        season: formData.seasons, // Interface expects 'season' not 'seasons'
-        wishlist: formData.isWishlistItem, // Interface expects 'wishlist' not 'isWishlistItem'
-        imageUrl: formData.imageUrl,
-        tags: []
+        brand: formData.brand,
+        size: formData.size,
+        price: parseFloat(formData.price) || 0,
+        season: formData.seasons,
+        wishlist: formData.isWishlistItem,
+        imageUrl: formData.imageUrl || previewImage || '',
+        dateAdded: initialItem?.dateAdded || new Date().toISOString(),
+        timesWorn: initialItem?.timesWorn || 0
       };
-
-      onSubmit(itemData);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      setErrors(prev => ({ ...prev, submit: 'Failed to save item. Please try again.' }));
-      setIsSubmitting(false);
+      onSubmit(item);
     }
   };
 
   return (
-    <FormContainer onClick={(e) => e.stopPropagation()}>
+    <FormContainer>
       <form onSubmit={handleSubmit}>
-        {/* Image Upload Section */}
         <ImageUploadSection
           previewImage={previewImage}
-          onDrop={(e) => handleDrop(e, setImageUrl)}
+          onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
           onDragOver={handleDragOver}
-          onFileSelect={(file) => handleFileSelect(file, setImageUrl)}
-          error={errors.image}
+          onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
+          error={formState.errors.image || ''}
         />
 
-        {/* TODO: Re-enable URL input after server-side image download is fixed
-        <Input
-          type="text"
-          value={imageUrl}
-          onChange={(e) => handleUrlChange(e.target.value, setImageUrl)}
-          placeholder="Or enter an image URL"
-          style={{ marginTop: '0.5rem', marginBottom: '1rem' }}
+        <BasicInfoFields
+          name={formState.name}
+          onNameChange={formState.setName}
+          category={formState.category}
+          onCategoryChange={formState.setCategory}
+          subcategory={formState.subcategory}
+          onSubcategoryChange={formState.setSubcategory}
+          color={formState.color}
+          onColorChange={formState.setColor}
+          errors={formState.errors}
         />
-        */}
 
-        {/* Basic Info Fields */}
-        <div style={{ marginTop: '2rem' }}>
-          <BasicInfoFields
-            name={name}
-            onNameChange={setName}
-            category={category}
-            onCategoryChange={setCategory}
-            subcategory={subcategory}
-            onSubcategoryChange={setSubcategory}
-            color={color}
-            onColorChange={setColor}
-            errors={errors}
-          />
-        </div>
-        
-        {/* Details Fields */}
-        <div style={{ marginTop: '1.5rem' }}>
-          <DetailsFields
-            material={material}
-            onMaterialChange={setMaterial}
-            brand={brand}
-            onBrandChange={setBrand}
-            size={size}
-            onSizeChange={setSize}
-            price={price}
-            onPriceChange={setPrice}
-            seasons={seasons}
-            onToggleSeason={toggleSeason}
-            isWishlistItem={isWishlistItem}
-            onWishlistToggle={setIsWishlistItem}
-            errors={errors}
-          />
-        </div>
+        <DetailsFields
+          material={formState.material}
+          onMaterialChange={formState.setMaterial}
+          brand={formState.brand}
+          onBrandChange={formState.setBrand}
+          size={formState.size}
+          onSizeChange={formState.setSize}
+          price={formState.price}
+          onPriceChange={formState.setPrice}
+          seasons={formState.seasons}
+          onToggleSeason={formState.toggleSeason}
+          isWishlistItem={formState.isWishlistItem}
+          onWishlistToggle={formState.setIsWishlistItem}
+          errors={formState.errors}
+        />
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <div style={{ color: 'red', fontSize: '0.875rem', marginBottom: '1rem' }}>
-            {errors.submit}
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div style={{ marginTop: '2rem' }}>
-          <FormActions
-            onSubmit={handleSubmit}
-            onCancel={onCancel}
-            isSubmitting={isSubmitting}
-            isDownloadingImage={isDownloadingImage}
-          />
-        </div>
+        <FormActions
+          onSubmit={() => handleSubmit({ preventDefault: () => {} } as React.FormEvent)}
+          onCancel={onCancel}
+          isSubmitting={formState.isSubmitting}
+        />
       </form>
     </FormContainer>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
+import Button from '../../../common/Button';
 
 import {
   ModalOverlay,
@@ -23,9 +24,7 @@ import {
   ItemContent,
   ItemName,
   ItemDetail,
-  ButtonGroup,
-  PrimaryButton,
-  SecondaryButton
+  ButtonGroup
 } from './OutfitDetailModal.styles';
 
 interface OutfitDetailModalProps {
@@ -99,8 +98,8 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
         </ItemsSection>
         
         <ButtonGroup>
-          <PrimaryButton onClick={() => onEdit(outfit)}>Edit</PrimaryButton>
-          <SecondaryButton onClick={() => onDelete(outfit.id)}>Delete</SecondaryButton>
+          <Button fullWidth variant="primary" onClick={() => onEdit(outfit)}>Edit</Button>
+          <Button fullWidth variant="secondary" onClick={() => onDelete(outfit.id)}>Delete</Button>
         </ButtonGroup>
       </ModalContent>
     </ModalOverlay>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Scenario } from '../../../../services/api';
-import { FormGroup, SeasonCheckboxes, CheckboxContainer, CheckboxLabel, CheckboxInput } from '../forms/CapsuleForm.styles';
+import { CheckboxContainer, CheckboxInput, CheckboxLabel, FormGroup, SeasonCheckboxes } from '../forms/CapsuleForm/CapsuleForm.styles';
 
 interface ScenarioSelectorProps {
   scenarios: Scenario[];
@@ -14,9 +14,7 @@ interface ScenarioSelectorProps {
 const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
   scenarios,
   selectedScenarios,
-  customScenario,
   onScenarioChange,
-  onCustomScenarioChange,
   isLoading
 }) => {
   return (

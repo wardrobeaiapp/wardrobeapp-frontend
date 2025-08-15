@@ -1,4 +1,5 @@
 // Export the main modular component
+export { default } from './WardrobeItemForm';
 export { default as WardrobeItemForm } from './WardrobeItemForm';
 
 // Export modular sub-components for potential reuse

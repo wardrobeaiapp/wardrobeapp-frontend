@@ -3,7 +3,7 @@ import { WardrobeItem } from '../../../../../types';
 import { Capsule } from '../../../../../types';
 import {
   FormContainer
-} from '../CapsuleForm.styles';
+} from './CapsuleForm.styles';
 
 // Custom hooks
 import { useCapsuleFormState } from './hooks/useCapsuleFormState';

@@ -8,6 +8,7 @@ import {
   CloseButton
 } from '../../../../pages/HomePage.styles';
 import styled from 'styled-components';
+import Button from '../../../common/Button';
 import * as outfitItemsService from '../../../../services/outfitItemsService';
 import * as outfitsService from '../../../../services/outfitsService';
 import * as capsuleItemsService from '../../../../services/capsuleItemsService';
@@ -66,39 +67,7 @@ const ButtonsContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-`;
-
-const Button = styled.button`
-  padding: 10px 16px;
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.25);
-  }
-`;
-
-const CancelButton = styled(Button)`
-  background-color: #f8f9fa;
-  border: 1px solid #ced4da;
-  margin-right: 12px;
-  
-  &:hover {
-    background-color: #e9ecef;
-  }
-`;
-
-const DeleteButton = styled(Button)`
-  background-color: #d9534f;
-  
-  &:hover {
-    background-color: #c82333;
-  }
+  width: 100%;
 `;
 
 const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
@@ -235,12 +204,16 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
         </ModalBody>
         <ModalFooter>
           <ButtonsContainer>
-            <CancelButton onClick={onClose}>
+            <Button fullWidth variant="secondary" onClick={onClose}>
               Cancel
-            </CancelButton>
-            <DeleteButton onClick={onConfirm}>
+            </Button>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={onConfirm}
+            >
               Delete
-            </DeleteButton>
+            </Button>
           </ButtonsContainer>
         </ModalFooter>
       </ModalContent>

@@ -3,7 +3,7 @@ import {
   FormGroup,
   Label,
   Input
-} from '../../CapsuleForm.styles';
+} from '../CapsuleForm.styles';
 
 export interface BasicInfoSectionProps {
   name: string;

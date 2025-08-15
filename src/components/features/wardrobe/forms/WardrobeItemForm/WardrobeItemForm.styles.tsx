@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { formTokens, createFocusStyles, createButtonStyles } from '../../../../styles/tokens/forms';
+import { formTokens, createFocusStyles, createButtonStyles } from '../../../../../styles/tokens/forms';
 
 // Form Container Styles
 export const FormContainer = styled.div`
@@ -15,6 +15,7 @@ export const PhotoUploadArea = styled.div`
   border: 2px dashed ${formTokens.colors.border};
   border-radius: ${formTokens.borderRadius.md};
   padding: ${formTokens.spacing.xxl};
+  margin-bottom: ${formTokens.spacing.xxl};
   text-align: center;
   background-color: ${formTokens.colors.background.upload};
   transition: ${formTokens.transitions.all};
@@ -177,59 +178,11 @@ export const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
   border-top: 1px solid #e5e7eb;
 `;
 
-export const SubmitButton = styled.button`
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-  
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-export const CancelButton = styled.button`
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  padding: 0.75rem 2rem;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #e5e7eb;
-    color: #4b5563;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
-  }
-  
-  &:active {
-    transform: translateY(0);
-  }
-`;
 
 export const TagsContainer = styled.div`
   display: flex;
@@ -246,24 +199,6 @@ export const Tag = styled.div`
   background-color: #e5e7eb;
   border-radius: 9999px;
   font-size: 0.875rem;
-`;
-
-export const RemoveTagButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1rem;
-  height: 1rem;
-  border-radius: 9999px;
-  background-color: #9ca3af;
-  color: white;
-  font-size: 0.75rem;
-  border: none;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #6b7280;
-  }
 `;
 
 // Duplicate ButtonContainer removed

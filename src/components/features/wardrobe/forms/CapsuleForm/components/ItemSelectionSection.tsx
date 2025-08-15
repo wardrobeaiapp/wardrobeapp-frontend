@@ -3,10 +3,8 @@ import { WardrobeItem } from '../../../../../../types';
 import {
   FormGroup,
   Label
-} from '../../CapsuleForm.styles';
-import {
-  ModernSubmitButton
-} from '../../OutfitForm.styles';
+} from '../CapsuleForm.styles';
+import Button from '../../../../../common/Button';
 import MainItemSelector from '../../../capsule/MainItemSelector';
 import SelectedItemsList from '../../../capsule/SelectedItemsList';
 
@@ -49,9 +47,9 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
 
       <FormGroup>
         <Label>Selected Items ({supportingItemsCount})</Label>
-        <ModernSubmitButton type="button" onClick={onOpenItemsModal}>
+        <Button variant="primary" type="button" onClick={onOpenItemsModal}>
           Select Items
-        </ModernSubmitButton>
+        </Button>
         
         <SelectedItemsList
           selectedItems={selectedItems}
