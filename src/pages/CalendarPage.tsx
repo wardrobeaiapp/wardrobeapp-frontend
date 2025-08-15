@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import PageHeader from '../components/layout/Header/Header';
 import { 
-  PageContainer,
   CalendarLayout,
   SidebarContainer,
   SidebarCard,
@@ -22,6 +21,7 @@ import EditOutfitPopup from '../components/features/calendar/EditOutfitPopup';
 import { useWardrobe } from '../context/WardrobeContext';
 import useCalendar from '../hooks/useCalendar';
 import { WardrobeItem } from '../types';
+import PageContainer from '../components/layout/PageContainer';
 
 
 const CalendarPage: React.FC = () => {

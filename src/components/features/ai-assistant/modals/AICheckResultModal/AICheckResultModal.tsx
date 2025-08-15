@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaTimes, FaCheckCircle, FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
+import Button from '../../../../common/Button';
 import {
   Modal,
   ModalContent,
@@ -16,11 +17,6 @@ import {
   DetailValue,
   ButtonsContainer
 } from '../../../wardrobe/modals/ItemViewModal.styles';
-import {
-  ActionButton,
-  SecondaryActionButton,
-  TertiaryActionButton
-} from './AICheckResultModal.styles';
 
 interface AICheckResultModalProps {
   isOpen: boolean;
@@ -89,24 +85,37 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           </ItemDetails>
           
           <ButtonsContainer>
-            <ActionButton onClick={() => {
-              onAddToWishlist?.();
-              onClose();
-            }}>
+            <Button 
+              variant="primary"
+              fullWidth 
+              onClick={() => {
+                onAddToWishlist?.();
+                onClose();
+              }}
+            >
               Add to wishlist
-            </ActionButton>
-            <SecondaryActionButton onClick={() => {
-              onSkip?.();
-              onClose();
-            }}>
+            </Button>
+            <Button 
+              variant="secondary" 
+              fullWidth 
+              onClick={() => {
+                onSkip?.();
+                onClose();
+              }}
+            >
               Dismiss
-            </SecondaryActionButton>
-            <TertiaryActionButton onClick={() => {
-              onDecideLater?.();
-              onClose();
-            }}>
+            </Button>
+            <Button 
+              variant="secondary" 
+              outlined
+              fullWidth 
+              onClick={() => {
+                onDecideLater?.();
+                onClose();
+              }}
+            >
               Decide later
-            </TertiaryActionButton>
+            </Button>
           </ButtonsContainer>
         </ModalBody>
       </ModalContent>

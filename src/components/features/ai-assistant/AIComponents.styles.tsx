@@ -23,20 +23,6 @@ export const Input = styled.input`
   }
 `;
 
-export const TextArea = styled.textarea`
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  min-height: 100px;
-  resize: vertical;
-  &:focus {
-    outline: none;
-    border-color: #4a90e2;
-  }
-`;
-
 // Season selector
 export const SeasonCheckboxes = styled.div`
   display: flex;
@@ -55,10 +41,6 @@ export const CheckboxLabel = styled.label`
 `;
 
 // Item selection
-export const ItemsContainer = styled.div`
-  margin-top: 20px;
-`;
-
 export const ItemsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

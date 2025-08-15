@@ -1,6 +1,5 @@
 import React from 'react';
 import Header from '../components/layout/Header/Header';
-import Footer from '../components/layout/Footer/Footer';
 import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
@@ -8,13 +7,13 @@ import { useHomePageData, TabType } from '../hooks/useHomePageData';
 import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
 import {
-  PageContainer,
   PageHeader,
   Title,
   TabsContainer,
   Tab,
 } from './HomePage.styles';
 import Button from '../components/common/Button';
+import PageContainer from '../components/layout/PageContainer';
 
 
 
@@ -386,7 +385,6 @@ const HomePage: React.FC = () => {
         />
 
     </PageContainer>
-    <Footer variant="simple" />
     </>
   );
 };

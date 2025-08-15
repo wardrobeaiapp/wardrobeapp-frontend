@@ -2,12 +2,6 @@ import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import { Card } from '../components/cards/Card.styles';
 
-export const PageContainer = styled.div`
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
 // Main cards layout
 export const CardsContainer = styled.div`
   display: grid;
@@ -296,21 +290,6 @@ export const HistoryTime = styled.span`
   flex-shrink: 0;
 `;
 
-export const ViewAllButton = styled.button`
-  background: none;
-  border: none;
-  color: ${theme.colors.primary};
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.2s ease;
-  
-  &:hover {
-    color: ${theme.colors.purple[600]};
-  }
-`;
-
 export const HistoryDate = styled.div`
   font-size: 0.875rem;
   color: #6b7280;
@@ -375,20 +354,6 @@ export const FilterDropdown = styled.select`
     outline: none;
     border-color: ${theme.colors.primary};
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-`;
-
-export const ExportButton = styled.button`
-  padding: 0.5rem 1rem;
-  background: ${theme.colors.primary};
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-weight: 500;
-  cursor: pointer;
-  
-  &:hover {
-    background: ${theme.colors.purple[600]};
   }
 `;
 
@@ -531,23 +496,6 @@ export const ScoreDisplay = styled.div`
 export const ScoreText = styled.span`
   font-size: 0.875rem;
   font-weight: 600;
-`;
-
-export const LoadMoreButton = styled.button`
-  width: 100%;
-  padding: 0.75rem;
-  background: none;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  color: ${theme.colors.primary};
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 1rem;
-  
-  &:hover {
-    background: #f9fafb;
-    border-color: ${theme.colors.primary};
-  }
 `;
 
 export const StatusBadge = styled.div<{ $status: string }>`

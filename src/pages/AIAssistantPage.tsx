@@ -11,8 +11,8 @@ import WishlistSelectionModal from '../components/features/ai-assistant/modals/W
 import AICheckResultModal from '../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
 import RecommendationModal from '../components/features/ai-assistant/modals/RecommendationModal/RecommendationModal';
 import HistoryDetailModal from '../components/features/ai-assistant/modals/HistoryDetailModal/HistoryDetailModal';
+import { PageContainer } from '../components/layout/PageContainer';
 import {
-  PageContainer,
   CardsContainer,
 } from './AIAssistantPage.styles';
 

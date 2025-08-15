@@ -134,7 +134,7 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
             
             {/* Action Buttons */}
             <ButtonGroup>
-              <Button variant="secondary" onClick={onOpenWishlistModal}>Select from Wishlist</Button>
+              <Button variant="secondary" outlined onClick={onOpenWishlistModal}>Select from Wishlist</Button>
               <Button variant="primary" onClick={onCheckItem}
                 disabled={isLoading || (!imageLink.trim())}>
                 {isLoading ? 'Analyzing...' : 'Start AI Check'}</Button>
