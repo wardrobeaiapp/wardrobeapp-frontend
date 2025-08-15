@@ -260,10 +260,16 @@ export const useHomePageData = () => {
   const handleSubmitEdit = useCallback((item: any) => {
     if (currentItemId) {
       updateItem(currentItemId, item);
+      
+      // If the view modal is open for this item, update the selectedItem with new data
+      if (selectedItem && selectedItem.id === currentItemId) {
+        setSelectedItem({ ...selectedItem, ...item });
+      }
+      
       setIsEditModalOpen(false);
       setCurrentItemId(null);
     }
-  }, [currentItemId, updateItem]);
+  }, [currentItemId, updateItem, selectedItem]);
   
   const handleAddOutfit = useCallback((outfit: any) => {
     addOutfit(outfit);

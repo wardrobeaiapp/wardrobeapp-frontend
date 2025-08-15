@@ -1,6 +1,5 @@
 import React from 'react';
 import { WardrobeItem, Season, WishlistStatus } from '../../../../types';
-import { formatCategory } from '../../../../utils/textFormatting';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import Button from '../../../common/Button';
 import {
@@ -132,8 +131,15 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
         <ItemDetails>
           <DetailRow>
             <DetailLabel>Category</DetailLabel>
-            <DetailValue>{formatCategory(item.category)}</DetailValue>
+            <DetailValue>{item.category ? item.category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : ''}</DetailValue>
           </DetailRow>
+          
+          {item.subcategory && item.subcategory !== item.category && (
+            <DetailRow>
+              <DetailLabel>Subcategory</DetailLabel>
+              <DetailValue>{item.subcategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ')}</DetailValue>
+            </DetailRow>
+          )}
           
           <DetailRow>
             <DetailLabel>Color</DetailLabel>

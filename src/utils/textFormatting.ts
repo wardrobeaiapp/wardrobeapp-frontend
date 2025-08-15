@@ -48,3 +48,19 @@ export const capitalize = (text: string): string => {
   if (!text) return '';
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 };
+
+/**
+ * Gets display text for item category, optionally including subcategory
+ */
+export const getItemDisplayCategory = (category: string, subcategory?: string): string => {
+  if (!category) return '';
+  
+  const formattedCategory = formatDisplayText(category);
+  
+  if (subcategory && subcategory !== category) {
+    const formattedSubcategory = formatDisplayText(subcategory);
+    return `${formattedCategory} - ${formattedSubcategory}`;
+  }
+  
+  return formattedCategory;
+};
