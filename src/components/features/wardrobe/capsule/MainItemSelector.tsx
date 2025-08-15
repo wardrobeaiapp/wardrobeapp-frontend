@@ -1,11 +1,7 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../types';
-import {
-  SelectedItemsContainer,
-  SelectedItemBadge,
-  RemoveItemButton
-} from '../forms/CapsuleForm.styles';
-import { ModernSubmitButton } from '../forms/OutfitForm.styles';
+import Button from '../../../common/Button';
+import { RemoveItemButton, SelectedItemBadge, SelectedItemsContainer } from '../forms/CapsuleForm/CapsuleForm.styles';
 
 interface MainItemSelectorProps {
   mainItemId: string;
@@ -32,9 +28,9 @@ const MainItemSelector: React.FC<MainItemSelectorProps> = ({
           </SelectedItemBadge>
         </SelectedItemsContainer>
       ) : (
-        <ModernSubmitButton type="button" onClick={onSelectClick} style={{ width: '100%' }}>
+        <Button fullWidth onClick={onSelectClick}>
           Select Main Item
-        </ModernSubmitButton>
+        </Button>
       )}
     </div>
   );

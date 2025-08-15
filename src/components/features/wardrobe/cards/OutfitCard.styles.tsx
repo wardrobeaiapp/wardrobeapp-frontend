@@ -31,54 +31,6 @@ export const ButtonsContainer = styled.div`
   margin-top: 1rem;
 `;
 
-export const ActionButton = styled.button`
-  background: none;
-  border: 1px solid ${theme.colors.gray[200]};
-  border-radius: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background-color: ${theme.colors.gray[100]};
-  }
-`;
-
-export const EditButton = styled.button`
-  flex: 1;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
-    background: linear-gradient(135deg, ${theme.colors.purple[600]} 0%, ${theme.colors.purple[700]} 100%);
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-  }
-`;
-
-export const DeleteButton = styled(ActionButton)`
-  color: ${theme.colors.error};
-  border-color: ${theme.colors.error};
-
-  &:hover {
-    background-color: #fee2e2;
-  }
-`;
-
 export const SeasonTag = styled.span`
   display: inline-block;
   background-color: ${theme.colors.gray[100]};

@@ -1,11 +1,6 @@
 import React from 'react';
-import {
-  ButtonGroup
-} from '../../CapsuleForm.styles';
-import {
-  ModernCancelButton,
-  ModernSubmitButton
-} from '../../OutfitForm.styles';
+import { ButtonGroup } from '../CapsuleForm.styles';
+import Button from '../../../../../common/Button';
 
 export interface FormActionsProps {
   onCancel: () => void;
@@ -20,13 +15,13 @@ const FormActions: React.FC<FormActionsProps> = ({
 }) => {
   return (
     <ButtonGroup>
-      <ModernCancelButton type="button" onClick={onCancel}>
+      <Button fullWidth variant="secondary" type="button" onClick={onCancel}>
         Cancel
-      </ModernCancelButton>
+      </Button>
 
-      <ModernSubmitButton type="submit" disabled={isSubmitting}>
+      <Button fullWidth variant="primary" type="submit" disabled={isSubmitting}>
         {editCapsule ? 'Update Capsule' : 'Create Capsule'}
-      </ModernSubmitButton>
+      </Button>
     </ButtonGroup>
   );
 };

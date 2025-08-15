@@ -1,6 +1,7 @@
 import React from 'react';
 import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
+import Button from '../../../common/Button';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
@@ -25,8 +26,6 @@ import {
   ItemName,
   ItemDetail,
   ButtonGroup,
-  PrimaryButton,
-  SecondaryButton,
   MainItemSection,
   MainItemCard,
   MainItemImageContainer,
@@ -167,8 +166,8 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
         </ItemsSection>
         
         <ButtonGroup>
-          <PrimaryButton onClick={() => onEdit(capsule)}>Edit</PrimaryButton>
-          <SecondaryButton onClick={() => onDelete(capsule.id)}>Delete</SecondaryButton>
+          <Button fullWidth variant="primary" onClick={() => onEdit(capsule)}>Edit</Button>
+          <Button fullWidth variant="secondary" onClick={() => onDelete(capsule.id)}>Delete</Button>
         </ButtonGroup>
       </ModalContent>
     </ModalOverlay>

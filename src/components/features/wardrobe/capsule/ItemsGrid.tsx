@@ -12,7 +12,7 @@ import {
   ItemDetail,
   SelectionIndicator,
   NoResultsMessage
-} from '../forms/OutfitForm.styles';
+} from '../forms/CapsuleForm/CapsuleForm.styles';
 
 interface ItemsGridProps {
   items: WardrobeItem[];

@@ -5,7 +5,7 @@ import {
   SeasonCheckboxes,
   CheckboxItem,
   CheckboxLabel
-} from '../forms/OutfitForm.styles';
+} from '../forms/OutfitForm/OutfitForm.styles';
 
 interface SeasonSelectorProps {
   selectedSeasons: Season[];

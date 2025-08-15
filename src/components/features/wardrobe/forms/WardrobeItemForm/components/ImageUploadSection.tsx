@@ -7,7 +7,7 @@ import {
   UploadText,
   BrowseButton,
   FileInfo
-} from '../../WardrobeItemForm.styles';
+} from '../WardrobeItemForm.styles';
 
 interface ImageUploadSectionProps {
   previewImage: string | null;
