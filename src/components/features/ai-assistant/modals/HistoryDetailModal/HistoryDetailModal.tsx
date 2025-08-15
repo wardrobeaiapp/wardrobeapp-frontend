@@ -1,14 +1,7 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../../types';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-  CloseButton
-} from '../../../../../pages/HomePage.styles';
+import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
 import {
   ItemImageContainer,
   ItemImage,
@@ -16,9 +9,7 @@ import {
   DetailRow,
   DetailLabel,
   DetailValue,
-  ButtonsContainer
 } from '../../../wardrobe/modals/ItemViewModal.styles';
-import Button from '../../../../common/Button';
 
 interface HistoryDetailModalProps {
   isOpen: boolean;
@@ -79,27 +70,40 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
     }
   };
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const showActionButtons = (item.type === 'check' && item.userActionStatus === UserActionStatus.PENDING) ||
                              (item.type === 'recommendation' && item.userActionStatus === UserActionStatus.SAVED) ||
                              (item.type === 'recommendation' && item.userActionStatus === UserActionStatus.DISMISSED);
   const showAppliedButtons = item.type === 'recommendation' && item.userActionStatus === UserActionStatus.SAVED;
   const showSaveButton = item.type === 'recommendation' && item.userActionStatus === UserActionStatus.DISMISSED;
 
+  const actions: ModalAction[] = [];
+  if (showActionButtons) {
+    if (showAppliedButtons) {
+      actions.push(
+        { label: 'Applied', onClick: () => onApply?.(item), variant: 'primary', fullWidth: true },
+        { label: 'Dismiss', onClick: () => onDismiss?.(item), variant: 'secondary', fullWidth: true }
+      );
+    } else if (showSaveButton) {
+      actions.push(
+        { label: 'Save', onClick: () => onMoveToWishlist?.(item), variant: 'primary', fullWidth: true }
+      );
+    } else {
+      actions.push(
+        { label: 'Move to Wishlist', onClick: () => onMoveToWishlist?.(item), variant: 'primary', fullWidth: true },
+        { label: 'Dismiss', onClick: () => onDismiss?.(item), variant: 'secondary', fullWidth: true }
+      );
+    }
+  }
+
   return (
-    <Modal onClick={handleOverlayClick}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>{item.title}</ModalTitle>
-          <CloseButton onClick={onClose}>×</CloseButton>
-        </ModalHeader>
-        
-        <ModalBody>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={item.title}
+      actions={actions}
+      size="md"
+    >
+      <ModalBody>
           {item.type === 'check' && item.image && (
             <ItemImageContainer>
               <ItemImage src={item.image} alt="Outfit check" />
@@ -162,36 +166,7 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
               <DetailValue>{formatDate(item.date)}</DetailValue>
             </DetailRow>
           </ItemDetails>
-
-          {showActionButtons && (
-            <ButtonsContainer>
-              {showAppliedButtons ? (
-                <>
-                  <Button fullWidth onClick={() => onApply?.(item)}>
-                    Applied
-                  </Button>
-                  <Button variant="secondary" fullWidth onClick={() => onDismiss?.(item)}>
-                    Dismiss
-                  </Button>
-                </>
-              ) : showSaveButton ? (
-                <Button fullWidth onClick={() => onMoveToWishlist?.(item)}>
-                  Save
-                </Button>
-              ) : (
-                <>
-                  <Button fullWidth onClick={() => onMoveToWishlist?.(item)}>
-                    Move to Wishlist
-                  </Button>
-                  <Button fullWidth variant="secondary" onClick={() => onDismiss?.(item)}>
-                    Dismiss
-                  </Button>
-                </>
-              )}
-            </ButtonsContainer>
-          )}
-        </ModalBody>
-      </ModalContent>
+      </ModalBody>
     </Modal>
   );
 };

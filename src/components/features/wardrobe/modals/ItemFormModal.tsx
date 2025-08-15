@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WardrobeItem } from '../../../../types';
 import WardrobeItemForm from '../forms/WardrobeItemForm';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  ModalBody,
-  CloseButton
-} from '../../../../pages/HomePage.styles';
+import { Modal } from '../../../common/Modal';
 
 interface ItemFormModalProps {
   isOpen: boolean;
@@ -49,35 +42,32 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
     wishlist: initialItem?.wishlist ?? defaultWishlist
   } : { wishlist: defaultWishlist });
 
-  if (!isOpen || !isMounted) return null;
+  if (!isMounted) return null;
 
   return (
-    <Modal>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{isEditing ? 'Edit Item' : 'Add New Item'}</ModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ModalHeader>
-        <ModalBody>
-          <WardrobeItemForm
-            initialItem={initialItem ? {
-              ...initialItem,
-              wishlist: initialItem?.wishlist ?? defaultWishlist
-            } : undefined}
-            defaultWishlist={defaultWishlist}
-            onSubmit={(item: WardrobeItem) => {
-              if (isMounted) {
-                onSubmit(item);
-              }
-            }}
-            onCancel={() => {
-              if (isMounted) {
-                onClose();
-              }
-            }}
-          />
-        </ModalBody>
-      </ModalContent>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditing ? 'Edit Item' : 'Add New Item'}
+      size="lg"
+    >
+      <WardrobeItemForm
+        initialItem={initialItem ? {
+          ...initialItem,
+          wishlist: initialItem?.wishlist ?? defaultWishlist
+        } : undefined}
+        defaultWishlist={defaultWishlist}
+        onSubmit={(item: WardrobeItem) => {
+          if (isMounted) {
+            onSubmit(item);
+          }
+        }}
+        onCancel={() => {
+          if (isMounted) {
+            onClose();
+          }
+        }}
+      />
     </Modal>
   );
 };

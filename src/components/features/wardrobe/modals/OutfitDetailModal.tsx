@@ -1,14 +1,9 @@
 import React from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 
 import {
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton,
   OutfitInfo,
   DetailRow,
   DetailLabel,
@@ -23,11 +18,11 @@ import {
   PlaceholderImage,
   ItemContent,
   ItemName,
-  ItemDetail,
-  ButtonGroup
+  ItemDetail
 } from './OutfitDetailModal.styles';
 
 interface OutfitDetailModalProps {
+  isOpen: boolean;
   outfit: Outfit;
   items: WardrobeItem[];
   onClose: () => void;
@@ -36,6 +31,7 @@ interface OutfitDetailModalProps {
 }
 
 const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
+  isOpen,
   outfit,
   items,
   onClose,
@@ -45,14 +41,30 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   // Find the actual wardrobe items using the IDs stored in the outfit
   const outfitItems = items.filter(item => outfit.items.includes(item.id));
 
+  const actions: ModalAction[] = [
+    {
+      label: 'Edit',
+      onClick: () => onEdit(outfit),
+      variant: 'primary',
+      fullWidth: true
+    },
+    {
+      label: 'Delete',
+      onClick: () => onDelete(outfit.id),
+      variant: 'secondary',
+      fullWidth: true
+    }
+  ];
+
   return (
-    <ModalOverlay>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{outfit.name}</ModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ModalHeader>
-        
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={outfit.name}
+      actions={actions}
+      size="lg"
+    >
+      <ModalBody>
         <OutfitInfo>
           <DetailRow>
             <DetailLabel>Seasons</DetailLabel>
@@ -96,13 +108,8 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
             </ItemsGrid>
           )}
         </ItemsSection>
-        
-        <ButtonGroup>
-          <Button fullWidth variant="primary" onClick={() => onEdit(outfit)}>Edit</Button>
-          <Button fullWidth variant="secondary" onClick={() => onDelete(outfit.id)}>Delete</Button>
-        </ButtonGroup>
-      </ModalContent>
-    </ModalOverlay>
+      </ModalBody>
+    </Modal>
   );
 };
 

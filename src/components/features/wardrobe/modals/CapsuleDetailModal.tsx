@@ -1,15 +1,10 @@
 import React from 'react';
 import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton,
   CapsuleInfo,
   DetailRow,
   DetailLabel,
@@ -25,7 +20,6 @@ import {
   ItemContent,
   ItemName,
   ItemDetail,
-  ButtonGroup,
   MainItemSection,
   MainItemCard,
   MainItemImageContainer,
@@ -38,6 +32,7 @@ import {
 } from './CapsuleDetailModal.styles';
 
 interface CapsuleDetailModalProps {
+  isOpen: boolean;
   capsule: Capsule;
   items: WardrobeItem[];
   onClose: () => void;
@@ -50,6 +45,7 @@ const capitalizeFirstLetter = (str: string): string => {
 };
 
 const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
+  isOpen,
   capsule,
   items,
   onClose,
@@ -79,14 +75,30 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
   // Filter out the main item from the regular items list
   const otherItems = mainItem ? allCapsuleItems.filter(item => item.id !== mainItem.id) : allCapsuleItems;
 
+  const actions: ModalAction[] = [
+    {
+      label: 'Edit',
+      onClick: () => onEdit(capsule),
+      variant: 'primary',
+      fullWidth: true
+    },
+    {
+      label: 'Delete',
+      onClick: () => onDelete(capsule.id),
+      variant: 'secondary',
+      fullWidth: true
+    }
+  ];
+
   return (
-    <ModalOverlay>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{capitalizeFirstLetter(capsule.name)}</ModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ModalHeader>
-        
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={capitalizeFirstLetter(capsule.name)}
+      actions={actions}
+      size="lg"
+    >
+      <ModalBody>
         <CapsuleInfo>
           <DetailRow>
             <DetailLabel>Scenario</DetailLabel>
@@ -164,13 +176,8 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
             </ItemsGrid>
           )}
         </ItemsSection>
-        
-        <ButtonGroup>
-          <Button fullWidth variant="primary" onClick={() => onEdit(capsule)}>Edit</Button>
-          <Button fullWidth variant="secondary" onClick={() => onDelete(capsule.id)}>Delete</Button>
-        </ButtonGroup>
-      </ModalContent>
-    </ModalOverlay>
+      </ModalBody>
+    </Modal>
   );
 };
 

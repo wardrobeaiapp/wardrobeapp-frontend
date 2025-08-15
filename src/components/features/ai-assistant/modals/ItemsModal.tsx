@@ -1,14 +1,9 @@
 import React from 'react';
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import FiltersPanel from '../FiltersPanel';
 import ItemsGrid from '../ItemsGrid';
 import {
-  Modal as StyledItemsModal,
-  ModalContent as ItemsModalContent,
-  ModalHeader as ItemsModalHeader,
-  ModalTitle as ItemsModalTitle,
-  CloseButton,
   ButtonGroup,
   ResultsCount,
   CheckboxContainer
@@ -45,16 +40,20 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
   onColorChange,
   onSeasonChange
 }) => {
-  if (!isOpen) return null;
+  const actions: ModalAction[] = [
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Done', onClick: onClose, variant: 'primary' }
+  ];
 
   return (
-    <StyledItemsModal>
-      <ItemsModalContent>
-        <ItemsModalHeader>
-          <ItemsModalTitle>Select Items to Include</ItemsModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ItemsModalHeader>
-        
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Items to Include"
+      actions={items.length > 0 ? actions : undefined}
+      size="lg"
+    >
+      <ModalBody>
         {items.length === 0 ? (
           <p>No items available. Add some items to your wardrobe first.</p>
         ) : (
@@ -81,15 +80,10 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
                 onItemSelect={onItemSelect}
               />
             </CheckboxContainer>
-            
-            <ButtonGroup>
-              <Button onClick={onClose}>Cancel</Button>
-              <Button variant="primary" onClick={onClose}>Done</Button>
-            </ButtonGroup>
           </>
         )}
-      </ItemsModalContent>
-    </StyledItemsModal>
+      </ModalBody>
+    </Modal>
   );
 };
 

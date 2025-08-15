@@ -1,12 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { WardrobeItem, WishlistStatus, ItemCategory, Season } from '../../../../../types';
-import { FaTimes, FaSearch } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
+import { Modal, ModalBody } from '../../../../common/Modal';
 import {
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton,
   FilterSection,
   SearchContainer,
   SearchInput,
@@ -82,24 +78,19 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
     return filtered;
   }, [items, searchQuery, selectedCategory, colorFilter, selectedSeason]);
 
-  // Conditional return must come after hooks
-  if (!isOpen) return null;
-
   const handleSelectItem = (item: WardrobeItem) => {
     onSelectItem(item);
     onClose();
   };
 
   return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-        <ModalHeader>
-          <ModalTitle>Select Items</ModalTitle>
-          <CloseButton onClick={onClose}>
-            <FaTimes />
-          </CloseButton>
-        </ModalHeader>
-
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Select Items"
+      size="xl"
+    >
+      <ModalBody>
         <FilterSection>
           {/* Search */}
           <SearchContainer>
@@ -187,8 +178,8 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
             No items found matching your criteria
           </EmptyState>
         )}
-      </ModalContent>
-    </ModalOverlay>
+      </ModalBody>
+    </Modal>
   );
 };
 

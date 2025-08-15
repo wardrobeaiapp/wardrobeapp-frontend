@@ -1,14 +1,7 @@
 import React from 'react';
 import { WardrobeItem, Capsule } from '../../../../types';
 import CapsuleForm, { CapsuleFormData } from '../forms/CapsuleForm';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalTitle,
-  CloseButton,
-  ModalBody
-} from '../../../../pages/HomePage.styles';
+import { Modal } from '../../../common/Modal';
 
 interface CapsuleFormModalProps {
   isOpen: boolean;
@@ -29,30 +22,25 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
   availableItems,
   isEditing
 }) => {
-  if (!isOpen) return null;
-
   // Create a wrapper function to adapt the signatures
   const handleFormSubmit = (id: string, data: CapsuleFormData) => {
     onSubmit(id, data);
   };
 
   return (
-    <Modal>
-      <ModalContent>
-        <ModalHeader>
-          <ModalTitle>{isEditing ? 'Edit Capsule' : 'Create New Capsule'}</ModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ModalHeader>
-        <ModalBody>
-          <CapsuleForm
-            availableItems={availableItems}
-            editCapsule={editCapsule}
-            onSubmit={handleFormSubmit}
-            onGenerateWithAI={onGenerateWithAI}
-            onCancel={onClose}
-          />
-        </ModalBody>
-      </ModalContent>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isEditing ? 'Edit Capsule' : 'Create New Capsule'}
+      size="lg"
+    >
+      <CapsuleForm
+        availableItems={availableItems}
+        editCapsule={editCapsule}
+        onSubmit={handleFormSubmit}
+        onGenerateWithAI={onGenerateWithAI}
+        onCancel={onClose}
+      />
     </Modal>
   );
 };

@@ -1,15 +1,11 @@
 import React, { useState, ChangeEvent } from 'react';
 import { periodOptions } from '../../../data/onboardingOptions';
-import Button from '../../common/Button';
+import { Modal, ModalAction } from '../../common/Modal';
 import {
-  ModalOverlay,
-  ModalContent,
-  ModalTitle,
   ModalForm,
   FormGroup,
   FormLabel,
   FormInput,
-  ButtonGroup,
   ModalFrequencyControls,
   FrequencyInput,
   FrequencySelect
@@ -79,57 +75,73 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
     setNewFrequencyPeriod(e.target.value);
   };
 
-  if (!isOpen) return null;
+  const handleModalSubmit = () => {
+    const mockEvent = { preventDefault: () => {} } as React.FormEvent;
+    handleSubmit(mockEvent);
+  };
+
+  const actions: ModalAction[] = [
+    {
+      label: 'Cancel',
+      onClick: handleClose,
+      variant: 'secondary',
+      fullWidth: true
+    },
+    {
+      label: 'Add Scenario',
+      onClick: handleModalSubmit,
+      variant: 'primary',
+      fullWidth: true
+    }
+  ];
 
   return (
-    <ModalOverlay>
-      <ModalContent>
-        <ModalTitle>Add New Scenario</ModalTitle>
-        <ModalForm onSubmit={handleSubmit}>
-          <FormGroup>
-            <FormLabel htmlFor="scenarioName">Scenario Name</FormLabel>
-            <FormInput
-              id="scenarioName"
-              type="text"
-              placeholder="e.g., Weekend Outing"
-              value={newScenarioName}
-              onChange={handleNewScenarioNameChange}
-              autoFocus
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Add New Scenario"
+      actions={actions}
+      size="md"
+    >
+      <ModalForm onSubmit={handleSubmit}>
+        <FormGroup>
+          <FormLabel htmlFor="scenarioName">Scenario Name</FormLabel>
+          <FormInput
+            id="scenarioName"
+            type="text"
+            placeholder="e.g., Weekend Outing"
+            value={newScenarioName}
+            onChange={handleNewScenarioNameChange}
+            autoFocus
+          />
+        </FormGroup>
+        
+        <FormGroup>
+          <FormLabel htmlFor="scenarioFrequency">Frequency</FormLabel>
+          <ModalFrequencyControls>
+            <FrequencyInput 
+              type="number" 
+              min="1"
+              id="frequencyValue"
+              value={newFrequencyValue}
+              onChange={handleNewFrequencyValueChange}
+              style={{ width: '80px' }}
             />
-          </FormGroup>
-          
-          <FormGroup>
-            <FormLabel htmlFor="scenarioFrequency">Frequency</FormLabel>
-            <ModalFrequencyControls>
-              <FrequencyInput 
-                type="number" 
-                min="1"
-                id="frequencyValue"
-                value={newFrequencyValue}
-                onChange={handleNewFrequencyValueChange}
-                style={{ width: '80px' }}
-              />
-              
-              <FrequencySelect
-                id="frequencyPeriod"
-                value={newFrequencyPeriod}
-                onChange={handleNewFrequencyPeriodChange}
-                style={{ flex: 1 }}
-              >
-                {periodOptions.map(option => (
-                  <option key={option.id} value={option.id}>{option.label}</option>
-                ))}
-              </FrequencySelect>
-            </ModalFrequencyControls>
-          </FormGroup>
-          
-          <ButtonGroup>
-            <Button variant="secondary" fullWidth type="button" onClick={handleClose}>Cancel</Button>
-            <Button variant="primary" fullWidth type="submit">Add Scenario</Button>
-          </ButtonGroup>
-        </ModalForm>
-      </ModalContent>
-    </ModalOverlay>
+            
+            <FrequencySelect
+              id="frequencyPeriod"
+              value={newFrequencyPeriod}
+              onChange={handleNewFrequencyPeriodChange}
+              style={{ flex: 1 }}
+            >
+              {periodOptions.map(option => (
+                <option key={option.id} value={option.id}>{option.label}</option>
+              ))}
+            </FrequencySelect>
+          </ModalFrequencyControls>
+        </FormGroup>
+      </ModalForm>
+    </Modal>
   );
 };
 
