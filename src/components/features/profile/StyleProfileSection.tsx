@@ -146,9 +146,9 @@ const StyleProfileContent: React.FC = () => {
         // Show the selected section
         <>
           <Button 
-            outlined={true} 
+            variant="link" 
             onClick={() => setActiveSection(null)} 
-            style={{ marginBottom: '20px' }}
+            style={{ textDecoration: 'none', marginBottom: '20px' }}
           >
             <FaArrowLeft style={{ marginRight: '8px' }} /> Back to Profile
           </Button>

@@ -5,7 +5,6 @@ import { FormInput as BaseFormInput } from '../../forms/styles/base.styles';
 export const PageContainer = styled.div`
   max-width: 700px;
   margin: 0 auto;
-  padding: 0 20px;
 `;
 
 export const ScenarioList = styled.div`

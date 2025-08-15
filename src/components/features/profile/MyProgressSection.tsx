@@ -25,6 +25,7 @@ import {
   TotalSavingsCard,
   LastUpdate
 } from './MyProgressSection.styles';
+import Button from '../../common/Button';
 
 
 
@@ -242,24 +243,14 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
         {/* Only show "Get more checks" button for free users */}
         {subscriptionPlan === 'free' && (
           <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <button 
+            <Button 
               onClick={onNavigateToSubscription}
               style={{
                 background: '#4f46e5',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 24px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
               }}
             >
               + Get more checks
-            </button>
+            </Button>
           </div>
         )}
       </ProgressCard>

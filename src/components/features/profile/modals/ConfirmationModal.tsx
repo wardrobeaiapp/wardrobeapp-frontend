@@ -8,6 +8,7 @@ import {
   ModalTitle,
   CloseButton
 } from '../../../../pages/HomePage.styles';
+import Button from '../../../common/Button';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -38,48 +39,10 @@ const WarningIcon = styled.div`
 `;
 
 const ButtonContainer = styled.div`
+  width: 100%;
   display: flex;
   gap: 12px;
   margin-top: 24px;
-`;
-
-const ConfirmButton = styled.button<{ variant?: 'danger' | 'secondary' }>`
-  padding: 12px 32px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: ${props => 
-    props.variant === 'danger' ? '#EF4444' : '#f3f4f6'
-  };
-  color: ${props => 
-    props.variant === 'danger' ? '#ffffff' : '#1f2937'
-  };
-  border: 1px solid ${props => 
-    props.variant === 'danger' ? '#EF4444' : '#e5e7eb'
-  };
-  min-width: 120px;
-  
-  &:hover {
-    background-color: ${props => 
-      props.variant === 'danger' ? '#DC2626' : '#e5e7eb'
-    };
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-  
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 3px ${props => 
-      props.variant === 'danger' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(156, 163, 175, 0.25)'
-    };
-  }
-  
-  &:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
 `;
 
 const Title = styled.h2`
@@ -148,11 +111,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Title>Confirmation Required</Title>
           <Message>{message}</Message>
           <ButtonContainer>
-            <ConfirmButton variant="secondary" onClick={onClose}>Cancel</ConfirmButton>
-            <ConfirmButton variant="danger" onClick={() => {
+            <Button variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
+            <Button variant="primary" fullWidth onClick={() => {
               onConfirm();
               onClose();
-            }}>Confirm</ConfirmButton>
+            }}>Confirm</Button>
           </ButtonContainer>
         </ModalBody>
       </EnhancedModalContent>
