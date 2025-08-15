@@ -2,12 +2,6 @@ import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import { Card } from '../components/cards/Card.styles';
 
-export const PageContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 1rem 2rem;
-`;
-
 export const Header = styled.header`
   display: flex;
   justify-content: space-between;

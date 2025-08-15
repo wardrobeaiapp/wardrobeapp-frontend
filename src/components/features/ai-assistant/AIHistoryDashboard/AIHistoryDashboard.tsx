@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FaTrash, FaSearch, FaMagic, FaTshirt } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../types';
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
+import Button from '../../../common/Button';
 import {
   DashboardContainer,
   DashboardTopBar,
@@ -17,8 +18,6 @@ import {
   ActivitySection,
   ActivityHeader,
   ActivityTitle,
-  LoadMoreButton,
-  ViewAllButton,
 } from '../../../../pages/AIAssistantPage.styles';
 
 interface AIHistoryDashboardProps {
@@ -62,7 +61,7 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
   return (
     <DashboardContainer>
       <div style={{ marginBottom: '1rem' }}>
-        <ViewAllButton onClick={onBackToMain}>← Back</ViewAllButton>
+        <Button variant="link" onClick={onBackToMain} style={{ textDecoration: 'none' }}>← Back</Button>
       </div>
       
       <DashboardTopBar>
@@ -166,9 +165,15 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         </div>
 
         {hasMoreItems && (
-          <LoadMoreButton onClick={handleLoadMore}>
+          <Button 
+            variant="secondary" 
+            outlined={true} 
+            fullWidth={true} 
+            onClick={handleLoadMore}
+            style={{ marginTop: '1rem' }}
+          >
             Load More History
-          </LoadMoreButton>
+          </Button>
         )}
       </ActivitySection>
     </DashboardContainer>

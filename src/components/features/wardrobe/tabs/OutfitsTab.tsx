@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
 import { Season, Outfit, WardrobeItem } from '../../../../types';
 import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
-import OutfitCard from '../cards/OutfitCard';
+import CollectionCard from '../cards/CollectionCard';
 import {
   ItemsGrid,
   EmptyState,
@@ -167,12 +167,12 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
               return matchesSeason && matchesScenario;
             })
             .map(outfit => (
-              <OutfitCard
+              <CollectionCard
                 key={outfit.id}
-                outfit={outfit}
+                type="outfit"
+                data={outfit}
+                onView={(data) => onViewOutfit(data as Outfit)}
                 wardrobeItems={wardrobeItems}
-                onView={() => onViewOutfit(outfit)}
-                onDelete={() => onDeleteOutfit(outfit.id)}
               />
             ))}
         </ItemsGrid>

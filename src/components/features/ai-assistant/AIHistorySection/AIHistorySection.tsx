@@ -1,11 +1,12 @@
 import React from 'react';
 import { AIHistoryItem as AIHistoryItemType } from '../../../../types';
 import AIHistoryItem from '../AIHistoryItem/AIHistoryItem';
+import Button from '../../../common/Button';
+import { MdArrowForward } from 'react-icons/md';
 import {
   HistorySection,
   HistoryHeader,
   HistoryTitle,
-  ViewAllButton,
   HistoryList,
 } from '../../../../pages/AIAssistantPage.styles';
 
@@ -27,7 +28,13 @@ const AIHistorySection: React.FC<AIHistorySectionProps> = ({
     <HistorySection>
       <HistoryHeader>
         <HistoryTitle>Recent Activity</HistoryTitle>
-        <ViewAllButton onClick={onViewAllHistory}>View All →</ViewAllButton>
+        <Button 
+          variant="link" 
+          onClick={onViewAllHistory}
+          style={{ textDecoration: 'none' }}
+        >
+          View All <MdArrowForward />
+        </Button>
       </HistoryHeader>
       
       <HistoryList>

@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import FormStyles from '../components/forms/styles';
 import { theme } from '../styles/theme';
+import { PageContainer as BasePageContainer } from '../components/layout/PageContainer';
 
 // Consistent width wrapper for all profile sections - acts as a layout container only
 export const SectionWrapper = styled.div`
@@ -39,11 +40,14 @@ export const StyledFieldset = styled.fieldset`
   }
 `;
 
-export const PageContainer = styled.div`
-  max-width: 1200px;
+// ProfilePage uses fixed width instead of responsive max-width
+export const PageContainer = styled(BasePageContainer)`
   width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+  
+  @media (max-width: 1240px) {
+    width: 100%;
+    max-width: 1200px;
+  }
 `;
 
 export const SectionHeader = styled.header`
