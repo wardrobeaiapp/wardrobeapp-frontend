@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import styled from 'styled-components';
 import Header from '../components/layout/Header/Header';
-import Footer from '../components/layout/Footer';
 import { useProfileSections } from '../components/features/profile/ProfileSections';
 import { useProfileData } from '../hooks/useProfileData';
 import { ProfileCategory, CATEGORIES } from '../types/profile';
@@ -171,7 +170,6 @@ const ProfilePage: React.FC = () => {
           </ContentPanel>
         </ProfileLayout>
       </PageContainer>
-      <Footer variant="simple" />
     </PageWrapper>
   );
 };

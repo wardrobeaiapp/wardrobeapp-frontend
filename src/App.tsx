@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
 import { SupabaseAuthProvider, useSupabaseAuth } from './context/SupabaseAuthContext';
 import { WardrobeProvider } from './context/WardrobeContext';
@@ -14,6 +14,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import WelcomePage from './pages/WelcomePage';
 import TestImageUpload from './pages/TestImageUpload';
 import StylePreferencesServiceTest from './components/tests/StylePreferencesServiceTest';
+import Footer from './components/layout/Footer';
 
 const GlobalStyle = createGlobalStyle`
   body {
@@ -139,6 +140,19 @@ const RedirectRoute: React.FC = () => {
   return <Navigate to={isAuthenticated ? "/" : "/welcome"} replace />;
 };
 
+// Footer component with route-based variant logic
+const AppFooter: React.FC = () => {
+  const location = useLocation();
+  
+  // Hide footer on welcome page as it has its own custom footer
+  if (location.pathname === '/welcome') {
+    return null;
+  }
+  
+  // Use simple footer for app pages
+  return <Footer variant="simple" />;
+};
+
 function App() {
   return (
     <Router>
@@ -176,8 +190,8 @@ function App() {
               </Routes>
             </Main>
             
-            
-            {/* Footer removed - now using shared Footer component in each page */}
+            {/* Sticky Footer */}
+            <AppFooter />
         </AppContainer>
         </WardrobeProvider>
       </SupabaseAuthProvider>
