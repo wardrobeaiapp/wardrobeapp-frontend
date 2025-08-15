@@ -34,9 +34,6 @@ export const CalendarViewContainer = styled.div`
   width: 100%;
 `;
 
-export const DayPlanDetailsContainer = styled.div`
-  width: 100%;
-`;
 
 export const PopupTitle = styled.h2`
   font-size: 1.5rem;

@@ -11,10 +11,7 @@ import {
 import {
   ButtonsContainer
 } from '../../../wardrobe/modals/ItemViewModal.styles';
-import {
-  ActionButton,
-  DismissButton
-} from './RecommendationModal.styles';
+import Button from '../../../../common/Button';
 
 interface RecommendationModalProps {
   isOpen: boolean;
@@ -77,21 +74,21 @@ const RecommendationModal: React.FC<RecommendationModalProps> = ({
           <ButtonsContainer>
             {isSavedRecommendation ? (
               <>
-                <ActionButton onClick={handleApply}>
+                <Button fullWidth onClick={handleApply}>
                   Applied
-                </ActionButton>
-                <DismissButton onClick={handleSkip}>
+                </Button>
+                <Button fullWidth variant="secondary" onClick={handleSkip}>
                   Dismiss
-                </DismissButton>
+                </Button>
               </>
             ) : (
               <>
-                <ActionButton onClick={handleSave}>
+                <Button fullWidth onClick={handleSave}>
                   Save
-                </ActionButton>
-                <DismissButton onClick={handleSkip}>
+                </Button>
+                <Button fullWidth variant="secondary" onClick={handleSkip}>
                   Dismiss
-                </DismissButton>
+                </Button>
               </>
             )}
           </ButtonsContainer>

@@ -18,10 +18,7 @@ import {
   DetailValue,
   ButtonsContainer
 } from '../../../wardrobe/modals/ItemViewModal.styles';
-import {
-  ActionButton,
-  DismissButton
-} from './HistoryDetailModal.styles';
+import Button from '../../../../common/Button';
 
 interface HistoryDetailModalProps {
   isOpen: boolean;
@@ -170,25 +167,25 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
             <ButtonsContainer>
               {showAppliedButtons ? (
                 <>
-                  <ActionButton onClick={() => onApply?.(item)}>
+                  <Button fullWidth onClick={() => onApply?.(item)}>
                     Applied
-                  </ActionButton>
-                  <DismissButton onClick={() => onDismiss?.(item)}>
+                  </Button>
+                  <Button variant="secondary" fullWidth onClick={() => onDismiss?.(item)}>
                     Dismiss
-                  </DismissButton>
+                  </Button>
                 </>
               ) : showSaveButton ? (
-                <ActionButton onClick={() => onMoveToWishlist?.(item)}>
+                <Button fullWidth onClick={() => onMoveToWishlist?.(item)}>
                   Save
-                </ActionButton>
+                </Button>
               ) : (
                 <>
-                  <ActionButton onClick={() => onMoveToWishlist?.(item)}>
+                  <Button fullWidth onClick={() => onMoveToWishlist?.(item)}>
                     Move to Wishlist
-                  </ActionButton>
-                  <DismissButton onClick={() => onDismiss?.(item)}>
+                  </Button>
+                  <Button fullWidth variant="secondary" onClick={() => onDismiss?.(item)}>
                     Dismiss
-                  </DismissButton>
+                  </Button>
                 </>
               )}
             </ButtonsContainer>
