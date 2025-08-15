@@ -199,58 +199,8 @@ export const ButtonContainer = styled.div`
   display: flex;
   justify-content: space-between;
   margin-top: 2rem;
-  padding: 0 1rem;
 `;
 
-export const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  
-  &:hover {
-    background-color: #e5e7eb;
-  }
-  
-  &::before {
-    content: '←';
-    margin-right: 0.5rem;
-  }
-`;
-
-export const NextButton = styled.button<{ $isComplete?: boolean }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #818cf8;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  
-  &:hover {
-    background-color: ${theme.colors.primary};
-  }
-  
-  &::after {
-    content: ${props => props.$isComplete ? '"✓"' : '"→"'};
-    margin-left: 0.5rem;
-  }
-`;
 
 export const SkipButton = styled.button`
   background: none;

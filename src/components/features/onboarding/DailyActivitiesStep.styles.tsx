@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { StepDescription } from '../../../pages/OnboardingPage.styles';
-import { FollowUpOptionButton } from './OnboardingCardComponents.styles';
 
 
 // Main container styles
@@ -8,8 +7,6 @@ export const ActivitiesContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-width: 600px;
-  margin: 24px auto;
 `;
 
 // Home activity option container
@@ -26,12 +23,6 @@ export const SecondaryDescription = styled(StepDescription)`
   font-weight: normal;
 `;
 
-// Custom FollowUpOptionButton for home activities
-export const HomeActivityButton = styled(FollowUpOptionButton)`
-  width: 100%;
-  justify-content: flex-start;
-  text-align: left;
-`;
 
 // Textarea styles for other activity description
 export const ActivityTextarea = styled.textarea`

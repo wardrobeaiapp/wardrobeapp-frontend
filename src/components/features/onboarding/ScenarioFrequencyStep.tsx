@@ -2,6 +2,7 @@ import React, { useState, useEffect, ChangeEvent } from 'react';
 import { frequencyOptions, periodOptions } from '../../../data/onboardingOptions';
 import { StepTitle, StepDescription } from '../../../pages/OnboardingPage.styles';
 import { FaLaptop, FaHome, FaWalking, FaUsers, FaCalendarAlt, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import Button from '../../common/Button';
 import {
   PageContainer,
   ScenarioList,
@@ -12,8 +13,6 @@ import {
   FrequencyControls,
   FrequencyInput,
   FrequencySelect,
-  DeleteButton,
-  AddScenarioButton,
   ModalOverlay,
   ModalContent,
   ModalTitle,
@@ -22,8 +21,6 @@ import {
   FormLabel,
   FormInput,
   ButtonGroup,
-  CancelButton,
-  SaveButton,
   ModalFrequencyControls
 } from './ScenarioFrequencyStep.styles';
 
@@ -223,9 +220,14 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
                   <ScenarioName>{scenario.name}</ScenarioName>
                 </ScenarioContent>
                 
-                <DeleteButton onClick={() => handleDeleteScenario(scenario.id)}>
+                <Button
+                  variant="error"
+                  size="sm"
+                  onClick={() => handleDeleteScenario(scenario.id)}
+                  style={{ background: 'none', border: 'none', color: '#888', padding: '4px', minHeight: 'auto' }}
+                >
                   <FaTrashAlt />
-                </DeleteButton>
+                </Button>
               </div>
               
               <FrequencyControls>
@@ -278,9 +280,13 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
         })}
       </ScenarioList>
       
-      <AddScenarioButton onClick={handleAddNewScenario}>
-        <FaPlus style={{ marginRight: '10px' }} /> Add New Scenario
-      </AddScenarioButton>
+      <Button 
+        variant="secondary" 
+        onClick={handleAddNewScenario}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', width: '100%', padding: '16px', marginTop: '20px', border: '2px dashed #ccc', backgroundColor: 'transparent', borderRadius: '12px' }}
+      >
+        <FaPlus /> Add New Scenario
+      </Button>
 
       {showModal && (
         <ModalOverlay>
@@ -325,8 +331,8 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
               </FormGroup>
               
               <ButtonGroup>
-                <CancelButton type="button" onClick={handleCloseModal}>Cancel</CancelButton>
-                <SaveButton type="submit">Add Scenario</SaveButton>
+                <Button variant="secondary" type="button" onClick={handleCloseModal}>Cancel</Button>
+                <Button variant="primary" type="submit">Add Scenario</Button>
               </ButtonGroup>
             </ModalForm>
           </ModalContent>

@@ -6,6 +6,7 @@ import { useOnboardingState } from '../hooks/useOnboardingState';
 import { useOnboardingEventAdapters } from '../hooks/useOnboardingEventAdapters';
 import { useOnboardingNavigation } from '../hooks/useOnboardingNavigation';
 import OnboardingStepRenderer from '../components/features/onboarding/OnboardingStepRenderer';
+import Button from '../components/common/Button';
 
 // Import styled components
 import {
@@ -15,8 +16,6 @@ import {
   ProgressDot,
   StepContent,
   ButtonContainer,
-  BackButton,
-  NextButton,
   LoadingMessage
 } from './OnboardingPage.styles';
 import { PageWrapper } from '../components/layout/Layout';
@@ -90,13 +89,14 @@ const OnboardingPage: React.FC = () => {
           
           <ButtonContainer>
             {step > 1 && (
-              <BackButton onClick={prevStep}>
+              <Button size="lg" variant="secondary" onClick={prevStep}>
                 Back
-              </BackButton>
+              </Button>
             )}
             
-            <NextButton 
-              $isComplete={step === totalSteps}
+            <Button 
+              size="lg"
+              variant="primary"
               onClick={() => {
                 console.log('DEBUG - Button clicked, step:', step, 'totalSteps:', totalSteps);
                 console.log('DEBUG - submitOnboarding reference type:', typeof submitOnboarding);
@@ -116,7 +116,7 @@ const OnboardingPage: React.FC = () => {
               }}
             >
               {step === totalSteps ? 'Complete' : 'Continue'}
-            </NextButton>
+            </Button>
           </ButtonContainer>
         </OnboardingCard>
       </OnboardingContainer>

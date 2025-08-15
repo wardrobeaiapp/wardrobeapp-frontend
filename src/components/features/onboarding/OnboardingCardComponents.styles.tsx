@@ -93,21 +93,6 @@ export const FollowUpOptionsContainer = styled.div`
   margin-top: 0.75rem;
 `;
 
-// Follow-up option button
-export const FollowUpOptionButton = styled.button<{ $selected?: boolean }>`
-  padding: 8px 16px;
-  background-color: ${props => props.$selected ? '#6c5ce7' : '#f5f5f5'};
-  color: ${props => props.$selected ? 'white' : '#333'};
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: ${props => props.$selected ? 'bold' : 'normal'};
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: ${props => props.$selected ? '#6c5ce7' : '#e0e0e0'};
-  }
-`;
 
 // Container for individual slider
 export const SliderContainer = styled.div`
