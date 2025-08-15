@@ -94,20 +94,6 @@ export const EditField = styled.div`
   flex: 1;
 `;
 
-export const EditButton = styled.button`
-  background-color: #6c5ce7;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  
-  &:hover {
-    background-color: #5649c0;
-  }
-`;
 
 export const FrequencyInput = styled.input`
   width: 60px;
@@ -143,47 +129,7 @@ export const FrequencySelect = styled.select`
   }
 `;
 
-export const DeleteButton = styled.button`
-  background: none;
-  border: none;
-  color: #888;
-  cursor: pointer;
-  padding: 10px;
-  margin-left: 10px;
-  font-size: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    color: #f43f5e;
-    background-color: rgba(244, 63, 94, 0.1);
-    transform: scale(1.1);
-  }
-`;
 
-export const AddScenarioButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 16px;
-  background-color: white;
-  border: 1px dashed #ccc;
-  border-radius: 12px;
-  color: #666;
-  font-weight: 500;
-  font-size: 16px;
-  cursor: pointer;
-  margin-bottom: 30px;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f9f9f9;
-  }
-`;
 
 export const ModalOverlay = styled.div`
   position: fixed;
@@ -258,39 +204,7 @@ export const ButtonGroup = styled.div`
   margin-bottom: 8px;
 `;
 
-export const CancelButton = styled.button`
-  padding: 12px 20px;
-  border: none;
-  border-radius: 12px;
-  background-color: #f5f5f5;
-  color: #333;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  
-  &:hover {
-    background-color: #eaeaea;
-  }
-`;
 
-export const SaveButton = styled.button`
-  padding: 12px 24px;
-  border: none;
-  border-radius: 12px;
-  background-color: #6366f1;
-  color: white;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  
-  &:hover {
-    background-color: #4f46e5;
-  }
-`;
 
 export const ButtonsContainer = styled.div`
   display: flex;
@@ -298,40 +212,7 @@ export const ButtonsContainer = styled.div`
   margin-top: 30px;
 `;
 
-export const BackButton = styled.button`
-  display: flex;
-  align-items: center;
-  padding: 12px 20px;
-  background-color: #f5f5f5;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #eaeaea;
-  }
-`;
 
-export const CompleteButton = styled.button`
-  display: flex;
-  align-items: center;
-  padding: 12px 24px;
-  background-color: #6c5ce7;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  
-  &:hover {
-    background-color: #5b4bc4;
-  }
-  
-  svg {
-    margin-left: 8px;
-  }
-`;
 
 export const NoteText = styled.p`
   color: #666;

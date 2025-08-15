@@ -50,21 +50,6 @@ export const PopupCloseButton = styled.button`
   color: #6b7280;
 `;
 
-export const ViewItemButton = styled.button`
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
-  cursor: pointer;
-  margin-left: 8px;
-  
-  &:hover {
-    background-color: #4f46e5;
-  }
-`;
-
 export const ActionButtonsContainer = styled.div`
   display: flex;
   align-items: center;

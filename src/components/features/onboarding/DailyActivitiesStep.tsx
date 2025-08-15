@@ -11,14 +11,13 @@ import {
   CardDescription,
   FollowUpQuestionContainer,
   FollowUpQuestionTitle,
-  FollowUpOptionsContainer,
-  FollowUpOptionButton
+  FollowUpOptionsContainer
 } from './OnboardingCardComponents.styles';
+import Button from '../../common/Button';
 import {
   ActivitiesContainer,
   HomeActivityOptionContainer,
   SecondaryDescription,
-  HomeActivityButton,
   getIconStyles
 } from './DailyActivitiesStep.styles';
 import { SharedStyledTextArea } from './SharedOnboardingComponents.styles';
@@ -129,13 +128,14 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {dressCodeOptions.map(option => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={officeDressCode === option.id}
+                      variant={officeDressCode === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleDressCodeSelect(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>
@@ -149,13 +149,14 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {remoteWorkOptions.map(option => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={remoteWorkPriority === option.id}
+                      variant={remoteWorkPriority === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleRemoteWorkPrioritySelect(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>
@@ -173,12 +174,15 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 <FollowUpOptionsContainer>
                   {homeActivityOptions.map(option => (
                     <HomeActivityOptionContainer key={option.id}>
-                      <HomeActivityButton
-                        $selected={homeActivities.includes(option.id)}
+                      <Button
+                        fullWidth
+                        variant={homeActivities.includes(option.id) ? 'primary' : 'secondary'}
+                        size="sm"
                         onClick={() => handleHomeActivityToggle(option.id)}
+                        style={{ justifyContent: 'flex-start', textAlign: 'left' }}
                       >
                         {option.label}
-                      </HomeActivityButton>
+                      </Button>
                     </HomeActivityOptionContainer>
                   ))}
                 </FollowUpOptionsContainer>
@@ -193,13 +197,14 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {creativeMobilityOptions.map(option => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={creativeMobility === option.id}
+                      variant={creativeMobility === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleCreativeMobilitySelect(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>
@@ -213,13 +218,14 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {studentDressCodeOptions.map((option) => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={studentDressCode === option.id}
+                      variant={studentDressCode === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleStudentDressCodeSelect(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>
@@ -233,13 +239,14 @@ const DailyActivitiesStep: React.FC<DailyActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {uniformUsageOptions.map((option) => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={uniformPreference === option.id}
+                      variant={uniformPreference === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleUniformPreferenceSelect(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>

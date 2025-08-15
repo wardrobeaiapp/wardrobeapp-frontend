@@ -10,9 +10,9 @@ import {
   CardDescription,
   FollowUpQuestionContainer,
   FollowUpQuestionTitle,
-  FollowUpOptionsContainer,
-  FollowUpOptionButton
+  FollowUpOptionsContainer
 } from './OnboardingCardComponents.styles';
+import Button from '../../common/Button';
 import { leisureActivityOptions, frequencyOptions, questionTexts, periodOptions, formalEventsPeriodOptions } from '../../../data/onboardingOptions';
 import { SharedStyledTextArea } from './SharedOnboardingComponents.styles';
 
@@ -68,7 +68,7 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
       <StepDescription>
         {questionTexts.leisureActivities.description}
       </StepDescription>
-      <OptionsGrid style={{ display: 'flex', flexDirection: 'column', maxWidth: '600px', margin: '24px auto' }}>
+      <OptionsGrid style={{ display: 'flex', flexDirection: 'column'}}>
         {leisureActivityOptions.map(activity => (
           <React.Fragment key={activity.id}>
             <OptionCard
@@ -184,13 +184,14 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
                 </FollowUpQuestionTitle>
                 <FollowUpOptionsContainer>
                   {travelFrequencyOptions.map((option: { id: string; label: string }) => (
-                    <FollowUpOptionButton
+                    <Button
                       key={option.id}
-                      $selected={travelFrequency === option.id}
+                      variant={travelFrequency === option.id ? 'primary' : 'secondary'}
+                      size="sm"
                       onClick={() => handleTravelFrequencyChange(option.id)}
                     >
                       {option.label}
-                    </FollowUpOptionButton>
+                    </Button>
                   ))}
                 </FollowUpOptionsContainer>
               </FollowUpQuestionContainer>
