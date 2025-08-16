@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
+import { Modal, ModalAction } from '../../../../common/Modal';
 import {
   ItemDetails,
 } from '../../../wardrobe/modals/ItemViewModal.styles';
@@ -61,7 +61,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       label: 'Decide later',
       onClick: handleDecideLater,
       variant: 'secondary',
-      fullWidth: true
+      fullWidth: true,
+      outlined: true
     }
   ];
 
@@ -73,7 +74,6 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
         <AnalysisText>
           {analysisResult}
         </AnalysisText>
@@ -97,7 +97,6 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
             </DetailRow>
           )}
         </ItemDetails>
-      </ModalBody>
     </Modal>
   );
 };

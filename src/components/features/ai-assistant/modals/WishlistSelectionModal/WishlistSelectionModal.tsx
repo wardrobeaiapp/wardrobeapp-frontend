@@ -1,16 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { WardrobeItem, WishlistStatus, ItemCategory, Season } from '../../../../../types';
-import { FaSearch } from 'react-icons/fa';
-import { Modal, ModalBody } from '../../../../common/Modal';
+import { WardrobeItem, WishlistStatus, Season } from '../../../../../types';
+import { Modal } from '../../../../common/Modal';
 import {
   FilterSection,
-  SearchContainer,
-  SearchInput,
-  FilterRow,
-  FilterGroup,
-  FilterLabel,
-  FilterSelect,
-  FilterInput,
   ItemsFoundText,
   ItemGrid,
   WishlistItemCard,
@@ -20,6 +12,7 @@ import {
   ItemDetails,
   EmptyState
 } from './WishlistSelectionModal.styles';
+import FiltersPanel from '../../../wardrobe/shared/FiltersPanel';
 
 interface WishlistSelectionModalProps {
   isOpen: boolean;
@@ -88,66 +81,20 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Select Items"
-      size="xl"
+      size="lg"
     >
-      <ModalBody>
         <FilterSection>
-          {/* Search */}
-          <SearchContainer>
-            <FaSearch />
-            <SearchInput
-              type="text"
-              placeholder="Search by name, brand, material..."
-              value={searchQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            />
-          </SearchContainer>
-
-          {/* Filters */}
-          <FilterRow>
-            <FilterGroup>
-              <FilterLabel>Category</FilterLabel>
-              <FilterSelect
-                value={selectedCategory}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {Object.values(ItemCategory).map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1).toLowerCase().replace(/_/g, ' ')}
-                  </option>
-                ))}
-              </FilterSelect>
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Color</FilterLabel>
-              <FilterInput
-                type="text"
-                placeholder="Enter color"
-                value={colorFilter}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setColorFilter(e.target.value)}
-              />
-            </FilterGroup>
-
-            <FilterGroup>
-              <FilterLabel>Season</FilterLabel>
-              <FilterSelect
-                value={selectedSeason}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedSeason(e.target.value)}
-              >
-                <option value="all">All Seasons</option>
-                {Object.values(Season)
-                  .filter(season => season !== Season.ALL_SEASON)
-                  .map(season => (
-                    <option key={season} value={season}>
-                      {season.charAt(0).toUpperCase() + season.slice(1)}
-                    </option>
-                  ))}
-              </FilterSelect>
-            </FilterGroup>
-          </FilterRow>
-
+          <FiltersPanel
+            searchQuery={searchQuery}
+            categoryFilter={selectedCategory}
+            colorFilter={colorFilter}
+            seasonFilter={selectedSeason}
+            onSearchChange={setSearchQuery}
+            onCategoryChange={setSelectedCategory}
+            onColorChange={setColorFilter}
+            onSeasonChange={setSelectedSeason}
+            searchPlaceholder="Search by name, brand, material..."
+          />
           <ItemsFoundText>{filteredItems.length} items found</ItemsFoundText>
         </FilterSection>
 
@@ -178,7 +125,6 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
             No items found matching your criteria
           </EmptyState>
         )}
-      </ModalBody>
     </Modal>
   );
 };
