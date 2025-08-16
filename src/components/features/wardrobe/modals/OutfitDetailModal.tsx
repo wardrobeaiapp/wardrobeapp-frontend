@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 import {
   OutfitInfo,
@@ -41,6 +42,8 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   // Find the actual wardrobe items using the IDs stored in the outfit
   const outfitItems = items.filter(item => outfit.items.includes(item.id));
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const actions: ModalAction[] = [
     {
       label: 'Edit',
@@ -50,7 +53,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
     },
     {
       label: 'Delete',
-      onClick: () => onDelete(outfit.id),
+      onClick: () => setShowDeleteConfirm(true),
       variant: 'secondary',
       fullWidth: true
     }
@@ -107,6 +110,18 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
             </ItemsGrid>
           )}
         </ItemsSection>
+      
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          onDelete(outfit.id);
+          setShowDeleteConfirm(false);
+        }}
+        title="Delete Outfit"
+        message="Are you sure you want to delete this outfit? This action cannot be undone."
+        confirmText="Delete Outfit"
+      />
     </Modal>
   );
 };

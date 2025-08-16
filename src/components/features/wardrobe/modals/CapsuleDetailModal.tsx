@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
+import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
@@ -75,6 +76,8 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
   // Filter out the main item from the regular items list
   const otherItems = mainItem ? allCapsuleItems.filter(item => item.id !== mainItem.id) : allCapsuleItems;
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   const actions: ModalAction[] = [
     {
       label: 'Edit',
@@ -84,7 +87,7 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
     },
     {
       label: 'Delete',
-      onClick: () => onDelete(capsule.id),
+      onClick: () => setShowDeleteConfirm(true),
       variant: 'secondary',
       fullWidth: true
     }
@@ -175,6 +178,18 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
             </ItemsGrid>
           )}
         </ItemsSection>
+      
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          onDelete(capsule.id);
+          setShowDeleteConfirm(false);
+        }}
+        title="Delete Capsule"
+        message="Are you sure you want to delete this capsule? This action cannot be undone."
+        confirmText="Delete Capsule"
+      />
     </Modal>
   );
 };
