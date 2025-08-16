@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Outfit } from '../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
+import { Modal, ModalAction } from '../../../common/Modal';
 import {
   SelectionGrid,
   SelectionItem,
   SelectionItemName,
   SelectionItemCategory,
-} from '../Calendar.styles';
+} from '../../../../pages/CalendarPage.styles';
 
 interface OutfitSelectionPopupProps {
   visible: boolean;
@@ -70,7 +70,6 @@ const OutfitSelectionPopup: React.FC<OutfitSelectionPopupProps> = ({
       actions={actions}
       size="lg"
     >
-      <ModalBody>
         <SelectionGrid>
           {outfits.map(outfit => (
             <SelectionItem 
@@ -87,7 +86,6 @@ const OutfitSelectionPopup: React.FC<OutfitSelectionPopupProps> = ({
             </SelectionItem>
           ))}
         </SelectionGrid>
-      </ModalBody>
     </Modal>
   );
 };

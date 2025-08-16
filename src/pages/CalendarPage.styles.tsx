@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import { theme } from '../styles/theme';
-import { Card } from '../components/cards/Card.styles';
 
 export const CalendarLayout = styled.div`
   display: grid;
@@ -12,14 +11,6 @@ export const CalendarLayout = styled.div`
     align-items: stretch;
     min-height: 700px;
   }
-`;
-
-export const CalendarContainer = styled.div`
-  background: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
 `;
 
 export const SidebarContainer = styled.div`
@@ -109,105 +100,6 @@ export const CalendarWrapper = styled.div`
   }
 `;
 
-export const DetailsPanel = styled.div`
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-`;
-
-export const NoOutfitMessage = styled.p`
-  color: #6b7280;
-  text-align: center;
-  padding: 2rem 0;
-`;
-
-// Use centralized Card with flat variant for subtle background
-export const OutfitCard = styled(Card).attrs({ $variant: 'flat', $padding: 'lg' })`
-  margin-bottom: 1.5rem;
-`;
-
-export const OutfitName = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 1rem;
-`;
-
-export const OutfitItems = styled.ul`
-  margin: 0 0 1.5rem;
-  padding-left: 1.5rem;
-`;
-
-export const OutfitItem = styled.li`
-  margin-bottom: 0.5rem;
-`;
-
-export const OutfitDetails = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-  color: #4b5563;
-`;
-
-export const OutfitDetail = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-export const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-`;
-
-export const Label = styled.label`
-  font-weight: 500;
-  color: #374151;
-`;
-
-export const Select = styled.select`
-  padding: 0.625rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 1rem;
-  background-color: white;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-  }
-`;
-
-export const Textarea = styled.textarea`
-  width: 100%;
-  padding: 0.625rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-family: inherit;
-  font-size: 0.875rem;
-  min-height: 100px;
-  resize: vertical;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-  }
-`;
-
-export const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-  gap: 1rem;
-`;
-
 export const SelectionGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -240,83 +132,10 @@ export const SelectionItemCategory = styled.div`
   color: #6b7280;
 `;
 
-export const TabContainer = styled.div`
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1.5rem;
-`;
-
-export const SelectionButtonsContainer = styled.div`
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-`;
-
-export const StatsCard = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-`;
-
-export const StatsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-export const StatItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-export const StatLabel = styled.span`
-  color: #4b5563;
-  font-size: 1rem;
-`;
-
-export const StatValue = styled.span<{ color?: string }>`
-  font-weight: 600;
-  font-size: 1rem;
-  color: ${props => props.color || '#1f2937'};
-`;
-
-export const SelectionButton = styled.button`
-  padding: 0.625rem 1.25rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  background-color: white;
-  font-weight: 500;
-  font-size: 0.875rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  
-  &:hover {
-    background-color: #f9fafb;
-  }
-  
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-`;
-
 export const DotIndicator = styled.div`
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background-color: #3b82f6;
   margin-top: 4px;
-`;
-
-export const DateDisplay = styled.div`
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: #4b5563;
-  margin-bottom: 1.5rem;
 `;

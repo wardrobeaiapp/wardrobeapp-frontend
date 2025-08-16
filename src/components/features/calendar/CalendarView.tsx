@@ -1,7 +1,7 @@
 import React from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { CalendarWrapper, DotIndicator } from './Calendar.styles';
+import { CalendarWrapper, DotIndicator } from '../../../pages/CalendarPage.styles';
 
 interface DayPlan {
   id?: string;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { WardrobeItem } from '../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
+import { Modal, ModalAction } from '../../../common/Modal';
 
 
 const ItemList = styled.div`
@@ -63,7 +63,6 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
   visible,
   date,
   outfitItems,
-  allItems,
   onSave,
   onClose
 }) => {
@@ -103,7 +102,6 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
         <h3>Current Outfit</h3>
         <ItemList>
           {selectedItems.length > 0 ? (
@@ -123,7 +121,6 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
             <p>No items in this outfit</p>
           )}
         </ItemList>
-      </ModalBody>
     </Modal>
   );
 };

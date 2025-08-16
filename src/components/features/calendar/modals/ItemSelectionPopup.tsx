@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { WardrobeItem } from '../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
-import {
-  SelectionGrid,
-  SelectionItem,
-  SelectionItemName,
-  SelectionItemCategory
-} from '../Calendar.styles';
+import { Modal, ModalAction } from '../../../common/Modal';
+import { SelectionGrid, SelectionItem, SelectionItemCategory, SelectionItemName } from '../../../../pages/CalendarPage.styles';
 
 interface ItemSelectionPopupProps {
   visible: boolean;
@@ -62,7 +57,6 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = ({
       actions={actions}
       size="lg"
     >
-      <ModalBody>
         <SelectionGrid>
           {items.map(item => (
             <SelectionItem 
@@ -79,7 +73,6 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = ({
             </SelectionItem>
           ))}
         </SelectionGrid>
-      </ModalBody>
     </Modal>
   );
 };
