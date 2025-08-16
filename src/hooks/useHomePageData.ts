@@ -209,9 +209,7 @@ export const useHomePageData = () => {
   }, []);
   
   const handleDeleteOutfit = useCallback((id: string) => {
-    if (window.confirm('Are you sure you want to delete this outfit?')) {
-      deleteOutfit(id);
-    }
+    deleteOutfit(id);
   }, [deleteOutfit]);
   
   const handleViewCapsule = useCallback((capsule: Capsule) => {
@@ -240,11 +238,9 @@ export const useHomePageData = () => {
   }, [updateCapsuleById]);
   
   const handleDeleteCapsule = useCallback((id: string) => {
-    if (window.confirm('Are you sure you want to delete this capsule?')) {
-      deleteCapsuleById(id);
-      setIsViewCapsuleModalOpen(false);
-      setSelectedCapsule(undefined);
-    }
+    deleteCapsuleById(id);
+    setIsViewCapsuleModalOpen(false);
+    setSelectedCapsule(undefined);
   }, [deleteCapsuleById]);
   
   const handleSubmitAdd = useCallback((item: any) => {
