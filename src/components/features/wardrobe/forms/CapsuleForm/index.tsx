@@ -1,6 +1,5 @@
 import React from 'react';
-import { WardrobeItem } from '../../../../../types';
-import { Capsule } from '../../../../../types';
+import { WardrobeItem, Capsule, ItemCategory, Season } from '../../../../../types';
 import {
   FormContainer
 } from './CapsuleForm.styles';
@@ -19,7 +18,7 @@ import FormActions from './components/FormActions';
 // Existing components
 import ScenarioSelector from '../../capsule/ScenarioSelector';
 import SeasonSelector from '../../capsule/SeasonSelector';
-import ItemsModal from '../../modals/ItemsModal';
+import OutfitItemsSelectionModal from '../../modals/OutfitItemsSelectionModal';
 
 // Re-export the interface for external use
 export type { CapsuleFormData } from './utils/formHelpers';
@@ -62,6 +61,25 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
     handleMainItemChange,
     handleScenarioChange,
   } = useCapsuleFormState({ editCapsule });
+
+  // Filter handlers
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  const handleCategoryChange = (value: ItemCategory | 'all') => {
+    setCategoryFilter(value);
+  };
+
+  const handleColorChange = (value: string) => {
+    setColorFilter(value);
+  };
+
+  // Use the handleSeasonChange from useCapsuleFormState for season selection
+  // and update the filter state to match
+  const handleSeasonFilterChange = (value: Season | 'all') => {
+    setSeasonFilter(value);
+  };
 
   // ✅ Item Filtering Logic
   const {
@@ -184,42 +202,44 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
       </FormContainer>
 
       {/* ✅ Modals */}
-      <ItemsModal
+      <OutfitItemsSelectionModal
         isOpen={isItemsModalOpen}
         onClose={() => setIsItemsModalOpen(false)}
-        items={filteredItems.filter(item => item.id !== mainItemId)} // Exclude main item from selection
+        availableItems={filteredItems.filter(item => item.id !== mainItemId)} // Exclude main item from selection
+        filteredItems={filteredItems.filter(item => item.id !== mainItemId)}
         selectedItems={selectedItems}
         onItemSelect={handleItemChange}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
         categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
+        onCategoryChange={handleCategoryChange}
         colorFilter={colorFilter}
-        onColorChange={setColorFilter}
+        onColorChange={handleColorChange}
         seasonFilter={seasonFilter}
-        onSeasonChange={setSeasonFilter}
+        onSeasonChange={handleSeasonFilterChange}
         categories={categories}
         colors={colors}
         title="Select Items"
       />
 
-      <ItemsModal
+      <OutfitItemsSelectionModal
         isOpen={isMainItemModalOpen}
         onClose={() => setIsMainItemModalOpen(false)}
-        items={filteredItems}
+        availableItems={filteredItems}
+        filteredItems={filteredItems}
         selectedItems={mainItemId ? [mainItemId] : []}
         onItemSelect={(itemId) => {
           handleMainItemChange(itemId);
           setIsMainItemModalOpen(false);
         }}
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
         categoryFilter={categoryFilter}
-        onCategoryChange={setCategoryFilter}
+        onCategoryChange={handleCategoryChange}
         colorFilter={colorFilter}
-        onColorChange={setColorFilter}
+        onColorChange={handleColorChange}
         seasonFilter={seasonFilter}
-        onSeasonChange={setSeasonFilter}
+        onSeasonChange={handleSeasonFilterChange}
         categories={categories}
         colors={colors}
         singleSelect={true}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Season, WardrobeItem } from '../../../../../../types';
+import { Season, WardrobeItem, ItemCategory } from '../../../../../../types';
 
 export interface UseItemFilteringProps {
   availableItems: WardrobeItem[];
@@ -7,12 +7,12 @@ export interface UseItemFilteringProps {
 
 export interface UseItemFilteringReturn {
   // Filter state
-  categoryFilter: string;
-  setCategoryFilter: (category: string) => void;
+  categoryFilter: ItemCategory | 'all';
+  setCategoryFilter: (category: ItemCategory | 'all') => void;
   colorFilter: string;
   setColorFilter: (color: string) => void;
-  seasonFilter: string;
-  setSeasonFilter: (season: string) => void;
+  seasonFilter: Season | 'all';
+  setSeasonFilter: (season: Season | 'all') => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   filteredItems: WardrobeItem[];
@@ -35,9 +35,9 @@ export const useItemFiltering = ({
   );
   
   // Filter state
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilterState] = useState<ItemCategory | 'all'>('all');
   const [colorFilter, setColorFilter] = useState('');
-  const [seasonFilter, setSeasonFilter] = useState('all');
+  const [seasonFilter, setSeasonFilterState] = useState<Season | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredItems, setFilteredItems] = useState<WardrobeItem[]>(nonWishlistItems);
 
@@ -91,10 +91,18 @@ export const useItemFiltering = ({
 
   // Reset filters helper (used when opening modals)
   const resetFilters = () => {
-    setCategoryFilter('all');
+    setCategoryFilterState('all');
     setColorFilter('');
-    setSeasonFilter('all');
+    setSeasonFilterState('all');
     setSearchQuery('');
+  };
+
+  const setCategoryFilter = (value: ItemCategory | 'all') => {
+    setCategoryFilterState(value);
+  };
+
+  const setSeasonFilter = (value: Season | 'all') => {
+    setSeasonFilterState(value);
   };
 
   return {

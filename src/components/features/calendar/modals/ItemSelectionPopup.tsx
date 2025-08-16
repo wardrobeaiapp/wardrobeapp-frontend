@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { WardrobeItem } from '../../../../types';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import {
-  PopupContainer,
-  PopupContent,
-  PopupHeader,
-  PopupTitle,
-  PopupCloseButton,
   SelectionGrid,
   SelectionItem,
   SelectionItemName,
-  SelectionItemCategory,
-  ButtonContainer
+  SelectionItemCategory
 } from '../Calendar.styles';
 
 interface ItemSelectionPopupProps {
@@ -50,15 +44,25 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = ({
     });
   };
   
-  if (!visible) return null;
+  const handleSave = () => {
+    onSave(localSelectedIds);
+    onClose();
+  };
+
+  const actions: ModalAction[] = [
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Done', onClick: handleSave, variant: 'primary' }
+  ];
 
   return (
-    <PopupContainer>
-      <PopupContent>
-        <PopupHeader>
-          <PopupTitle>Select Individual Items</PopupTitle>
-          <PopupCloseButton onClick={() => onClose()}>×</PopupCloseButton>
-        </PopupHeader>
+    <Modal
+      isOpen={visible}
+      onClose={onClose}
+      title="Select Individual Items"
+      actions={actions}
+      size="lg"
+    >
+      <ModalBody>
         <SelectionGrid>
           {items.map(item => (
             <SelectionItem 
@@ -75,16 +79,8 @@ const ItemSelectionPopup: React.FC<ItemSelectionPopupProps> = ({
             </SelectionItem>
           ))}
         </SelectionGrid>
-        <ButtonContainer>
-          <Button fullWidth variant="secondary" onClick={() => onClose()}>Cancel</Button>
-          <Button fullWidth variant="primary" onClick={() => {
-            // Save selections and close
-            onSave(localSelectedIds);
-            onClose();
-          }}>Done</Button>
-        </ButtonContainer>
-      </PopupContent>
-    </PopupContainer>
+      </ModalBody>
+    </Modal>
   );
 };
 

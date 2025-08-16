@@ -4,7 +4,6 @@ import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import FiltersPanel from '../FiltersPanel';
 import ItemsGrid from '../ItemsGrid';
 import {
-  ButtonGroup,
   ResultsCount,
   CheckboxContainer
 } from '../AIComponents.styles';

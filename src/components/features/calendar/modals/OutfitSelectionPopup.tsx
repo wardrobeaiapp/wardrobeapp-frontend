@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Outfit } from '../../../../types';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import {
-  PopupContainer,
-  PopupContent,
-  PopupHeader,
-  PopupTitle,
-  PopupCloseButton,
   SelectionGrid,
   SelectionItem,
   SelectionItemName,
   SelectionItemCategory,
-  ButtonContainer,
 } from '../Calendar.styles';
 
 interface OutfitSelectionPopupProps {
@@ -58,15 +52,25 @@ const OutfitSelectionPopup: React.FC<OutfitSelectionPopupProps> = ({
     });
   };
   
-  if (!visible) return null;
+  const handleSave = () => {
+    onSave(localSelectedIds);
+    onClose();
+  };
+
+  const actions: ModalAction[] = [
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Done', onClick: handleSave, variant: 'primary' }
+  ];
 
   return (
-    <PopupContainer>
-      <PopupContent>
-        <PopupHeader>
-          <PopupTitle>Select Outfits</PopupTitle>
-          <PopupCloseButton onClick={() => onClose()}>×</PopupCloseButton>
-        </PopupHeader>
+    <Modal
+      isOpen={visible}
+      onClose={onClose}
+      title="Select Outfits"
+      actions={actions}
+      size="lg"
+    >
+      <ModalBody>
         <SelectionGrid>
           {outfits.map(outfit => (
             <SelectionItem 
@@ -79,22 +83,12 @@ const OutfitSelectionPopup: React.FC<OutfitSelectionPopupProps> = ({
               }}
             >
               <SelectionItemName>{outfit.name}</SelectionItemName>
-              {outfit.occasion && (
-                <SelectionItemCategory>{outfit.occasion}</SelectionItemCategory>
-              )}
+              <SelectionItemCategory>{outfit.items?.length || 0} items</SelectionItemCategory>
             </SelectionItem>
           ))}
         </SelectionGrid>
-        <ButtonContainer>
-          <Button variant="secondary" fullWidth onClick={() => onClose()}>Cancel</Button>
-          <Button variant="primary" fullWidth onClick={() => {
-            // Save selections and close
-            onSave(localSelectedIds);
-            onClose();
-          }}>Done</Button>
-        </ButtonContainer>
-      </PopupContent>
-    </PopupContainer>
+      </ModalBody>
+    </Modal>
   );
 };
 

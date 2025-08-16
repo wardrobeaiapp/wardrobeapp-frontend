@@ -11,7 +11,7 @@ import {
 import Button from '../../../../../components/common/Button';
 // ScenarioFixer removed as requested
 import SelectedItemsList from '../../outfit/SelectedItemsList';
-import ItemsModal from '../../outfit/ItemsModal';
+import OutfitItemsSelectionModal from '../../modals/OutfitItemsSelectionModal';
 
 // Import the extracted components
 import ScenarioSelector from '../../outfit/ScenarioSelector';
@@ -311,7 +311,7 @@ return (
           />
           
           {/* Items modal component */}
-          <ItemsModal
+          <OutfitItemsSelectionModal
             isOpen={isItemsModalOpen}
             onClose={() => setIsItemsModalOpen(false)}
             availableItems={nonWishlistItems}
@@ -321,6 +321,11 @@ return (
             categoryFilter={categoryFilter}
             colorFilter={colorFilter}
             seasonFilter={seasonFilter}
+            categories={Array.from(new Set(nonWishlistItems.map(item => item.category)))}
+            colors={Array.from(new Set(nonWishlistItems
+              .map(item => item.color)
+              .filter(Boolean) as string[]
+            ))}
             onSearchChange={setSearchQuery}
             onCategoryChange={setCategoryFilter}
             onColorChange={setColorFilter}

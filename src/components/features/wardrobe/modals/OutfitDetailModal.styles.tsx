@@ -1,69 +1,5 @@
 import styled from 'styled-components';
 
-export const ModalOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 60;
-`;
-
-export const ModalContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  max-width: 800px;
-  width: 100%;
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-height: 90vh;
-  overflow-y: auto;
-`;
-
-export const ModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-export const ModalTitle = styled.h2`
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-`;
-
-export const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  color: #6b7280;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-
-  &:hover {
-    background-color: #f3f4f6;
-    color: #374151;
-  }
-`;
-
 export const OutfitInfo = styled.div`
   display: flex;
   flex-direction: column;
@@ -114,23 +50,6 @@ export const DetailValue = styled.span`
   @media (min-width: 768px) {
     font-size: 0.9rem;
   }
-`;
-
-export const SeasonTags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-`;
-
-export const SeasonTag = styled.span`
-  background-color: #8b5cf6;
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.025em;
-  box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
 `;
 
 export const SeasonText = styled.span`
@@ -216,19 +135,3 @@ export const ItemDetail = styled.div`
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
-
-export const ButtonGroup = styled.div`
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.25rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid #e2e8f0;
-  
-  @media (min-width: 768px) {
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    padding-top: 1.5rem;
-  }
-`;
-
