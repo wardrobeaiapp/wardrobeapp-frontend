@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import PageHeader from '../components/layout/Header/Header';
+import Header from '../components/layout/Header/Header';
 import { PageTitle } from '../components/common/Typography/PageTitle';
 import { 
   CalendarLayout,
@@ -21,6 +21,7 @@ import { useWardrobe } from '../context/WardrobeContext';
 import useCalendar from '../hooks/useCalendar';
 import { WardrobeItem } from '../types';
 import PageContainer from '../components/layout/PageContainer';
+import PageHeader from '../components/common/Typography/PageHeader/PageHeader';
 
 
 const CalendarPage: React.FC = () => {
@@ -85,10 +86,13 @@ const CalendarPage: React.FC = () => {
   
   return (
     <>
-      <PageHeader title="Outfit Calendar" />
+      <Header title="Outfit Calendar" />
       <PageContainer>
-        <h2>Outfit Calendar</h2>
-        <p>Plan your outfits and track your wardrobe usage</p>
+        <PageHeader 
+          title="Outfit Calendar"
+          description="Plan your outfits and track your wardrobe usage"
+          titleSize="lg"
+        ></PageHeader>
         
         <CalendarLayout>
           {/* Main Calendar Block */}
@@ -197,7 +201,7 @@ const CalendarPage: React.FC = () => {
             
             {/* Quick Actions Block */}
             <QuickActionsContainer>
-              <PageTitle size="sm" style={{ marginBottom: '0.5rem' }}>Quick Actions</PageTitle>
+              <PageTitle size="sm" style={{ marginBottom: '1rem' }}>Quick Actions</PageTitle>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <Button fullWidth variant="primary" onClick={() => setOutfitPopupVisible(true)}>

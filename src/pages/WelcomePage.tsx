@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PageTitle } from '../components/common/Typography/PageTitle';
+import { PageHeader } from '../components/common/Typography/PageHeader';
 import {
   PageContainer,
   Header,
@@ -111,11 +111,16 @@ const WelcomePage: React.FC = () => {
       
       <HeroSection>
         <HeroContent>
-          <div style={{ fontSize: '3rem', lineHeight: '1.2', marginBottom: '1rem' }}>
-            <PageTitle size="lg">
-              Your Personal <span style={{ color: '#8b5cf6' }}>AI Stylist</span>
-            </PageTitle>
-          </div>
+          <PageHeader 
+            title="Your Personal AI Stylist"
+            titleSize="lg"
+            style={{ 
+              fontSize: '3rem',
+              lineHeight: '1.2',
+              marginBottom: '1rem',
+              color: 'white'
+            }}
+          />
           <HeroDescription>
             Transform your wardrobe with AI-powered insights. Discover
             what you already own, get personalized outfit suggestions,
