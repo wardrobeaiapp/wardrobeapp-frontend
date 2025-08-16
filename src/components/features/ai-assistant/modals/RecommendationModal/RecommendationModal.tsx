@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserActionStatus } from '../../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
+import { Modal, ModalAction } from '../../../../common/Modal';
 import styled from 'styled-components';
 
 const RecommendationText = styled.div`
@@ -81,11 +81,9 @@ const RecommendationModal: React.FC<RecommendationModalProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
         <RecommendationText>
           {recommendation}
         </RecommendationText>
-      </ModalBody>
     </Modal>
   );
 };

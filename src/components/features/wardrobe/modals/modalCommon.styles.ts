@@ -65,12 +65,13 @@ export const ItemCard = styled.div`
 
 export const ItemImageContainer = styled.div`
   position: relative;
-  width: 100%;
+  width: 360px;
+  height: 360px;
+  margin: 0 auto 1rem;
   aspect-ratio: 1;
   flex-shrink: 0;
   background-color: #f3f4f6;
   border-radius: 0.375rem;
-  margin-bottom: 0.5rem;
   overflow: hidden;
   display: flex;
   align-items: center;

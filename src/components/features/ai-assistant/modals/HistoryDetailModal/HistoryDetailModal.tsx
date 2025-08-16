@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../../types';
-import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
+import { Modal, ModalAction } from '../../../../common/Modal';
 import { ItemDetails } from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
   ItemImageContainer,
@@ -103,7 +103,6 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
           {item.type === 'check' && item.image && (
             <ItemImageContainer>
               <ItemImage src={item.image} alt="Outfit check" />
@@ -161,12 +160,11 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
               </DetailRow>
             )}
 
-<DetailRow>
+            <DetailRow>
               <DetailLabel>Date</DetailLabel>
               <DetailValue>{formatDate(item.date)}</DetailValue>
             </DetailRow>
           </ItemDetails>
-      </ModalBody>
     </Modal>
   );
 };
