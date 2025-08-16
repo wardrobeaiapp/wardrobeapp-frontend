@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaCalendarAlt } from 'react-icons/fa';
-import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
+import { Modal, ModalAction } from '../../../common/Modal';
 import SimpleDatePicker from '../SimpleDatePicker';
 
 interface DateSelectionPopupProps {
@@ -58,7 +58,6 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
         <p>Select a date to copy outfits and items from:</p>
         
         <DatePickerContainer>
@@ -74,7 +73,6 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
             maxDate={new Date(currentDate.getFullYear() + 1, 11, 31)}
           />
         </DatePickerContainer>
-      </ModalBody>
     </Modal>
   );
 };

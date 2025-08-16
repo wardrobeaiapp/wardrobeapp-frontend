@@ -213,7 +213,7 @@ const CalendarPage: React.FC = () => {
                 </Button>
                 
                 <Button fullWidth variant="secondary" onClick={() => setDatePopupVisible(true)}>
-                  <span>↺</span> Copy from Date
+                  Copy from Date
                 </Button>
               </div>
             </QuickActionsContainer>

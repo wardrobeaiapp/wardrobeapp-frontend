@@ -63,9 +63,18 @@ export const useCapsuleValidation = ({
       scenarioValue = scenarioNames.join(', ');
     }
 
-    // If there's a custom scenario, add it
-    if (customScenario.trim()) {
-      scenarioValue = scenarioValue ? `${scenarioValue}, ${customScenario.trim()}` : customScenario.trim();
+    // If there's a custom scenario, add it only if it's not already included
+    const trimmedCustomScenario = customScenario.trim();
+    if (trimmedCustomScenario) {
+      // Check if the custom scenario is already in the selected scenarios
+      const isCustomScenarioInSelected = scenariosArray.some(id => {
+        const scenario = scenarios.find(s => s.id === id);
+        return scenario?.name.toLowerCase() === trimmedCustomScenario.toLowerCase();
+      });
+      
+      if (!isCustomScenarioInSelected) {
+        scenarioValue = scenarioValue ? `${scenarioValue}, ${trimmedCustomScenario}` : trimmedCustomScenario;
+      }
     }
 
     // Generate capsule name if not provided
