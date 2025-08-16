@@ -320,13 +320,6 @@ export const DashboardHeader = styled.div`
   margin-bottom: 2rem;
 `;
 
-export const DashboardTitle = styled.h1`
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 0.5rem 0;
-`;
-
 export const DashboardSubtitle = styled.p`
   color: #6b7280;
   font-size: 1rem;

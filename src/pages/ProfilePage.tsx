@@ -7,10 +7,10 @@ import { useProfileData } from '../hooks/useProfileData';
 import { ProfileCategory, CATEGORIES } from '../types/profile';
 import { FaPalette, FaCrown, FaChartLine, FaBell, FaCog } from 'react-icons/fa';
 import { FaCalendarDays } from 'react-icons/fa6';
+import { PageTitle } from '../components/common/Typography/PageTitle';
 import {
   PageContainer,
   SectionHeader,
-  Title,
   Description,
   ProfileLayout,
   Sidebar,
@@ -115,8 +115,10 @@ const ProfilePage: React.FC = () => {
       <PageContainer>
         <SectionHeader>
           <div>
-            <Title>Profile</Title>
-            <Description>Manage your profile settings and preferences</Description>
+            <PageTitle>Profile Settings</PageTitle>
+            <Description>
+              Customize your style preferences, notification settings, and more.
+            </Description>
           </div>
         </SectionHeader>
         

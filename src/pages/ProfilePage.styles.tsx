@@ -54,13 +54,6 @@ export const SectionHeader = styled.header`
   margin-bottom: 2rem;
 `;
 
-export const Title = styled.h1`
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 1rem;
-`;
-
 export const Description = styled.p`
   color: #4b5563;
   margin: 0;

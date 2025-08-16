@@ -5,7 +5,6 @@ export {
   CalendarWrapper,
   DotIndicator,
   DetailsPanel,
-  DetailsPanelTitle,
   DateDisplay,
   SelectionButtonsContainer,
   SelectionButton,

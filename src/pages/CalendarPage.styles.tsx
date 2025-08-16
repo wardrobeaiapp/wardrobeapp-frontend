@@ -2,25 +2,6 @@ import styled from 'styled-components';
 import { theme } from '../styles/theme';
 import { Card } from '../components/cards/Card.styles';
 
-export const Header = styled.header`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-`;
-
-export const Title = styled.h1`
-  font-size: 1.875rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 1rem;
-`;
-
-export const Description = styled.p`
-  color: #4b5563;
-  margin: 0;
-`;
-
 export const CalendarLayout = styled.div`
   display: grid;
   grid-template-columns: 1fr;
@@ -82,13 +63,6 @@ export const QuickActionsContainer = styled(SidebarCard)`
   margin-top: auto;
 `;
 
-export const SidebarTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 1rem;
-`;
-
 export const SidebarDate = styled.div`
   font-size: 0.875rem;
   color: #6b7280;
@@ -140,13 +114,6 @@ export const DetailsPanel = styled.div`
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   padding: 1.5rem;
-`;
-
-export const DetailsPanelTitle = styled.h2`
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 1.5rem;
 `;
 
 export const NoOutfitMessage = styled.p`
@@ -234,7 +201,6 @@ export const Textarea = styled.textarea`
   }
 `;
 
-
 export const ButtonContainer = styled.div`
   display: flex;
   justify-content: flex-end;
@@ -294,13 +260,6 @@ export const StatsCard = styled.div`
   margin-bottom: 2rem;
 `;
 
-export const StatsTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 1rem;
-`;
-
 export const StatsList = styled.div`
   display: flex;
   flex-direction: column;
@@ -344,72 +303,6 @@ export const SelectionButton = styled.button`
     outline: none;
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-  }
-`;
-
-export const PopupContainer = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-export const PopupContent = styled.div`
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-`;
-
-export const PopupHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-export const PopupTitle = styled.h3`
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-`;
-
-export const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.25rem;
-  cursor: pointer;
-  color: #6b7280;
-  
-  &:hover {
-    color: #111827;
-  }
-`;
-export const Tab = styled.button<{ active: boolean }>`
-  padding: 0.75rem 1rem;
-  border: none;
-  background: none;
-  font-weight: ${props => props.active ? '600' : '400'};
-  color: ${props => props.active ? '#3b82f6' : '#4b5563'};
-  border-bottom: 2px solid ${props => props.active ? '#3b82f6' : 'transparent'};
-  cursor: pointer;
-  transition: all 0.2s;
-  
-  &:hover {
-    color: #3b82f6;
   }
 `;
 

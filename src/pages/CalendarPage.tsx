@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import PageHeader from '../components/layout/Header/Header';
+import { PageTitle } from '../components/common/Typography/PageTitle';
 import { 
   CalendarLayout,
   SidebarContainer,
   SidebarCard,
-  SidebarTitle,
   SidebarDate,
   OutfitContainer,
   QuickActionsContainer
@@ -111,8 +111,10 @@ const CalendarPage: React.FC = () => {
           <SidebarContainer>
             {/* Selected Date's Outfit Block */}
             <SidebarCard>
-              <SidebarTitle>{selectedDate.toDateString() === new Date().toDateString() ? "Today's Outfit" : "Selected Outfit"}</SidebarTitle>
-              <SidebarDate>{selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</SidebarDate>
+              <PageTitle size="sm" style={{ marginBottom: '0.5rem' }}>Selected Day</PageTitle>
+              <SidebarDate>
+                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </SidebarDate>
               
               {/* Find day plan for selected date */}
               {(() => {
@@ -195,7 +197,7 @@ const CalendarPage: React.FC = () => {
             
             {/* Quick Actions Block */}
             <QuickActionsContainer>
-              <SidebarTitle>Quick Actions</SidebarTitle>
+              <PageTitle size="sm" style={{ marginBottom: '0.5rem' }}>Quick Actions</PageTitle>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <Button fullWidth variant="primary" onClick={() => setOutfitPopupVisible(true)}>

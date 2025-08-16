@@ -3,10 +3,10 @@ import { FaTrash, FaSearch, FaMagic, FaTshirt } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../types';
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
+import { PageTitle } from '../../../../components/common/Typography/PageTitle';
 import {
   DashboardContainer,
   DashboardTopBar,
-  DashboardTitle,
   DashboardSubtitle,
   FilterDropdown,
   StatsGrid,
@@ -66,7 +66,7 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
       
       <DashboardTopBar>
         <div>
-          <DashboardTitle>AI History</DashboardTitle>
+          <PageTitle size="lg">AI History</PageTitle>
           <DashboardSubtitle>Track your AI styling journey and insights.</DashboardSubtitle>
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
