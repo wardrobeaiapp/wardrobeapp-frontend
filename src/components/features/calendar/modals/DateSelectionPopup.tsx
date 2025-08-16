@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaCalendarAlt } from 'react-icons/fa';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import SimpleDatePicker from '../SimpleDatePicker';
-import Button from '../../../common/Button';
 
 interface DateSelectionPopupProps {
   isVisible: boolean;
@@ -10,50 +10,6 @@ interface DateSelectionPopupProps {
   onSelectDate: (date: Date) => void;
   currentDate: Date;
 }
-
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContent = styled.div`
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-`;
-
-const PopupHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-`;
-
-const PopupTitle = styled.h2`
-  margin: 0;
-  font-size: 1.5rem;
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-`;
 
 const DatePickerContainer = styled.div`
   margin: 1rem 0;
@@ -69,13 +25,6 @@ const DatePickerLabel = styled.label`
   font-weight: bold;
 `;
 
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 1rem;
-`;
-
 const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
   isVisible,
   onClose,
@@ -84,10 +33,6 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  if (!isVisible) {
-    return null;
-  }
-
   const handleConfirm = () => {
     if (selectedDate) {
       onSelectDate(selectedDate);
@@ -95,14 +40,25 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
     }
   };
 
+  const actions: ModalAction[] = [
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { 
+      label: 'Copy', 
+      onClick: handleConfirm, 
+      variant: 'primary',
+      disabled: !selectedDate
+    }
+  ];
+
   return (
-    <PopupOverlay>
-      <PopupContent>
-        <PopupHeader>
-          <PopupTitle>Copy from Date</PopupTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </PopupHeader>
-        
+    <Modal
+      isOpen={isVisible}
+      onClose={onClose}
+      title="Copy from Date"
+      actions={actions}
+      size="md"
+    >
+      <ModalBody>
         <p>Select a date to copy outfits and items from:</p>
         
         <DatePickerContainer>
@@ -118,20 +74,8 @@ const DateSelectionPopup: React.FC<DateSelectionPopupProps> = ({
             maxDate={new Date(currentDate.getFullYear() + 1, 11, 31)}
           />
         </DatePickerContainer>
-        
-        <ButtonContainer>
-          <Button fullWidth variant="secondary" onClick={onClose}>Cancel</Button>
-          <Button 
-            variant="primary"
-            onClick={handleConfirm} 
-            disabled={!selectedDate}
-            fullWidth
-          >
-            Copy
-          </Button>
-        </ButtonContainer>
-      </PopupContent>
-    </PopupOverlay>
+      </ModalBody>
+    </Modal>
   );
 };
 

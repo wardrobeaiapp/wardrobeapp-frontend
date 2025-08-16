@@ -1,7 +1,6 @@
 import React from 'react';
-import { WardrobeItem, Season, WishlistStatus } from '../../../../types';
+import { WardrobeItem, Season } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
-import Button from '../../../common/Button';
 import { Modal, ModalAction } from '../../../common/Modal';
 import {
   ItemImageContainer,
@@ -12,8 +11,7 @@ import {
   DetailLabel,
   DetailValue,
   TagsContainer,
-  Tag,
-  ButtonsContainer
+  Tag
 } from './ItemViewModal.styles';
 
 
@@ -42,14 +40,6 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
   
   const handleDelete = () => {
     onDelete(item.id);
-    onClose();
-  };
-  
-  const handleRunAICheck = () => {
-    // Simulate AI check by randomly setting status to either APPROVED or POTENTIAL_ISSUE
-    const randomStatus = Math.random() > 0.5 ? WishlistStatus.APPROVED : WishlistStatus.POTENTIAL_ISSUE;
-    updateItem(item.id, { wishlistStatus: randomStatus });
-    // Could add a toast notification here to inform the user
     onClose();
   };
   
@@ -92,19 +82,28 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
   const imageUrl = item.imageUrl ? getFullImageUrl(item.imageUrl) : '';
   
   // Build modal actions
+  const wishlistAction = item.wishlist ? [{
+    label: 'Move to Wardrobe',
+    onClick: handleMoveToWardrobe,
+    variant: 'secondary' as const,
+    fullWidth: true,
+  } as ModalAction] : [];
+  
   const actions: ModalAction[] = [
     {
       label: 'Edit',
       onClick: handleEdit,
-      variant: 'primary',
+      variant: 'primary' as const,
       fullWidth: true
     },
+    ...wishlistAction,
     {
       label: 'Delete',
       onClick: handleDelete,
-      variant: 'danger',
-      fullWidth: true
-    }
+      variant: 'secondary' as const,
+      fullWidth: true,
+      outlined: true
+    },
   ];
 
   return (
@@ -123,15 +122,6 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             <PlaceholderImage>No Image</PlaceholderImage>
           )}
         </ItemImageContainer>
-        
-        {item.wishlist ? (
-          <ButtonsContainer style={{ marginTop: '10px', marginBottom: '20px' }}>
-            {item.wishlistStatus === WishlistStatus.NOT_REVIEWED ? (
-              <Button variant="primary" onClick={handleRunAICheck}>Run AI Check</Button>
-            ) : null}
-            <Button variant="primary" onClick={handleMoveToWardrobe}>Move to Wardrobe</Button>
-          </ButtonsContainer>
-        ) : null}
         
         <ItemDetails>
           <DetailRow>
@@ -195,21 +185,12 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
           
 
           
-          {item.wishlist ? (
-            <>
-              <DetailRow>
-                <DetailLabel>Wishlist</DetailLabel>
-                <DetailValue>Yes</DetailValue>
-              </DetailRow>
-              <DetailRow>
-                <DetailLabel>Status</DetailLabel>
-                <DetailValue>
-                  {item.wishlistStatus === WishlistStatus.APPROVED ? 'Approved' : 
-                   item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? 'Potential Issue' : 'Not Reviewed'}
-                </DetailValue>
-              </DetailRow>
-            </>
-          ) : null}
+          {!item.wishlist ? null : (
+            <DetailRow>
+              <DetailLabel>Wishlist</DetailLabel>
+              <DetailValue>Yes</DetailValue>
+            </DetailRow>
+          )}
         </ItemDetails>
         
         {item.tags && item.tags.length > 0 ? (

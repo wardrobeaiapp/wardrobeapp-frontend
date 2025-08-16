@@ -18,12 +18,14 @@ interface ItemsGridProps {
   items: WardrobeItem[];
   selectedItems: string[];
   onItemSelect: (itemId: string) => void;
+  singleSelect?: boolean;
 }
 
 const ItemsGrid: React.FC<ItemsGridProps> = ({
   items,
   selectedItems,
-  onItemSelect
+  onItemSelect,
+  singleSelect = false
 }) => {
   if (items.length === 0) {
     return (
@@ -41,7 +43,13 @@ const ItemsGrid: React.FC<ItemsGridProps> = ({
           <ItemCard 
             key={item.id} 
             $isSelected={isSelected}
-            onClick={() => onItemSelect(item.id)}
+            onClick={() => {
+              if (singleSelect) {
+                onItemSelect(isSelected ? '' : item.id);
+              } else {
+                onItemSelect(item.id);
+              }
+            }}
           >
             {isSelected && (
               <SelectionIndicator>✓</SelectionIndicator>

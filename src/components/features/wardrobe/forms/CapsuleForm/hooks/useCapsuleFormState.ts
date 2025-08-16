@@ -29,7 +29,7 @@ export interface UseCapsuleFormStateReturn {
   setIsMainItemModalOpen: (open: boolean) => void;
   
   // Handlers
-  handleSeasonChange: (season: Season) => void;
+  handleSeasonChange: (season: Season | 'all') => void;
   handleItemChange: (itemId: string) => void;
   handleMainItemChange: (itemId: string) => void;
   handleScenarioChange: (scenarioId: string) => void;
@@ -66,8 +66,10 @@ export const useCapsuleFormState = ({
   const [isMainItemModalOpen, setIsMainItemModalOpen] = useState(false);
 
   // Handle season changes
-  const handleSeasonChange = (season: Season) => {
-    if (seasons.includes(season)) {
+  const handleSeasonChange = (season: Season | 'all') => {
+    if (season === 'all') {
+      setSeasons([]);
+    } else if (seasons.includes(season)) {
       setSeasons(seasons.filter(s => s !== season));
     } else {
       setSeasons([...seasons, season]);

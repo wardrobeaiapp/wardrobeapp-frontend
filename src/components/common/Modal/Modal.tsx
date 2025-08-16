@@ -18,6 +18,7 @@ export interface ModalAction {
   variant?: 'primary' | 'secondary' | 'danger';
   disabled?: boolean;
   fullWidth?: boolean;
+  outlined?: boolean;
 }
 
 export interface ModalProps {
@@ -89,6 +90,7 @@ const Modal: React.FC<ModalProps> = ({
                     onClick={action.onClick}
                     disabled={action.disabled}
                     fullWidth={action.fullWidth}
+                    outlined={action.outlined}
                   >
                     {action.label}
                   </Button>

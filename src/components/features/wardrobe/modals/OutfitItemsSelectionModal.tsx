@@ -1,20 +1,14 @@
 import React from 'react';
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
-import FiltersPanel from './FiltersPanel';
-import ItemsGrid from './ItemsGrid';
+import { Modal, ModalAction } from '../../../common/Modal';
+import FiltersPanel from '../outfit/FiltersPanel';
+import ItemsGrid from '../outfit/ItemsGrid';
 import {
-  ItemsModal as StyledItemsModal,
-  ItemsModalContent,
-  ItemsModalHeader,
-  ItemsModalTitle,
-  CloseButton,
   CheckboxContainer,
-  ResultsCount,
-  ButtonGroup
+  ResultsCount
 } from '../forms/OutfitForm/OutfitForm.styles';
-import Button from '../../../common/Button';
 
-interface ItemsModalProps {
+interface OutfitItemsSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableItems: WardrobeItem[];
@@ -24,14 +18,18 @@ interface ItemsModalProps {
   categoryFilter: ItemCategory | 'all';
   colorFilter: string;
   seasonFilter: Season | 'all';
+  categories: string[];
+  colors: string[];
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: ItemCategory | 'all') => void;
   onColorChange: (value: string) => void;
   onSeasonChange: (value: Season | 'all') => void;
   onItemSelect: (itemId: string) => void;
+  title?: string;
+  singleSelect?: boolean;
 }
 
-const ItemsModal: React.FC<ItemsModalProps> = ({
+const OutfitItemsSelectionModal: React.FC<OutfitItemsSelectionModalProps> = ({
   isOpen,
   onClose,
   availableItems,
@@ -45,18 +43,24 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
   onCategoryChange,
   onColorChange,
   onSeasonChange,
-  onItemSelect
+  onItemSelect,
+  categories,
+  colors,
+  title = 'Select Wardrobe Items',
+  singleSelect = false
 }) => {
-  if (!isOpen) return null;
+  const actions: ModalAction[] = [
+    { label: 'Done', onClick: onClose, variant: 'primary' }
+  ];
 
   return (
-    <StyledItemsModal>
-      <ItemsModalContent>
-        <ItemsModalHeader>
-          <ItemsModalTitle>Select Wardrobe Items</ItemsModalTitle>
-          <CloseButton onClick={onClose}>&times;</CloseButton>
-        </ItemsModalHeader>
-        
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      actions={actions}
+      size="lg"
+    >
         {availableItems.length === 0 ? (
           <p>No items available. Add some items to your wardrobe first.</p>
         ) : (
@@ -81,19 +85,13 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
                 items={filteredItems}
                 selectedItems={selectedItems}
                 onItemSelect={onItemSelect}
+                singleSelect={singleSelect}
               />
             </CheckboxContainer>
           </>
         )}
-        
-        <ButtonGroup style={{ marginTop: '1.5rem' }}>
-          <Button variant="primary" type="button" onClick={onClose}>
-            Done
-          </Button>
-        </ButtonGroup>
-      </ItemsModalContent>
-    </StyledItemsModal>
+    </Modal>
   );
 };
 
-export default ItemsModal;
+export default OutfitItemsSelectionModal;

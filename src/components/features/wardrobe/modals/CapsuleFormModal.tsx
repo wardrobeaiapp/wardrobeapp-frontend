@@ -32,7 +32,7 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Capsule' : 'Create New Capsule'}
-      size="lg"
+      size="md"
     >
       <CapsuleForm
         availableItems={availableItems}

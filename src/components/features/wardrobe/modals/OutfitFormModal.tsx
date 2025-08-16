@@ -27,7 +27,7 @@ const OutfitFormModal: React.FC<OutfitFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Outfit' : 'Create New Outfit'}
-      size="lg"
+      size="md"
     >
       <OutfitForm
         availableItems={availableItems}

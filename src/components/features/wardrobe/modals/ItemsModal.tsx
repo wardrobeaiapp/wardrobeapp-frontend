@@ -1,17 +1,12 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../types';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 import FiltersPanel from '../capsule/FiltersPanel';
 import ItemsGrid from '../capsule/ItemsGrid';
 import {
-  ItemsModal as StyledItemsModal,
-  ItemsModalContent,
-  ItemsModalHeader,
-  ItemsModalTitle,
   CheckboxContainer,
-  ResultsCount,
-  ButtonGroup
+  ResultsCount
 } from '../forms/OutfitForm/OutfitForm.styles';
-import Button from '../../../common/Button';
 
 interface ItemsModalProps {
   isOpen: boolean;
@@ -43,7 +38,6 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
   categoryFilter,
   colorFilter,
   seasonFilter,
-  categories,
   colors,
   onSearchChange,
   onCategoryChange,
@@ -52,8 +46,6 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
   singleSelect = false,
   title = 'Select Items'
 }) => {
-  if (!isOpen) return null;
-
   // Create a wrapper function for item selection to handle single select mode
   const handleItemSelect = (itemId: string) => {
     if (singleSelect) {
@@ -69,13 +61,19 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
     }
   };
 
+  const actions: ModalAction[] = [
+    { label: 'Done', onClick: onClose, variant: 'primary' }
+  ];
+
   return (
-    <StyledItemsModal>
-      <ItemsModalContent>
-        <ItemsModalHeader>
-          <ItemsModalTitle>{title}</ItemsModalTitle>
-        </ItemsModalHeader>
-        
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      actions={actions}
+      size="xl"
+    >
+      <ModalBody>
         {items.length === 0 ? (
           <p>No items available. Add some items to your wardrobe first.</p>
         ) : (
@@ -105,14 +103,8 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
             </CheckboxContainer>
           </>
         )}
-        
-        <ButtonGroup style={{ marginTop: '1.5rem' }}>
-          <Button variant="primary" type="button" onClick={onClose}>
-            Done
-          </Button>
-        </ButtonGroup>
-      </ItemsModalContent>
-    </StyledItemsModal>
+      </ModalBody>
+    </Modal>
   );
 };
 

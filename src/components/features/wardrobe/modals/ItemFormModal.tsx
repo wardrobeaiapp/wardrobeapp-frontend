@@ -49,7 +49,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Item' : 'Add New Item'}
-      size="lg"
+      size="md"
     >
       <WardrobeItemForm
         initialItem={initialItem ? {

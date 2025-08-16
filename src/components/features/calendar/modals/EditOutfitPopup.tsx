@@ -1,51 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { WardrobeItem } from '../../../../types';
-import Button from '../../../common/Button';
+import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
 
-const PopupOverlay = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-`;
-
-const PopupContent = styled.div`
-  background-color: white;
-  border-radius: 8px;
-  padding: 24px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-`;
-
-const PopupHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-`;
-
-const PopupTitle = styled.h2`
-  margin: 0;
-  font-size: 1.5rem;
-`;
-
-const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #666;
-`;
 
 const ItemList = styled.div`
   margin-bottom: 20px;
@@ -92,12 +49,6 @@ const RemoveButton = styled.button`
   justify-content: center;
 `;
 
-const ButtonContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-  gap: 1rem;
-`;
 
 interface EditOutfitPopupProps {
   visible: boolean;
@@ -133,22 +84,26 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
     onSave(selectedItems.map(item => item.id));
   };
 
-  if (!visible) return null;
-
   const formattedDate = date.toLocaleDateString('en-US', {
     month: 'long',
     day: 'numeric',
     year: 'numeric'
   });
 
-  return (
-    <PopupOverlay>
-      <PopupContent>
-        <PopupHeader>
-          <PopupTitle>Edit Outfit - {formattedDate}</PopupTitle>
-          <CloseButton onClick={onClose}>×</CloseButton>
-        </PopupHeader>
+  const actions: ModalAction[] = [
+    { label: 'Cancel', onClick: onClose, variant: 'secondary' },
+    { label: 'Save Changes', onClick: handleSaveChanges, variant: 'primary' }
+  ];
 
+  return (
+    <Modal
+      isOpen={visible}
+      onClose={onClose}
+      title={`Edit Outfit - ${formattedDate}`}
+      actions={actions}
+      size="md"
+    >
+      <ModalBody>
         <h3>Current Outfit</h3>
         <ItemList>
           {selectedItems.length > 0 ? (
@@ -168,13 +123,8 @@ const EditOutfitPopup: React.FC<EditOutfitPopupProps> = ({
             <p>No items in this outfit</p>
           )}
         </ItemList>
-
-        <ButtonContainer>
-          <Button variant="secondary" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" fullWidth onClick={handleSaveChanges}>Save Changes</Button>
-        </ButtonContainer>
-      </PopupContent>
-    </PopupOverlay>
+      </ModalBody>
+    </Modal>
   );
 };
 

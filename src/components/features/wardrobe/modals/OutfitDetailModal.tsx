@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
-import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
+import { Modal, ModalAction } from '../../../common/Modal';
 
 import {
   OutfitInfo,
@@ -62,9 +62,8 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
       onClose={onClose}
       title={outfit.name}
       actions={actions}
-      size="lg"
+      size="md"
     >
-      <ModalBody>
         <OutfitInfo>
           <DetailRow>
             <DetailLabel>Seasons</DetailLabel>
@@ -108,7 +107,6 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
             </ItemsGrid>
           )}
         </ItemsSection>
-      </ModalBody>
     </Modal>
   );
 };
