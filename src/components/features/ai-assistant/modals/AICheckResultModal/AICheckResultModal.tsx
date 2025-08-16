@@ -4,11 +4,9 @@ import { WishlistStatus } from '../../../../../types';
 import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
 import {
   ItemDetails,
-  DetailRow,
-  DetailLabel,
-  DetailValue
 } from '../../../wardrobe/modals/ItemViewModal.styles';
 import { AnalysisText } from './AICheckResultModal.styles';
+import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
 
 interface AICheckResultModalProps {
   isOpen: boolean;

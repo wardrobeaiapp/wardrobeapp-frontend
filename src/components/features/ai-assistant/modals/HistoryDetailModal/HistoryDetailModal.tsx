@@ -2,14 +2,14 @@ import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../../types';
 import { Modal, ModalAction, ModalBody } from '../../../../common/Modal';
+import { ItemDetails } from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
   ItemImageContainer,
   ItemImage,
-  ItemDetails,
   DetailRow,
   DetailLabel,
   DetailValue,
-} from '../../../wardrobe/modals/ItemViewModal.styles';
+} from '../../../wardrobe/modals/modalCommon.styles';
 
 interface HistoryDetailModalProps {
   isOpen: boolean;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import styled, { createGlobalStyle } from 'styled-components';
+import { ThemeProvider } from './theme/ThemeProvider';
 import { SupabaseAuthProvider, useSupabaseAuth } from './context/SupabaseAuthContext';
 import { WardrobeProvider } from './context/WardrobeContext';
 import HomePage from './pages/HomePage';
@@ -156,10 +157,11 @@ const AppFooter: React.FC = () => {
 function App() {
   return (
     <Router>
-      <SupabaseAuthProvider>
-        <WardrobeProvider>
-          <GlobalStyle />
-          <AppContainer>
+      <ThemeProvider>
+        <SupabaseAuthProvider>
+          <WardrobeProvider>
+            <GlobalStyle />
+            <AppContainer>
             {/* Navbar removed - now using shared Header component in each page */}
             
             <Main>
@@ -177,7 +179,6 @@ function App() {
                 {/* Protected routes - require auth and completed onboarding */}
                 <Route path="/" element={<ProtectedRoute element={<HomePage />} />} />
                 <Route path="/ai-assistant" element={<ProtectedRoute element={<AIAssistantPage />} />} />
-
                 <Route path="/calendar" element={<ProtectedRoute element={<CalendarPage />} />} />
                 <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
                 
@@ -185,17 +186,18 @@ function App() {
                 <Route path="/test-image" element={<TestImageUpload />} />
                 <Route path="/test-style-preferences" element={<StylePreferencesServiceTest />} />
                 
-                {/* Redirect any unknown routes to welcome page if not authenticated, otherwise to home */}
+                {/* Redirect any unknown routes */}
                 <Route path="*" element={<RedirectRoute />} />
               </Routes>
             </Main>
             
             {/* Sticky Footer */}
             <AppFooter />
-        </AppContainer>
+          </AppContainer>
         </WardrobeProvider>
       </SupabaseAuthProvider>
-    </Router>
+    </ThemeProvider>
+  </Router>
   );
 }
 

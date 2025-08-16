@@ -1,16 +1,8 @@
 import React from 'react';
 import { Season } from '../../../../../../types';
 import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
-import {
-  FormRow,
-  FormGroup,
-  Label,
-  Input,
-  CheckboxGroup,
-  CheckboxItem,
-  CheckboxInput,
-  CheckboxLabel
-} from '../WardrobeItemForm.styles';
+import { FormRow, Input, CheckboxGroup, CheckboxItem, CheckboxInput, CheckboxLabel } from '../WardrobeItemForm.styles';
+import { FormField } from '../../../../../forms/common/FormField';
 
 interface DetailsFieldsProps {
   material: string;
@@ -46,81 +38,68 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   return (
     <>
       <FormRow>
-        <FormGroup>
-          <Label>Material</Label>
+        <FormField label="Material" error={errors.material}>
           <Input
             type="text"
             value={material}
             onChange={(e) => onMaterialChange(e.target.value)}
             placeholder="Enter material"
           />
-          {errors.material && (
-            <div style={{ color: 'red', fontSize: '0.875rem' }}>
-              {errors.material}
-            </div>
-          )}
-        </FormGroup>
-        <FormGroup>
-          <Label>Brand</Label>
+        </FormField>
+        
+        <FormField label="Brand" error={errors.brand}>
           <Input
             type="text"
             value={brand}
             onChange={(e) => onBrandChange(e.target.value)}
             placeholder="Enter brand"
           />
-        </FormGroup>
+        </FormField>
       </FormRow>
 
       <FormRow style={{ marginTop: '1.5rem' }}>
-        <FormGroup>
-          <Label>Size</Label>
+        <FormField label="Size" error={errors.size}>
           <Input
             type="text"
             value={size}
             onChange={(e) => onSizeChange(e.target.value)}
             placeholder="e.g., S, M, L, XL, 32, 10"
           />
-        </FormGroup>
-        <FormGroup>
-          <Label>Purchase Price</Label>
+        </FormField>
+        
+        <FormField label="Purchase Price" error={errors.price}>
           <Input
             type="number"
             value={price}
             onChange={(e) => onPriceChange(e.target.value)}
             placeholder="Enter price"
           />
-        </FormGroup>
+        </FormField>
       </FormRow>
 
-      <FormGroup style={{ marginTop: '1.5rem' }}>
-        <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-          <legend style={{ fontSize: '14px', fontWeight: '600', color: '#374151', marginBottom: '0.25rem', padding: 0, display: 'block' }}>
-            Seasons *
-          </legend>
-          <CheckboxGroup>
-            {AVAILABLE_SEASONS.map((season) => (
-              <CheckboxItem key={season}>
-                <CheckboxInput
-                  type="checkbox"
-                  id={`season-${season}`}
-                  checked={seasons.includes(season as Season)}
-                  onChange={() => onToggleSeason(season as Season)}
-                />
-                <CheckboxLabel htmlFor={`season-${season}`}>
-                  {getSeasonDisplayName(season)}
-                </CheckboxLabel>
-              </CheckboxItem>
-            ))}
-          </CheckboxGroup>
-        </fieldset>
-        {errors.seasons && (
-          <div style={{ color: 'red', fontSize: '0.875rem' }}>
-            {errors.seasons}
-          </div>
-        )}
-      </FormGroup>
+      <FormField 
+        label="Seasons" 
+        error={errors.seasons}
+        style={{ marginTop: '1.5rem' }}
+      >
+        <CheckboxGroup>
+          {AVAILABLE_SEASONS.map((season) => (
+            <CheckboxItem key={season}>
+              <CheckboxInput
+                type="checkbox"
+                id={`season-${season}`}
+                checked={seasons.includes(season as Season)}
+                onChange={() => onToggleSeason(season as Season)}
+              />
+              <CheckboxLabel htmlFor={`season-${season}`}>
+                {getSeasonDisplayName(season)}
+              </CheckboxLabel>
+            </CheckboxItem>
+          ))}
+        </CheckboxGroup>
+      </FormField>
 
-      <FormGroup style={{ marginTop: '1.5rem' }}>
+      <FormField style={{ marginTop: '1.5rem' }}>
         <CheckboxItem>
           <CheckboxInput
             type="checkbox"
@@ -132,7 +111,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             Add to wishlist
           </CheckboxLabel>
         </CheckboxItem>
-      </FormGroup>
+      </FormField>
     </>
   );
 };

@@ -1,8 +1,8 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../types';
 import { Modal, ModalAction, ModalBody } from '../../../common/Modal';
-import FiltersPanel from '../capsule/FiltersPanel';
-import ItemsGrid from '../capsule/ItemsGrid';
+import FiltersPanel from '../shared/FiltersPanel';
+import ItemsGrid from '../shared/ItemsGrid';
 import {
   CheckboxContainer,
   ResultsCount
@@ -38,7 +38,6 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
   categoryFilter,
   colorFilter,
   seasonFilter,
-  colors,
   onSearchChange,
   onCategoryChange,
   onColorChange,
@@ -83,7 +82,6 @@ const ItemsModal: React.FC<ItemsModalProps> = ({
               categoryFilter={categoryFilter}
               colorFilter={colorFilter}
               seasonFilter={seasonFilter}
-              colors={colors}
               onSearchChange={onSearchChange}
               onCategoryChange={onCategoryChange}
               onColorChange={onColorChange}

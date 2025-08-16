@@ -3,24 +3,10 @@ import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { OutfitInfo } from './OutfitDetailModal.styles';
+import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, ItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
+import { ItemsSection } from './CapsuleDetailModal.styles';
 
-import {
-  OutfitInfo,
-  DetailRow,
-  DetailLabel,
-  DetailValue,
-  SeasonText,
-  ItemsSection,
-  SectionTitle,
-  ItemsGrid,
-  ItemCard,
-  ItemImageContainer,
-  ItemImage,
-  PlaceholderImage,
-  ItemContent,
-  ItemName,
-  ItemDetail
-} from './OutfitDetailModal.styles';
 
 interface OutfitDetailModalProps {
   isOpen: boolean;

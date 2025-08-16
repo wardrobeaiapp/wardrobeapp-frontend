@@ -145,7 +145,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       
       {/* Shopping Limit Summary - Only show if shopping limit is set */}
       {shoppingLimit > 0 && (
-        <ProgressCard theme="linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%)">
+        <ProgressCard $bgGradient="linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%)">
           <CardTitle>
             🛍️ Shopping Limit Summary
           </CardTitle>
@@ -197,7 +197,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       )}
 
       {/* AI Usage Tracker */}
-      <ProgressCard theme="linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)">
+      <ProgressCard $bgGradient="linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 100%)">
         <CardTitle>
           🤖 AI Usage Tracker
         </CardTitle>
@@ -256,7 +256,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
       </ProgressCard>
 
       {/* Impulse Buy Tracker */}
-      <ProgressCard theme="linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%)">
+      <ProgressCard $bgGradient="linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%)">
         <CardTitle>
           🎯 Impulse Buy Tracker
         </CardTitle>
@@ -287,7 +287,7 @@ const MyProgressSection: React.FC<MyProgressProps> = ({ onNavigateToSubscription
 
       {/* Savings This Month - Only show if clothing budget is set */}
       {!!(clothingBudgetData?.amount && clothingBudgetData.amount > 0) && (
-      <ProgressCard theme="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
+      <ProgressCard $bgGradient="linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%)">
         <CardTitle>
           💰 Saved {getPeriodText(clothingBudgetFrequency)}
         </CardTitle>

@@ -1,21 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Outfit, Season, WardrobeItem, ItemCategory, Scenario } from '../../../../../types';
+import { Outfit, WardrobeItem, Scenario, Season, ItemCategory } from '../../../../../types';
 import { fetchScenarios } from '../../../../../services/api';
 import { FALLBACK_SCENARIOS } from '../../../../../constants';
-import { 
-  FormContainer, 
-  FormGroup, 
-  Label, 
-  ButtonGroup
-} from './OutfitForm.styles';
+import { FormContainer, ButtonGroup } from './OutfitForm.styles';
+import FormField from '../../../../common/Form/FormField';
 import Button from '../../../../../components/common/Button';
 // ScenarioFixer removed as requested
-import SelectedItemsList from '../../outfit/SelectedItemsList';
+import SelectedItemsList from '../../shared/SelectedItemsList';
 import OutfitItemsSelectionModal from '../../modals/OutfitItemsSelectionModal';
 
-// Import the extracted components
-import ScenarioSelector from '../../outfit/ScenarioSelector';
-import SeasonSelector from '../../outfit/SeasonSelector';
+// Import the shared components
+import ScenarioSelector from '../../shared/ScenarioSelector';
+import SeasonSelector from '../../shared/SeasonSelector';
 
 // Using Scenario interface imported from '../types'
 
@@ -292,23 +288,28 @@ return (
         onSeasonChange={handleSeasonChange}
       />
       
-      <FormGroup>
-          <Label>Select Items</Label>
+      <FormField 
+        label={`Selected Items (${selectedItems.length})`}
+        helpText="Add items to create your outfit"
+      >
+        <div style={{ marginBottom: '0.5rem' }}>
           <Button 
             variant="primary"
             type="button" 
             onClick={openItemsModal}
-            style={{ marginBottom: '0.5rem' }}
+            fullWidth
           >
             Select Wardrobe Items
           </Button>
-          
-          {/* Selected items list component */}
-          <SelectedItemsList
-            selectedItems={selectedItems}
-            availableItems={availableItems}
-            onItemRemove={handleItemChange}
-          />
+        </div>
+        
+        {/* Selected items list component */}
+        <SelectedItemsList
+          selectedItems={selectedItems}
+          availableItems={availableItems}
+          onItemRemove={handleItemChange}
+        />
+      </FormField>
           
           {/* Items modal component */}
           <OutfitItemsSelectionModal
@@ -319,20 +320,16 @@ return (
             selectedItems={selectedItems}
             searchQuery={searchQuery}
             categoryFilter={categoryFilter}
-            colorFilter={colorFilter}
             seasonFilter={seasonFilter}
-            categories={Array.from(new Set(nonWishlistItems.map(item => item.category)))}
-            colors={Array.from(new Set(nonWishlistItems
-              .map(item => item.color)
-              .filter(Boolean) as string[]
-            ))}
-            onSearchChange={setSearchQuery}
+            onSearchChange={(value: string) => setSearchQuery(value)}
             onCategoryChange={setCategoryFilter}
             onColorChange={setColorFilter}
             onSeasonChange={setSeasonFilter}
             onItemSelect={handleItemChange}
+            colorFilter={colorFilter}
+            categories={Array.from(new Set(nonWishlistItems.map(item => item.category)))}
+            colors={Array.from(new Set(nonWishlistItems.map(item => item.color).filter(Boolean)))}
           />
-        </FormGroup>
         
         <ButtonGroup>
           <Button fullWidth variant="secondary" type="button" onClick={onCancel}>

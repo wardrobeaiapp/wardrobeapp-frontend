@@ -1,6 +1,6 @@
 import React from 'react';
-import { WardrobeItem, Season } from '../../../../types';
-import { formatCategory } from '../../../../utils/textFormatting';
+import { WardrobeItem, Season } from '../../../../../types';
+import { formatCategory } from '../../../../../utils/textFormatting';
 import {
   ItemsGrid as StyledItemsGrid,
   ItemCard,
@@ -12,27 +12,33 @@ import {
   ItemDetail,
   SelectionIndicator,
   NoResultsMessage
-} from '../forms/OutfitForm/OutfitForm.styles';
+} from '../../forms/OutfitForm/OutfitForm.styles';
 
-interface ItemsGridProps {
+export interface ItemsGridProps {
   items: WardrobeItem[];
   selectedItems: string[];
   onItemSelect: (itemId: string) => void;
   singleSelect?: boolean;
+  noResultsMessage?: string;
 }
 
 const ItemsGrid: React.FC<ItemsGridProps> = ({
   items,
   selectedItems,
   onItemSelect,
-  singleSelect = false
+  singleSelect = false,
+  noResultsMessage = 'No items match your filters. Try adjusting your search criteria.'
 }) => {
+  const handleItemClick = (itemId: string, isSelected: boolean) => {
+    if (singleSelect) {
+      onItemSelect(isSelected ? '' : itemId);
+    } else {
+      onItemSelect(itemId);
+    }
+  };
+
   if (items.length === 0) {
-    return (
-      <NoResultsMessage>
-        No items match your filters. Try adjusting your search criteria.
-      </NoResultsMessage>
-    );
+    return <NoResultsMessage>{noResultsMessage}</NoResultsMessage>;
   }
 
   return (
@@ -43,13 +49,7 @@ const ItemsGrid: React.FC<ItemsGridProps> = ({
           <ItemCard 
             key={item.id} 
             $isSelected={isSelected}
-            onClick={() => {
-              if (singleSelect) {
-                onItemSelect(isSelected ? '' : item.id);
-              } else {
-                onItemSelect(item.id);
-              }
-            }}
+            onClick={() => handleItemClick(item.id, isSelected)}
           >
             {isSelected && (
               <SelectionIndicator>✓</SelectionIndicator>

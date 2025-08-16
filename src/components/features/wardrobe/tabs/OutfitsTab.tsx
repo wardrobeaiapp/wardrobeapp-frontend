@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MdSearch } from 'react-icons/md';
+import { FormField } from '../../../common/Form';
 import { Season, Outfit, WardrobeItem } from '../../../../types';
 import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
 import CollectionCard from '../cards/CollectionCard';
@@ -14,7 +15,6 @@ import {
   ErrorContainer,
   FiltersContainer,
   FilterGroup,
-  FilterLabel,
   Select,
   SearchContainer,
   SearchInput,
@@ -87,57 +87,67 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
 
       <FiltersContainer>
         <FilterGroup>
-          <FilterLabel htmlFor="outfit-search-input">Search</FilterLabel>
-          <SearchContainer>
-            <SearchIcon>
-              <MdSearch />
-            </SearchIcon>
-            <SearchInput
-              id="outfit-search-input"
-              type="text"
-              placeholder="Search outfits by name, scenario..."
-              value={searchQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            />
-          </SearchContainer>
+          <FormField
+            label="Search outfits"
+            htmlFor="outfit-search-input"
+          >
+            <SearchContainer>
+              <SearchIcon><MdSearch /></SearchIcon>
+              <SearchInput
+                id="outfit-search-input"
+                type="text"
+                placeholder="Search outfits by name, scenario..."
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              />
+            </SearchContainer>
+          </FormField>
         </FilterGroup>
 
         <FilterGroup>
-          <FilterLabel htmlFor="outfit-season-filter">Season</FilterLabel>
-          <Select
-            id="outfit-season-filter"
-            value={seasonFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
+          <FormField
+            label="Season"
+            htmlFor="outfit-season-filter"
           >
-            <option value="all">All Seasons</option>
-            {Object.values(Season)
-              .filter(season => season !== Season.ALL_SEASON)
-              .map(season => (
-                <option key={season} value={season}>
-                  {season.charAt(0).toUpperCase() + season.slice(1)}
-                </option>
-              ))}
-          </Select>
+            <Select
+              id="outfit-season-filter"
+              value={seasonFilter}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
+            >
+              <option value="all">All Seasons</option>
+              {Object.values(Season)
+                .filter(season => season !== Season.ALL_SEASON)
+                .map(season => (
+                  <option key={season} value={season}>
+                    {season.charAt(0).toUpperCase() + season.slice(1)}
+                  </option>
+                ))}
+            </Select>
+          </FormField>
         </FilterGroup>
 
         <FilterGroup>
-          <FilterLabel htmlFor="outfit-scenario-filter">Scenario</FilterLabel>
-          <Select
-            id="outfit-scenario-filter"
-            value={scenarioFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setScenarioFilter(e.target.value)}
+          <FormField
+            label="Scenario"
+            htmlFor="outfit-scenario-filter"
           >
-            <option value="all">All Scenarios</option>
-            {loadingScenarios ? (
-              <option disabled>Loading scenarios...</option>
-            ) : (
-              scenarioOptions.map(scenario => (
-                <option key={scenario} value={scenario}>
-                  {scenario}
-                </option>
-              ))
-            )}
-          </Select>
+            <Select
+              id="outfit-scenario-filter"
+              value={scenarioFilter}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setScenarioFilter(e.target.value)}
+            >
+              <option value="all">All Scenarios</option>
+              {loadingScenarios ? (
+                <option disabled>Loading scenarios...</option>
+              ) : (
+                scenarioOptions.map(scenario => (
+                  <option key={scenario} value={scenario}>
+                    {scenario}
+                  </option>
+                ))
+              )}
+            </Select>
+          </FormField>
         </FilterGroup>
       </FiltersContainer>
 

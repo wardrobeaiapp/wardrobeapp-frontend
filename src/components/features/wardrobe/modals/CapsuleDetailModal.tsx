@@ -7,20 +7,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
   CapsuleInfo,
-  DetailRow,
-  DetailLabel,
-  DetailValue,
-  SeasonText,
   ItemsSection,
-  SectionTitle,
-  ItemsGrid,
-  ItemCard,
-  ItemImageContainer,
-  ItemImage,
-  PlaceholderImage,
-  ItemContent,
-  ItemName,
-  ItemDetail,
   MainItemSection,
   MainItemCard,
   MainItemImageContainer,
@@ -31,6 +18,21 @@ import {
   MainItemDetail,
   MainItemBadge
 } from './CapsuleDetailModal.styles';
+import { 
+  DetailLabel, 
+  DetailRow, 
+  DetailValue, 
+  ItemCard, 
+  ItemContent, 
+  ItemDetail, 
+  ItemImage, 
+  ItemImageContainer,
+  ItemName, 
+  ItemsGrid, 
+  PlaceholderImage, 
+  SeasonText, 
+  SectionTitle 
+} from './modalCommon.styles';
 
 interface CapsuleDetailModalProps {
   isOpen: boolean;

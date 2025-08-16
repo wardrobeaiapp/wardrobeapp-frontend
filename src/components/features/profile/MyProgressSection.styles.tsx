@@ -1,8 +1,12 @@
 import styled from 'styled-components';
 
 // Main progress card container
-export const ProgressCard = styled.div`
-  background: ${props => props.theme || '#f8f9fa'};
+type ProgressCardProps = {
+  $bgGradient?: string;
+};
+
+export const ProgressCard = styled.div<ProgressCardProps>`
+  background: ${props => props.$bgGradient || '#f8f9fa'};
   border-radius: 16px;
   padding: 24px;
   margin: 16px 0;

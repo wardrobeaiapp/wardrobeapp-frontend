@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FormField } from '../../../common/Form';
 import { MdSearch } from 'react-icons/md';
 import { Season, Capsule, WardrobeItem } from '../../../../types';
 import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
@@ -6,7 +7,6 @@ import CollectionCard from '../cards/CollectionCard';
 import {
   FiltersContainer,
   FilterGroup,
-  FilterLabel,
   Select,
   SearchContainer,
   SearchInput,
@@ -35,10 +35,6 @@ interface CapsulesTabProps {
   onViewCapsule: (capsule: Capsule) => void;
   onDeleteCapsule: (id: string) => void;
 }
-
-const capitalizeFirstLetter = (str: string): string => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
 
 const CapsulesTab: React.FC<CapsulesTabProps> = ({
   capsules,
@@ -90,57 +86,67 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
 
       <FiltersContainer>
         <FilterGroup>
-          <FilterLabel htmlFor="capsule-search-input">Search</FilterLabel>
-          <SearchContainer>
-            <SearchIcon>
-              <MdSearch />
-            </SearchIcon>
-            <SearchInput
-              id="capsule-search-input"
-              type="text"
-              placeholder="Search capsules by name, scenario..."
-              value={searchQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            />
-          </SearchContainer>
+          <FormField
+            label="Search capsules"
+            htmlFor="capsule-search-input"
+          >
+            <SearchContainer>
+              <SearchIcon><MdSearch /></SearchIcon>
+              <SearchInput
+                id="capsule-search-input"
+                type="text"
+                placeholder="Search capsules by name, scenario..."
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+              />
+            </SearchContainer>
+          </FormField>
         </FilterGroup>
 
         <FilterGroup>
-          <FilterLabel htmlFor="capsule-season-filter">Season</FilterLabel>
-          <Select
-            id="capsule-season-filter"
-            value={seasonFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
+          <FormField
+            label="Season"
+            htmlFor="capsule-season-filter"
           >
-            <option value="all">All Seasons</option>
-            {Object.values(Season)
-              .filter(season => season !== Season.ALL_SEASON)
-              .map(season => (
-                <option key={season} value={season}>
-                  {season.charAt(0).toUpperCase() + season.slice(1)}
-                </option>
-              ))}
-          </Select>
+            <Select
+              id="capsule-season-filter"
+              value={seasonFilter}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
+            >
+              <option value="all">All Seasons</option>
+              {Object.values(Season)
+                .filter(season => season !== Season.ALL_SEASON)
+                .map(season => (
+                  <option key={season} value={season}>
+                    {season.charAt(0).toUpperCase() + season.slice(1)}
+                  </option>
+                ))}
+            </Select>
+          </FormField>
         </FilterGroup>
 
         <FilterGroup>
-          <FilterLabel htmlFor="capsule-scenario-filter">Scenario</FilterLabel>
-          <Select
-            id="capsule-scenario-filter"
-            value={scenarioFilter}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setScenarioFilter(e.target.value)}
+          <FormField
+            label="Scenario"
+            htmlFor="capsule-scenario-filter"
           >
-            <option value="all">All Scenarios</option>
-            {loadingScenarios ? (
-              <option disabled>Loading scenarios...</option>
-            ) : (
-              scenarioOptions.map(scenario => (
-                <option key={scenario} value={scenario}>
-                  {scenario}
-                </option>
-              ))
-            )}
-          </Select>
+            <Select
+              id="capsule-scenario-filter"
+              value={scenarioFilter}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setScenarioFilter(e.target.value)}
+            >
+              <option value="all">All Scenarios</option>
+              {loadingScenarios ? (
+                <option disabled>Loading scenarios...</option>
+              ) : (
+                scenarioOptions.map(scenario => (
+                  <option key={scenario} value={scenario}>
+                    {scenario}
+                  </option>
+                ))
+              )}
+            </Select>
+          </FormField>
         </FilterGroup>
       </FiltersContainer>
 

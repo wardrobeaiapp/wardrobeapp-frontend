@@ -76,25 +76,6 @@ export const FormRow = styled.div`
   }
 `;
 
-export const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${formTokens.spacing.sm};
-`;
-
-export const Label = styled.label`
-  font-size: ${formTokens.typography.fontSizes.sm};
-  font-weight: ${formTokens.typography.fontWeights.semibold};
-  color: ${formTokens.colors.text};
-  margin-bottom: ${formTokens.spacing.xs};
-  display: block;
-  
-  &.required::after {
-    content: ' *';
-    color: ${formTokens.colors.error};
-  }
-`;
-
 export const Input = styled.input`
   width: 100%;
   padding: ${formTokens.form.inputPadding};
@@ -123,27 +104,6 @@ export const Select = styled.select`
   
   &:focus {
     ${createFocusStyles()}
-  }
-`;
-
-export const Textarea = styled.textarea`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 80px;
-  transition: border-color 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-  
-  &::placeholder {
-    color: #9ca3af;
   }
 `;
 
@@ -183,95 +143,3 @@ export const ButtonContainer = styled.div`
   border-top: 1px solid #e5e7eb;
 `;
 
-
-export const TagsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-`;
-
-export const Tag = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background-color: #e5e7eb;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-`;
-
-// Duplicate ButtonContainer removed
-
-export const ErrorMessage = styled.p`
-  color: #ef4444;
-  font-size: 0.875rem;
-  margin: 0.25rem 0 0;
-`;
-
-export const FormScreen = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  width: 100%;
-`;
-
-export const ScreenTitle = styled.h2`
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin: 0 0 1rem;
-  text-align: center;
-`;
-
-export const NavigationButtons = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 1rem;
-`;
-
-export const ImagePreviewContainer = styled.div`
-  margin-top: 0.5rem;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-export const ImagePreview = styled.img`
-  max-width: 100%;
-  max-height: 200px;
-  border-radius: 0.5rem;
-  object-fit: cover;
-  margin-bottom: 0.5rem;
-`;
-
-export const ImageUploadButtons = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-top: 0.5rem;
-  width: 100%;
-`;
-
-export const FileInputLabel = styled.label`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 1rem;
-  background-color: #f3f4f6;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  flex: 1;
-  text-align: center;
-  
-  &:hover {
-    background-color: #e5e7eb;
-  }
-`;
-
-export const FileInput = styled.input`
-  display: none;
-`;

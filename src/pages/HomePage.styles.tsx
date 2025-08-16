@@ -47,12 +47,6 @@ export const FilterGroup = styled.div`
   gap: 0.5rem;
 `;
 
-export const FilterLabel = styled.label`
-  font-weight: 500;
-  font-size: 0.875rem;
-  color: #4b5563;
-`;
-
 export const Select = styled.select`
   padding: 0.75rem 1rem;
   border: 1px solid #e5e7eb;
