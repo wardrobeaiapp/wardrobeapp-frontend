@@ -6,7 +6,7 @@ import HomePageModals from '../components/features/wardrobe/modals/HomePageModal
 import { useHomePageData, TabType } from '../hooks/useHomePageData';
 import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
-import { PageTitle } from '../components/common/Typography/PageTitle';
+import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
 import {
   PageHeader,
   TabsContainer,
@@ -125,7 +125,10 @@ const HomePage: React.FC = () => {
       <PageContainer>
         
         <PageHeader>
-          <PageTitle>My Wardrobe</PageTitle>
+          <CommonPageHeader 
+            title="My Wardrobe"
+            titleSize="lg"
+          />
           {activeTab === TabType.ITEMS && (
             <Button size="lg" onClick={handleAddItem}>
               <MdAdd />

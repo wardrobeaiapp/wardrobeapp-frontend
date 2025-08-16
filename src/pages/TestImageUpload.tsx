@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { PageTitle } from '../components/common/Typography/PageTitle';
+import { PageHeader } from '../components/common/Typography/PageHeader';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -121,7 +121,10 @@ const TestImageUpload: React.FC = () => {
   
   return (
     <Container>
-      <PageTitle>Image Upload Test</PageTitle>
+      <PageHeader 
+        title="Image Upload Test" 
+        style={{ marginBottom: '2rem' }}
+      />
       
       <Form>
         <input 
