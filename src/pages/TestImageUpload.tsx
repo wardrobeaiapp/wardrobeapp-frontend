@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { PageTitle } from '../components/common/Typography/PageTitle';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -9,10 +10,6 @@ const Container = styled.div`
   padding: 2rem;
 `;
 
-const Title = styled.h1`
-  margin-bottom: 2rem;
-  color: #333;
-`;
 
 const Form = styled.div`
   display: flex;
@@ -124,7 +121,7 @@ const TestImageUpload: React.FC = () => {
   
   return (
     <Container>
-      <Title>Test Image Upload</Title>
+      <PageTitle>Image Upload Test</PageTitle>
       
       <Form>
         <input 
