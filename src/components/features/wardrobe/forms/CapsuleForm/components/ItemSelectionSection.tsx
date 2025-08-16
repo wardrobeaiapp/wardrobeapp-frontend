@@ -1,12 +1,9 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../../../types';
-import {
-  FormGroup,
-  Label
-} from '../CapsuleForm.styles';
 import Button from '../../../../../common/Button';
-import MainItemSelector from '../../../capsule/MainItemSelector';
-import SelectedItemsList from '../../../capsule/SelectedItemsList';
+import FormField from '../../../../../common/Form/FormField';
+import MainItemSelector from '../../../shared/MainItemSelector';
+import SelectedItemsList from '../../../shared/SelectedItemsList';
 
 export interface ItemSelectionSectionProps {
   // Main item props
@@ -35,21 +32,27 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
   
   return (
     <>
-      <FormGroup>
-        <Label>Main Item</Label>
+      <FormField 
+        label="Main Item"
+        helpText="Select the primary item for this capsule"
+      >
         <MainItemSelector
           mainItemId={mainItemId}
           availableItems={availableItems}
           onMainItemChange={onMainItemChange}
           onSelectClick={onOpenMainItemModal}
         />
-      </FormGroup>
+      </FormField>
 
-      <FormGroup>
-        <Label>Selected Items ({supportingItemsCount})</Label>
-        <Button variant="primary" type="button" onClick={onOpenItemsModal}>
-          Select Items
-        </Button>
+      <FormField 
+        label={`Selected Items (${supportingItemsCount})`}
+        helpText="Add supporting items to complete your capsule"
+      >
+        <div style={{ marginBottom: '0.5rem' }}>
+          <Button variant="primary" fullWidth type="button" onClick={onOpenItemsModal}>
+            Select Items
+          </Button>
+        </div>
         
         <SelectedItemsList
           selectedItems={selectedItems}
@@ -57,7 +60,7 @@ const ItemSelectionSection: React.FC<ItemSelectionSectionProps> = ({
           onItemRemove={onItemChange}
           mainItemId={mainItemId}
         />
-      </FormGroup>
+      </FormField>
     </>
   );
 };

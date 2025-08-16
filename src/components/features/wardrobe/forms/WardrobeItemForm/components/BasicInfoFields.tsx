@@ -1,13 +1,8 @@
 import React from 'react';
 import { ItemCategory } from '../../../../../../types';
 import { getSubcategoryOptions } from '../utils/formHelpers';
-import {
-  FormRow,
-  FormGroup,
-  Label,
-  Input,
-  Select
-} from '../WardrobeItemForm.styles';
+import { FormRow, Input, Select } from '../WardrobeItemForm.styles';
+import { FormField } from '../../../../../forms/common/FormField';
 
 interface BasicInfoFieldsProps {
   name: string;
@@ -37,18 +32,16 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   return (
     <>
       <FormRow>
-        <FormGroup>
-          <Label>Item Name</Label>
+        <FormField label="Item Name" error={errors.name}>
           <Input
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Enter item name (optional)"
           />
-        </FormGroup>
+        </FormField>
         
-        <FormGroup>
-          <Label>Category *</Label>
+        <FormField label="Category *" error={errors.category} required>
           <Select
             value={category}
             onChange={(e) => onCategoryChange(e.target.value as ItemCategory | '')}
@@ -62,17 +55,13 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
             <option value={ItemCategory.ACCESSORY}>Accessory</option>
             <option value={ItemCategory.OTHER}>Other</option>
           </Select>
-          {errors.category && (
-            <div style={{ color: 'red', fontSize: '0.875rem' }}>
-              {errors.category}
-            </div>
-          )}
-        </FormGroup>
+        </FormField>
       </FormRow>
 
-      <FormRow style={{ marginTop: '1.5rem' }}>
-        <FormGroup>
-          <Label>Subcategory</Label>
+      <FormRow style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+        <FormField 
+          label="Subcategory" 
+        >
           <Select
             value={subcategory}
             onChange={(e) => onSubcategoryChange(e.target.value)}
@@ -85,21 +74,16 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
               </option>
             ))}
           </Select>
-        </FormGroup>
-        <FormGroup>
-          <Label>Color *</Label>
+        </FormField>
+        
+        <FormField label="Color *" error={errors.color} required>
           <Input
             type="text"
             value={color}
             onChange={(e) => onColorChange(e.target.value)}
             placeholder="Enter color"
           />
-          {errors.color && (
-            <div style={{ color: 'red', fontSize: '0.875rem' }}>
-              {errors.color}
-            </div>
-          )}
-        </FormGroup>
+        </FormField>
       </FormRow>
     </>
   );

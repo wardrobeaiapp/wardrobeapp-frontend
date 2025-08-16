@@ -15,9 +15,9 @@ import BasicInfoSection from './components/BasicInfoSection';
 import ItemSelectionSection from './components/ItemSelectionSection';
 import FormActions from './components/FormActions';
 
-// Existing components
-import ScenarioSelector from '../../capsule/ScenarioSelector';
-import SeasonSelector from '../../capsule/SeasonSelector';
+// Shared components
+import ScenarioSelector from '../../shared/ScenarioSelector';
+import SeasonSelector from '../../shared/SeasonSelector';
 import OutfitItemsSelectionModal from '../../modals/OutfitItemsSelectionModal';
 
 // Re-export the interface for external use
@@ -164,7 +164,7 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
         {/* ✅ Basic Info Section */}
         <BasicInfoSection
           name={name}
-          setName={setName}
+          onNameChange={setName}
         />
 
         {/* ✅ Scenario Selection */}

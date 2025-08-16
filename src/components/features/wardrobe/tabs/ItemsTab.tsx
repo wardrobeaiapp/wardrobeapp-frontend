@@ -3,10 +3,10 @@ import { MdSearch } from 'react-icons/md';
 import { ItemCategory, Season, WardrobeItem } from '../../../../types';
 import WardrobeItemCard from '../cards/WardrobeItemCard';
 import Loader from '../../../common/Loader';
+import { FormField } from '../../../common/Form';
 import {
   FiltersContainer,
   FilterGroup,
-  FilterLabel,
   Select,
   ItemsGrid,
   EmptyState,
@@ -14,8 +14,8 @@ import {
   EmptyStateText,
   ErrorContainer,
   SearchContainer,
-  SearchInput,
-  SearchIcon
+  SearchIcon,
+  SearchInput
 } from '../../../../pages/HomePage.styles';
 
 interface ItemsTabProps {
@@ -83,51 +83,63 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
         <>
           <FiltersContainer>
             <FilterGroup>
-              <FilterLabel htmlFor="search-input">Search</FilterLabel>
-              <SearchContainer>
-                <SearchIcon><MdSearch /></SearchIcon>
-                <SearchInput
-                  id="search-input"
-                  type="text"
-                  placeholder="Search items..."
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                />
-              </SearchContainer>
+              <FormField
+                label="Search items"
+                htmlFor="search-input"
+              >
+                <SearchContainer>
+                  <SearchIcon><MdSearch /></SearchIcon>
+                  <SearchInput
+                    id="search-input"
+                    type="text"
+                    placeholder="Type to search..."
+                    value={searchQuery}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  />
+                </SearchContainer>
+              </FormField>
             </FilterGroup>
             
             <FilterGroup>
-              <FilterLabel htmlFor="category-filter">Category</FilterLabel>
-              <Select
-                id="category-filter"
-                value={categoryFilter}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategoryFilter(e.target.value)}
+              <FormField
+                label="Category"
+                htmlFor="category-filter"
               >
-                <option value="all">All Categories</option>
-                {Object.values(ItemCategory).map(category => (
-                  <option key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </option>
-                ))}
-              </Select>
-            </FilterGroup>
-            
-            <FilterGroup>
-              <FilterLabel htmlFor="season-filter">Season</FilterLabel>
-              <Select
-                id="season-filter"
-                value={seasonFilter}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
-              >
-                <option value="all">All Seasons</option>
-                {Object.values(Season)
-                  .filter(season => season !== Season.ALL_SEASON)
-                  .map(season => (
-                    <option key={season} value={season}>
-                      {season.charAt(0).toUpperCase() + season.slice(1)}
+                <Select
+                  id="category-filter"
+                  value={categoryFilter}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setCategoryFilter(e.target.value)}
+                >
+                  <option value="all">All Categories</option>
+                  {Object.values(ItemCategory).map(category => (
+                    <option key={category} value={category}>
+                      {category.charAt(0).toUpperCase() + category.slice(1)}
                     </option>
                   ))}
-              </Select>
+                </Select>
+              </FormField>
+            </FilterGroup>
+            
+            <FilterGroup>
+              <FormField
+                label="Season"
+                htmlFor="season-filter"
+              >
+                <Select
+                  id="season-filter"
+                  value={seasonFilter}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
+                >
+                  <option value="all">All Seasons</option>
+                  {Object.values(Season)
+                    .filter(season => season !== Season.ALL_SEASON)
+                    .map(season => (
+                      <option key={season} value={season}>
+                        {season.charAt(0).toUpperCase() + season.slice(1)}
+                      </option>
+                    ))}
+                </Select>
+              </FormField>
             </FilterGroup>
           </FiltersContainer>
 

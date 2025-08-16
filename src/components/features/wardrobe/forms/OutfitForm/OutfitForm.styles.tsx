@@ -8,16 +8,6 @@ export const FormContainer = styled.div`
   padding: 0;
 `;
 
-export const FormRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
 export const ThreeColumnRow = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -42,46 +32,12 @@ export const FormGroup = styled.div`
   gap: 0.5rem;
 `;
 
-export const Label = styled.label`
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 0.25rem;
-  display: block;
-  
-  &.required::after {
-    content: ' *';
-    color: #ef4444;
-  }
-`;
-
 export const Input = styled.input`
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
-  transition: border-color 0.2s ease;
-  
-  &:focus {
-    outline: none;
-    border-color: #8b5cf6;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-  
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
-export const TextArea = styled.textarea`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 80px;
   transition: border-color 0.2s ease;
   
   &:focus {
@@ -109,87 +65,6 @@ export const Select = styled.select`
     border-color: #8b5cf6;
     box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
   }
-`;
-
-export const ItemsModal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  z-index: 60;
-`;
-
-export const ItemsModalContent = styled.div`
-  background-color: white;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  max-width: 800px;
-  width: 100%;
-  max-height: 90vh;
-  overflow-y: auto;
-`;
-
-export const ItemsModalHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-export const ItemsModalTitle = styled.h3`
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0;
-`;
-
-export const CloseButton = styled.button`
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #6b7280;
-  
-  &:hover {
-    color: #1f2937;
-  }
-`;
-
-export const FilterContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
-`;
-
-export const FilterGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-`;
-
-export const FilterLabel = styled.label`
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #4b5563;
-`;
-
-export const FilterSelect = styled.select`
-  padding: 0.375rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-  min-width: 120px;
 `;
 
 export const FilterInput = styled.input`
@@ -240,13 +115,6 @@ export const ItemName = styled.div`
 export const ItemCategory = styled.div`
   font-size: 0.75rem;
   color: #6b7280;
-`;
-
-export const NoItemsMessage = styled.div`
-  color: #6b7280;
-  font-size: 0.875rem;
-  text-align: center;
-  padding: 1rem 0;
 `;
 
 export const SelectedItemBadge = styled.div`
@@ -374,25 +242,6 @@ export const SelectionIndicator = styled.div`
   font-size: 0.75rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 2;
-`;
-
-export const FiltersContainer = styled.div`
-  margin-bottom: 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.375rem;
-  padding: 1rem;
-  background-color: #f9fafb;
-`;
-
-export const FilterRow = styled.div`
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-`;
-
-export const SearchInput = styled(FilterInput)`
-  width: 100%;
-  margin-bottom: 0.75rem;
 `;
 
 export const ResultsCount = styled.div`

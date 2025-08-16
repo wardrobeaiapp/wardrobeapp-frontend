@@ -2,14 +2,19 @@ import React from 'react';
 import { WardrobeItem, Season } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import { Modal, ModalAction } from '../../../common/Modal';
+// Import shared modal styles
 import {
-  ItemImageContainer,
-  ItemImage,
-  PlaceholderImage,
-  ItemDetails,
   DetailRow,
   DetailLabel,
   DetailValue,
+  ItemImage,
+  ItemImageContainer,
+  PlaceholderImage
+} from './modalCommon.styles';
+
+// Import component-specific styles
+import {
+  ItemDetails,
   TagsContainer,
   Tag
 } from './ItemViewModal.styles';

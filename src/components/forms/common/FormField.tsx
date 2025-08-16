@@ -6,6 +6,7 @@ export interface FormFieldProps {
   label?: string;
   required?: boolean;
   error?: string;
+  helpText?: string;
   children: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -17,25 +18,25 @@ const FieldContainer = styled.div`
   gap: ${formTokens.spacing.sm};
 `;
 
-const Label = styled.label<{ required?: boolean }>`
+const Label = styled.label`
   font-size: ${formTokens.typography.fontSizes.sm};
   font-weight: ${formTokens.typography.fontWeights.semibold};
   color: ${formTokens.colors.text};
   margin-bottom: ${formTokens.spacing.xs};
   display: block;
-  
-  ${props => props.required && `
-    &::after {
-      content: ' *';
-      color: ${formTokens.colors.error};
-    }
-  `}
 `;
 
 const ErrorMessage = styled.div`
   color: ${formTokens.colors.error};
   font-size: ${formTokens.typography.fontSizes.xs};
-  margin: 0;
+  margin: ${formTokens.spacing.xs} 0 0;
+`;
+
+const HelpText = styled.div`
+  color: ${formTokens.colors.textMuted};
+  font-size: ${formTokens.typography.fontSizes.xs};
+  margin: ${formTokens.spacing.xs} 0 0;
+  font-style: italic;
 `;
 
 // Base input styles that can be applied to form elements
@@ -113,6 +114,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   label,
   required,
   error,
+  helpText,
   children,
   className,
   style
@@ -120,16 +122,13 @@ export const FormField: React.FC<FormFieldProps> = ({
   return (
     <FieldContainer className={className} style={style}>
       {label && (
-        <Label required={required}>
+        <Label>
           {label}
         </Label>
       )}
       {children}
-      {error && (
-        <ErrorMessage>{error}</ErrorMessage>
-      )}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {helpText && !error && <HelpText>{helpText}</HelpText>}
     </FieldContainer>
   );
 };
-
-
