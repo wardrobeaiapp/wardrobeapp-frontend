@@ -19,18 +19,13 @@ export type { FormRowProps } from './FormRow';
 export { default as Checkbox, type CheckboxProps } from './Checkbox';
 export { default as CheckboxGroup, type CheckboxGroupProps, type CheckboxOption } from './CheckboxGroup';
 
+export { default as FormTextarea } from './FormTextarea';
+export type { FormTextareaProps } from './FormTextarea';
+
 // Form validation components
 // TODO: Uncomment when these components are implemented
 // export { default as FormError } from './FormError';
 // export type { FormErrorProps } from './FormError';
-
-// Form input components
-// TODO: Uncomment when these components are implemented
-// export { default as FormSelect } from './FormSelect';
-// export type { FormSelectProps } from './FormSelect';
-
-// export { default as FormTextarea } from './FormTextarea';
-// export type { FormTextareaProps } from './FormTextarea';
 
 // export { default as FormCheckbox } from './FormCheckbox';
 // export type { FormCheckboxProps } from './FormCheckbox';
