@@ -10,7 +10,7 @@ import {
 } from '../../../../pages/ProfilePage.styles';
 import { SectionProps } from './types';
 import { WardrobeGoalsData } from '../../../../types';
-import { wardrobeGoalOptionsWithDetails } from '../../../../data/onboardingOptions';
+import { wardrobeGoalOptionsWithDetails, wardrobeGoalsStepContent } from '../../../../data/onboardingOptions';
 import { useStyleProfile } from '../context/StyleProfileContext';
 import Button from '../../../common/Button';
 
@@ -112,6 +112,7 @@ const WardrobeGoalsSection: React.FC<WardrobeGoalsSectionProps> = ({
 
   return (
     <>
+      <SectionDivider>{wardrobeGoalsStepContent.profileSection.title}</SectionDivider>
       <FormGroup>
         <Label>What are your main wardrobe goals? (Select all that apply)</Label>
         {wardrobeGoalOptionsWithDetails.map((option) => (
