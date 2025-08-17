@@ -27,6 +27,52 @@ export const Tab = styled.button<{ $active: boolean }>`
   
   &:hover {
     color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[600])};
+  }`;
+
+export const TooltipContainer = styled.div`
+  position: relative;
+  display: inline-block;
+  
+  @media (hover: hover) {
+    &:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+  
+  @media (hover: none) {
+    &:active .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+`;
+
+export const TooltipText = styled.span`
+  visibility: hidden;
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  text-align: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s, visibility 0.2s;
+  margin-bottom: 8px;
+  width: max-content;
+  max-width: 250px;
+  pointer-events: none;
+  
+  @media (max-width: 480px) {
+    font-size: 0.7rem;
+    white-space: normal;
+    width: 200px;
   }
   
   &:focus {

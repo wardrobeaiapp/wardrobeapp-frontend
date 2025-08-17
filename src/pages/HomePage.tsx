@@ -7,10 +7,13 @@ import { useHomePageData, TabType } from '../hooks/useHomePageData';
 import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
+import { theme } from '../styles/theme';
 import {
   PageHeader,
   TabsContainer,
   Tab,
+  TooltipContainer,
+  TooltipText
 } from './HomePage.styles';
 import Button from '../components/common/Button';
 import PageContainer from '../components/layout/PageContainer';
@@ -125,15 +128,60 @@ const HomePage: React.FC = () => {
       <PageContainer>
         
         <PageHeader>
-          <CommonPageHeader 
-            title="My Wardrobe"
-            titleSize="lg"
-          />
+          <div style={{ marginBottom: '0' }}>
+            <CommonPageHeader 
+              title="My Wardrobe"
+              description="Organize and optimize your wardrobe collection"
+              titleSize="lg"
+            />
+          </div>
           {activeTab === TabType.ITEMS && (
-            <Button size="lg" onClick={handleAddItem}>
-              <MdAdd />
-              Add Item
-            </Button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Button 
+                size="lg" 
+                onClick={handleAddItem} 
+                style={{ 
+                  height: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 16px'
+                }}
+              >
+                <MdAdd />
+                Add Item
+              </Button>
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                gap: '4px',
+                height: '100%',
+                justifyContent: 'flex-start'
+              }}>
+                <Button 
+                  size="lg" 
+                  variant="secondary" 
+                  onClick={() => {}}
+                  style={{ 
+                    whiteSpace: 'nowrap',
+                    height: '40px',
+                    padding: '0 16px'
+                  }}
+                >
+                  Mark Wardrobe Complete
+                </Button>
+                <span style={{ 
+                  fontSize: '0.75rem',
+                  color: theme.colors.gray[500],
+                  textAlign: 'center',
+                  maxWidth: '200px',
+                  lineHeight: '1.2'
+                }}>
+                  Mark your wardrobe as complete to start tracking new purchases
+                </span>
+              </div>
+            </div>
           )}
           {activeTab === TabType.OUTFITS && (
             <Button size="lg" onClick={() => setIsAddOutfitModalOpen(true)}>
