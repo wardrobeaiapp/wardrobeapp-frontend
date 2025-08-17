@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { formTokens, createFocusStyles, createButtonStyles } from '../../../../../styles/tokens/forms';
+import { formTokens, createButtonStyles } from '../../../../../styles/tokens/forms';
 
 // Form Container Styles
 export const FormContainer = styled.div`
@@ -65,81 +65,13 @@ export const FileInfo = styled.p`
   margin: 0;
 `;
 
-// Form Layout
-export const FormRow = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${formTokens.spacing.lg};
-  
-  @media (max-width: ${formTokens.form.breakpoints.mobile}) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-export const Input = styled.input`
-  width: 100%;
-  padding: ${formTokens.form.inputPadding};
-  border: 1px solid ${formTokens.colors.border};
-  border-radius: ${formTokens.borderRadius.base};
-  font-size: ${formTokens.typography.fontSizes.sm};
-  transition: ${formTokens.transitions.colors};
-  
-  &:focus {
-    ${createFocusStyles()}
-  }
-  
-  &::placeholder {
-    color: ${formTokens.colors.textPlaceholder};
-  }
-`;
-
-export const Select = styled.select`
-  width: 100%;
-  padding: ${formTokens.form.inputPadding};
-  border: 1px solid ${formTokens.colors.border};
-  border-radius: ${formTokens.borderRadius.base};
-  font-size: ${formTokens.typography.fontSizes.sm};
-  background-color: ${formTokens.colors.background.primary};
-  transition: ${formTokens.transitions.colors};
-  
-  &:focus {
-    ${createFocusStyles()}
-  }
-`;
-
-export const CheckboxGroup = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-top: 0.5rem;
-`;
-
-export const CheckboxItem = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-export const CheckboxInput = styled.input`
-  width: 16px;
-  height: 16px;
-  accent-color: #8b5cf6;
-`;
-
-export const CheckboxLabel = styled.label`
-  font-size: 14px;
-  color: #374151;
-  cursor: pointer;
-  user-select: none;
-`;
-
 // Button Container and Buttons
 export const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1rem;
-  padding-top: 0.5rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #e5e7eb;
 `;
 

@@ -8,8 +8,16 @@ export type { FormFieldProps } from './FormField';
 export { default as FormLabel } from './FormLabel';
 export type { FormLabelProps } from './FormLabel';
 
+export { FormSelect, type FormSelectProps } from './FormSelect';
+
 export { default as FormInput } from './FormInput';
 export type { FormInputProps } from './FormInput';
+
+export { default as FormRow } from './FormRow';
+export type { FormRowProps } from './FormRow';
+
+export { default as Checkbox, type CheckboxProps } from './Checkbox';
+export { default as CheckboxGroup, type CheckboxGroupProps, type CheckboxOption } from './CheckboxGroup';
 
 // Form validation components
 // TODO: Uncomment when these components are implemented

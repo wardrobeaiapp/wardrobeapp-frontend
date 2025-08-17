@@ -119,15 +119,35 @@ export const FormField: React.FC<FormFieldProps> = ({
   className,
   style
 }) => {
+  // Generate a unique ID for the input if it doesn't have one
+  const id = React.useId();
+  
+  // Clone the child element to ensure it has proper ID and aria attributes
+  const enhancedChildren = React.Children.map(children, (child) => {
+    if (React.isValidElement(child)) {
+      const childElement = child as React.ReactElement<{ id?: string }>;
+      const childProps = {
+        id: childElement.props.id || id,
+        'aria-invalid': error ? 'true' : undefined,
+        'aria-required': required ? 'true' : undefined,
+        'aria-describedby': error ? `${id}-error` : undefined,
+      };
+      
+      return React.cloneElement(childElement, childProps);
+    }
+    return child;
+  });
+
   return (
     <FieldContainer className={className} style={style}>
       {label && (
-        <Label>
+        <Label htmlFor={id}>
           {label}
+          {required && <span aria-hidden="true">*</span>}
         </Label>
       )}
-      {children}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {enhancedChildren}
+      {error && <ErrorMessage id={`${id}-error`}>{error}</ErrorMessage>}
       {helpText && !error && <HelpText>{helpText}</HelpText>}
     </FieldContainer>
   );

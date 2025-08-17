@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { Season } from '../../../../../../types';
 import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
-import { FormRow, Input, CheckboxGroup, CheckboxItem, CheckboxInput, CheckboxLabel } from '../WardrobeItemForm.styles';
-import { FormField } from '../../../../../forms/common/FormField';
+import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup } from '../../../../../../components/common/Form';
 
 interface DetailsFieldsProps {
   material: string;
@@ -39,40 +38,48 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     <>
       <FormRow>
         <FormField label="Material" error={errors.material}>
-          <Input
+          <FormInput
             type="text"
             value={material}
-            onChange={(e) => onMaterialChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onMaterialChange(e.target.value)}
             placeholder="Enter material"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
         
         <FormField label="Brand" error={errors.brand}>
-          <Input
+          <FormInput
             type="text"
             value={brand}
-            onChange={(e) => onBrandChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onBrandChange(e.target.value)}
             placeholder="Enter brand"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
       </FormRow>
 
       <FormRow style={{ marginTop: '1.5rem' }}>
         <FormField label="Size" error={errors.size}>
-          <Input
+          <FormInput
             type="text"
             value={size}
-            onChange={(e) => onSizeChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onSizeChange(e.target.value)}
             placeholder="e.g., S, M, L, XL, 32, 10"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
         
         <FormField label="Purchase Price" error={errors.price}>
-          <Input
+          <FormInput
             type="number"
             value={price}
-            onChange={(e) => onPriceChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onPriceChange(e.target.value)}
             placeholder="Enter price"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
       </FormRow>
@@ -82,35 +89,32 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
         error={errors.seasons}
         style={{ marginTop: '1.5rem' }}
       >
-        <CheckboxGroup>
-          {AVAILABLE_SEASONS.map((season) => (
-            <CheckboxItem key={season}>
-              <CheckboxInput
-                type="checkbox"
-                id={`season-${season}`}
-                checked={seasons.includes(season as Season)}
-                onChange={() => onToggleSeason(season as Season)}
-              />
-              <CheckboxLabel htmlFor={`season-${season}`}>
-                {getSeasonDisplayName(season)}
-              </CheckboxLabel>
-            </CheckboxItem>
-          ))}
-        </CheckboxGroup>
+        <CheckboxGroup
+          options={AVAILABLE_SEASONS.map(season => ({
+            value: season as Season,
+            label: getSeasonDisplayName(season)
+          }))}
+          value={seasons}
+          onChange={(selectedSeasons) => {
+            // Find which season was toggled
+            const allSeasons = new Set([...seasons, ...selectedSeasons]);
+            const changedSeason = Array.from(allSeasons).find(
+              season => seasons.includes(season) !== selectedSeasons.includes(season)
+            );
+            
+            if (changedSeason) {
+              onToggleSeason(changedSeason);
+            }
+          }}
+        />
       </FormField>
 
       <FormField style={{ marginTop: '1.5rem' }}>
-        <CheckboxItem>
-          <CheckboxInput
-            type="checkbox"
-            id="wishlist"
-            checked={isWishlistItem}
-            onChange={(e) => onWishlistToggle(e.target.checked)}
-          />
-          <CheckboxLabel htmlFor="wishlist">
-            Add to wishlist
-          </CheckboxLabel>
-        </CheckboxItem>
+        <Checkbox
+          label="Add to wishlist"
+          checked={isWishlistItem}
+          onChange={(e) => onWishlistToggle(e.target.checked)}
+        />
       </FormField>
     </>
   );
