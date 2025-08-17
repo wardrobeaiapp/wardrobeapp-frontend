@@ -172,7 +172,7 @@ const InputContainer = styled.div<{ $isFullWidth?: boolean }>`
 
 const StyledInput = styled.input<StyledInputProps>`
   width: 100%;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
+  border-radius: ${({ theme }) => theme.borderRadius.md};
   color: ${({ theme }) => theme.colors.textPrimary};
   transition: all 0.2s ease;
   outline: none;

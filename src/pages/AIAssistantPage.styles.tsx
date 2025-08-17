@@ -169,26 +169,6 @@ export const InputLabel = styled.label`
   margin-bottom: 0.5rem;
 `;
 
-export const TextInput = styled.input`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-  
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
 // Select dropdown for Season and Scenario
 export const Select = styled.select`
   width: 100%;
@@ -314,16 +294,6 @@ export const DashboardContainer = styled.div`
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-`;
-
-export const DashboardHeader = styled.div`
-  margin-bottom: 2rem;
-`;
-
-export const DashboardSubtitle = styled.p`
-  color: #6b7280;
-  font-size: 1rem;
-  margin: 0;
 `;
 
 export const DashboardTopBar = styled.div`
