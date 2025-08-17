@@ -4,10 +4,10 @@ import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../typ
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
 import { PageHeader } from '../../../../components/common/Typography/PageHeader';
+import { FormField, FormSelect } from '../../../common/Form';
 import {
   DashboardContainer,
   DashboardTopBar,
-  FilterDropdown,
   StatsGrid,
   StatCard,
   StatIcon,
@@ -71,34 +71,48 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
             titleSize="lg"
           />
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <FilterDropdown 
-            value={activityFilter} 
-            onChange={(e) => onFilterChange(e.target.value)}
-          >
-            <option value="all">Show All</option>
-            <option value="check">AI Checks</option>
-            <option value="recommendation">AI Recommendations</option>
-          </FilterDropdown>
-          <FilterDropdown 
-            value={checkStatusFilter} 
-            onChange={(e) => onCheckStatusFilterChange(e.target.value)}
-          >
-            <option value="all">All Status</option>
-            <option value={WishlistStatus.APPROVED}>Approved</option>
-            <option value={WishlistStatus.POTENTIAL_ISSUE}>Potential Issue</option>
-            <option value={WishlistStatus.NOT_REVIEWED}>Not Reviewed</option>
-          </FilterDropdown>
-          <FilterDropdown 
-            value={userActionFilter} 
-            onChange={(e) => onUserActionFilterChange(e.target.value)}
-          >
-            <option value="all">All Actions</option>
-            <option value={UserActionStatus.SAVED}>Saved</option>
-            <option value={UserActionStatus.DISMISSED}>Dismissed</option>
-            <option value={UserActionStatus.PENDING}>Pending</option>
-            <option value={UserActionStatus.APPLIED}>Applied</option>
-          </FilterDropdown>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end' }}>
+          <FormField label="Activity Type" htmlFor="activity-filter" style={{ minWidth: '200px' }}>
+            <FormSelect
+              id="activity-filter"
+              value={activityFilter}
+              onChange={(e) => onFilterChange(e.target.value)}
+              size="medium"
+            >
+              <option value="all">Show All</option>
+              <option value="check">AI Checks</option>
+              <option value="recommendation">AI Recommendations</option>
+            </FormSelect>
+          </FormField>
+          
+          <FormField label="Status" htmlFor="status-filter" style={{ minWidth: '200px' }}>
+            <FormSelect
+              id="status-filter"
+              value={checkStatusFilter}
+              onChange={(e) => onCheckStatusFilterChange(e.target.value)}
+              size="medium"
+            >
+              <option value="all">All Status</option>
+              <option value={WishlistStatus.APPROVED}>Approved</option>
+              <option value={WishlistStatus.POTENTIAL_ISSUE}>Potential Issue</option>
+              <option value={WishlistStatus.NOT_REVIEWED}>Not Reviewed</option>
+            </FormSelect>
+          </FormField>
+          
+          <FormField label="Actions" htmlFor="action-filter" style={{ minWidth: '200px' }}>
+            <FormSelect
+              id="action-filter"
+              value={userActionFilter}
+              onChange={(e) => onUserActionFilterChange(e.target.value)}
+              size="medium"
+            >
+              <option value="all">All Actions</option>
+              <option value={UserActionStatus.SAVED}>Saved</option>
+              <option value={UserActionStatus.DISMISSED}>Dismissed</option>
+              <option value={UserActionStatus.PENDING}>Pending</option>
+              <option value={UserActionStatus.APPLIED}>Applied</option>
+            </FormSelect>
+          </FormField>
         </div>
       </DashboardTopBar>
 

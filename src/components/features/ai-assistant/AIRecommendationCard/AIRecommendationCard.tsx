@@ -9,12 +9,10 @@ import {
   CardDescription,
   CardIcon,
   DropdownContainer,
-  InputSection,
-  InputLabel,
-  Select,
   ButtonGroup,
 } from '../../../../pages/AIAssistantPage.styles';
 import Button from '../../../common/Button';
+import { FormField, FormSelect } from '../../../common/Form';
 
 interface AIRecommendationCardProps {
   selectedSeason: string;
@@ -61,29 +59,32 @@ const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
 
         {/* Season and Scenario Dropdowns */}
         <DropdownContainer>
-          <InputSection>
-            <InputLabel>Season</InputLabel>
-            <Select
+          <FormField label="Season" htmlFor="season-select">
+            <FormSelect
+              id="season-select"
               value={selectedSeason}
               onChange={(e) => onSeasonChange(e.target.value)}
+              style={{ width: '100%' }}
             >
               <option value="all">All Seasons</option>
               <option value={Season.SPRING}>Spring</option>
               <option value={Season.SUMMER}>Summer</option>
               <option value={Season.FALL}>Fall</option>
               <option value={Season.WINTER}>Winter</option>
-            </Select>
-          </InputSection>
+            </FormSelect>
+          </FormField>
           
-          <InputSection>
-            <InputLabel>Scenario</InputLabel>
-            <Select
+          <FormField label="Scenario" htmlFor="scenario-select">
+            <FormSelect
+              id="scenario-select"
               value={selectedScenario}
               onChange={(e) => onScenarioChange(e.target.value)}
+              style={{ width: '100%' }}
+              disabled={loadingScenarios}
             >
               <option value="all">All Scenarios</option>
               {loadingScenarios ? (
-                <option disabled>Loading scenarios...</option>
+                <option>Loading scenarios...</option>
               ) : (
                 scenarioOptions.map(scenario => (
                   <option key={scenario} value={scenario}>
@@ -91,8 +92,8 @@ const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
                   </option>
                 ))
               )}
-            </Select>
-          </InputSection>
+            </FormSelect>
+          </FormField>
         </DropdownContainer>
         
         {/* Error Message */}

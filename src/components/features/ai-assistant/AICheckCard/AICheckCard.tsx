@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSearch, FaCloudUploadAlt } from 'react-icons/fa';
+import { FaSearch, FaCloudUploadAlt, FaLink } from 'react-icons/fa';
 import {
   AICard,
   CardContent,
@@ -12,12 +12,11 @@ import {
   UploadIcon,
   UploadText,
   ControlsArea,
-  InputSection,
-  InputLabel,
-  TextInput,
   ButtonGroup,
 } from '../../../../pages/AIAssistantPage.styles';
 import Button from '../../../common/Button';
+import { FormField, FormInput } from '../../../common/Form';
+
 
 interface AICheckCardProps {
   imageLink: string;
@@ -37,7 +36,6 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
   onCheckItem,
   onOpenWishlistModal,
   isLoading,
-  itemCheckResponse
 }) => {
   return (
     <AICard>
@@ -123,14 +121,17 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
           {/* Right Column - Controls */}
           <ControlsArea>
             {/* Image Link Input */}
-            <InputSection>
-              <InputLabel>Or paste image link:</InputLabel>
-              <TextInput
+            <FormField label="Or paste image link">
+              <FormInput
                 value={imageLink}
                 onChange={(e) => onImageLinkChange(e.target.value)}
                 placeholder="https://example.com/your-image.jpg"
+                leftIcon={<FaLink size={14} />}
+                size="medium"
+                variant="outline"
+                isFullWidth
               />
-            </InputSection>
+            </FormField>
             
             {/* Action Buttons */}
             <ButtonGroup>

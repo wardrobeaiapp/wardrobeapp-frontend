@@ -35,7 +35,7 @@ export const ModalContainer = styled.div`
 
 export const ModalContent = styled.div<{ size?: 'sm' | 'md' | 'lg' | 'xl' }>`
   background-color: white;
-  border-radius: 12px;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   width: 100%;
   max-height: 90vh;
   overflow: hidden;
