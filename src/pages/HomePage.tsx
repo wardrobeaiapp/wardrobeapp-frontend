@@ -26,7 +26,6 @@ const HomePage: React.FC = () => {
     filteredItems,
     filteredOutfits,
     filteredCapsules,
-    filteredWishlistItems,
     isLoading,
     error,
     
@@ -140,10 +139,6 @@ const HomePage: React.FC = () => {
                 onClick={handleAddItem} 
                 style={{ 
                   height: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '0 16px'
                 }}
               >
                 <MdAdd />
@@ -160,12 +155,8 @@ const HomePage: React.FC = () => {
                 <Button 
                   size="lg" 
                   variant="secondary" 
+                  outlined
                   onClick={() => {}}
-                  style={{ 
-                    whiteSpace: 'nowrap',
-                    height: '40px',
-                    padding: '0 16px'
-                  }}
                 >
                   Mark Wardrobe Complete
                 </Button>

@@ -126,11 +126,10 @@ const ShoppingLimitSectionWrapper = React.forwardRef<
         onSave={(data) => {
           console.log('🛍️ ShoppingLimitSectionWrapper - onSave called with:', data);
           // Update local data when section component calls onSave
-          setLocalData(prev => ({
-            ...prev,
-            shoppingLimitAmount: data.amount,
-            shoppingLimitFrequency: data.frequency as 'monthly' | 'quarterly' | 'yearly'
-          }));
+          setLocalData({
+            amount: data.amount,
+            frequency: data.frequency as 'monthly' | 'quarterly' | 'yearly'
+          });
         }}
       />
       

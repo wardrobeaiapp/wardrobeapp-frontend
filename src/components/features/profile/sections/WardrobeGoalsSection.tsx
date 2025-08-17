@@ -1,18 +1,11 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import {
-  FormGroup,
-  Label,
-  Textarea,
-  Checkbox,
-  CheckboxLabel,
-  SectionDivider,
-  ButtonContainer,
-} from '../../../../pages/ProfilePage.styles';
+import { FormGroup, SectionDivider, ButtonContainer } from '../../../../pages/ProfilePage.styles';
+import Button from '../../../common/Button';
 import { SectionProps } from './types';
 import { WardrobeGoalsData } from '../../../../types';
 import { wardrobeGoalOptionsWithDetails, wardrobeGoalsStepContent } from '../../../../data/onboardingOptions';
 import { useStyleProfile } from '../context/StyleProfileContext';
-import Button from '../../../common/Button';
+import { FormField, Checkbox } from '../../../../components/common/Form';
 
 // Define a more specific props interface using WardrobeGoalsData
 interface WardrobeGoalsSectionProps extends Omit<SectionProps, 'profileData'> {
@@ -110,123 +103,111 @@ const WardrobeGoalsSection: React.FC<WardrobeGoalsSectionProps> = ({
     }
   };
 
+  const onCheckboxChange = (optionId: string) => {
+    if (optionId === 'other') {
+      if (data.wardrobeGoals?.includes('other')) {
+        // User is unchecking 'other' - clear the textarea text
+        savedOtherGoalRef.current = typeof data.otherWardrobeGoal === 'string' ? data.otherWardrobeGoal : '';
+        
+        // Clear the textarea text when unchecking
+        if (setProfileData) {
+          const baseData = profileData || data;
+          const updatedData = {
+            ...baseData,
+            wardrobeGoals: data.wardrobeGoals,
+            otherWardrobeGoal: ''
+          } as any;
+          setProfileData(updatedData);
+        }
+      } else {
+        // User is checking 'other' - save current text and focus textarea
+        if (typeof data.otherWardrobeGoal === 'string') {
+          savedOtherGoalRef.current = data.otherWardrobeGoal;
+        }
+        
+        setTimeout(() => {
+          const textareaElement = document.querySelector('textarea[placeholder*="other wardrobe goal"]') as HTMLTextAreaElement;
+          if (textareaElement) {
+            textareaElement.focus();
+          }
+        }, 0);
+      }
+    }
+    
+    if (handleCheckboxChange) {
+      handleCheckboxChange('wardrobeGoals', optionId);
+    }
+  };
+
   return (
     <>
       <SectionDivider>{wardrobeGoalsStepContent.profileSection.title}</SectionDivider>
       <FormGroup>
-        <Label>What are your main wardrobe goals? (Select all that apply)</Label>
-        {wardrobeGoalOptionsWithDetails.map((option) => (
-          <div key={option.id}>
-            <CheckboxLabel>
+        <FormField label="What are your main wardrobe goals? (Select all that apply)">
+          {wardrobeGoalOptionsWithDetails.map((option) => (
+            <div key={option.id} style={{ marginBottom: option.description ? '0.5rem' : '0.25rem' }}>
               <Checkbox
-                type="checkbox"
+                label={option.label}
                 checked={data.wardrobeGoals?.includes(option.id) || false}
-                onChange={() => {
-                  if (option.id === 'other') {
-                    if (data.wardrobeGoals?.includes('other')) {
-                      // User is unchecking 'other' - clear the textarea text
-                      savedOtherGoalRef.current = typeof data.otherWardrobeGoal === 'string' ? data.otherWardrobeGoal : '';
-                      
-                      // Clear the textarea text when unchecking
-                      if (setProfileData) {
-                        const baseData = profileData || data;
-                        const updatedData = {
-                          ...baseData,
-                          wardrobeGoals: data.wardrobeGoals,
-                          otherWardrobeGoal: ''
-                        } as any;
-                        setProfileData(updatedData);
-                      }
-                    } else {
-                      // User is checking 'other' - save current text and focus textarea
-                      if (typeof data.otherWardrobeGoal === 'string') {
-                        savedOtherGoalRef.current = data.otherWardrobeGoal;
-                      }
-                      
-                      setTimeout(() => {
-                        const textareaElement = document.querySelector('textarea[placeholder*="other wardrobe goal"]') as HTMLTextAreaElement;
-                        if (textareaElement) {
-                          textareaElement.focus();
-                        }
-                      }, 0);
-                    }
-                  }
-                  
-                  if (handleCheckboxChange) {
-                    handleCheckboxChange('wardrobeGoals', option.id);
-                  }
-                }}
+                onChange={() => onCheckboxChange(option.id)}
               />
-              {option.label}
-            </CheckboxLabel>
-            {option.description && (
-              <div style={{
-                fontSize: '0.875rem',
-                color: '#6B7280',
-                marginLeft: '1.5rem',
-                marginTop: '0.25rem',
-                marginBottom: '0.5rem'
-              }}>
-                {option.description}
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {/* Custom goals display */}
-        {customWardrobeGoals.length > 0 && (
-          <div style={{ marginTop: '0.5rem' }}>
-            {customWardrobeGoals.map((goal, index) => (
-              <CheckboxLabel key={`custom-goal-${index}`}>
-                <Checkbox
-                  type="checkbox"
-                  checked={true}
-                  onChange={() => {
-                    console.log('Current wardrobe goals before change:', data.wardrobeGoals);
-                    
-                    const isAdding = !data.wardrobeGoals?.includes(goal);
-                    console.log('Custom goal toggle:', { goal, isAdding });
-                    
-                    if (handleCheckboxChange) {
-                      handleCheckboxChange('wardrobeGoals', goal);
-                    }
-                  }}
-                />
-                {goal} (Custom)
-              </CheckboxLabel>
-            ))}
-          </div>
-        )}
+              {option.description && (
+                <div style={{
+                  fontSize: '0.875rem',
+                  color: '#6B7280',
+                  marginLeft: '1.5rem',
+                  marginTop: '0.25rem',
+                  marginBottom: '0.5rem'
+                }}>
+                  {option.description}
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {/* Custom goals display */}
+          {customWardrobeGoals.length > 0 && (
+            <div style={{ marginTop: '0.75rem' }}>
+              {customWardrobeGoals.map((goal, index) => (
+                <div key={`custom-goal-${index}`} style={{ marginBottom: '0.25rem' }}>
+                  <Checkbox
+                    label={`${goal} (Custom)`}
+                    checked={true}
+                    onChange={() => {
+                      console.log('Current wardrobe goals before change:', data.wardrobeGoals);
+                      if (handleCheckboxChange) {
+onCheckboxChange(goal);
+                      }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </FormField>
       </FormGroup>
       
       {data.wardrobeGoals?.includes('other') && (
-        <FormGroup>
-          <Label htmlFor="otherWardrobeGoal">Please specify your other wardrobe goal:</Label>
-          <Textarea
+        <FormField 
+          label="Please specify your other wardrobe goal"
+          htmlFor="otherWardrobeGoal"
+        >
+          <textarea
             id="otherWardrobeGoal"
             value={data.otherWardrobeGoal || ''}
             onChange={(e) => {
               if (setProfileData) {
-                // Handle both modular (wardrobeGoalsData) and legacy (profileData) approaches
                 const baseData = profileData || data;
-                const updatedData = {
+                setProfileData({
                   ...baseData,
-                  wardrobeGoals: data.wardrobeGoals,
                   otherWardrobeGoal: e.target.value
-                } as any;
-                
-                console.log('WardrobeGoalsSection - otherWardrobeGoal changed:', {
-                  value: e.target.value,
-                  updatedData
-                });
-                
-                setProfileData(updatedData);
+                } as any);
               }
             }}
             placeholder="Describe your other wardrobe goal..."
             rows={3}
           />
-        </FormGroup>
+        </FormField>
       )}
 
       <SectionDivider />

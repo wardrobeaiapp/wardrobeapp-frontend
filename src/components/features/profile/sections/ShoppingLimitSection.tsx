@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FormGroup,
-  Label,
-  Select,
-  Input,
-  SectionDivider,
-  SectionWrapper,
-  SectionContent
-} from '../../../../pages/ProfilePage.styles';
+import { SectionDivider, SectionWrapper, SectionContent } from '../../../../pages/ProfilePage.styles';
 import { ShoppingData, ShoppingLimit } from '../../../../types';
 import { shoppingLimitStepContent } from '../../../../data/onboardingOptions';
+import { FormField, FormInput, FormSelect } from '../../../../components/common/Form';
 
 interface ShoppingLimitSectionProps {
   initialData: Partial<ShoppingData>;
@@ -109,10 +102,12 @@ const ShoppingLimitSection: React.FC<ShoppingLimitSectionProps> = ({
     <SectionWrapper>
       <SectionContent>
         <SectionDivider>{shoppingLimitStepContent.profileSection.title}</SectionDivider>
-        <FormGroup>
-          <Label htmlFor="shopping-limit-amount">{shoppingLimitStepContent.profileSection.mainLabel}</Label>
+        <FormField 
+          label={shoppingLimitStepContent.profileSection.mainLabel}
+          htmlFor="shopping-limit-amount"
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Input
+            <FormInput
               id="shopping-limit-amount"
               name="shopping-limit-amount"
               type="number"
@@ -123,9 +118,9 @@ const ShoppingLimitSection: React.FC<ShoppingLimitSectionProps> = ({
               min="0"
               step="1"
               aria-label="Shopping limit amount"
-              style={{ width: '120px' }} // Add width constraint
+              style={{ width: '120px' }}
             />
-            <Select
+            <FormSelect
               id="shopping-limit-frequency"
               name="shopping-limit-frequency"
               value={frequency}
@@ -135,9 +130,9 @@ const ShoppingLimitSection: React.FC<ShoppingLimitSectionProps> = ({
               <option value="monthly">{shoppingLimitStepContent.profileSection.monthlyOption}</option>
               <option value="quarterly">{shoppingLimitStepContent.profileSection.quarterlyOption}</option>
               <option value="yearly">{shoppingLimitStepContent.profileSection.yearlyOption}</option>
-            </Select>
+            </FormSelect>
           </div>
-        </FormGroup>
+        </FormField>
       </SectionContent>
     </SectionWrapper>
   );
