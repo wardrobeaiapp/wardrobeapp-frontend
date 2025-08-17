@@ -156,37 +156,6 @@ export const UploadText = styled.p`
   margin: 0;
 `;
 
-// Input sections
-export const InputSection = styled.div`
-  margin-bottom: 0;
-`;
-
-export const InputLabel = styled.label`
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-`;
-
-// Select dropdown for Season and Scenario
-export const Select = styled.select`
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  background-color: white;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
-`;
-
 // Dropdown container for Season and Scenario
 export const DropdownContainer = styled.div`
   display: grid;
@@ -301,23 +270,6 @@ export const DashboardTopBar = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
-`;
-
-export const FilterDropdown = styled.select`
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  background: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-sizing: border-box;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-  }
 `;
 
 export const StatsGrid = styled.div`
