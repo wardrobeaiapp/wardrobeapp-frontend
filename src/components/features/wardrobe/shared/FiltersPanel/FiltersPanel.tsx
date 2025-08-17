@@ -88,13 +88,17 @@ export interface FiltersPanelProps {
   showAllSeasons?: boolean;
   
   // Custom filters
-  customFilters?: {
+  customFilters?: Array<{
     id: string;
     label: string;
     value: any;
     options: { value: any; label: string }[];
     onChange: (value: any) => void;
-  }[];
+  }>;
+  
+  // Reset functionality
+  onResetFilters?: () => void;
+  showResetButton?: boolean;
   
   // Layout
   layout?: 'horizontal' | 'vertical';
@@ -128,6 +132,10 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   // Custom filters
   customFilters = [],
   
+  // Reset functionality
+  onResetFilters,
+  showResetButton = false,
+  
   // Layout
   layout = 'horizontal',
   className = ''
@@ -147,106 +155,88 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (onColorChange) onColorChange(e.target.value);
   };
+  
+  // Handle reset button click
+  const handleReset = () => {
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  };
 
   return (
     <FiltersContainer className={className} $layout={layout}>
-      <FilterGroup $layout={layout}>
-        {/* Search Input */}
+      <div style={{ display: 'flex', width: '100%', gap: '1rem', alignItems: 'flex-end' }}>
         {showSearch && onSearchChange && (
-          <SearchContainer label="Search" htmlFor="search-input">
-            <div className="form-input-container">
-              <span className="search-icon">
-                <MdSearch size={20} />
-              </span>
+          <FormField label="Search" htmlFor="search-filter">
+            <SearchContainer>
+              <div className="form-input-container">
+                <MdSearch className="search-icon" />
+                <FormInput
+                  id="search-filter"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder={searchPlaceholder}
+                  style={{ paddingLeft: '2rem' }}
+                />
+              </div>
+            </SearchContainer>
+          </FormField>
+        )}
+
+        <FilterGroup $layout={layout}>
+          {showCategoryFilter && onCategoryChange && (
+            <FormField label="Category" htmlFor="category-filter">
+              <FormSelect
+                id="category-filter"
+                value={categoryFilter}
+                onChange={(e) => onCategoryChange(e.target.value)}
+              >
+                {showAllCategories && <option value="all">All Categories</option>}
+                {Object.values(ItemCategory).map((category) => (
+                  <option key={category} value={category}>
+                    {formatCategoryForFilter(category)}
+                  </option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+          
+          {/* Season Filter */}
+          {showSeasonFilter && onSeasonChange && (
+            <FormField label="Season" htmlFor="season-filter">
+              <FormSelect
+                id="season-filter"
+                value={seasonFilter}
+                onChange={(e) => onSeasonChange(e.target.value)}
+              >
+                {showAllSeasons && <option value="all">All Seasons</option>}
+                {Object.values(Season)
+                  .filter(season => season !== 'ALL_SEASON')
+                  .map((season) => (
+                    <option key={season} value={season}>
+                      {season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()}
+                    </option>
+                  ))}
+              </FormSelect>
+            </FormField>
+          )}
+          
+          {/* Color Filter */}
+          {showColorFilter && onColorChange && (
+            <FormField label="Color" htmlFor="color-filter">
               <FormInput
-                id="search-input"
+                id="color-filter"
                 type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder={searchPlaceholder}
-                style={{ paddingLeft: '2.5rem' }}
+                placeholder="Filter by color"
+                value={colorFilter}
+                onChange={(e) => onColorChange(e.target.value)}
               />
-            </div>
-          </SearchContainer>
-        )}
-
-        {/* Category Filter */}
-        {showCategoryFilter && onCategoryChange && (
-          <FormField label="Category" htmlFor="category-filter">
-            <FormSelect
-              id="category-filter"
-              value={categoryFilter}
-              onChange={handleCategoryChange}
-              variant="outline"
-              isFullWidth
-            >
-              {showAllCategories && <option value="all">All Categories</option>}
-              {Object.values(ItemCategory).map((category) => (
-                <option key={category} value={category}>
-                  {formatCategoryForFilter(category)}
-                </option>
-              ))}
-            </FormSelect>
-          </FormField>
-        )}
+            </FormField>
+          )}
         
-
-        {/* Season Filter */}
-        {showSeasonFilter && onSeasonChange && (
-          <FormField label="Season" htmlFor="season-filter">
-            <FormSelect
-              id="season-filter"
-              value={seasonFilter}
-              onChange={handleSeasonChange}
-              variant="outline"
-              isFullWidth
-            >
-              {showAllSeasons && <option value="all">All Seasons</option>}
-              {Object.values(Season).map((season) => (
-                <option key={season} value={season}>
-                  {season.charAt(0).toUpperCase() + season.slice(1)}
-                </option>
-              ))}
-            </FormSelect>
-          </FormField>
-        )}
-        
-
-        {/* Color Filter */}
-        {showColorFilter && onColorChange && (
-          <FormField label="Color" htmlFor="color-filter">
-            <FormInput
-              id="color-filter"
-              type="text"
-              placeholder="Filter by color"
-              value={colorFilter}
-              onChange={handleColorChange}
-              variant="outline"
-              isFullWidth
-            />
-          </FormField>
-        )}
-        
-
-        {/* Custom Filters */}
-        {customFilters.map((filter) => (
-          <FormField key={filter.id} label={filter.label} htmlFor={`${filter.id}-filter`}>
-            <FormSelect
-              id={`${filter.id}-filter`}
-              value={filter.value}
-              onChange={(e) => filter.onChange(e.target.value)}
-              variant="outline"
-              isFullWidth
-            >
-              {filter.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </FormSelect>
-          </FormField>
-        ))}
-      </FilterGroup>
+        </FilterGroup>
+      </div>
     </FiltersContainer>
   );
 };

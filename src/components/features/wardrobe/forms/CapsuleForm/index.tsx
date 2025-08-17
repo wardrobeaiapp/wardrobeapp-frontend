@@ -204,18 +204,17 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
         isOpen={isItemsModalOpen}
         onClose={() => setIsItemsModalOpen(false)}
         availableItems={filteredItems.filter(item => item.id !== mainItemId)} // Exclude main item from selection
-        filteredItems={filteredItems.filter(item => item.id !== mainItemId)}
         selectedItems={selectedItems}
         onItemSelect={handleItemChange}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        categoryFilter={categoryFilter}
-        onCategoryChange={handleCategoryChange}
+        categoryFilter={categoryFilter || 'all'}
+        onCategoryChange={(value) => handleCategoryChange(value as ItemCategory | 'all')}
         colorFilter={colorFilter}
         onColorChange={handleColorChange}
-        seasonFilter={seasonFilter}
-        onSeasonChange={handleSeasonFilterChange}
-        categories={categories}
+        seasonFilter={seasonFilter || 'all'}
+        onSeasonChange={(value) => handleSeasonFilterChange(value as Season | 'all')}
+        categories={categories as string[]}
         colors={colors}
         title="Select Items"
       />
@@ -224,24 +223,23 @@ const CapsuleForm: React.FC<CapsuleFormProps> = ({
         isOpen={isMainItemModalOpen}
         onClose={() => setIsMainItemModalOpen(false)}
         availableItems={filteredItems}
-        filteredItems={filteredItems}
         selectedItems={mainItemId ? [mainItemId] : []}
         onItemSelect={(itemId) => {
-          handleMainItemChange(itemId);
+          handleMainItemChange(itemId as string);
           setIsMainItemModalOpen(false);
         }}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
-        categoryFilter={categoryFilter}
-        onCategoryChange={handleCategoryChange}
+        categoryFilter={categoryFilter || 'all'}
+        onCategoryChange={(value) => handleCategoryChange(value as ItemCategory | 'all')}
         colorFilter={colorFilter}
         onColorChange={handleColorChange}
-        seasonFilter={seasonFilter}
-        onSeasonChange={handleSeasonFilterChange}
-        categories={categories}
+        seasonFilter={seasonFilter || 'all'}
+        onSeasonChange={(value) => handleSeasonFilterChange(value as Season | 'all')}
+        categories={categories as string[]}
         colors={colors}
-        singleSelect={true}
         title="Select Main Item"
+        singleSelect={true}
       />
     </form>
   );

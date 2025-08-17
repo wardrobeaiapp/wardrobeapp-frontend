@@ -30,7 +30,7 @@ export interface UseCapsuleFormStateReturn {
   
   // Handlers
   handleSeasonChange: (season: Season | 'all') => void;
-  handleItemChange: (itemId: string) => void;
+  handleItemChange: (itemIds: string | string[]) => void;
   handleMainItemChange: (itemId: string) => void;
   handleScenarioChange: (scenarioId: string) => void;
 }
@@ -78,13 +78,21 @@ export const useCapsuleFormState = ({
     }
   };
 
-  // Handle item selection
-  const handleItemChange = (itemId: string) => {
-    if (selectedItems.includes(itemId)) {
-      setSelectedItems(selectedItems.filter(id => id !== itemId));
-    } else {
-      setSelectedItems([...selectedItems, itemId]);
-    }
+  // Handle item selection (supports both single and multiple items)
+  const handleItemChange = (itemIds: string | string[]) => {
+    const ids = Array.isArray(itemIds) ? itemIds : [itemIds];
+    setSelectedItems(prev => {
+      const newItems = [...prev];
+      ids.forEach(id => {
+        const index = newItems.indexOf(id);
+        if (index === -1) {
+          newItems.push(id);
+        } else {
+          newItems.splice(index, 1);
+        }
+      });
+      return newItems;
+    });
   };
 
   // Handle main item selection

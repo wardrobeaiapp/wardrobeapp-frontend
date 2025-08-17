@@ -57,12 +57,16 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
     );
   };
   
-  const handleItemChange = (itemId: string) => {
-    setSelectedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(id => id !== itemId) 
-        : [...prev, itemId]
-    );
+  const handleItemChange = (itemIds: string | string[]) => {
+    const ids = Array.isArray(itemIds) ? itemIds : [itemIds];
+    setSelectedItems(prev => {
+      // If any of the clicked items are already selected, remove them
+      if (ids.some(id => prev.includes(id))) {
+        return prev.filter(id => !ids.includes(id));
+      }
+      // Otherwise add them
+      return [...prev, ...ids];
+    });
   };
   
   // Scenario fixing is now handled by the ScenarioFixer component
@@ -316,15 +320,14 @@ return (
             isOpen={isItemsModalOpen}
             onClose={() => setIsItemsModalOpen(false)}
             availableItems={nonWishlistItems}
-            filteredItems={filteredItems}
             selectedItems={selectedItems}
             searchQuery={searchQuery}
             categoryFilter={categoryFilter}
             seasonFilter={seasonFilter}
-            onSearchChange={(value: string) => setSearchQuery(value)}
-            onCategoryChange={setCategoryFilter}
+            onSearchChange={setSearchQuery}
+            onCategoryChange={(value: string) => setCategoryFilter(value as ItemCategory | 'all')}
             onColorChange={setColorFilter}
-            onSeasonChange={setSeasonFilter}
+            onSeasonChange={(value: string) => setSeasonFilter(value as Season | 'all')}
             onItemSelect={handleItemChange}
             colorFilter={colorFilter}
             categories={Array.from(new Set(nonWishlistItems.map(item => item.category)))}
