@@ -1,6 +1,5 @@
 import React from 'react';
-import { Input } from '../CapsuleForm.styles';
-import FormField from '../../../../../common/Form/FormField';
+import { FormField, FormInput } from '../../../../../common/Form';
 
 export interface BasicInfoSectionProps {
   /** Current capsule name */
@@ -27,13 +26,16 @@ const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
       disabled={disabled}
       className={className}
     >
-      <Input
+      <FormInput
         id="capsule-name"
         type="text"
         value={name}
         onChange={(e) => onNameChange(e.target.value)}
         placeholder="e.g., Summer 2025 Capsule"
         disabled={disabled}
+        variant="outline"
+        size="medium"
+        isFullWidth
       />
     </FormField>
   );

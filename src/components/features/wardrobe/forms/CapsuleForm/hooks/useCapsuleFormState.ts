@@ -43,8 +43,10 @@ export const useCapsuleFormState = ({
   
   // Initialize form state with existing capsule data if provided
   const [name, setName] = useState(editCapsule?.name || '');
-  const [selectedScenarios, setSelectedScenarios] = useState<string[]>([]);
-  const [customScenario, setCustomScenario] = useState(editCapsule?.scenario || '');
+  const [selectedScenarios, setSelectedScenarios] = useState<string[]>(
+    editCapsule?.scenarios || []
+  );
+  const [customScenario, setCustomScenario] = useState('');
   const [seasons, setSeasons] = useState<Season[]>(editCapsule?.seasons || []);
 
   // Initialize selectedItems with capsuleItemIds if available, otherwise fall back to selectedItems array

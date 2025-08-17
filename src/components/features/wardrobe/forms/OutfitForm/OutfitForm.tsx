@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Outfit, WardrobeItem, Scenario, Season, ItemCategory } from '../../../../../types';
 import { fetchScenarios } from '../../../../../services/api';
 import { FALLBACK_SCENARIOS } from '../../../../../constants';
-import { FormContainer, ButtonGroup } from './OutfitForm.styles';
+import { ButtonContainer, FormContainer } from '../../shared/styles/form.styles';
 import FormField from '../../../../common/Form/FormField';
 import Button from '../../../../../components/common/Button';
 // ScenarioFixer removed as requested
@@ -331,14 +331,14 @@ return (
             colors={Array.from(new Set(nonWishlistItems.map(item => item.color).filter(Boolean)))}
           />
         
-        <ButtonGroup>
+        <ButtonContainer>
           <Button fullWidth variant="secondary" type="button" onClick={onCancel}>
             Cancel
           </Button>
           <Button fullWidth variant="primary" type="submit">
             Save Outfit
           </Button>
-        </ButtonGroup>
+        </ButtonContainer>
       </FormContainer>
     </form>
   );

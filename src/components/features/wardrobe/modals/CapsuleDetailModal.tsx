@@ -71,6 +71,9 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
     !capsuleItems.some(ci => ci.id === item.id)
   )];
   
+  // Get scenarios array, defaulting to an empty array if not present
+  const scenarios = capsule.scenarios || [];
+  
   // Find the main item
   const mainItemId = capsule.mainItemId || capsule.main_item_id;
   const mainItem = mainItemId ? allCapsuleItems.find(item => item.id === mainItemId) : null;
@@ -105,8 +108,12 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
     >
         <CapsuleInfo>
           <DetailRow>
-            <DetailLabel>Scenario</DetailLabel>
-            <DetailValue>{capsule.scenario || 'No scenario provided'}</DetailValue>
+            <DetailLabel>Scenarios:</DetailLabel>
+            <DetailValue>
+              {scenarios.length > 0 
+                ? scenarios.join(', ')
+                : 'Not specified'}
+            </DetailValue>
           </DetailRow>
           
           <DetailRow>

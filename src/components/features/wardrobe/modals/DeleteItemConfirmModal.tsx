@@ -32,10 +32,6 @@ const MessageText = styled.p`
   line-height: 1.5;
 `;
 
-const ModalBody = styled.div`
-  padding: 0;
-`;
-
 const AssociationsList = styled.ul`
   margin-bottom: 16px;
   padding-left: 20px;
@@ -135,7 +131,6 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalBody>
           <MessageText>
             Are you sure you want to delete the item "{item.name}"?
           </MessageText>
@@ -198,7 +193,6 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
               )}
             </>
           )}
-      </ModalBody>
     </Modal>
   );
 };

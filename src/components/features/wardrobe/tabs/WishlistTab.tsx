@@ -1,11 +1,9 @@
 import React from 'react';
-import { MdSearch } from 'react-icons/md';
-import { FormField } from '../../../common/Form';
-import { ItemCategory, Season, WardrobeItem, WishlistStatus } from '../../../../types';
+import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter } from '../shared/Filters';
+import { Season, WardrobeItem, WishlistStatus } from '../../../../types';
 import {
   FiltersContainer,
   FilterGroup,
-  Select,
   ItemsGrid,
   EmptyState,
   EmptyStateTitle,
@@ -13,10 +11,7 @@ import {
   LoadingContainer,
   LoadingText,
   Spinner,
-  ErrorContainer,
-  SearchContainer,
-  SearchIcon,
-  SearchInput
+  ErrorContainer
 } from '../../../../pages/HomePage.styles';
 import WardrobeItemCard from '../cards/WardrobeItemCard';
 
@@ -32,7 +27,7 @@ interface WishlistTabProps {
   setStatusFilter: (status: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  onViewItem?: (item: WardrobeItem) => void; // New prop for viewing items
+  onViewItem?: (item: WardrobeItem) => void; 
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onAddItem?: () => void;
@@ -95,78 +90,36 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
     <>
       <FiltersContainer>
         <FilterGroup>
-          <FormField
-            label="Search wishlist"
-            htmlFor="wishlist-search-input"
-          >
-            <SearchContainer>
-              <SearchIcon><MdSearch /></SearchIcon>
-              <SearchInput
-                id="wishlist-search-input"
-                type="text"
-                placeholder="Search wishlist by name, category, brand..."
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-              />
-            </SearchContainer>
-          </FormField>
-        </FilterGroup>
-
-        <FilterGroup>
-          <FormField
-            label="Category"
-            htmlFor="category-filter"
-          >
-            <Select 
-              id="category-filter"
-              value={categoryFilter} 
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="all">All Categories</option>
-              {Object.values(ItemCategory).map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </Select>
-          </FormField>
+          <SearchFilter
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search wishlist..."
+          />
         </FilterGroup>
         <FilterGroup>
-          <FormField
-            label="Season"
-            htmlFor="season-filter"
-          >
-            <Select 
-              id="season-filter"
-              value={seasonFilter} 
-              onChange={(e) => setSeasonFilter(e.target.value)}
-            >
-              <option value="all">All Seasons</option>
-              {Object.values(Season)
-                .filter(season => season !== Season.ALL_SEASON)
-                .map(season => (
-                  <option key={season} value={season}>{season}</option>
-                ))}
-            </Select>
-          </FormField>
+          <CategoryFilter
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+          />
         </FilterGroup>
         <FilterGroup>
-          <FormField
+          <SeasonFilter
+            value={seasonFilter}
+            onChange={setSeasonFilter}
+          />
+        </FilterGroup>
+        <FilterGroup>
+          <SelectFilter
+            value={statusFilter}
+            onChange={setStatusFilter}
             label="Status"
-            htmlFor="status-filter"
-          >
-            <Select 
-              id="status-filter"
-              value={statusFilter} 
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="all">All Statuses</option>
-              {Object.values(WishlistStatus).map(status => (
-                <option key={status} value={status}>
-                  {status === WishlistStatus.APPROVED ? 'Approved' : 
-                   status === WishlistStatus.POTENTIAL_ISSUE ? 'Potential Issue' : 'Not Reviewed'}
-                </option>
-              ))}
-            </Select>
-          </FormField>
+            id="status-filter"
+            options={Object.values(WishlistStatus).map(status => ({
+              value: status,
+              label: status.charAt(0) + status.slice(1).toLowerCase()
+            }))}
+            allOptionLabel="All Statuses"
+          />
         </FilterGroup>
       </FiltersContainer>
 

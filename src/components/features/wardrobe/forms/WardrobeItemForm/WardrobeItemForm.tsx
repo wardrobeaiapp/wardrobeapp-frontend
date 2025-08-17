@@ -6,7 +6,7 @@ import { ImageUploadSection } from './components/ImageUploadSection';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { DetailsFields } from './components/DetailsFields';
 import { FormActions } from './components/FormActions';
-import { FormContainer } from './WardrobeItemForm.styles';
+import { FormContainer } from '../../shared/styles/form.styles';
 
 interface WardrobeItemFormProps {
   initialItem?: WardrobeItem;

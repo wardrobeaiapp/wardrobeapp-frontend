@@ -281,19 +281,38 @@ export const useHomePageData = () => {
   }, [currentOutfitId, updateOutfit]);
   
   const handleAddCapsule = useCallback(async (id: string, data: CapsuleFormData) => {
-    // For new capsules, we ignore the id parameter (it will be 'new')
-    const capsuleData = {
-      name: data.name,
-      description: data.description || '',
-      scenario: data.scenario,
-      seasons: data.seasons,
-      selectedItems: data.selectedItems,
-      mainItemId: data.mainItemId || '',
-      dateCreated: new Date().toISOString()
-    };
-    
-    await addCapsule(capsuleData);
-    setIsAddCapsuleModalOpen(false);
+    try {
+      // For new capsules, we ignore the id parameter (it will be 'new')
+      const capsuleData = {
+        name: data.name,
+        description: data.description || '',
+        style: '', // Default empty style since it's required by the Capsule type
+        scenario: data.scenarios?.[0] || '', // Use first scenario or empty string
+        scenarios: data.scenarios || [],
+        seasons: data.seasons,
+        selectedItems: data.selectedItems || [],
+        mainItemId: data.mainItemId || ''
+      };
+      
+      // Add the capsule and wait for it to complete
+      const newCapsule = await addCapsule(capsuleData);
+      
+      if (!newCapsule) {
+        throw new Error('Failed to create capsule');
+      }
+      
+      // Close the modal
+      setIsAddCapsuleModalOpen(false);
+      
+      // Force a refresh of the capsules list
+      // This ensures the UI is in sync with the database
+      window.dispatchEvent(new CustomEvent('refreshCapsules'));
+      
+      return newCapsule;
+    } catch (error) {
+      console.error('Error adding capsule:', error);
+      throw error; // Re-throw to handle in the component
+    }
   }, [addCapsule]);
   
   const handleGenerateOutfitWithAI = useCallback(async (data: any) => {

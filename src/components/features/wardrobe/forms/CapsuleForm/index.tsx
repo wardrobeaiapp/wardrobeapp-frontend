@@ -1,8 +1,5 @@
 import React from 'react';
 import { WardrobeItem, Capsule, ItemCategory, Season } from '../../../../../types';
-import {
-  FormContainer
-} from './CapsuleForm.styles';
 
 // Custom hooks
 import { useCapsuleFormState } from './hooks/useCapsuleFormState';
@@ -19,6 +16,7 @@ import FormActions from './components/FormActions';
 import ScenarioSelector from '../../shared/ScenarioSelector';
 import SeasonSelector from '../../shared/SeasonSelector';
 import OutfitItemsSelectionModal from '../../modals/OutfitItemsSelectionModal';
+import { FormContainer } from '../../shared/styles/form.styles';
 
 // Re-export the interface for external use
 export type { CapsuleFormData } from './utils/formHelpers';

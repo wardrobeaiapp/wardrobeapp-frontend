@@ -1,0 +1,58 @@
+import React from 'react';
+import { Season } from '../../../../../types';
+import { SelectFilter } from './SelectFilter';
+
+type SeasonFilterProps = {
+  value: string;
+  onChange: (value: string) => void;
+  id?: string;
+  className?: string;
+  includeAllOption?: boolean;
+  allOptionLabel?: string;
+};
+
+export const SeasonFilter: React.FC<SeasonFilterProps> = ({
+  value,
+  onChange,
+  id = 'season-filter',
+  className,
+  includeAllOption = true,
+  allOptionLabel = 'All Seasons',
+}) => {
+  // Create season options - filter out ALL_SEASON since we handle 'All' separately
+  const seasonOptions = Object.values(Season)
+    .filter(season => season !== Season.ALL_SEASON)
+    .map(season => ({
+      value: season,
+      label: formatSeasonForDisplay(season),
+    }));
+
+  // Handle the case when 'all' is selected
+  const handleChange = (value: string) => {
+    // Convert empty string from SelectFilter to 'all' for the parent component
+    onChange(value === '' ? 'all' : value);
+  };
+
+  // Convert 'all' to empty string for the select element
+  const displayValue = value === 'all' ? '' : value;
+
+  return (
+    <SelectFilter
+      value={displayValue}
+      onChange={handleChange}
+      label="Season"
+      id={id}
+      options={seasonOptions}
+      className={className}
+      // Let SelectFilter handle the 'All' option
+      includeAllOption={includeAllOption}
+      allOptionLabel={allOptionLabel}
+    />
+  );
+};
+
+function formatSeasonForDisplay(season: string): string {
+  // Skip formatting for ALL_SEASON since we filter it out
+  if (season === Season.ALL_SEASON) return 'All Seasons';
+  return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
+}

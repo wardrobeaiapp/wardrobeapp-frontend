@@ -1,6 +1,6 @@
 import React from 'react';
-import { ButtonGroup } from '../CapsuleForm.styles';
 import Button from '../../../../../common/Button';
+import { ButtonContainer } from '../../../shared/styles/form.styles';
 
 export interface FormActionsProps {
   onCancel: () => void;
@@ -14,7 +14,7 @@ const FormActions: React.FC<FormActionsProps> = ({
   isSubmitting = false
 }) => {
   return (
-    <ButtonGroup>
+    <ButtonContainer>
       <Button fullWidth variant="secondary" type="button" onClick={onCancel}>
         Cancel
       </Button>
@@ -22,7 +22,7 @@ const FormActions: React.FC<FormActionsProps> = ({
       <Button fullWidth variant="primary" type="submit" disabled={isSubmitting}>
         {editCapsule ? 'Update Capsule' : 'Create Capsule'}
       </Button>
-    </ButtonGroup>
+    </ButtonContainer>
   );
 };
 

@@ -1,4 +1,4 @@
-import { ItemCategory } from '../../../../../../types';
+import { ItemCategory, Season } from '../../../../../../types';
 
 // Subcategory options based on category
 export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => {
@@ -45,18 +45,23 @@ export const formatCategoryName = (category: ItemCategory): string => {
 };
 
 // Available seasons (excluding ALL_SEASON as requested)
-export const AVAILABLE_SEASONS = ['SPRING', 'SUMMER', 'FALL', 'WINTER'] as const;
+export const AVAILABLE_SEASONS = [
+  Season.SPRING, 
+  Season.SUMMER, 
+  Season.FALL, 
+  Season.WINTER
+] as const;
 
 // Season display names
-export const getSeasonDisplayName = (season: string): string => {
+export const getSeasonDisplayName = (season: Season | string): string => {
   switch (season) {
-    case 'SPRING':
+    case Season.SPRING:
       return 'Spring';
-    case 'SUMMER':
+    case Season.SUMMER:
       return 'Summer';
-    case 'FALL':
+    case Season.FALL:
       return 'Fall';
-    case 'WINTER':
+    case Season.WINTER:
       return 'Winter';
     default:
       return season;
