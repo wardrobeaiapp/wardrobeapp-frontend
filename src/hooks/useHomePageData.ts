@@ -142,22 +142,51 @@ export const useHomePageData = () => {
   }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
 
   // Filter wishlist items based on selected filters
-  const filteredWishlistItems = useMemo(() => items.filter(item => {
-    if (!item.wishlist) return false; // Only show wishlist items
+  const filteredWishlistItems = useMemo(() => {
+    console.log('[useHomePageData] Filtering wishlist items');
+    console.log('[useHomePageData] Total items:', items.length);
     
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    const matchesSeason = seasonFilter === 'all' || item.season.includes(seasonFilter as Season);
-    const matchesStatus = wishlistStatusFilter === 'all' || 
-      (wishlistStatusFilter === WishlistStatus.APPROVED && item.wishlistStatus === WishlistStatus.APPROVED) ||
-      (wishlistStatusFilter === WishlistStatus.POTENTIAL_ISSUE && item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE) ||
-      (wishlistStatusFilter === WishlistStatus.NOT_REVIEWED && item.wishlistStatus === WishlistStatus.NOT_REVIEWED);
-    const matchesSearch = wishlistSearchQuery === '' || 
-      item.name.toLowerCase().includes(wishlistSearchQuery.toLowerCase()) ||
-      item.category?.toLowerCase().includes(wishlistSearchQuery.toLowerCase()) ||
-      item.brand?.toLowerCase().includes(wishlistSearchQuery.toLowerCase());
+    // First filter only wishlist items
+    const wishlistItems = items.filter(item => item.wishlist === true);
+    console.log('[useHomePageData] Wishlist items count:', wishlistItems.length);
+    console.log('[useHomePageData] Status filter value:', wishlistStatusFilter);
     
-    return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
-  }), [items, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
+    // Debug log all wishlist items with their status
+    console.log('[useHomePageData] Wishlist items with status:', wishlistItems.map(item => ({
+      id: item.id,
+      name: item.name,
+      wishlist: item.wishlist,
+      wishlistStatus: item.wishlistStatus || WishlistStatus.NOT_REVIEWED
+    })));
+    
+    // Apply all filters
+    return wishlistItems.filter(item => {
+      // Category filter
+      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+      
+      // Season filter
+      const matchesSeason = seasonFilter === 'all' || 
+        (Array.isArray(item.season) 
+          ? item.season.includes(seasonFilter as Season)
+          : item.season === seasonFilter);
+      
+      // Status filter - handle null/undefined as 'not_reviewed'
+      const itemStatus = item.wishlistStatus || WishlistStatus.NOT_REVIEWED;
+      const matchesStatus = wishlistStatusFilter === 'all' || 
+        itemStatus === wishlistStatusFilter;
+      
+      console.log(`[useHomePageData] Item ${item.name} - status: ${itemStatus}, matches: ${matchesStatus}`);
+      
+      // Search query
+      const searchLower = wishlistSearchQuery.toLowerCase();
+      const matchesSearch = wishlistSearchQuery === '' || 
+        item.name.toLowerCase().includes(searchLower) ||
+        (item.category?.toLowerCase() || '').includes(searchLower) ||
+        (item.brand?.toLowerCase() || '').includes(searchLower);
+      
+      return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
+    });
+  }, [items, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
   
   // Event handlers
   const handleAddItem = useCallback(() => {

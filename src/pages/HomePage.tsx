@@ -344,7 +344,7 @@ const HomePage: React.FC = () => {
         
         {activeTab === TabType.WISHLIST && (
           <WishlistTab
-            items={filteredWishlistItems}
+            items={items}
             isLoading={isLoading}
             error={error}
             categoryFilter={categoryFilter}
