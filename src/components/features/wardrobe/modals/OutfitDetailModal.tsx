@@ -4,7 +4,7 @@ import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { OutfitInfo } from './OutfitDetailModal.styles';
-import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, ItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
+import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, SmallItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
 import { ItemsSection } from './CapsuleDetailModal.styles';
 
 
@@ -74,7 +74,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
             <ItemsGrid>
               {outfitItems.map(item => (
                 <ItemCard key={item.id}>
-                  <ItemImageContainer>
+                  <SmallItemImageContainer>
                     {item.imageUrl ? (
                       <ItemImage 
                         src={item.imageUrl} 
@@ -86,7 +86,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
                     ) : (
                       <PlaceholderImage>No Image</PlaceholderImage>
                     )}
-                  </ItemImageContainer>
+                  </SmallItemImageContainer>
                   <ItemContent>
                     <ItemName>{item.name}</ItemName>
                     <ItemDetail>{formatCategory(item.category)}, {item.color.toLowerCase()}</ItemDetail>

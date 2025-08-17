@@ -78,6 +78,19 @@ export const ItemImageContainer = styled.div`
   justify-content: center;
 `;
 
+export const SmallItemImageContainer = styled.div`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1; /* This ensures the container stays square */
+  background-color: #f3f4f6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+`;
+
 export const ItemImage = styled.img`
   max-width: 100%;
   width: 100%;

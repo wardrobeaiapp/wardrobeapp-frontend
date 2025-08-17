@@ -26,7 +26,7 @@ import {
   ItemContent, 
   ItemDetail, 
   ItemImage, 
-  ItemImageContainer,
+  SmallItemImageContainer,
   ItemName, 
   ItemsGrid, 
   PlaceholderImage, 
@@ -158,7 +158,7 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
             <ItemsGrid>
               {otherItems.map(item => (
                 <ItemCard key={item.id}>
-                  <ItemImageContainer>
+                  <SmallItemImageContainer>
                     {item.imageUrl ? (
                       <ItemImage 
                         src={item.imageUrl} 
@@ -170,7 +170,7 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
                     ) : (
                       <PlaceholderImage>No Image</PlaceholderImage>
                     )}
-                  </ItemImageContainer>
+                  </SmallItemImageContainer>
                   <ItemContent>
                     <ItemName>{item.name}</ItemName>
                     <ItemDetail>{formatCategory(item.category)}, {item.color.toLowerCase()}</ItemDetail>
