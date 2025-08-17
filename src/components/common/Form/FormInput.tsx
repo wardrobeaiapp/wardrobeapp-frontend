@@ -61,18 +61,21 @@ interface StyledInputProps {
 const getSizeStyles = (theme: Theme) => ({
   small: css`
     height: 2rem;
-    padding: 0 0.5rem;
-    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
   `,
   medium: css`
-    height: 2.5rem;
-    padding: 0 0.75rem;
+    height: 2.7rem;
+    padding: 0.75rem;
     font-size: 0.875rem;
+    line-height: 1.5rem;
   `,
   large: css`
     height: 3rem;
-    padding: 0 1rem;
+    padding: 0.75rem 1rem;
     font-size: 1rem;
+    line-height: 1.5rem;
   `,
 });
 
@@ -80,25 +83,70 @@ const getVariantStyles = (theme: Theme) => ({
   default: css`
     background-color: ${theme.colors.background};
     border: 1px solid ${theme.colors.border};
+    border-radius: 0.375rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    color: ${theme.colors.textPrimary};
+    
     &:focus {
+      outline: none;
       border-color: ${theme.colors.primary};
       box-shadow: 0 0 0 1px ${theme.colors.primary};
+    }
+    
+    &::placeholder {
+      color: ${theme.colors.gray400};
+    }
+    
+    &:disabled {
+      background-color: ${theme.colors.gray200};
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   `,
   outline: css`
-    background-color: transparent;
-    border: 1px solid ${theme.colors.border};
+    background-color: ${theme.colors.background};
+    border: 1px solid ${theme.colors.borderDark};
+    border-radius: 0.375rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    color: ${theme.colors.textPrimary};
+    
     &:focus {
+      outline: none;
       border-color: ${theme.colors.primary};
       box-shadow: 0 0 0 1px ${theme.colors.primary};
     }
+    
+    &::placeholder {
+      color: ${theme.colors.gray400};
+    }
+    
+    &:disabled {
+      background-color: ${theme.colors.gray200};
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
   `,
   filled: css`
-    background-color: ${theme.colors.backgroundSecondary};
-    border: 1px solid transparent;
+    background-color: ${theme.colors.gray100};
+    border: 1px solid ${theme.colors.border};
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    width: 100%;
+    color: ${theme.colors.textPrimary};
+    
     &:focus {
       background-color: ${theme.colors.background};
+      outline: none;
       border-color: ${theme.colors.primary};
+      box-shadow: 0 0 0 1px ${theme.colors.primary};
+    }
+    
+    &:disabled {
+      background-color: ${theme.colors.gray200};
+      cursor: not-allowed;
+      opacity: 0.7;
     }
   `,
   flushed: css`

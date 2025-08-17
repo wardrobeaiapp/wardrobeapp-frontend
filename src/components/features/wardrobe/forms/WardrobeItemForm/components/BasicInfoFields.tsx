@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { ChangeEvent } from 'react';
 import { ItemCategory } from '../../../../../../types';
 import { getSubcategoryOptions } from '../utils/formHelpers';
-import { FormRow, Input, Select } from '../WardrobeItemForm.styles';
-import { FormField } from '../../../../../forms/common/FormField';
+import { FormField, FormInput, FormSelect, FormRow } from '../../../../../../components/common/Form';
 
 interface BasicInfoFieldsProps {
   name: string;
@@ -33,16 +32,18 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
     <>
       <FormRow>
         <FormField label="Item Name" error={errors.name}>
-          <Input
+          <FormInput
             type="text"
             value={name}
-            onChange={(e) => onNameChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onNameChange(e.target.value)}
             placeholder="Enter item name (optional)"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
         
-        <FormField label="Category *" error={errors.category} required>
-          <Select
+        <FormField label="Category " error={errors.category} required>
+          <FormSelect
             value={category}
             onChange={(e) => onCategoryChange(e.target.value as ItemCategory | '')}
           >
@@ -54,7 +55,7 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
             <option value={ItemCategory.FOOTWEAR}>Footwear</option>
             <option value={ItemCategory.ACCESSORY}>Accessory</option>
             <option value={ItemCategory.OTHER}>Other</option>
-          </Select>
+          </FormSelect>
         </FormField>
       </FormRow>
 
@@ -62,7 +63,7 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
         <FormField 
           label="Subcategory" 
         >
-          <Select
+          <FormSelect
             value={subcategory}
             onChange={(e) => onSubcategoryChange(e.target.value)}
             disabled={!category || subcategoryOptions.length === 0}
@@ -73,15 +74,17 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
                 {option}
               </option>
             ))}
-          </Select>
+          </FormSelect>
         </FormField>
         
-        <FormField label="Color *" error={errors.color} required>
-          <Input
+        <FormField label="Color " error={errors.color} required>
+          <FormInput
             type="text"
             value={color}
-            onChange={(e) => onColorChange(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onColorChange(e.target.value)}
             placeholder="Enter color"
+            variant="outline"
+            isFullWidth
           />
         </FormField>
       </FormRow>

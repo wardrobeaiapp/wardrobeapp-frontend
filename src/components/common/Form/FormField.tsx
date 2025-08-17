@@ -1,6 +1,9 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useId, cloneElement, isValidElement, ReactElement } from 'react';
 import styled from 'styled-components';
 import { Theme } from '../../../theme/types';
+
+// Type for form control elements that can receive props
+type FormControlElement = ReactElement<{ id?: string; disabled?: boolean; 'aria-invalid'?: string; 'aria-describedby'?: string }>;
 
 export interface FormFieldProps {
   /**
@@ -90,7 +93,7 @@ const FieldContent = styled.div`
   width: 100%;
 `;
 
-const ErrorText = styled.div`
+const ErrorMessage = styled.div`
   color: ${({ theme }: { theme: Theme }) => theme.colors.danger};
   font-size: 0.75rem;
   margin-top: 0.25rem;
@@ -106,7 +109,7 @@ const HelpText = styled.div`
  * A form field component that provides consistent styling and layout for form inputs.
  * Handles labels, validation errors, and help text in a consistent way.
  */
-const FormField: React.FC<FormFieldProps> = ({
+export const FormField: React.FC<FormFieldProps> = ({
   label,
   labelPosition = 'top',
   required = false,
@@ -115,9 +118,27 @@ const FormField: React.FC<FormFieldProps> = ({
   children,
   className,
   style,
-  htmlFor,
+  htmlFor: propHtmlFor,
   disabled = false,
 }) => {
+  const generatedId = useId();
+  const fieldId = propHtmlFor || `field-${generatedId}`;
+  
+  // Clone the child element and inject the id prop if it's a form control
+  const enhancedChildren = React.Children.map(children, (child) => {
+    if (isValidElement(child) && !propHtmlFor) {
+      const childElement = child as FormControlElement;
+      const childProps = childElement.props;
+      
+      return cloneElement(childElement, {
+        id: childProps.id || fieldId,
+        disabled: childProps.disabled ?? disabled,
+        'aria-invalid': error ? 'true' : undefined,
+        'aria-describedby': error ? `${fieldId}-error` : undefined,
+      });
+    }
+    return child;
+  });
   return (
     <FieldContainer 
       className={`form-field ${className || ''}`}
@@ -126,19 +147,19 @@ const FormField: React.FC<FormFieldProps> = ({
       style={style}
     >
       {label && (
-        <Label 
-          htmlFor={htmlFor}
+        <Label
+          htmlFor={fieldId}
           $labelPosition={labelPosition}
           $disabled={disabled}
         >
           {label}
-          {required && <RequiredIndicator>*</RequiredIndicator>}
+          {required && <RequiredIndicator aria-hidden="true">*</RequiredIndicator>}
         </Label>
       )}
       <FieldContent>
-        {children}
-        {error && <ErrorText>{error}</ErrorText>}
-        {helpText && !error && <HelpText>{helpText}</HelpText>}
+        {enhancedChildren}
+        {error && <ErrorMessage id={`${fieldId}-error`} role="alert">{error}</ErrorMessage>}
+        {helpText && !error && <HelpText id={`${fieldId}-help`}>{helpText}</HelpText>}
       </FieldContent>
     </FieldContainer>
   );
