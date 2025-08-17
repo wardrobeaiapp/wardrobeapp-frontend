@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  FormGroup,
-  Label,
-  Select,
-  Input,
-  SectionDivider
-} from '../../../../pages/ProfilePage.styles';
+import { SectionDivider } from '../../../../pages/ProfilePage.styles';
 import { ClothingBudget } from '../../../../types';
-import { frequencyOptions as appFrequencyOptions, currencyOptions as appCurrencyOptions, clothingBudgetStepContent } from '../../../../data/onboardingOptions';
+import { 
+  frequencyOptions as appFrequencyOptions, 
+  currencyOptions as appCurrencyOptions, 
+  clothingBudgetStepContent 
+} from '../../../../data/onboardingOptions';
+import { FormField, FormInput, FormSelect } from '../../../../components/common/Form';
 
 interface BudgetSectionProps {
   initialData: ClothingBudget;
@@ -79,53 +78,51 @@ const BudgetSection: React.FC<BudgetSectionProps> = ({
   return (
     <>
       <SectionDivider>{clothingBudgetStepContent.profileSection.title}</SectionDivider>
-      <FormGroup>
-        <Label htmlFor="clothingBudgetAmount">{clothingBudgetStepContent.description}</Label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-          <Input
+      <FormField 
+        label={clothingBudgetStepContent.description}
+        htmlFor="clothingBudgetAmount"
+      >
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <FormInput
             id="clothingBudgetAmount"
             type="number"
             min="0"
             value={inputValue}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-              // Store the raw input value
               setInputValue(e.target.value);
-              // Only convert to number when the value is not empty
               const newAmount = e.target.value === '' ? 0 : parseFloat(e.target.value);
               setAmount(newAmount);
-              // Don't call handleSave here - wait for Save Profile button
             }}
-            style={{ width: '100px' }}
           />
-          <Select
+          <FormSelect
             id="clothingBudgetCurrency"
             value={currency}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              const newCurrency = e.target.value;
-              setCurrency(newCurrency);
-              // Don't call handleSaveChanges here - wait for Save Profile button
+              setCurrency(e.target.value);
             }}
-            style={{ width: '80px' }}
           >
             {currencyOptions.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
-          </Select>
-          <Select
+          </FormSelect>
+          <FormSelect
             id="clothingBudgetFrequency"
             value={frequency}
+            isFullWidth
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              const newFrequency = e.target.value;
-              setFrequency(newFrequency);
-              // Don't call handleSaveChanges here - wait for Save Profile button
+              setFrequency(e.target.value as typeof frequency);
             }}
           >
             {frequencyOptions.map(option => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
             ))}
-          </Select>
+          </FormSelect>
         </div>
-      </FormGroup>
+      </FormField>
     </>
   );
 };
