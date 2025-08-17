@@ -21,6 +21,10 @@ export interface UseItemFilteringReturn {
   categories: string[];
   colors: string[];
   
+  // State helpers
+  hasActiveFilters: boolean;
+  noMatchingItems: boolean;
+  
   // Modal helpers
   resetFilters: () => void;
 }
@@ -43,7 +47,10 @@ export const useItemFiltering = ({
 
   // Filter items based on selected filters
   useEffect(() => {
-    if (!nonWishlistItems.length) return;
+    if (!nonWishlistItems.length) {
+      setFilteredItems([]);
+      return;
+    }
     
     let filtered = [...nonWishlistItems];
     
@@ -78,8 +85,28 @@ export const useItemFiltering = ({
       );
     }
     
-    setFilteredItems(filtered);
+    // Only update if we have items or if all filters are reset
+    if (filtered.length > 0 || 
+        (categoryFilter === 'all' && 
+         !colorFilter && 
+         seasonFilter === 'all' && 
+         !searchQuery)) {
+      setFilteredItems(filtered);
+    }
   }, [nonWishlistItems, categoryFilter, colorFilter, seasonFilter, searchQuery]);
+  
+  // Check if there are active filters
+  const hasActiveFilters = useMemo(() => {
+    return categoryFilter !== 'all' || 
+           colorFilter !== '' || 
+           seasonFilter !== 'all' || 
+           searchQuery !== '';
+  }, [categoryFilter, colorFilter, seasonFilter, searchQuery]);
+  
+  // Check if no items match the current filters
+  const noMatchingItems = useMemo(() => {
+    return hasActiveFilters && filteredItems.length === 0;
+  }, [hasActiveFilters, filteredItems.length]);
 
   // Get unique categories and colors for filters
   const categories = nonWishlistItems
@@ -120,6 +147,10 @@ export const useItemFiltering = ({
     // Filter data
     categories,
     colors,
+    
+    // State helpers
+    hasActiveFilters,
+    noMatchingItems,
     
     // Modal helpers
     resetFilters,
