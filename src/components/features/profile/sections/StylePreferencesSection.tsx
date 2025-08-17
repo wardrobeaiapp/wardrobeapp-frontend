@@ -1,9 +1,9 @@
 import React from 'react';
 import { useStyleProfile } from '../context/StyleProfileContext';
+import { FormTextarea } from '../../../common/Form';
 import {
   FormGroup,
   Label,
-  Textarea,
   SliderContainer,
   SliderLabels,
   SliderLabel,
@@ -146,8 +146,9 @@ const StylePreferencesFormContent: React.FC<StylePreferencesSectionProps & { onS
 
         <FormGroup>
           <Label htmlFor="additionalStyleNotes">{stylePreferencesStepContent.profileSection.additionalNotesLabel}</Label>
-          <Textarea
+          <FormTextarea
             id="additionalStyleNotes"
+            isFullWidth
             value={data.stylePreferences?.additionalNotes || ''}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
               // Use handleNestedChange for immediate state update
@@ -155,26 +156,11 @@ const StylePreferencesFormContent: React.FC<StylePreferencesSectionProps & { onS
               console.log('StylePreferencesSection - additionalNotes changed to:', e.target.value);
             }}
             placeholder={stylePreferencesStepContent.profileSection.additionalNotesPlaceholder}
+            variant="outline"
+            rows={4}
           />
         </FormGroup>
       </FormGroup>
-
-      {/* Debug display - Comment out or remove in production */}
-      <div style={{ 
-        margin: '20px 0', 
-        padding: '10px', 
-        border: '1px solid #ccc', 
-        borderRadius: '4px',
-        backgroundColor: '#f5f5f5',
-        fontSize: '12px',
-        display: 'none' // Set to 'block' to show debug info
-      }}>
-        <h4>Debug: Current Style Preferences Data</h4>
-        <pre>{JSON.stringify({
-          preferredStyles: data.preferredStyles,
-          stylePreferences: data.stylePreferences
-        }, null, 2)}</pre>
-      </div>
       
       {/* Section-specific save button removed to avoid duplication with parent component */}
     </>
