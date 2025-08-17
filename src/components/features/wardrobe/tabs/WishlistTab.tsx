@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter } from '../shared/Filters';
 import { Season, WardrobeItem, WishlistStatus } from '../../../../types';
 import {
@@ -50,30 +50,62 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   onDeleteItem,
   onAddItem
 }) => {
-  // Add debugging logs to see what items have the wishlist property set
-  console.log('[WishlistTab] All items:', items);
-  console.log('[WishlistTab] Items with wishlist property:', items.filter(item => item.wishlist !== undefined));
-  console.log('[WishlistTab] Items with wishlist=true:', items.filter(item => item.wishlist === true));
-  
-  // Filter items based on selected filters and wishlist status
-  const wishlistItems = items.filter(item => {
-    const isWishlist = item.wishlist === true;
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    const matchesSeason = seasonFilter === 'all' || 
-      (item.season && Array.isArray(item.season) && item.season.includes(seasonFilter as Season));
-    const matchesStatus = statusFilter === 'all' || item.wishlistStatus === statusFilter;
+  // Filter items to only include wishlist items and apply all filters
+  const filteredItems = useMemo(() => {
+    // First filter only wishlist items
+    let result = items.filter(item => item.wishlist === true);
     
-    console.log(`[WishlistTab] Item ${item.id} (${item.name}) - wishlist:`, item.wishlist, 'isWishlist:', isWishlist);
-    return isWishlist && matchesCategory && matchesSeason && matchesStatus;
-  });
+    // Apply category filter
+    if (categoryFilter !== 'all') {
+      result = result.filter(item => item.category === categoryFilter);
+    }
+    
+    // Apply season filter
+    if (seasonFilter !== 'all') {
+      result = result.filter(item => 
+        Array.isArray(item.season) 
+          ? item.season.includes(seasonFilter as Season)
+          : item.season === seasonFilter
+      );
+    }
+    
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(item => 
+        (item.wishlistStatus || WishlistStatus.NOT_REVIEWED) === statusFilter
+      );
+    }
+    
+    // Apply search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        item.name.toLowerCase().includes(query) ||
+        (item.category?.toLowerCase() || '').includes(query) ||
+        (item.brand?.toLowerCase() || '').includes(query)
+      );
+    }
+    
+    return result;
+  }, [items, categoryFilter, seasonFilter, statusFilter, searchQuery]);
   
-  console.log('[WishlistTab] Filtered wishlist items:', wishlistItems);
+  // Debug logging
+  useEffect(() => {
+    console.log('[WishlistTab] Items received:', items.length);
+    console.log('[WishlistTab] Filtered wishlist items:', filteredItems.length);
+    console.log('[WishlistTab] Active filters:', { 
+      categoryFilter, 
+      seasonFilter, 
+      statusFilter,
+      searchQuery 
+    });
+  }, [items, filteredItems, categoryFilter, seasonFilter, statusFilter, searchQuery]);
 
   if (isLoading) {
     return (
       <LoadingContainer>
         <Spinner />
-        <LoadingText>Loading your wishlist items...</LoadingText>
+        <LoadingText>Loading wishlist items...</LoadingText>
       </LoadingContainer>
     );
   }
@@ -114,18 +146,20 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
             onChange={setStatusFilter}
             label="Status"
             id="status-filter"
-            options={Object.values(WishlistStatus).map(status => ({
-              value: status,
-              label: status.charAt(0) + status.slice(1).toLowerCase()
-            }))}
-            allOptionLabel="All Statuses"
+            options={[
+              { value: 'all', label: 'All Statuses' },
+              { value: WishlistStatus.APPROVED, label: 'Approved' },
+              { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
+              { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
+            ]}
+            includeAllOption={false} // We're handling the 'all' option manually
           />
         </FilterGroup>
       </FiltersContainer>
 
-      {wishlistItems.length > 0 ? (
+      {filteredItems.length > 0 ? (
         <ItemsGrid $variant="items">
-          {wishlistItems.map(item => (
+          {filteredItems.map((item: WardrobeItem) => (
             <WardrobeItemCard
               key={item.id}
               item={item}
