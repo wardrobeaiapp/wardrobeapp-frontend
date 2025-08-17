@@ -12,8 +12,6 @@ import {
   PageHeader,
   TabsContainer,
   Tab,
-  TooltipContainer,
-  TooltipText
 } from './HomePage.styles';
 import Button from '../components/common/Button';
 import PageContainer from '../components/layout/PageContainer';

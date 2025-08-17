@@ -156,7 +156,7 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
               )}
             </EmptyState>
           ) : (
-            <ItemsGrid>
+            <ItemsGrid $variant="items">
               {filteredItems.map(item => (
                 <WardrobeItemCard
                   key={item.id}

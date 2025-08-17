@@ -171,7 +171,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
       </FiltersContainer>
 
       {wishlistItems.length > 0 ? (
-        <ItemsGrid>
+        <ItemsGrid $variant="items">
           {wishlistItems.map(item => (
             <WardrobeItemCard
               key={item.id}

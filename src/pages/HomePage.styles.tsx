@@ -29,57 +29,6 @@ export const Tab = styled.button<{ $active: boolean }>`
     color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[600])};
   }`;
 
-export const TooltipContainer = styled.div`
-  position: relative;
-  display: inline-block;
-  
-  @media (hover: hover) {
-    &:hover .tooltip-text {
-      visibility: visible;
-      opacity: 1;
-    }
-  }
-  
-  @media (hover: none) {
-    &:active .tooltip-text {
-      visibility: visible;
-      opacity: 1;
-    }
-  }
-`;
-
-export const TooltipText = styled.span`
-  visibility: hidden;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.85);
-  color: white;
-  text-align: center;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.2s, visibility 0.2s;
-  margin-bottom: 8px;
-  width: max-content;
-  max-width: 250px;
-  pointer-events: none;
-  
-  @media (max-width: 480px) {
-    font-size: 0.7rem;
-    white-space: normal;
-    width: 200px;
-  }
-  
-  &:focus {
-    outline: none;
-  }
-`;
-
 export const FiltersContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -159,31 +108,39 @@ export const SearchIcon = styled.div`
   z-index: 1;
 `;
 
-export const ItemsGrid = styled.div`
+export const ItemsGrid = styled.div<{ $variant?: 'items' | 'default' }>`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
   padding: 0.5rem 0;
   
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
+    gap: 1.25rem;
     padding: 0.25rem 0;
   }
   
   @media (min-width: 641px) and (max-width: 1024px) {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
   }
   
   @media (min-width: 1025px) {
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 2rem;
+    ${props => props.$variant === 'items' 
+      ? `grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+         gap: 1.5rem;`
+      : `grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+         gap: 2rem;`
+    }
   }
   
-  @media (min-width: 1440px) {
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: 2.5rem;
+  @media (min-width: 1280px) {
+    ${props => props.$variant === 'items' 
+      ? `grid-template-columns: repeat(4, minmax(0, 1fr));
+         gap: 1.5rem;`
+      : `grid-template-columns: repeat(3, minmax(0, 1fr));
+         gap: 2rem;`
+    }
   }
 `;
 
