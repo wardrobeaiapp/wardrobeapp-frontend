@@ -1,15 +1,6 @@
 import styled from 'styled-components';
 import { formTokens, createButtonStyles } from '../../../../../styles/tokens/forms';
 
-// Form Container Styles
-export const FormContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${formTokens.spacing.xl};
-  width: 100%;
-  padding: 0;
-`;
-
 // Photo Upload Area
 export const PhotoUploadArea = styled.div`
   border: 2px dashed ${formTokens.colors.border};
@@ -66,12 +57,5 @@ export const FileInfo = styled.p`
 `;
 
 // Button Container and Buttons
-export const ButtonContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e5e7eb;
-`;
+export { ButtonContainer } from '../../shared/styles/form.styles';
 

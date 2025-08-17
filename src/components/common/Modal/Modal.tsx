@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import styled from 'styled-components';
 import Button from '../Button';
 import {
   ModalBackdrop,
@@ -8,8 +9,8 @@ import {
   ModalHeader,
   ModalTitle,
   CloseButton,
-  ModalBody,
-  ModalFooter
+  ModalFooter,
+  ModalBody as BaseModalBody
 } from './Modal.styles';
 
 export interface ModalAction {
@@ -73,9 +74,9 @@ const Modal: React.FC<ModalProps> = ({
             </ModalHeader>
           )}
           
-          <ModalBody hasHeader={!!(title || showCloseButton)} hasFooter={!!actions}>
+          <StyledModalBody $hasHeader={!!(title || showCloseButton)} $hasFooter={!!actions}>
             {children}
-          </ModalBody>
+          </StyledModalBody>
           
           {actions && actions.length > 0 && (
             <ModalFooter>
@@ -106,5 +107,10 @@ const Modal: React.FC<ModalProps> = ({
   // Render modal in a portal to ensure it appears above other content
   return createPortal(modalContent, document.body);
 };
+
+const StyledModalBody = styled(BaseModalBody)<{ $hasHeader?: boolean; $hasFooter?: boolean }>`
+  ${props => !props.$hasHeader && 'padding-top: 2rem;'}
+  ${props => !props.$hasFooter && 'padding-bottom: 2rem;'}
+`;
 
 export default Modal;

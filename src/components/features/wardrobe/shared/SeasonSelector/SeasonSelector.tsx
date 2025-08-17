@@ -1,11 +1,37 @@
 import React from 'react';
+import styled from 'styled-components';
 import { Season } from '../../../../../types';
-import {
-  FormGroup,
-  SeasonCheckboxes,
-  CheckboxItem as StyledCheckboxItem,
-  CheckboxLabel as StyledCheckboxLabel,
-} from '../../forms/OutfitForm/OutfitForm.styles';
+import { Checkbox, FormField } from '../../../../../components/common/Form';
+
+const SeasonCheckboxes = styled.div`
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  
+  /* Handle */
+  &::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 2px;
+  }
+  
+  /* Handle on hover */
+  &::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+`;
+
+const formatSeason = (season: string): string => {
+  if (season === 'ALL_SEASON') return 'All Seasons';
+  return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
+};
 
 export interface SeasonSelectorProps {
   /** Currently selected seasons */
@@ -32,35 +58,22 @@ const SeasonSelector: React.FC<SeasonSelectorProps> = ({
   );
 
   return (
-    <FormGroup>
-      <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-        <legend style={{ 
-          fontSize: '14px', 
-          fontWeight: '600', 
-          color: '#374151', 
-          marginBottom: '0.25rem', 
-          padding: 0, 
-          display: 'block' 
-        }}>
-          {label}
-        </legend>
-        <SeasonCheckboxes>
-          {seasons.map(season => (
-            <StyledCheckboxItem key={season}>
-              <input
-                type="checkbox"
-                id={`${namespace}-${season}`}
-                checked={selectedSeasons.includes(season)}
-                onChange={() => onSeasonChange(season)}
-              />
-              <StyledCheckboxLabel htmlFor={`${namespace}-${season}`}>
-                {season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()}
-              </StyledCheckboxLabel>
-            </StyledCheckboxItem>
-          ))}
-        </SeasonCheckboxes>
-      </fieldset>
-    </FormGroup>
+    <FormField
+      label={label}
+      labelPosition="top"
+    >
+      <SeasonCheckboxes>
+        {seasons.map(season => (
+          <Checkbox
+            key={season}
+            id={`${namespace}-${season}`}
+            checked={selectedSeasons.includes(season)}
+            onChange={() => onSeasonChange(season)}
+            label={formatSeason(season)}
+          />
+        ))}
+      </SeasonCheckboxes>
+    </FormField>
   );
 };
 

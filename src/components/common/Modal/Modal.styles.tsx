@@ -113,13 +113,10 @@ export const CloseButton = styled.button`
   }
 `;
 
-export const ModalBody = styled.div<{ hasHeader?: boolean; hasFooter?: boolean }>`
+export const ModalBody = styled.div`
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
-  
-  ${props => !props.hasHeader && 'padding-top: 2rem;'}
-  ${props => !props.hasFooter && 'padding-bottom: 2rem;'}
 `;
 
 export const ModalFooter = styled.div`

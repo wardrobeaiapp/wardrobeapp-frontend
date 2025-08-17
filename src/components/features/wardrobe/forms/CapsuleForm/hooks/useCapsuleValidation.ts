@@ -4,8 +4,7 @@ import { Scenario } from '../../../../../../services/api';
 export interface CapsuleFormData {
   name: string;
   description: string;
-  scenario: string; // Kept for backward compatibility
-  scenarios?: string[]; // Array of scenario IDs
+  scenarios: string[]; // Array of scenario IDs or names
   seasons: Season[];
   selectedItems: string[];
   mainItemId: string; // ID of the main item (single-select)
@@ -50,30 +49,28 @@ export const useCapsuleValidation = ({
   };
 
   const prepareFormData = (): CapsuleFormData => {
-    let scenarioValue = '';
     let scenariosArray: string[] = [];
 
-    // Handle scenarios - collect names for backward compatibility and IDs for new approach
+    // Handle selected scenarios
     if (selectedScenarios.length > 0) {
-      scenariosArray = selectedScenarios;
-      // Convert scenario IDs to names for backward compatibility
-      const scenarioNames = selectedScenarios
-        .map(id => scenarios.find(s => s.id === id)?.name)
-        .filter(Boolean) as string[];
-      scenarioValue = scenarioNames.join(', ');
+      // Convert scenario IDs to names for consistent storage
+      scenariosArray = selectedScenarios
+        .map(id => {
+          const scenario = scenarios.find(s => s.id === id);
+          return scenario?.name || id; // Use name if available, otherwise fallback to ID
+        });
     }
 
-    // If there's a custom scenario, add it only if it's not already included
+    // Handle custom scenario if provided
     const trimmedCustomScenario = customScenario.trim();
     if (trimmedCustomScenario) {
       // Check if the custom scenario is already in the selected scenarios
-      const isCustomScenarioInSelected = scenariosArray.some(id => {
-        const scenario = scenarios.find(s => s.id === id);
-        return scenario?.name.toLowerCase() === trimmedCustomScenario.toLowerCase();
-      });
+      const isCustomScenarioInSelected = scenariosArray.some(
+        name => name.toLowerCase() === trimmedCustomScenario.toLowerCase()
+      );
       
       if (!isCustomScenarioInSelected) {
-        scenarioValue = scenarioValue ? `${scenarioValue}, ${trimmedCustomScenario}` : trimmedCustomScenario;
+        scenariosArray.push(trimmedCustomScenario);
       }
     }
 
@@ -82,14 +79,15 @@ export const useCapsuleValidation = ({
     if (!capsuleName) {
       // Auto-generate based on seasons and scenarios
       const seasonNames = seasons.join(', ');
-      const scenarioText = scenarioValue || 'General';
+      const scenarioText = scenariosArray.length > 0 
+        ? scenariosArray.join(', ')
+        : 'General';
       capsuleName = `${seasonNames} ${scenarioText} Capsule`;
     }
 
     return {
       name: capsuleName, // Use the generated name if original was empty
       description: '', // Providing empty string as default
-      scenario: scenarioValue,
       scenarios: scenariosArray,
       seasons,
       selectedItems,

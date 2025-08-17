@@ -1,11 +1,18 @@
 import React from 'react';
 import { Scenario } from '../../../../../services/api';
-import {
-  FormGroup,
-  SeasonCheckboxes,
-  CheckboxItem as StyledCheckboxItem,
-  CheckboxLabel as StyledCheckboxLabel,
-} from '../../forms/OutfitForm/OutfitForm.styles';
+import { Checkbox, FormField, FormInput } from '../../../../../components/common/Form';
+import styled from 'styled-components';
+
+const ScenarioCheckboxes = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+`;
+
+const CheckboxItem = styled.div`
+  padding: 0.25rem 0;
+`;
 
 export interface ScenarioSelectorProps {
   /** List of available scenarios */
@@ -38,72 +45,46 @@ const ScenarioSelector: React.FC<ScenarioSelectorProps> = ({
 }) => {
   return (
     <>
-      <FormGroup>
-        <fieldset style={{ border: 'none', margin: 0, padding: 0 }}>
-          <legend style={{ 
-            fontSize: '14px', 
-            fontWeight: '600', 
-            color: '#374151', 
-            marginBottom: '0.25rem', 
-            padding: 0, 
-            display: 'block' 
-          }}>
-            Scenarios
-          </legend>
-          <SeasonCheckboxes>
-            {isLoading ? (
-              <div>Loading scenarios...</div>
-            ) : scenarios.length === 0 ? (
-              <div>No scenarios available. Set them up in Scenario Settings.</div>
-            ) : (
-              scenarios.map(scenario => (
-                <StyledCheckboxItem key={scenario.id}>
-                  <input
-                    type="checkbox"
-                    id={`${namespace}-${scenario.id}`}
-                    checked={selectedScenarios.includes(scenario.id)}
-                    onChange={() => onScenarioChange(scenario.id)}
-                  />
-                  <StyledCheckboxLabel htmlFor={`${namespace}-${scenario.id}`}>
-                    {scenario.name}
-                  </StyledCheckboxLabel>
-                </StyledCheckboxItem>
-              ))
-            )}
-          </SeasonCheckboxes>
-        </fieldset>
-      </FormGroup>
+      <FormField
+        label="Scenarios"
+        labelPosition="top"
+        className={isLoading || scenarios.length === 0 ? 'no-margin' : ''}
+      >
+        <ScenarioCheckboxes>
+          {isLoading ? (
+            <div>Loading scenarios...</div>
+          ) : scenarios.length === 0 ? (
+            <div>No scenarios available. Set them up in Scenario Settings.</div>
+          ) : (
+            scenarios.map(scenario => (
+              <CheckboxItem key={scenario.id}>
+                <Checkbox
+                  id={`${namespace}-${scenario.id}`}
+                  checked={selectedScenarios.includes(scenario.id)}
+                  onChange={() => onScenarioChange(scenario.id)}
+                  label={scenario.name}
+                />
+              </CheckboxItem>
+            ))
+          )}
+        </ScenarioCheckboxes>
+      </FormField>
       
       {showCustomScenario && onCustomScenarioChange && (
-        <FormGroup>
-          <label 
-            htmlFor={`${namespace}-custom`}
-            style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '0.5rem',
-              display: 'block'
-            }}
-          >
-            Custom Scenario
-          </label>
-          <input
-            type="text"
+        <FormField
+          label="Custom Scenario"
+          htmlFor={`${namespace}-custom`}
+        >
+          <FormInput
             id={`${namespace}-custom`}
+            type="text"
             value={customScenario}
             onChange={(e) => onCustomScenarioChange(e.target.value)}
             placeholder="Enter custom scenario"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              borderRadius: '0.375rem',
-              border: '1px solid #D1D5DB',
-              fontSize: '0.875rem',
-              lineHeight: '1.25rem'
-            }}
+            variant="outline"
+            isFullWidth
           />
-        </FormGroup>
+        </FormField>
       )}
     </>
   );

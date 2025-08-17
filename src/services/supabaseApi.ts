@@ -329,14 +329,37 @@ export const deleteOutfit = async (id: string): Promise<void> => {
 
 // Capsule API calls
 export const fetchCapsules = async (): Promise<Capsule[]> => {
+  console.log('[supabaseApi] fetchCapsules called');
+  
+  // Get the current user
+  const { data: { session } } = await supabase.auth.getSession();
+  const user = session?.user;
+  console.log('[supabaseApi] User session:', { hasUser: !!user, isGuest: !user });
+  
+  // Check if we're in guest mode
+  const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
+  console.log('[supabaseApi] Guest mode:', isGuestMode);
+  
   try {
-    // Get the current user
-    const { data: { session } } = await supabase.auth.getSession();
-    const user = session?.user;
     
-    // Check if we're in guest mode
-    const isGuestMode = !user && localStorage.getItem('guestMode');
-    
+    // Define the expected database capsule type with null values from the database
+    interface DBCapsule {
+      id: string;
+      name: string;
+      description: string | null;
+      style: string | null;
+      seasons: Season[] | null;
+      scenarios: string[] | null;
+      selected_items: string[] | null;
+      main_item_id: string | null;
+      date_created: string | null;
+      created_at: string | null;
+      user_id: string | null;
+      [key: string]: any; // Allow for additional properties
+    }
+
+    // First, fetch all capsules for the current user
+    console.log('[supabaseApi] Fetching capsules from database...');
     let query = supabase
       .from('capsules')
       .select('*')
@@ -344,64 +367,107 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
     
     // If in guest mode, explicitly filter for guest user_id
     if (isGuestMode) {
+      console.log('[supabaseApi] Filtering for guest user...');
       query = query.eq('user_id', 'guest');
     }
+
+    const { data, error } = await query as { data: DBCapsule[] | null; error: any };
+
+    console.log('[supabaseApi] Database query results:', { data, error });
+
+    if (error) {
+      console.error('[supabaseApi] Database query error:', error);
+      throw error;
+    }
+
+    // If no capsules found, return empty array
+    if (!data || data.length === 0) {
+      console.log('[supabaseApi] No capsules found in database');
+      return [];
+    }
+
+    // Get all capsule IDs to fetch their items in a single query
+    const capsuleIds = data.map(capsule => capsule.id);
     
-    const { data, error } = await query;
-    
-    if (error) throw error;
-    
-    // Get all capsule IDs to fetch their items
-    const capsuleIds = (data || []).map(capsule => capsule.id);
-    
-    // Fetch all capsule items in a single query for better performance
-    let capsuleItemsMap: Record<string, string[]> = {};
-    
+    // Fetch all capsule items in a single query
+    const capsuleItemsMap: Record<string, string[]> = {};
     if (capsuleIds.length > 0) {
-      const { data: capsuleItemsData, error: capsuleItemsError } = await supabase
+      const { data: capsuleItems, error: capsuleItemsError } = await supabase
         .from('capsule_items')
         .select('capsule_id, item_id')
-        .in('capsule_id', capsuleIds) as { data: { capsule_id: string, item_id: string }[] | null, error: any };
-      
-      if (!capsuleItemsError && capsuleItemsData) {
-        // Group items by capsule_id
-        capsuleItemsMap = capsuleItemsData.reduce((acc, item: { capsule_id: string, item_id: string }) => {
-          if (!acc[item.capsule_id]) {
-            acc[item.capsule_id] = [];
+        .in('capsule_id', capsuleIds);
+
+      if (capsuleItems) {
+        // Create a map of capsule_id to array of item_ids
+        capsuleItems.forEach((item) => {
+          const capsuleId = String(item.capsule_id);
+          const itemId = String(item.item_id);
+          if (!capsuleItemsMap[capsuleId]) {
+            capsuleItemsMap[capsuleId] = [];
           }
-          acc[item.capsule_id].push(item.item_id);
-          return acc;
-        }, {} as Record<string, string[]>);
-      } else {
+          capsuleItemsMap[capsuleId].push(itemId);
+        });
+      } else if (capsuleItemsError) {
         console.error('[Supabase] Error fetching capsule items:', capsuleItemsError);
       }
     }
     
-    // Map snake_case fields to camelCase for frontend
-    const dbCapsules = (data || []).map(capsule => ({
-      ...capsule,
-      dateCreated: capsule.date_created,
-      // Get items from the join table or fall back to the legacy selected_items array
-      selectedItems: capsuleItemsMap[capsule.id as string] || capsule.selected_items || [],
-      mainItemId: capsule.main_item_id,
-      // Handle scenarios field (may be null if schema hasn't been updated)
-      scenarios: capsule.scenarios || [],
-      // Remove snake_case fields to avoid confusion
-      date_created: undefined,
-      selected_items: undefined,
-      main_item_id: undefined
-    } as Capsule));
+    // Map database capsules to our application's Capsule type with proper defaults
+    const dbCapsules = data.map((capsule: DBCapsule) => {
+      // Helper function to safely get string or empty string
+      const getString = (value: string | null | undefined, defaultValue = ''): string => {
+        return typeof value === 'string' ? value : defaultValue;
+      };
+
+      // Helper function to safely get array or empty array
+      const getArray = <T>(value: T[] | null | undefined): T[] => {
+        return Array.isArray(value) ? value : [];
+      };
+
+      // Map the database capsule to our application's Capsule type
+      const mappedCapsule: Capsule = {
+        id: getString(capsule.id, `capsule-${Date.now()}`),
+        name: getString(capsule.name, 'Untitled Capsule'),
+        description: getString(capsule.description),
+        style: getString(capsule.style),
+        seasons: getArray<Season>(capsule.seasons),
+        scenarios: getArray<string>(capsule.scenarios),
+        selectedItems: getArray<string>(capsuleItemsMap[capsule.id] || capsule.selected_items),
+        mainItemId: getString(capsule.main_item_id) || undefined,
+        dateCreated: getString(capsule.date_created || capsule.created_at, new Date().toISOString())
+      };
+
+      // Add database fields for backward compatibility if they exist
+      const dbFields: Partial<Capsule> = {};
+      
+      if (capsule.date_created) dbFields.date_created = capsule.date_created;
+      if (capsule.main_item_id) dbFields.main_item_id = capsule.main_item_id;
+      if (capsule.selected_items) dbFields.selected_items = capsule.selected_items;
+      if (capsule.user_id) dbFields.user_id = capsule.user_id;
+
+      return { ...mappedCapsule, ...dbFields };
+    });
     
     // If in guest mode, also get capsules from local storage and combine them
     if (isGuestMode) {
       const storedCapsules = localStorage.getItem('guestCapsules');
       if (storedCapsules) {
-        const localCapsules = JSON.parse(storedCapsules);
+        const localCapsules: Capsule[] = JSON.parse(storedCapsules);
         // Combine and deduplicate by ID
         const allCapsules = [...dbCapsules];
-        localCapsules.forEach((localCapsule: Capsule) => {
+        localCapsules.forEach(localCapsule => {
           if (!allCapsules.some(c => c.id === localCapsule.id)) {
-            allCapsules.push(localCapsule);
+            // Ensure all required fields are present with proper defaults
+            const combinedCapsule: Capsule = {
+              ...localCapsule,
+              description: localCapsule.description || '',
+              style: localCapsule.style || '',
+              seasons: Array.isArray(localCapsule.seasons) ? localCapsule.seasons : [],
+              scenarios: Array.isArray(localCapsule.scenarios) ? localCapsule.scenarios : [],
+              selectedItems: Array.isArray(localCapsule.selectedItems) ? localCapsule.selectedItems : [],
+              dateCreated: localCapsule.dateCreated || new Date().toISOString()
+            };
+            allCapsules.push(combinedCapsule);
           }
         });
         return allCapsules;
@@ -411,99 +477,91 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
     return dbCapsules;
   } catch (error) {
     console.error('[Supabase] Error fetching capsules:', error);
-    // Try to get capsules from local storage as fallback
-    const storedCapsules = localStorage.getItem('guestCapsules');
-    if (storedCapsules) {
-      return JSON.parse(storedCapsules);
+    // Try to get capsules from local storage as fallback in guest mode
+    if (isGuestMode) {
+      try {
+        const storedCapsules = localStorage.getItem('guestCapsules');
+        if (storedCapsules) {
+          const parsedCapsules: unknown = JSON.parse(storedCapsules);
+          if (Array.isArray(parsedCapsules)) {
+            // Ensure all required fields are present with proper defaults
+            return parsedCapsules.map(capsule => ({
+              id: capsule.id || '',
+              name: capsule.name || 'Untitled Capsule',
+              description: capsule.description || '',
+              style: capsule.style || '',
+              seasons: Array.isArray(capsule.seasons) ? capsule.seasons : [],
+              scenarios: Array.isArray(capsule.scenarios) ? capsule.scenarios : [],
+              selectedItems: Array.isArray(capsule.selectedItems) ? capsule.selectedItems : [],
+              mainItemId: capsule.mainItemId,
+              dateCreated: capsule.dateCreated || new Date().toISOString()
+            }));
+          }
+        }
+      } catch (parseError) {
+        console.error('Error parsing stored capsules:', parseError);
+      }
     }
     return [];
   }
 };
 
 export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>): Promise<Capsule> => {
+  console.log('[supabaseApi] createCapsule called with data:', capsule);
+  
   try {
-    // Removed excessive logging for performance
-    
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
+    console.log('[supabaseApi] User session for createCapsule:', { hasUser: !!user, userId: user?.id });
     
-    if (!user && !localStorage.getItem('guestMode')) {
-      throw new Error('User must be authenticated to create a capsule');
-    }
+    // Check if user is authenticated or in guest mode
+    const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
+    console.log('[supabaseApi] Guest mode for createCapsule:', isGuestMode);
     
-    // Extract items from the capsule object
-    const { selectedItems, ...capsuleWithoutItems } = capsule;
-    // Removed excessive logging for performance
-    
-    // Convert camelCase to snake_case for database
-    const newCapsule: any = {
-      // Convert all camelCase fields to snake_case
-      name: capsuleWithoutItems.name,
-      description: capsuleWithoutItems.description || '',
-      scenario: capsuleWithoutItems.scenario || '',
-      seasons: capsuleWithoutItems.seasons,
-      style: capsuleWithoutItems.style || '',
-      // Explicitly set date_created (not dateCreated)
-      date_created: new Date().toISOString(),
-      // Keep selected_items for backward compatibility
-      selected_items: [],
-      // Convert mainItemId to main_item_id
-      main_item_id: capsule.mainItemId,
-      // Set the user_id for RLS policies
-      user_id: user?.id || 'guest'
-    };
-    
-    // Removed excessive logging for performance
-    
-    // Make sure no camelCase fields are sent to the database
-    delete newCapsule.selectedItems;
-    delete newCapsule.mainItemId;
-    delete newCapsule.dateCreated; // This shouldn't exist, but just in case
-    
-    // Temporarily remove scenarios field until DB schema is updated
-    // Once the schema is updated, this can be removed
-    if (newCapsule.scenarios) {
-      // Removed excessive logging for performance
-      delete newCapsule.scenarios;
-    }
-    
-    // Removed excessive logging for performance
-    
-    const { data, error } = await supabase
-      .from('capsules')
-      .insert(newCapsule)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error('Supabase error creating capsule:', error);
+    if (!user && !isGuestMode) {
+      const error = new Error('User must be authenticated to create a capsule');
+      console.error('[supabaseApi] Authentication error:', error);
       throw error;
     }
     
-    // Removed excessive logging for performance
+    // Prepare the capsule data for insertion with proper defaults
+    const capsuleData = {
+      name: capsule.name || 'Untitled Capsule',
+      description: typeof capsule.description === 'string' ? capsule.description : '',
+      style: typeof capsule.style === 'string' ? capsule.style : '',
+      seasons: Array.isArray(capsule.seasons) ? capsule.seasons : [],
+      scenarios: Array.isArray(capsule.scenarios) ? capsule.scenarios : [],
+      main_item_id: capsule.mainItemId || null,
+      selected_items: Array.isArray(capsule.selectedItems) ? capsule.selectedItems : [],
+      user_id: user?.id || 'guest',
+      date_created: new Date().toISOString()
+    };
     
-    // Prepare to add items to the join table
-    const itemsToAdd = [...(selectedItems || [])];
+    console.log('[supabaseApi] Prepared capsule data for insertion:', capsuleData);
     
-    // Add the main item to the join table if it exists and isn't already in the selectedItems array
-    if (capsule.mainItemId && !itemsToAdd.includes(capsule.mainItemId)) {
-      // Removed excessive logging for performance
-      itemsToAdd.push(capsule.mainItemId);
+    // Insert the new capsule into the database
+    console.log('[supabaseApi] Inserting capsule into database...');
+    const { data, error } = await supabase
+      .from('capsules')
+      .insert([capsuleData])
+      .select()
+      .single();
+      
+    if (error) {
+      console.error('[supabaseApi] Error creating capsule:', error);
+      throw error;
     }
     
-    // Add items to the join table if there are any
-    if (itemsToAdd.length > 0 && data.id) {
-      // Removed excessive logging for performance
-      
-      // Create records for the join table
-      const records = itemsToAdd.map(itemId => ({
+    console.log('[supabaseApi] Successfully created capsule:', data);
+    
+    // If there are selected items, add them to the capsule_items join table
+    if (Array.isArray(capsule.selectedItems) && capsule.selectedItems.length > 0) {
+      const records = capsule.selectedItems.map(itemId => ({
         capsule_id: data.id,
         item_id: itemId,
         user_id: user?.id || 'guest'
       }));
-      
-      // Removed excessive logging for performance
       
       // Insert into the join table
       const { error: joinError } = await supabase
@@ -512,26 +570,41 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       
       if (joinError) {
         console.error('Error adding items to capsule:', joinError);
-      } else {
-        // Removed excessive logging for performance
       }
-    } else {
-      // Removed excessive logging for performance
     }
     
-    // Map snake_case back to camelCase for frontend
-    return {
-      ...data,
-      dateCreated: data.date_created,
-      selectedItems: data.selected_items || [],
-      mainItemId: data.main_item_id,
-      // Handle scenarios field (may be null if schema hasn't been updated)
-      scenarios: data.scenarios || [],
-      // Remove snake_case fields to avoid confusion
-      date_created: undefined,
-      selected_items: undefined,
-      main_item_id: undefined
-    } as Capsule;
+    // Define the expected database response type
+    interface DBCapsuleResponse {
+      id: string;
+      name: string | null;
+      description: string | null;
+      style: string | null;
+      seasons: Season[] | null;
+      scenarios: string[] | null;
+      selected_items: string[] | null;
+      main_item_id: string | null;
+      date_created: string;
+      created_at?: string;
+      user_id: string;
+    }
+    
+    // Type assertion for the database response
+    const dbResponse = data as unknown as DBCapsuleResponse;
+    
+    // Map the database response to our Capsule type with proper defaults
+    const newCapsule: Capsule = {
+      id: dbResponse.id,
+      name: dbResponse.name || 'Untitled Capsule',
+      description: typeof dbResponse.description === 'string' ? dbResponse.description : '',
+      style: typeof dbResponse.style === 'string' ? dbResponse.style : '',
+      seasons: Array.isArray(dbResponse.seasons) ? dbResponse.seasons : [],
+      scenarios: Array.isArray(dbResponse.scenarios) ? dbResponse.scenarios : [],
+      selectedItems: Array.isArray(dbResponse.selected_items) ? dbResponse.selected_items : [],
+      mainItemId: dbResponse.main_item_id || undefined,
+      dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
+    };
+    
+    return newCapsule;
   } catch (error) {
     console.error('[Supabase] Error creating capsule:', error);
     
@@ -552,116 +625,118 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
   }
 };
 
-export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Promise<Capsule | null> => {
+export const updateCapsule = async (id: string, updates: Partial<Capsule>): Promise<Capsule | null> => {
   try {
-    // Removed excessive logging for performance
+    // Get the current user
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
+    
+    // Check if user is authenticated or in guest mode
+    const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
+    
+    if (!user && !isGuestMode) {
+      throw new Error('User must be authenticated to update a capsule');
+    }
     
     // Extract items from the capsule object if present
-    const { selectedItems, ...capsuleWithoutItems } = capsule;
+    const { selectedItems, ...capsuleWithoutItems } = updates;
     
-    // Convert camelCase to snake_case for database
-    const dbCapsule: any = { ...capsuleWithoutItems };
+    // Prepare the update data with proper null handling
+    const updateData: Record<string, any> = {};
     
-    // Handle dateCreated -> date_created conversion
-    if (capsule.dateCreated) {
-      dbCapsule.date_created = capsule.dateCreated;
-      delete dbCapsule.dateCreated;
-    }
+    // Helper function to safely get string or undefined
+    const getStringOrUndefined = (value: any): string | undefined => {
+      return typeof value === 'string' ? value : undefined;
+    };
     
-    // Keep selected_items empty for backward compatibility
-    dbCapsule.selected_items = [];
+    // Only include fields that are actually being updated
+    if ('name' in capsuleWithoutItems) updateData.name = getStringOrUndefined(capsuleWithoutItems.name) || 'Untitled Capsule';
+    if ('description' in capsuleWithoutItems) updateData.description = getStringOrUndefined(capsuleWithoutItems.description) || '';
+    if ('style' in capsuleWithoutItems) updateData.style = getStringOrUndefined(capsuleWithoutItems.style) || '';
+    if ('seasons' in capsuleWithoutItems) updateData.seasons = Array.isArray(capsuleWithoutItems.seasons) ? capsuleWithoutItems.seasons : [];
+    if ('scenarios' in capsuleWithoutItems) updateData.scenarios = Array.isArray(capsuleWithoutItems.scenarios) ? capsuleWithoutItems.scenarios : [];
+    if ('mainItemId' in capsuleWithoutItems) updateData.main_item_id = getStringOrUndefined(capsuleWithoutItems.mainItemId) || null;
     
-    // Handle mainItemId -> main_item_id conversion
-    if (capsule.mainItemId) {
-      // Removed excessive logging for performance
-      dbCapsule.main_item_id = capsule.mainItemId;
-      delete dbCapsule.mainItemId;
-    } else {
-      // Removed excessive logging for performance
-    }
+    // Always update the updated_at timestamp
+    updateData.updated_at = new Date().toISOString();
     
-    // Handle scenario field (singular) for backward compatibility
-    if (capsule.scenario) {
-      dbCapsule.scenario = capsule.scenario;
-    }
-    
-    // Temporarily remove scenarios field until DB schema is updated
-    // Once the schema is updated, this can be removed
-    if (dbCapsule.scenarios) {
-      // Removed excessive logging for performance
-      delete dbCapsule.scenarios;
-    }
-    
-    const { data, error } = await supabase
+    // Update the capsule in the database
+    const { data, error: updateError } = await supabase
       .from('capsules')
-      .update(dbCapsule)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
-    
-    if (error) throw error;
-    
-    // Update items in the join table if provided
-    if (selectedItems !== undefined) {
-      // Get the current user
-      const { data: authData } = await supabase.auth.getUser();
-      const userId = authData?.user?.id || 'guest';
       
-      // First remove all existing items for this capsule
-      await supabase
+    if (updateError) {
+      console.error('Error updating capsule:', updateError);
+      throw updateError;
+    }
+    
+    // If selectedItems was provided, update the capsule_items join table
+    if (selectedItems) {
+      // First, delete all existing items for this capsule
+      const { error: deleteError } = await supabase
         .from('capsule_items')
         .delete()
         .eq('capsule_id', id);
-      
-      // Prepare items to add to the join table
-      const itemsToAdd = [...(selectedItems || [])];
-      
-      // Add the main item to the join table if it exists and isn't already in the selectedItems array
-      if (capsule.mainItemId && !itemsToAdd.includes(capsule.mainItemId)) {
-        // Removed excessive logging for performance
-        itemsToAdd.push(capsule.mainItemId);
+        
+      if (deleteError) {
+        console.error('Error removing existing items from capsule:', deleteError);
+        throw deleteError;
       }
       
-      // Then add the items if there are any
-      if (itemsToAdd.length > 0) {
-        // Removed excessive logging for performance
-        
-        // Create records for the join table
-        const records = itemsToAdd.map(itemId => ({
+      // Then add the new items if there are any
+      if (selectedItems.length > 0) {
+        const records = selectedItems.map(itemId => ({
           capsule_id: id,
           item_id: itemId,
-          user_id: userId
+          user_id: user?.id || 'guest'
         }));
         
-        // Insert into the join table
-        const { error: joinError } = await supabase
+        const { error: insertError } = await supabase
           .from('capsule_items')
-          .upsert(records, { onConflict: 'capsule_id,item_id' });
-        
-        if (joinError) {
-          console.error('Error updating capsule items:', joinError);
-        } else {
-          // Removed excessive logging for performance
+          .insert(records);
+          
+        if (insertError) {
+          console.error('Error adding items to capsule:', insertError);
+          throw insertError;
         }
-      } else {
-        // Removed excessive logging for performance
       }
     }
     
-    if (error) throw error;
-    // Map snake_case back to camelCase for frontend
-    return {
-      ...data,
-      dateCreated: data.date_created,
-      selectedItems: data.selected_items || [],
-      mainItemId: data.main_item_id,
-      // Handle scenarios field (may be null if schema hasn't been updated)
-      scenarios: data.scenarios || [],
-      // Remove snake_case fields to avoid confusion
-      date_created: undefined,
-      selected_items: undefined,
-      main_item_id: undefined
-    } as Capsule;
+    // Define the expected database response type
+    interface DBCapsuleResponse {
+      id: string;
+      name: string | null;
+      description: string | null;
+      style: string | null;
+      seasons: Season[] | null;
+      scenarios: string[] | null;
+      selected_items: string[] | null;
+      main_item_id: string | null;
+      date_created: string;
+      created_at?: string;
+      user_id: string;
+    }
+    
+    // Type assertion for the database response
+    const dbResponse = data as unknown as DBCapsuleResponse;
+    
+    // Map the database response to our Capsule type with proper defaults
+    const updatedCapsule: Capsule = {
+      id: dbResponse.id,
+      name: dbResponse.name || 'Untitled Capsule',
+      description: typeof dbResponse.description === 'string' ? dbResponse.description : '',
+      style: typeof dbResponse.style === 'string' ? dbResponse.style : '',
+      seasons: Array.isArray(dbResponse.seasons) ? dbResponse.seasons : [],
+      scenarios: Array.isArray(dbResponse.scenarios) ? dbResponse.scenarios : [],
+      selectedItems: Array.isArray(dbResponse.selected_items) ? dbResponse.selected_items : [],
+      mainItemId: dbResponse.main_item_id || undefined,
+      dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
+    };
+    
+    return updatedCapsule;
   } catch (error) {
     console.error('[Supabase] Error updating capsule:', error);
     
@@ -671,7 +746,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
       if (storedCapsules) {
         const capsules = JSON.parse(storedCapsules);
         const updatedCapsules = capsules.map((c: Capsule) => 
-          c.id === id ? { ...c, ...capsule } : c
+          c.id === id ? { ...c, ...updates, id } : c
         );
         localStorage.setItem('guestCapsules', JSON.stringify(updatedCapsules));
         

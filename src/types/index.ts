@@ -218,16 +218,15 @@ export type ArrayFieldsOfProfileData = 'dailyActivities' | 'preferredStyles' | '
 export interface Capsule {
   id: string;
   name: string;
-  description?: string;
-  scenario?: string;
-  scenarios?: string[]; // Array of scenario IDs or names
+  description: string; // Made required with default empty string
+  scenarios: string[]; // Array of scenario IDs or names
   seasons: Season[];
-  style?: string;
+  style: string; // Made required with default empty string
   mainItemId?: string; // ID of the main item (single-select)
-  selectedItems?: string[]; // Array of WardrobeItem ids (now optional)
+  selectedItems: string[]; // Made required with default empty array
   dateCreated: string;
   
-  // Database fields (snake_case)
+  // Database fields (snake_case) - kept for backward compatibility
   date_created?: string; // Matches database column name
   main_item_id?: string; // Matches database column name
   selected_items?: string[]; // Matches database column name

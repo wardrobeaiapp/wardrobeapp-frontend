@@ -1,195 +1,231 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Capsule } from '../types'; // Removed unused WardrobeItem import
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Capsule, Season } from '../types';
 import { fetchCapsules, createCapsule, updateCapsule, deleteCapsule } from '../services/api';
 import { replaceAllCapsuleItems } from '../services/capsuleItemsService';
+
+// Store the last fetched capsules to prevent unnecessary state updates
+let lastFetchedCapsules: Capsule[] | null = null;
 
 /**
  * Custom hook to manage capsules with the new capsule-items relationship
  */
 export const useCapsules = () => {
   const [capsules, setCapsules] = useState<Capsule[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(true);
 
   // Fetch all capsules
   const loadCapsules = useCallback(async () => {
+    if (!isMounted.current) return;
+    
     setLoading(true);
     setError(null);
 
     try {
       const data = await fetchCapsules();
-      setCapsules(data);
+      if (!isMounted.current) return;
+      
+      // Only update state if data has changed
+      setCapsules(prevCapsules => {
+        // Skip update if data is the same
+        if (JSON.stringify(prevCapsules) === JSON.stringify(data)) {
+          return prevCapsules;
+        }
+        
+        // Store the last fetched data to prevent unnecessary updates
+        lastFetchedCapsules = data;
+        return data;
+      });
     } catch (err) {
-      // Removed excessive logging for performance
+      if (!isMounted.current) return;
+      console.error('Error loading capsules:', err);
       setError('Failed to load capsules');
+      setCapsules([]);
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, []);
+  
+  // Initial load and setup
+  useEffect(() => {
+    isMounted.current = true;
+    
+    // Initial load only if we don't have cached data
+    if (!lastFetchedCapsules) {
+      loadCapsules();
+    } else {
+      // Use cached data if available
+      setCapsules(lastFetchedCapsules);
+      setLoading(false);
+    }
+    
+    // Set up refresh event listener
+    const handleRefreshCapsules = () => {
+      loadCapsules();
+    };
+    
+    window.addEventListener('refreshCapsules', handleRefreshCapsules);
+    
+    // Cleanup
+    return () => {
+      isMounted.current = false;
+      window.removeEventListener('refreshCapsules', handleRefreshCapsules);
+    };
+  }, [loadCapsules]);
+  
 
   // Create a new capsule
   const addCapsule = useCallback(async (capsuleData: Omit<Capsule, 'id' | 'dateCreated'> & { selectedItems?: string[] }) => {
+    if (!isMounted.current) return null;
+    
     setLoading(true);
     setError(null);
 
     try {
-      // Extract selectedItems before creating the capsule
-      let selectedItemsArray = [...(capsuleData.selectedItems || [])];
-      const capsuleWithoutItems = { ...capsuleData };
-      delete (capsuleWithoutItems as any).selectedItems;
+      // Prepare selected items array
+      const selectedItemsArray = [...(capsuleData.selectedItems || [])];
       
-      // Removed excessive logging for performance
-      
-      // IMPORTANT: Add main item to selectedItems array if it exists and isn't already included
-      // Do this BEFORE creating the capsule to ensure it's included in the join table
+      // Create a copy of capsule data without selectedItems
+      const { selectedItems, ...capsuleWithoutItems } = capsuleData as any;
+
+      // Ensure mainItemId is in selected items
       if (capsuleWithoutItems.mainItemId && !selectedItemsArray.includes(capsuleWithoutItems.mainItemId)) {
-        // Removed excessive logging for performance
         selectedItemsArray.push(capsuleWithoutItems.mainItemId);
       }
-      
-      // Create the capsule in Supabase
-      const newCapsule = await createCapsule(capsuleWithoutItems as Omit<Capsule, 'id' | 'dateCreated'>);
-      // Removed excessive logging for performance
-      
-      // Double-check that main item is in selectedItems after capsule creation
-      if (newCapsule?.mainItemId && !selectedItemsArray.includes(newCapsule.mainItemId)) {
-        // Removed excessive logging for performance
-        selectedItemsArray.push(newCapsule.mainItemId);
+
+      const newCapsule = await createCapsule(capsuleWithoutItems);
+
+      // If there are selected items, create the capsule-item relationships
+      if (selectedItemsArray.length > 0 && isMounted.current) {
+        await replaceAllCapsuleItems(newCapsule.id, selectedItemsArray);
+        if (!isMounted.current) return null;
       }
       
-      // If we have a capsule ID and any items to add, update the capsule-items relationship
-      if (newCapsule?.id && selectedItemsArray.length > 0) {
-        // Removed excessive logging for performance
+      // Update local state with the new capsule
+      if (isMounted.current) {
+        setCapsules(prevCapsules => {
+          // Check if the capsule already exists to avoid duplicates
+          const exists = prevCapsules.some(c => c.id === newCapsule.id);
+          return exists ? prevCapsules : [...prevCapsules, newCapsule];
+        });
         
-        void replaceAllCapsuleItems(newCapsule.id, selectedItemsArray).then(() => {
-          // Dispatch event to notify other components
-          window.dispatchEvent(new CustomEvent('capsuleItemsChanged', {
-            detail: { capsuleId: newCapsule.id, action: 'replace', itemIds: selectedItemsArray }
-          }));
-          // Removed excessive logging for performance
-        }).catch(err => {
-          // Removed excessive logging for performance
-        });
-      } else if (newCapsule?.id && newCapsule.mainItemId) {
-        // Fallback: If no items but we have a main item, add just the main item
-        // Removed excessive logging for performance
-        void replaceAllCapsuleItems(newCapsule.id, [newCapsule.mainItemId]).then(() => {
-          window.dispatchEvent(new CustomEvent('capsuleItemsChanged', {
-            detail: { capsuleId: newCapsule.id, action: 'replace', itemIds: [newCapsule.mainItemId] }
-          }));
-          // Removed excessive logging for performance
-        }).catch(err => {
-          // Removed excessive logging for performance
-        });
-      } else {
-        // Removed excessive logging for performance
+        // Dispatch event to refresh capsules in other components
+        window.dispatchEvent(new Event('refreshCapsules'));
       }
       
-      // Update local state
-      setCapsules(prev => [newCapsule, ...prev]);
-      
-      // Return the created capsule
       return newCapsule;
     } catch (err) {
-      // Removed excessive logging for performance
-      setError('Failed to create capsule');
-      return null;
+      console.error('[useCapsules] Error adding capsule:', err);
+      if (isMounted.current) {
+        setError('Failed to add capsule');
+      }
+      throw err;
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   // Update an existing capsule
-  const updateCapsuleById = useCallback(async (id: string, capsuleData: Partial<Omit<Capsule, 'selectedItems'>> & { selectedItems?: string[] }) => {
+  const updateCapsuleById = useCallback(async (id: string, updates: Partial<Capsule> & { selectedItems?: string[] }) => {
+    if (!isMounted.current) return null;
+    
     setLoading(true);
     setError(null);
-
+    
     try {
-      // Extract selectedItems before updating the capsule
-      let selectedItemsArray = [...(capsuleData.selectedItems || [])];
-      const capsuleWithoutItems = { ...capsuleData };
-      delete (capsuleWithoutItems as any).selectedItems;
+      // Extract selectedItems if present
+      const { selectedItems, ...capsuleUpdates } = updates as any;
       
-      // Removed excessive logging for performance
+      // Update the capsule
+      const updatedCapsule = await updateCapsule(id, capsuleUpdates);
+      if (!isMounted.current) return null;
       
-      // IMPORTANT: Add main item to selectedItems array if it exists and isn't already included
-      if (capsuleWithoutItems.mainItemId && !selectedItemsArray.includes(capsuleWithoutItems.mainItemId)) {
-        // Removed excessive logging for performance
-        selectedItemsArray.push(capsuleWithoutItems.mainItemId);
-      }
-      
-      // Update the capsule in Supabase
-      const updatedCapsule = await updateCapsule(id, capsuleWithoutItems) as Capsule | null;
-      // Removed excessive logging for performance
-      
-      // Double-check that main item is in selectedItems after capsule update
-      if (updatedCapsule && updatedCapsule.mainItemId && !selectedItemsArray.includes(updatedCapsule.mainItemId)) {
-        // Removed excessive logging for performance
-        selectedItemsArray.push(updatedCapsule.mainItemId);
-      }
-      
-      // If we have a capsule ID and any items to add, update the capsule-items relationship
-      if (updatedCapsule && updatedCapsule.id && selectedItemsArray.length > 0) {
-        // Removed excessive logging for performance
-        
-        void replaceAllCapsuleItems(updatedCapsule.id, selectedItemsArray).then(() => {
-          // Dispatch event to notify other components
-          window.dispatchEvent(new CustomEvent('capsuleItemsChanged', {
-            detail: { capsuleId: updatedCapsule.id, action: 'replace', itemIds: selectedItemsArray }
-          }));
-          // Removed excessive logging for performance
-        }).catch(err => {
-          // Removed excessive logging for performance
-        });
-      } else if (updatedCapsule && updatedCapsule.id && updatedCapsule.mainItemId) {
-        // Fallback: If no selected items but we have a main item, add just the main item
-        // Removed excessive logging for performance
-        void replaceAllCapsuleItems(updatedCapsule.id, [updatedCapsule.mainItemId]).then(() => {
-          window.dispatchEvent(new CustomEvent('capsuleItemsChanged', {
-            detail: { capsuleId: updatedCapsule.id, action: 'replace', itemIds: [updatedCapsule.mainItemId] }
-          }));
-          // Removed excessive logging for performance
-        }).catch(err => {
-          // Removed excessive logging for performance
-        });
-      } else {
-        // Removed excessive logging for performance
+      // If selectedItems is provided, update the capsule-item relationships
+      if (selectedItems && isMounted.current) {
+        await replaceAllCapsuleItems(id, selectedItems);
+        if (!isMounted.current) return null;
       }
       
       // Update local state
-      setCapsules(prev => 
-        prev.map(capsule => 
-          capsule.id === id ? { ...capsule, ...capsuleWithoutItems } : capsule
-        )
-      );
+      if (isMounted.current && updatedCapsule) {
+        setCapsules(prevCapsules => {
+          const updatedCapsules = prevCapsules.map(capsule => 
+            capsule.id === id 
+              ? {
+                  ...capsule, // Keep existing values as fallback
+                  ...updatedCapsule, // Apply updates
+                  // Ensure required fields are always present
+                  id: updatedCapsule.id || capsule.id,
+                  name: updatedCapsule.name ?? capsule.name,
+                  description: updatedCapsule.description ?? capsule.description,
+                  scenarios: updatedCapsule.scenarios ?? capsule.scenarios ?? [],
+                  seasons: updatedCapsule.seasons ?? capsule.seasons ?? [],
+                  style: updatedCapsule.style ?? capsule.style ?? '',
+                  selectedItems: updatedCapsule.selectedItems ?? capsule.selectedItems ?? [],
+                  dateCreated: updatedCapsule.dateCreated ?? updatedCapsule.date_created ?? capsule.dateCreated
+                }
+              : capsule
+          );
+          
+          // Only update if something actually changed
+          const hasChanges = JSON.stringify(prevCapsules) !== JSON.stringify(updatedCapsules);
+          return hasChanges ? updatedCapsules : prevCapsules;
+        });
+        
+        // Dispatch event to refresh capsules in other components
+        window.dispatchEvent(new Event('refreshCapsules'));
+      }
       
-      return true;
+      return updatedCapsule;
     } catch (err) {
-      // Removed excessive logging for performance
-      setError('Failed to update capsule');
-      return false;
+      console.error('[useCapsules] Error updating capsule:', err);
+      if (isMounted.current) {
+        setError('Failed to update capsule');
+      }
+      throw err;
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   // Delete a capsule
   const deleteCapsuleById = useCallback(async (id: string) => {
+    if (!isMounted.current) return;
+    
     setLoading(true);
     setError(null);
-
+    
     try {
       await deleteCapsule(id);
       
-      // Update local state
-      setCapsules(prev => prev.filter(capsule => capsule.id !== id));
-      return true;
+      // Update local state if still mounted
+      if (isMounted.current) {
+        setCapsules(prevCapsules => {
+          const updatedCapsules = prevCapsules.filter(capsule => capsule.id !== id);
+          // Only update if something changed
+          return updatedCapsules.length !== prevCapsules.length ? updatedCapsules : prevCapsules;
+        });
+        
+        // Dispatch event to refresh capsules in other components
+        window.dispatchEvent(new Event('refreshCapsules'));
+      }
     } catch (err) {
-      // Removed excessive logging for performance
-      setError('Failed to delete capsule');
-      return false;
+      console.error('[useCapsules] Error deleting capsule:', err);
+      if (isMounted.current) {
+        setError('Failed to delete capsule');
+      }
+      throw err;
     } finally {
-      setLoading(false);
+      if (isMounted.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -210,7 +246,11 @@ export const useCapsules = () => {
   // Filter capsules by scenario
   const filterCapsulesByScenario = useCallback((scenario: string) => {
     if (scenario === 'all') return capsules;
-    return capsules.filter(capsule => capsule.scenario === scenario);
+    return capsules.filter(capsule => 
+      capsule.scenarios && 
+      Array.isArray(capsule.scenarios) && 
+      capsule.scenarios.includes(scenario)
+    );
   }, [capsules]);
 
   // Load capsules on mount
@@ -218,30 +258,76 @@ export const useCapsules = () => {
     void loadCapsules();
   }, [loadCapsules]);
 
+  // Memoize the callbacks
+  const memoizedLoadCapsules = useCallback((): Promise<void> => {
+    lastFetchedCapsules = null;
+    return loadCapsules();
+  }, [loadCapsules]);
+  
+  const memoizedAddCapsule = useCallback(async (capsuleData: Omit<Capsule, 'id' | 'dateCreated'> & { selectedItems?: string[] }) => {
+    const result = await addCapsule(capsuleData);
+    lastFetchedCapsules = null;
+    return result;
+  }, [addCapsule]);
+  
+  const memoizedUpdateCapsuleById = useCallback(async (id: string, updates: Partial<Capsule> & { selectedItems?: string[] }) => {
+    const result = await updateCapsuleById(id, updates);
+    lastFetchedCapsules = null;
+    return result;
+  }, [updateCapsuleById]);
+  
+  const memoizedDeleteCapsuleById = useCallback(async (id: string): Promise<void> => {
+    await deleteCapsuleById(id);
+    lastFetchedCapsules = null;
+  }, [deleteCapsuleById]);
+  
+  const memoizedGetCapsuleById = useCallback((id: string) => {
+    return capsules.find(capsule => capsule.id === id) || null;
+  }, [capsules]);
+  
+  const memoizedFilterCapsulesBySeason = useCallback((season: string) => {
+    return capsules.filter(capsule => 
+      capsule.seasons.includes(season as Season)
+    );
+  }, [capsules]);
+  
+  const memoizedFilterCapsulesByScenario = useCallback((scenario: string) => {
+    return capsules.filter(capsule => 
+      capsule.scenarios.includes(scenario)
+    );
+  }, [capsules]);
+
   // Listen for wardrobe item deletion to refresh capsules
   useEffect(() => {
     const handleWardrobeItemDeleted = () => {
+      // Invalidate cache and reload
+      lastFetchedCapsules = null;
       void loadCapsules();
     };
 
     window.addEventListener('wardrobeItemDeleted', handleWardrobeItemDeleted);
-
     return () => {
       window.removeEventListener('wardrobeItemDeleted', handleWardrobeItemDeleted);
     };
   }, [loadCapsules]);
 
+  // Return the API
   return {
+    // State
     capsules,
     loading,
     error,
-    loadCapsules,
-    addCapsule,
-    updateCapsuleById,
-    deleteCapsuleById,
-    getCapsuleById,
-    filterCapsulesBySeason,
-    filterCapsulesByScenario
+    
+    // Actions
+    loadCapsules: memoizedLoadCapsules,
+    addCapsule: memoizedAddCapsule,
+    updateCapsuleById: memoizedUpdateCapsuleById,
+    deleteCapsuleById: memoizedDeleteCapsuleById,
+    
+    // Selectors
+    getCapsuleById: memoizedGetCapsuleById,
+    filterCapsulesBySeason: memoizedFilterCapsulesBySeason,
+    filterCapsulesByScenario: memoizedFilterCapsulesByScenario,
   };
 };
 

@@ -27,12 +27,16 @@ export const useScenarioHandling = ({
         const data = await fetchScenarios();
         setScenarios(data);
         
-        // If editing a capsule with a scenario, try to find matching scenario IDs
-        if (editCapsule?.scenario) {
-          const scenario = editCapsule.scenario; // Store in a local variable to satisfy TypeScript
+        // If editing a capsule with scenarios, find matching scenario IDs
+        if (editCapsule?.scenarios && editCapsule.scenarios.length > 0) {
+          // Convert scenario names to lowercase for case-insensitive comparison
+          const scenarioNames = editCapsule.scenarios.map(s => s.toLowerCase());
+          
+          // Find all scenarios where the name matches any of the capsule's scenario names
           const matchingScenarios = data.filter(s => 
-            scenario.toLowerCase().includes(s.name.toLowerCase())
+            scenarioNames.includes(s.name.toLowerCase())
           );
+          
           if (matchingScenarios.length > 0) {
             setSelectedScenarios(matchingScenarios.map(s => s.id));
           }

@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { FormField } from '../../../common/Form';
-import { MdSearch } from 'react-icons/md';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { Season, Capsule, WardrobeItem } from '../../../../types';
 import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
 import CollectionCard from '../cards/CollectionCard';
+import { SearchFilter } from '../shared/Filters/SearchFilter';
+import { SeasonFilter } from '../shared/Filters/SeasonFilter';
+import { SelectFilter } from '../shared/Filters/SelectFilter';
 import {
   FiltersContainer,
-  FilterGroup,
-  Select,
-  SearchContainer,
-  SearchInput,
-  SearchIcon,
   ItemsGrid,
   EmptyState,
   EmptyStateTitle,
@@ -22,8 +18,8 @@ import {
 } from '../../../../pages/HomePage.styles';
 
 interface CapsulesTabProps {
-  capsules: Capsule[];
-  wardrobeItems: WardrobeItem[];
+  capsules?: Capsule[];
+  wardrobeItems?: WardrobeItem[];
   isLoading: boolean;
   error: string | null;
   seasonFilter: string;
@@ -33,12 +29,15 @@ interface CapsulesTabProps {
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewCapsule: (capsule: Capsule) => void;
-  onDeleteCapsule: (id: string) => void;
+  onDeleteCapsule?: (id: string) => void;
 }
 
-const CapsulesTab: React.FC<CapsulesTabProps> = ({
-  capsules,
-  wardrobeItems,
+// Memoize the collection card to prevent unnecessary re-renders
+const MemoizedCollectionCard = memo(CollectionCard);
+
+const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
+  capsules = [],
+  wardrobeItems = [],
   isLoading,
   error,
   seasonFilter,
@@ -52,139 +51,188 @@ const CapsulesTab: React.FC<CapsulesTabProps> = ({
   const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
   
+  // Memoize scenario options to prevent recalculation on every render
+  const scenarioOptionsList = useMemo(() => {
+    if (loadingScenarios) {
+      return [{ value: 'loading', label: 'Loading scenarios...', disabled: true }];
+    }
+    return scenarioOptions.map(option => ({
+      value: option,
+      label: option
+    }));
+  }, [scenarioOptions, loadingScenarios]);
+  
   // Load scenario options from the premade list when component mounts
   useEffect(() => {
+    let isMounted = true;
+    
     const loadScenarioOptions = async () => {
       setLoadingScenarios(true);
       try {
         const options = await getScenarioNamesForFilters();
-        setScenarioOptions(options);
+        if (isMounted) {
+          setScenarioOptions(options);
+        }
       } catch (err) {
         console.error('Error loading scenario options:', err);
       } finally {
-        setLoadingScenarios(false);
+        if (isMounted) {
+          setLoadingScenarios(false);
+        }
       }
     };
     
     loadScenarioOptions();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Handle scenario filter change
+  const handleScenarioChange = useCallback((value: string) => {
+    // Convert empty string to 'all' for consistency
+    setScenarioFilter(value === '' ? 'all' : value);
+  }, [setScenarioFilter]);
+
+  // Prepare custom filters for the FiltersPanel
+  const customFilters = useMemo(() => {
+    const scenarioOptionsList = loadingScenarios
+      ? [{ value: 'loading', label: 'Loading scenarios...', disabled: true }]
+      : scenarioOptions.map(option => ({
+          value: option,
+          label: option
+        }));
+        
+    return [{
+      id: 'scenario',
+      label: 'Scenario',
+      value: scenarioFilter === 'all' ? '' : scenarioFilter,
+      options: scenarioOptionsList,
+      onChange: handleScenarioChange
+    }];
+  }, [scenarioFilter, scenarioOptions, loadingScenarios, handleScenarioChange]);
+
+  // Memoize the filter function to prevent recreation on every render
+  const filterCapsules = useCallback((capsule: Capsule) => {
+    // Filter by search query
+    const matchesSearch = searchQuery === '' || 
+      capsule.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Filter by season
+    const matchesSeason = seasonFilter === 'all' || 
+      (Array.isArray(capsule.seasons) && capsule.seasons.includes(seasonFilter as Season));
+    
+    // Filter by scenario - check if any of the capsule's scenarios match the filter
+    const matchesScenario = 
+      !scenarioFilter || 
+      scenarioFilter === 'all' ||
+      (Array.isArray(capsule.scenarios) && 
+       capsule.scenarios.some(scenario => 
+         scenario && scenario.toLowerCase() === scenarioFilter.toLowerCase()
+       ));
+    
+    return matchesSearch && matchesSeason && matchesScenario;
+  }, [searchQuery, seasonFilter, scenarioFilter]);
+  
+  // Filter capsules based on search, season, and scenario filters
+  const filteredCapsules = useMemo(() => {
+    if (!capsules || !capsules.length) return [];
+    return capsules.filter(filterCapsules);
+  }, [capsules, filterCapsules]);
+
+  // Memoize the search handler to prevent recreation on every render
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+  }, [setSearchQuery]);
+  
+  // Memoize the season filter handler
+  const handleSeasonChange = useCallback((value: string) => {
+    setSeasonFilter(value);
+  }, [setSeasonFilter]);
+  
+  
+  // Memoize the view capsule handler
+  const handleViewCapsuleClick = useCallback((data: Capsule | any) => {
+    if ('seasons' in data && 'scenarios' in data) {
+      onViewCapsule(data as Capsule);
+    }
+  }, [onViewCapsule]);
+  
+  // Render loading state
+  if (isLoading) {
+    return (
+      <LoadingContainer>
+        <LoadingText>Loading your capsules...</LoadingText>
+        <Spinner />
+      </LoadingContainer>
+    );
+  }
+  
+  // Render error state
+  if (error) {
+    return (
+      <ErrorContainer>
+        <p>Error loading capsules: {error}</p>
+        <p>Please try refreshing the page.</p>
+      </ErrorContainer>
+    );
+  }
+  
   return (
     <>
-      {isLoading && (
-        <LoadingContainer>
-          <LoadingText>Loading your capsules...</LoadingText>
-          <Spinner />
-        </LoadingContainer>
-      )}
-      
-      {error && (
-        <ErrorContainer>
-          <p>Error loading capsules: {error}</p>
-          <p>Please try refreshing the page.</p>
-        </ErrorContainer>
-      )}
-
       <FiltersContainer>
-        <FilterGroup>
-          <FormField
-            label="Search capsules"
-            htmlFor="capsule-search-input"
-          >
-            <SearchContainer>
-              <SearchIcon><MdSearch /></SearchIcon>
-              <SearchInput
-                id="capsule-search-input"
-                type="text"
-                placeholder="Search capsules by name, scenario..."
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-              />
-            </SearchContainer>
-          </FormField>
-        </FilterGroup>
-
-        <FilterGroup>
-          <FormField
-            label="Season"
-            htmlFor="capsule-season-filter"
-          >
-            <Select
-              id="capsule-season-filter"
-              value={seasonFilter}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSeasonFilter(e.target.value)}
-            >
-              <option value="all">All Seasons</option>
-              {Object.values(Season)
-                .filter(season => season !== Season.ALL_SEASON)
-                .map(season => (
-                  <option key={season} value={season}>
-                    {season.charAt(0).toUpperCase() + season.slice(1)}
-                  </option>
-                ))}
-            </Select>
-          </FormField>
-        </FilterGroup>
-
-        <FilterGroup>
-          <FormField
-            label="Scenario"
-            htmlFor="capsule-scenario-filter"
-          >
-            <Select
-              id="capsule-scenario-filter"
-              value={scenarioFilter}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setScenarioFilter(e.target.value)}
-            >
-              <option value="all">All Scenarios</option>
-              {loadingScenarios ? (
-                <option disabled>Loading scenarios...</option>
-              ) : (
-                scenarioOptions.map(scenario => (
-                  <option key={scenario} value={scenario}>
-                    {scenario}
-                  </option>
-                ))
-              )}
-            </Select>
-          </FormField>
-        </FilterGroup>
+        <SearchFilter
+          value={searchQuery}
+          onChange={handleSearchChange}
+          placeholder="Search capsules..."
+        />
+        <SeasonFilter
+          value={seasonFilter}
+          onChange={handleSeasonChange}
+        />
+        <SelectFilter
+          id="scenario-filter"
+          label="Scenario"
+          value={scenarioFilter}
+          onChange={handleScenarioChange}
+          options={scenarioOptionsList}
+          allOptionLabel="All Scenarios"
+        />
       </FiltersContainer>
-
-      {capsules.length === 0 ? (
+      
+      {filteredCapsules.length === 0 ? (
         <EmptyState>
-          <EmptyStateTitle>You don't have any capsules yet</EmptyStateTitle>
+          <EmptyStateTitle>
+            {searchQuery || seasonFilter !== 'all' || scenarioFilter !== 'all' 
+              ? 'No matching capsules found' 
+              : "You don't have any capsules yet"}
+          </EmptyStateTitle>
           <EmptyStateText>
-            Create your first capsule by clicking the "Add Capsule" button.
+            {searchQuery || seasonFilter !== 'all' || scenarioFilter !== 'all'
+              ? 'Try adjusting your search or filters'
+              : 'Create your first capsule by clicking the "Add Capsule" button.'}
           </EmptyStateText>
         </EmptyState>
       ) : (
         <ItemsGrid>
-          {capsules
-            .filter(capsule => {
-              // Filter by season
-              const matchesSeason = seasonFilter === 'all' || 
-                (capsule.seasons && Array.isArray(capsule.seasons) && 
-                  capsule.seasons.includes(seasonFilter as Season));
-              
-              // Filter by scenario
-              const matchesScenario = scenarioFilter === 'all' || 
-                capsule.scenario === scenarioFilter;
-              
-              return matchesSeason && matchesScenario;
-            })
-            .map(capsule => (
-              <CollectionCard
-                key={capsule.id}
-                type="capsule"
-                data={capsule}
-                onView={(data) => onViewCapsule(data as Capsule)}
-                wardrobeItems={wardrobeItems}
-              />
-            ))}
+          {filteredCapsules.map(capsule => (
+            <MemoizedCollectionCard
+              key={capsule.id}
+              type="capsule"
+              data={capsule}
+              onView={handleViewCapsuleClick}
+              wardrobeItems={wardrobeItems}
+            />
+          ))}
         </ItemsGrid>
       )}
     </>
   );
 };
+
+// Add display name for better debugging in React DevTools
+const CapsulesTab = memo(CapsulesTabComponent);
+CapsulesTab.displayName = 'CapsulesTab';
 
 export default CapsulesTab;
