@@ -198,23 +198,6 @@ export const HistoryList = styled.div`
   gap: 1rem;
 `;
 
-export const HistoryItem = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1rem;
-  background: #ffffff;
-  border-radius: 0.75rem;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: #f9fafb;
-    transform: translateX(4px);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
-  }
-`;
-
-
 export const HistoryContent = styled.div`
   flex: 1;
 `;
@@ -239,23 +222,11 @@ export const HistoryTime = styled.span`
   flex-shrink: 0;
 `;
 
-export const HistoryDate = styled.div`
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-bottom: 0.5rem;
-`;
-
 export const HistoryTitle = styled.h4`
   font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 0.5rem;
-`;
-
-export const HistoryDescription = styled.p`
-  color: #4b5563;
-  margin: 0;
-  font-size: 0.875rem;
 `;
 
 // AI History Dashboard Components
