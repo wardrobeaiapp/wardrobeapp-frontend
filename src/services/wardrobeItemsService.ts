@@ -3,6 +3,87 @@ import { WardrobeItem, ItemCategory } from '../types';
 import { camelToSnakeCase, snakeToCamelCase } from '../utils/caseConversionExport';
 import * as outfitItemsService from './outfitItemsService';
 
+// Generate a signed URL for an image
+export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600): Promise<string> => {
+  console.log('[wardrobeItemsService] Calling generate-signed-url function for path:', filePath);
+  
+  const { data, error } = await supabase.functions.invoke('generate-signed-url', {
+    body: {
+      filePath: filePath,
+      expiresIn: expiresIn
+    }
+  }); // 1 hour expiration
+  
+  if (error) {
+    console.error('[wardrobeItemsService] Error from generate-signed-url function:', error);
+    throw error;
+  }
+  
+  console.log('[wardrobeItemsService] Generated signed URL:', data.signedUrl);
+  return data.signedUrl;
+};
+
+// Upload file and get signed URL with user-specific folder structure
+const uploadAndSignUrl = async (file: File, itemId: string, userId: string): Promise<string> => {
+  const fileExt = file.name.split('.').pop();
+  const fileName = `${itemId}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+  const filePath = `${userId}/${fileName}`; // User-specific folder
+  
+  console.log('[wardrobeItemsService] Uploading file to path:', filePath);
+  
+  // Upload the file
+  const { error: uploadError } = await supabase.storage
+    .from('wardrobe-images')
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+  
+  if (uploadError) {
+    console.error('[wardrobeItemsService] Storage upload error:', uploadError);
+    throw new Error(`Failed to upload image: ${uploadError.message}`);
+  }
+  
+  console.log('[wardrobeItemsService] File uploaded successfully, generating signed URL...');
+  
+  // Generate 7-day signed URL for production use
+  try {
+    const signedUrlData = await generateSignedUrl(filePath, 604800); // 7 days in seconds
+    const imageExpiry = new Date(Date.now() + (604800 * 1000)); // 7 days from now
+    console.log('Generated 7-day signed URL for production, expires at:', imageExpiry);
+    return signedUrlData;
+  } catch (signedUrlError) {
+    console.error('Failed to generate signed URL:', signedUrlError);
+    // Fallback: store file path if signed URL generation fails
+    return filePath;
+  }
+};
+
+// Delete image from storage
+const deleteImageFromStorage = async (imageUrl: string | null, userId: string): Promise<void> => {
+  try {
+    if (!imageUrl) {
+      console.log('No image URL provided, skipping deletion');
+      return;
+    }
+    
+    // Extract filename from the signed URL or imageUrl
+    const urlParts = imageUrl.split('/');
+    const filename = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+    const filePath = `${userId}/${filename}`;
+    
+    const { error } = await supabase.storage
+      .from('wardrobe-images')
+      .remove([filePath]);
+    
+    if (error) {
+      console.warn('Error deleting image from storage:', error);
+    }
+  } catch (error) {
+    console.warn('Error parsing image URL for deletion:', error);
+  }
+};
+
 // Get all wardrobe items for the current user
 export const getWardrobeItems = async (): Promise<WardrobeItem[]> => {
   try {
@@ -46,8 +127,8 @@ export const getWardrobeItems = async (): Promise<WardrobeItem[]> => {
   }
 };
 
-// Add a new wardrobe item
-export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>): Promise<WardrobeItem | null> => {
+// Add a new wardrobe item with optional file upload
+export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: File): Promise<WardrobeItem | null> => {
   try {
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
@@ -61,11 +142,98 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>): Promise<W
       throw new Error(`Invalid category: ${item.category}. Valid categories are: ${Object.values(ItemCategory).join(', ')}`);
     }
 
+    // Handle file upload if provided - store file path instead of signed URL
+    let imageUrl = item.imageUrl;
+    let imageExpiry: Date | null = null;
+    if (file) {
+      console.log('[wardrobeItemsService] Uploading file and storing path instead of signed URL');
+      
+      // Create a temporary item to get an ID for the file name
+      const tempItemData = {
+        user_id: authData.user.id,
+        name: 'temp_' + Date.now(), // Temporary name
+        category: 'other', // Default category
+        color: 'unknown', // Default color
+        season: ['all'], // Default season
+        wishlist: false
+      };
+
+      const { data: tempItem, error: tempItemError } = await supabase
+        .from('wardrobe_items')
+        .insert(tempItemData)
+        .select()
+        .single();
+      
+      if (tempItemError) {
+        console.error('Error creating temporary item:', tempItemError);
+        throw new Error('Failed to create temporary item: ' + tempItemError.message);
+      }
+      
+      if (!tempItem) throw new Error('No data returned when creating temporary item');
+      
+      // Upload file but store file path instead of signed URL
+      if (typeof tempItem.id === 'string') {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${tempItem.id}-${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+        const filePath = `${authData.user.id}/${fileName}`;
+        
+        console.log('[wardrobeItemsService] Uploading file to path:', filePath);
+        
+        // Upload the file
+        const { error: uploadError } = await supabase.storage
+          .from('wardrobe-images')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('[wardrobeItemsService] Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        console.log('[wardrobeItemsService] File uploaded successfully, generating 1-hour signed URL for testing');
+        
+        // Generate 1-hour signed URL for testing
+        try {
+          const signedUrl = await generateSignedUrl(filePath, 604800); // 7 days for production
+          imageUrl = signedUrl;
+          imageExpiry = new Date(Date.now() + 604800 * 1000); // 7 days from now
+          console.log('[wardrobeItemsService] Generated 7-day signed URL, expires at:', imageExpiry);
+        } catch (signedUrlError) {
+          console.error('[wardrobeItemsService] Failed to generate signed URL:', signedUrlError);
+          // Fallback: store file path if signed URL generation fails
+          imageUrl = filePath;
+        }
+      } else {
+        throw new Error('Failed to generate item ID for file upload');
+      }
+      
+      // Delete the temporary item
+      if (typeof tempItem.id === 'string') {
+        await supabase
+          .from('wardrobe_items')
+          .delete()
+          .eq('id', tempItem.id);
+      }
+    }
+
     // Convert camelCase to snake_case for database storage
-    const snakeCaseItem = camelToSnakeCase({
+    // Only include imageExpiry if column exists (backwards compatibility)
+    const itemData = {
       ...item,
+      imageUrl,
       userId: authData.user.id
-    });
+    };
+    
+    // TODO: Remove this check once image_expiry column is added to database
+    // Only include imageExpiry if column exists and we have a value
+    if (imageExpiry) {
+      console.log('[wardrobeItemsService] Including imageExpiry in database insert:', imageExpiry);
+      // Convert Date object to ISO string for database storage
+      (itemData as any).imageExpiry = imageExpiry.toISOString();
+    } else {
+      console.log('[wardrobeItemsService] Skipping imageExpiry - column may not exist yet');
+    }
+    
+    const snakeCaseItem = camelToSnakeCase(itemData);
     
     const { data, error } = await supabase
       .from('wardrobe_items')
@@ -85,17 +253,30 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>): Promise<W
   }
 };
 
-// Update an existing wardrobe item
-export const updateWardrobeItem = async (item: WardrobeItem): Promise<WardrobeItem | null> => {
+// Update an existing wardrobe item with optional file upload
+export const updateWardrobeItem = async (item: WardrobeItem, file?: File): Promise<WardrobeItem | null> => {
   try {
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
       throw new Error('User not authenticated');
     }
 
+    // Handle file upload if provided
+    let imageUrl = item.imageUrl;
+    if (file) {
+      // Delete old image if exists
+      if (item.imageUrl) {
+        await deleteImageFromStorage(item.imageUrl, authData.user.id);
+      }
+      
+      // Upload new image
+      imageUrl = await uploadAndSignUrl(file, item.id, authData.user.id);
+    }
+
     // Convert camelCase to snake_case for database storage
     const snakeCaseItem = camelToSnakeCase({
       ...item,
+      imageUrl,
       updated_at: new Date().toISOString()
     });
 
@@ -125,6 +306,19 @@ export const deleteWardrobeItem = async (itemId: string): Promise<boolean> => {
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
       throw new Error('User not authenticated');
+    }
+
+    // Get the item first to check if it has an image
+    const { data: itemData } = await supabase
+      .from('wardrobe_items')
+      .select('image_url')
+      .eq('id', itemId)
+      .eq('user_id', authData.user.id)
+      .single();
+
+    // Delete the image from storage if it exists
+    if (itemData?.image_url && typeof itemData.image_url === 'string') {
+      await deleteImageFromStorage(itemData.image_url, authData.user.id);
     }
 
     // With CASCADE delete in the database, deleting the item will automatically

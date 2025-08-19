@@ -52,7 +52,7 @@ interface HomePageModalsProps {
   setIsDeleteConfirmModalOpen: (isOpen: boolean) => void;
   
   // Action handlers
-  handleSubmitAdd: (item: any) => void;
+  handleSubmitAdd: (item: any, file?: File) => void;
   handleSubmitEdit: (item: any) => void;
   handleAddOutfit: (outfit: any) => void;
   handleEditOutfitSubmit: (outfitData: any) => void;

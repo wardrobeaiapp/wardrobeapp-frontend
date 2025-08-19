@@ -11,7 +11,7 @@ import { FormContainer } from '../../shared/styles/form.styles';
 interface WardrobeItemFormProps {
   initialItem?: WardrobeItem;
   defaultWishlist?: boolean;
-  onSubmit: (item: WardrobeItem) => void;
+  onSubmit: (item: WardrobeItem, file?: File) => void;
   onCancel: () => void;
 }
 
@@ -26,15 +26,21 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     defaultWishlist
   });
 
-  const { 
-    previewImage, 
-    handleFileSelect, 
+  const {
+    previewImage,
+    selectedFile,
     handleDrop,
     handleDragOver,
+    handleFileSelect,
+    handleUrlChange
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
-    onImageError: (error: string) => formState.setErrors(prev => ({ ...prev, image: error })),
-    onImageSuccess: () => formState.setErrors(prev => ({ ...prev, image: '' }))
+    onImageError: (message) => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: message || 'Image error' }));
+    },
+    onImageSuccess: () => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    }
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,7 +63,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
         timesWorn: initialItem?.timesWorn || 0
       } as WardrobeItem;
-      onSubmit(item);
+      console.log('[WardrobeItemForm] Submitting with file:', !!selectedFile);
+      onSubmit(item, selectedFile || undefined);
     }
   };
 

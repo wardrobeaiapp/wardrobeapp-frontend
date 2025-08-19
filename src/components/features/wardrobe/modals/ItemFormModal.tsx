@@ -6,7 +6,7 @@ import { Modal } from '../../../common/Modal';
 interface ItemFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (item: any) => void;
+  onSubmit: (item: any, file?: File) => void;
   initialItem?: WardrobeItem;
   isEditing: boolean;
   defaultWishlist?: boolean;
@@ -42,6 +42,11 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
     wishlist: initialItem?.wishlist ?? defaultWishlist
   } : { wishlist: defaultWishlist });
 
+  const handleSubmit = (item: any, file?: File) => {
+    console.log('[ItemFormModal] Handling submit with file:', !!file);
+    onSubmit(item, file);
+  };
+
   if (!isMounted) return null;
 
   return (
@@ -57,11 +62,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
           wishlist: initialItem?.wishlist ?? defaultWishlist
         } : undefined}
         defaultWishlist={defaultWishlist}
-        onSubmit={(item: WardrobeItem) => {
-          if (isMounted) {
-            onSubmit(item);
-          }
-        }}
+        onSubmit={handleSubmit}
         onCancel={() => {
           if (isMounted) {
             onClose();
