@@ -81,7 +81,7 @@ const getSizeStyles = (theme: Theme) => ({
 const getVariantStyles = (theme: Theme) => ({
   outline: css`
     background-color: ${theme.colors.background};
-    border: 1px solid ${theme.colors.border};
+    border: 1px solid ${theme.colors.borderDark};
     border-radius: 0.375rem;
     
     &:focus {

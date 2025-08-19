@@ -70,10 +70,10 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []) => {
   }, []);
 
   // Add a new wardrobe item
-  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => {
+  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>, file?: File) => {
     try {
       setIsLoading(true);
-      // Removed excessive logging for performance
+      console.log('[useWardrobeItemsDB] Adding item with file:', !!file);
       
       // Set default wishlist status for wishlist items
       const wishlistStatus = item.wishlist ? WishlistStatus.NOT_REVIEWED : undefined;
@@ -85,7 +85,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []) => {
         wishlistStatus,
       };
       
-      const newItem = await addWardrobeItem(newItemData);
+      const newItem = await addWardrobeItem(newItemData, file);
       
       if (newItem) {
         // Removed excessive logging for performance

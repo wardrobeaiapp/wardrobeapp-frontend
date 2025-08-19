@@ -25,6 +25,7 @@ export interface WardrobeItem {
   season: Season[];
   scenarios?: string[]; // Array of scenario names this item is suitable for
   imageUrl?: string;
+  imageExpiry?: Date | string; // Timestamp when stored signed URL expires
   dateAdded: string;
   lastWorn?: string;
   timesWorn: number;

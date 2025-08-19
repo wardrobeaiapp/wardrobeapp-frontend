@@ -272,8 +272,9 @@ export const useHomePageData = () => {
     setSelectedCapsule(undefined);
   }, [deleteCapsuleById]);
   
-  const handleSubmitAdd = useCallback((item: any) => {
-    addItem(item);
+  const handleSubmitAdd = useCallback((item: any, file?: File) => {
+    console.log('[useHomePageData] Adding item with file:', !!file);
+    addItem(item, file);
     setIsAddModalOpen(false);
     
     // If the item is a wishlist item, switch to the wishlist tab

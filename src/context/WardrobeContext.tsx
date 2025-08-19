@@ -11,7 +11,7 @@ interface WardrobeContextState {
   items: WardrobeItem[];
   outfits: Outfit[];
   capsules: Capsule[];
-  addItem: (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => void;
+  addItem: (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>, file?: File) => void;
   updateItem: (id: string, item: Partial<WardrobeItem>) => void;
   deleteItem: (id: string) => void;
   addOutfit: (outfit: Omit<Outfit, 'id' | 'dateCreated'>) => void;

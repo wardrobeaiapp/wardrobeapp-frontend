@@ -13,6 +13,7 @@ export const useImageHandling = ({
 }: UseImageHandlingProps) => {
   const [previewImage, setPreviewImage] = useState<string | null>(initialImageUrl || null);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const compressImage = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -76,6 +77,9 @@ export const useImageHandling = ({
     }
     
     try {
+      // Store the original file
+      setSelectedFile(file);
+      
       const compressedImageUrl = await compressImage(file);
       setImageUrl(compressedImageUrl);
       setPreviewImage(compressedImageUrl);
@@ -116,6 +120,7 @@ export const useImageHandling = ({
     setPreviewImage,
     isDownloadingImage,
     setIsDownloadingImage,
+    selectedFile,
     handleFileSelect,
     handleDrop,
     handleDragOver,
