@@ -2,10 +2,12 @@ import React from 'react';
 import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
+import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
 import { ImageUploadSection } from './components/ImageUploadSection';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { DetailsFields } from './components/DetailsFields';
 import { FormActions } from './components/FormActions';
+import { BackgroundRemovalPreview } from './components/BackgroundRemovalPreview';
 import { FormContainer } from '../../shared/styles/form.styles';
 
 interface WardrobeItemFormProps {
@@ -32,6 +34,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     handleDrop,
     handleDragOver,
     handleFileSelect,
+    setPreviewImage,
+    setSelectedFile
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
     onImageError: (message) => {
@@ -41,6 +45,29 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
     }
   });
+
+  const backgroundRemoval = useBackgroundRemoval({
+    onError: (message) => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: message || 'Background removal error' }));
+    },
+    onSuccess: () => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    }
+  });
+
+  const handleRemoveBackground = () => {
+    if (selectedFile && previewImage) {
+      backgroundRemoval.processImage(selectedFile, previewImage);
+    }
+  };
+
+  const handleUseProcessed = async () => {
+    await backgroundRemoval.useProcessed(
+      setPreviewImage,
+      formState.setImageUrl,
+      setSelectedFile
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +99,23 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       <form onSubmit={handleSubmit}>
         <ImageUploadSection
           previewImage={previewImage}
+          selectedFile={selectedFile}
           onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
           onDragOver={handleDragOver}
           onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
+          onRemoveBackground={handleRemoveBackground}
+          isProcessingBackground={backgroundRemoval.isProcessing}
           error={formState.errors.image || ''}
+        />
+
+        <BackgroundRemovalPreview
+          isOpen={backgroundRemoval.showPreview}
+          originalImage={backgroundRemoval.originalImage || ''}
+          processedImage={backgroundRemoval.processedImage || ''}
+          onUseOriginal={backgroundRemoval.useOriginal}
+          onUseProcessed={handleUseProcessed}
+          onClose={backgroundRemoval.closePreview}
+          isProcessing={backgroundRemoval.isProcessing}
         />
 
         <BasicInfoFields
