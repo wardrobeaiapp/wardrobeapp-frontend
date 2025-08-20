@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { PageHeader } from '../components/common/Typography/PageHeader';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import { saveImageFromUrl, isValidImageUrl } from '../services/imageService';
 
 const Container = styled.div`
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 `;
 
 
@@ -15,17 +17,45 @@ const Form = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-bottom: 2rem;
+  width: 100%;
+  max-width: 600px;
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 1rem;
+  width: 100%;
+  
+  &:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
 `;
 
 const Button = styled.button`
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   background-color: #4f46e5;
   color: white;
   border: none;
-  border-radius: 0.25rem;
+  border-radius: 0.5rem;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  &:hover {
+    background-color: #4338ca;
+  }
+  
+  &:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
   
   &:hover {
     background-color: #4338ca;
@@ -50,126 +80,238 @@ const ImagePreview = styled.div`
   overflow: hidden;
 `;
 
-const PreviewImage = styled.img`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const ResultContainer = styled.div`
-  margin-top: 2rem;
-  padding: 1rem;
-  background-color: #f3f4f6;
-  border-radius: 0.5rem;
-  white-space: pre-wrap;
-`;
-
-const TestImageUpload: React.FC = () => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [uploadResult, setUploadResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [displayedImage, setDisplayedImage] = useState<string | null>(null);
-  
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      
-      reader.onload = (event) => {
-        if (event.target && typeof event.target.result === 'string') {
-          setSelectedImage(event.target.result);
-        }
-      };
-      
-      reader.readAsDataURL(e.target.files[0]);
-    }
-  };
-  
-  const handleUpload = async () => {
-    if (!selectedImage) return;
+const TestImageUpload = () => {
+  useEffect(() => {
+    console.log('TestImageUpload component mounted');
     
-    setLoading(true);
-    try {
-      console.log(`Sending image data to test endpoint (length: ${selectedImage.length} chars)`);
-      const response = await fetch(`${API_URL}/wardrobe-items/test-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageData: selectedImage
-        })
+    // Check if the button exists in the DOM
+    const button = document.querySelector('button[type="button"]');
+    console.log('Button found in DOM:', !!button);
+    
+    if (button) {
+      // Check for any global styles that might be affecting the button
+      const buttonStyles = window.getComputedStyle(button);
+      console.log('Button styles:', {
+        display: buttonStyles.display,
+        visibility: buttonStyles.visibility,
+        opacity: buttonStyles.opacity,
+        pointerEvents: buttonStyles.pointerEvents,
+        cursor: buttonStyles.cursor,
       });
       
-      const result = await response.json();
-      setUploadResult(result);
+      // Add a direct event listener to test if clicks are being captured
+      const handleClick = (e: Event) => {
+        console.log('Direct click event captured on button', e);
+        e.stopPropagation();
+      };
       
-      if (result.success && result.fullUrl) {
-        setDisplayedImage(result.fullUrl);
-        // Log the image URL from server, but truncate if it's a base64 string
-        const truncatedUrl = result.fullUrl.startsWith('data:image/') 
-          ? `${result.fullUrl.split(';')[0]}... (${result.fullUrl.length} chars)` 
-          : result.fullUrl;
-        console.log('Image URL from server:', truncatedUrl);
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setUploadResult({ error: 'Failed to upload image' });
-    } finally {
-      setLoading(false);
+      button.addEventListener('click', handleClick, true); // Use capture phase
+      
+      return () => {
+        button.removeEventListener('click', handleClick, true);
+      };
+    }
+  }, []);
+  const [imageUrl, setImageUrl] = useState('');
+  const [preview, setPreview] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [savedUrl, setSavedUrl] = useState<string>('');
+
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value.trim();
+    setImageUrl(url);
+    
+    // Clear previous state
+    setError('');
+    setSavedUrl('');
+    
+    // Set preview if URL is valid
+    if (isValidImageUrl(url)) {
+      setPreview(url);
+    } else if (preview) {
+      setPreview('');
     }
   };
-  
+
+  const handleSaveImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Save button clicked');
+    
+    if (!imageUrl) {
+      const errorMsg = 'Please enter an image URL';
+      console.error(errorMsg);
+      setError(errorMsg);
+      return;
+    }
+    
+    if (!isValidImageUrl(imageUrl)) {
+      const errorMsg = 'Please enter a valid image URL (must start with http:// or https://)';
+      console.error(errorMsg);
+      setError(errorMsg);
+      return;
+    }
+
+    console.log('Starting image save process...');
+    setIsLoading(true);
+    setError('');
+    setSavedUrl('');
+    setPreview(imageUrl); // Set preview immediately
+
+    try {
+      console.log('Calling saveImageFromUrl...');
+      const publicUrl = await saveImageFromUrl(imageUrl);
+      
+      if (!publicUrl) {
+        throw new Error('No URL returned from image upload');
+      }
+      
+      console.log('Image saved successfully:', publicUrl);
+      setSavedUrl(publicUrl);
+      
+      // Verify the URL is accessible
+      try {
+        console.log('Verifying image URL...');
+        const verifyResponse = await fetch(publicUrl, { method: 'HEAD' });
+        if (!verifyResponse.ok) {
+          console.warn('Warning: Image URL verification failed:', verifyResponse.status);
+        }
+      } catch (verifyError) {
+        console.warn('Warning: Could not verify image URL:', verifyError);
+      }
+      
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save image';
+      console.error('Error in handleSaveImage:', errorMsg, err);
+      setError(`Error: ${errorMsg}. Check console for details.`);
+    } finally {
+      console.log('Save process completed');
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Save button clicked - handleSaveClick', {
+      target: e.target,
+      currentTarget: e.currentTarget,
+      eventPhase: e.eventPhase,
+      bubbles: e.bubbles,
+      defaultPrevented: e.defaultPrevented,
+    });
+    handleSaveImage(e);
+  };
+
+  const handleTestClick = () => {
+    console.log('Test button clicked!');
+    alert('Test button works!');
+  };
+
   return (
     <Container>
-      <PageHeader 
-        title="Image Upload Test" 
-        style={{ marginBottom: '2rem' }}
-      />
+      <PageHeader title="Test Image URL Saver" />
+      
+      {/* Test button outside the form */}
+      <div style={{ marginBottom: '20px' }}>
+        <Button 
+          type="button" 
+          onClick={handleTestClick}
+          style={{ backgroundColor: '#10b981' }}
+        >
+          Test Button (Check Console)
+        </Button>
+      </div>
       
       <Form>
-        <input 
-          type="file" 
-          accept="image/*" 
-          onChange={handleImageChange} 
-          disabled={loading}
-        />
+        <div>
+          <label htmlFor="imageUrl" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+            Image URL
+          </label>
+          <Input
+            id="imageUrl"
+            type="url"
+            value={imageUrl}
+            onChange={handleUrlChange}
+            placeholder="https://example.com/image.jpg"
+            disabled={isLoading}
+            onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+          />
+        </div>
         
-        {selectedImage && (
-          <ImagePreview>
-            <PreviewImage src={selectedImage} alt="Selected" />
-          </ImagePreview>
+        <div>
+          <div style={{ 
+            padding: '20px', 
+            border: '2px solid red',
+            margin: '10px 0',
+            position: 'relative',
+            zIndex: 1000
+          }}>
+            <div style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(255,0,0,0.1)',
+              pointerEvents: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'red',
+              fontWeight: 'bold'
+            }}>
+              Click Test Area
+            </div>
+            <Button 
+              type="button" 
+              onClick={handleSaveClick}
+              onMouseDown={e => console.log('Button mouse down', e)}
+              onMouseUp={e => console.log('Button mouse up', e)}
+              disabled={isLoading || !imageUrl}
+              style={{ 
+                marginTop: '1rem',
+                position: 'relative',
+                zIndex: 1001,
+                pointerEvents: 'auto'
+              }}
+            >
+              {isLoading ? 'Saving...' : 'Save Image to Storage'}
+            </Button>
+          </div>
+        </div>
+        
+        {error && <div style={{ color: '#ef4444', marginTop: '0.5rem' }}>Error: {error}</div>}
+        {savedUrl && (
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ color: '#10b981', marginBottom: '0.5rem' }}>
+              Image saved successfully!
+            </div>
+            <div style={{ wordBreak: 'break-all', fontSize: '0.875rem', color: '#4b5563' }}>
+              Public URL: <a href={savedUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+                {savedUrl}
+              </a>
+            </div>
+          </div>
         )}
         
-        <Button 
-          onClick={handleUpload} 
-          disabled={!selectedImage || loading}
-        >
-          {loading ? 'Uploading...' : 'Test Upload'}
-        </Button>
+        {preview && (
+          <div style={{ marginTop: '2rem' }}>
+            <h3 style={{ marginBottom: '0.5rem' }}>Preview:</h3>
+            <ImagePreview>
+              <img 
+                src={preview} 
+                alt="Preview" 
+                style={{ 
+                  maxWidth: '100%', 
+                  maxHeight: '100%',
+                  objectFit: 'contain'
+                }} 
+              />
+            </ImagePreview>
+          </div>
+        )}
       </Form>
-      
-      {uploadResult && (
-        <ResultContainer>
-          <h3>Upload Result:</h3>
-          <pre>{JSON.stringify(uploadResult, null, 2)}</pre>
-        </ResultContainer>
-      )}
-      
-      {displayedImage && (
-        <>
-          <h3>Displayed Image from Server URL:</h3>
-          <ImagePreview>
-            <PreviewImage 
-              src={displayedImage} 
-              alt="From Server" 
-              onError={() => console.error('Error loading image from server URL')}
-            />
-          </ImagePreview>
-          <p>Image URL: {displayedImage.startsWith('data:image/') 
-            ? `${displayedImage.split(';')[0]}... (${displayedImage.length} chars)` 
-            : displayedImage}</p>
-        </>
-      )}
     </Container>
   );
 };
