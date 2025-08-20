@@ -32,7 +32,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     handleDrop,
     handleDragOver,
     handleFileSelect,
-    handleUrlChange
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
     onImageError: (message) => {
