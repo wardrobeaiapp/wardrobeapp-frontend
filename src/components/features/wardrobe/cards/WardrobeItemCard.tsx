@@ -8,8 +8,6 @@ import {
   StatusIcon,
   CardContent,
   ItemName,
-  TagsContainer,
-  Tag,
   ButtonContainer,
 } from './WardrobeItemCard.styles';
 import Button from '../../../common/Button';
@@ -59,14 +57,6 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
       
       <CardContent>
         <ItemName>{item.name}</ItemName>
-        
-        {item.tags && item.tags.length > 0 && (
-          <TagsContainer>
-            {item.tags.map((tag, index) => (
-              <Tag key={index}>{tag}</Tag>
-            ))}
-          </TagsContainer>
-        )}
         
         <ButtonContainer>
           {onView && (

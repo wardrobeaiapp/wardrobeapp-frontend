@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { WardrobeItem } from '../../../../../types';
+import { WardrobeItem, ItemCategory } from '../../../../../types';
+import { detectImageTags, extractTopTags } from '../../../../../services/ximilarService';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
@@ -88,6 +89,80 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       // Import the image proxy service
       const { fetchImageViaProxy } = await import('../../../../../services/imageProxyService');
       
+      // First, detect tags from the URL before processing the image
+      try {
+        console.log('[Ximilar] Detecting tags from URL:', url);
+        const response = await detectImageTags(url);
+        
+        if (!response.records || response.records.length === 0) {
+          console.warn('[Ximilar] No records found in response');
+          return;
+        }
+        
+        // Log the full response for debugging
+        console.log('[Ximilar] Full response:', JSON.stringify(response, null, 2));
+        
+        // Extract all tags from the response
+        const allTags = extractTopTags(response);
+        console.log('[Ximilar] All detected tags:', allTags);
+        
+        // Store all detected tags in form state
+        formState.setDetectedTags?.(allTags);
+        
+        // Auto-fill form fields based on tags
+        if (allTags) {
+          const { Category, Color, Material, Style, Subcategory, ...otherTags } = allTags;
+          
+          if (Category) {
+            const category = Category.split('/').pop(); // Get the last part of the category path
+            if (category) {
+              // Only set category if it's a valid ItemCategory
+              const validCategories = Object.values(ItemCategory);
+              if (validCategories.includes(category as ItemCategory)) {
+                formState.setCategory(category as ItemCategory);
+              }
+            }
+          }
+          
+          if (Color) {
+            formState.setColor(Color);
+          }
+          
+          if (Material) {
+            formState.setMaterial(Material);
+          }
+          
+          if (Subcategory) {
+            formState.setSubcategory(Subcategory);
+          }
+          
+          // Log any additional tags that weren't mapped to specific fields
+          const unmappedTags = Object.entries(otherTags);
+          if (unmappedTags.length > 0) {
+            console.log('[Ximilar] Additional unmapped tags:', unmappedTags);
+          }
+        }
+      } catch (error: unknown) {
+        console.error('[Ximilar] Error detecting tags from URL:', error);
+        // Log additional error details if available
+        if (error && typeof error === 'object') {
+          const err = error as { 
+            response?: { data?: any; status?: number };
+            request?: any;
+            message?: string;
+          };
+          
+          if (err.response) {
+            console.error('[Ximilar] Error response data:', err.response.data);
+            console.error('[Ximilar] Error status:', err.response.status);
+          } else if (err.request) {
+            console.error('[Ximilar] No response received:', err.request);
+          } else if (err.message) {
+            console.error('[Ximilar] Error details:', err.message);
+          }
+        }
+      }
+      
       // Fetch the image via proxy to get a blob and extension
       const { blob, fileExt } = await fetchImageViaProxy(url);
       
@@ -128,6 +203,32 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       const formData = formState.getFormData();
       const finalImageUrl = formData.imageUrl || previewImage || '';
       
+      // Get all detected tags from the form state
+      const detectedTags = formData.detectedTags || {};
+      
+      // Create tags object with all detected tags plus any form field overrides
+      const tags: Record<string, string> = {};
+      
+      // First add all detected tags in their original format
+      Object.entries(detectedTags).forEach(([key, value]) => {
+        if (value) {
+          // Convert keys to lowercase for consistency
+          const normalizedKey = key.toLowerCase();
+          tags[normalizedKey] = value;
+        }
+      });
+      
+      // Then override with any explicitly set form fields
+      if (formData.category) tags.category = formData.category.toLowerCase();
+      if (formData.color) tags.color = formData.color.toLowerCase();
+      if (formData.material) tags.material = formData.material.toLowerCase();
+      if (formData.brand) tags.brand = formData.brand;
+      if (formData.subcategory) tags.subcategory = formData.subcategory.toLowerCase();
+      
+      // Add any additional tags from the form that might not be in detectedTags
+      if (formData.size) tags.size = formData.size;
+      if (formData.price) tags.price = formData.price;
+      
       const item: WardrobeItem = {
         ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
         name: formData.name,
@@ -142,7 +243,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         wishlist: formData.isWishlistItem,
         imageUrl: finalImageUrl,
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
-        timesWorn: initialItem?.timesWorn || 0
+        timesWorn: initialItem?.timesWorn || 0,
+        tags: tags // Save as JSON object
       } as WardrobeItem;
       
       // If we have a Supabase storage URL (processed image), don't pass the file

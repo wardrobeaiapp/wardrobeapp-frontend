@@ -51,8 +51,12 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
     const newItem = {
       ...item,
       dateAdded: new Date().toISOString(),
-      timesWorn: 0
+      timesWorn: 0,
+      // Ensure tags are properly included in the insert
+      tags: item.tags ? { ...item.tags } : undefined
     };
+    
+    console.log('[Supabase] Creating wardrobe item with tags:', newItem.tags);
     
     const { data, error } = await supabase
       .from('wardrobe_items')
@@ -78,7 +82,8 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
       dateAdded: (data.dateAdded || data.date_added) as string,
       lastWorn: (data.lastWorn || data.last_worn) as string | undefined,
       timesWorn: (data.timesWorn || data.times_worn || 0) as number,
-      tags: data.tags as string[] | undefined,
+      // Store the complete tags object as-is with the correct type
+      tags: data.tags as Record<string, any> | undefined,
       wishlist: data.wishlist as boolean | undefined,
       wishlistStatus: (data.wishlistStatus || data.wishlist_status) as WishlistStatus | undefined,
       userId: (data.userId || data.user_id) as string | undefined
@@ -108,9 +113,24 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
 
 export const updateWardrobeItem = async (id: string, item: Partial<WardrobeItem>): Promise<void> => {
   try {
+    // Create a copy of the item to avoid mutating the original
+    const updateData = { ...item };
+    
+    // If tags is being updated, ensure it's properly handled
+    if ('tags' in updateData) {
+      console.log('[Supabase] Updating tags for item:', id, 'New tags:', updateData.tags);
+      // If tags is an empty object, set it to undefined to remove it from the update
+      if (updateData.tags && Object.keys(updateData.tags).length === 0) {
+        updateData.tags = undefined;
+      } else if (updateData.tags === null) {
+        // Convert null to undefined to properly clear the tags
+        updateData.tags = undefined;
+      }
+    }
+    
     const { error } = await supabase
       .from('wardrobe_items')
-      .update(item)
+      .update(updateData)
       .eq('id', id);
     
     if (error) throw error;

@@ -80,8 +80,7 @@ export const useItemFiltering = ({
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.brand && item.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.material && item.material.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.tags && item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+        (item.material && item.material.toLowerCase().includes(searchQuery.toLowerCase())) 
       );
     }
     

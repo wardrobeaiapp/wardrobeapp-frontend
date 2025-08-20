@@ -29,7 +29,7 @@ export interface WardrobeItem {
   dateAdded: string;
   lastWorn?: string;
   timesWorn: number;
-  tags?: string[];
+  tags?: Record<string, any>; // Allow any value type to preserve complete tag structure
   wishlist?: boolean;
   wishlistStatus?: WishlistStatus;
 }

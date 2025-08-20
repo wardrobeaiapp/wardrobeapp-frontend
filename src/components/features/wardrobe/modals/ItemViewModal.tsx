@@ -15,8 +15,6 @@ import {
 // Import component-specific styles
 import {
   ItemDetails,
-  TagsContainer,
-  Tag
 } from './ItemViewModal.styles';
 
 
@@ -197,17 +195,6 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             </DetailRow>
           )}
         </ItemDetails>
-        
-        {item.tags && item.tags.length > 0 ? (
-          <>
-            <h3>Tags</h3>
-            <TagsContainer>
-              {item.tags.map((tag, index) => (
-                <Tag key={index}>{tag}</Tag>
-              ))}
-            </TagsContainer>
-          </>
-        ) : null}
     </Modal>
   );
 };
