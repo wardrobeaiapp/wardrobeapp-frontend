@@ -4,12 +4,14 @@ interface UseImageHandlingProps {
   initialImageUrl?: string;
   onImageError: (error: string) => void;
   onImageSuccess: () => void;
+  onNewImageSelected?: () => void;
 }
 
 export const useImageHandling = ({ 
   initialImageUrl = '', 
   onImageError, 
-  onImageSuccess 
+  onImageSuccess,
+  onNewImageSelected
 }: UseImageHandlingProps) => {
   const [previewImage, setPreviewImage] = useState<string | null>(initialImageUrl || null);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
@@ -84,6 +86,9 @@ export const useImageHandling = ({
       setImageUrl(compressedImageUrl);
       setPreviewImage(compressedImageUrl);
       onImageSuccess();
+      
+      // Reset any background removal state when new image is selected
+      onNewImageSelected?.();
     } catch (error) {
       console.error('Error processing image:', error);
       onImageError('Failed to process image');

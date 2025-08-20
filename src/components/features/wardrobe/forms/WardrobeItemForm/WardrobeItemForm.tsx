@@ -28,6 +28,15 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     defaultWishlist
   });
 
+  const backgroundRemoval = useBackgroundRemoval({
+    onError: (message) => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: message || 'Background removal error' }));
+    },
+    onSuccess: () => {
+      formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    }
+  });
+
   const {
     previewImage,
     selectedFile,
@@ -43,15 +52,9 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     },
     onImageSuccess: () => {
       formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
-    }
-  });
-
-  const backgroundRemoval = useBackgroundRemoval({
-    onError: (message) => {
-      formState.setErrors(prev => ({ ...prev, imageUrl: message || 'Background removal error' }));
     },
-    onSuccess: () => {
-      formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    onNewImageSelected: () => {
+      backgroundRemoval.resetProcessedState();
     }
   });
 
@@ -73,6 +76,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     e.preventDefault();
     if (formState.validateForm()) {
       const formData = formState.getFormData();
+      const finalImageUrl = formData.imageUrl || previewImage || '';
+      
       const item: WardrobeItem = {
         ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
         name: formData.name,
@@ -85,12 +90,23 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         price: parseFloat(formData.price) || 0,
         season: formData.seasons,
         wishlist: formData.isWishlistItem,
-        imageUrl: formData.imageUrl || previewImage || '',
+        imageUrl: finalImageUrl,
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
         timesWorn: initialItem?.timesWorn || 0
       } as WardrobeItem;
-      console.log('[WardrobeItemForm] Submitting with file:', !!selectedFile);
-      onSubmit(item, selectedFile || undefined);
+      
+      // If we have a Supabase storage URL (processed image), don't pass the file
+      const isSupabaseUrl = finalImageUrl && finalImageUrl.includes('supabase');
+      const fileToSubmit = isSupabaseUrl ? undefined : selectedFile || undefined;
+      
+      console.log('[WardrobeItemForm] Submitting with:', {
+        hasFile: !!fileToSubmit,
+        hasImageUrl: !!finalImageUrl,
+        isSupabaseUrl,
+        imageUrl: finalImageUrl
+      });
+      
+      onSubmit(item, fileToSubmit);
     }
   };
 
@@ -105,6 +121,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
           onRemoveBackground={handleRemoveBackground}
           isProcessingBackground={backgroundRemoval.isProcessing}
+          isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
           error={formState.errors.image || ''}
         />
 
