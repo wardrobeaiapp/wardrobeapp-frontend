@@ -17,6 +17,7 @@ export interface WardrobeItemFormData {
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
+  detectedTags?: Record<string, string>;
 }
 
 interface UseWardrobeItemFormProps {
@@ -37,6 +38,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
+  const [detectedTags, setDetectedTags] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -96,21 +98,20 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   };
 
   // Get form data
-  const getFormData = (): WardrobeItemFormData => {
-    return {
-      name: name.trim() || generateAutoName(),
-      category,
-      subcategory,
-      color,
-      material,
-      brand,
-      size,
-      price,
-      seasons,
-      isWishlistItem,
-      imageUrl
-    };
-  };
+  const getFormData = (): WardrobeItemFormData => ({
+    name: name.trim() || generateAutoName(),
+    category,
+    subcategory,
+    color,
+    material,
+    brand,
+    size,
+    price,
+    seasons,
+    isWishlistItem,
+    imageUrl,
+    detectedTags,
+  });
 
   // Reset form
   const resetForm = () => {
@@ -122,6 +123,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setSeasons([]);
     setIsWishlistItem(false);
     setImageUrl('');
+    setDetectedTags({});
     setErrors({});
     setIsSubmitting(false);
   };
@@ -155,6 +157,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setIsWishlistItem,
     imageUrl,
     setImageUrl,
+    setDetectedTags,
     errors,
     setErrors,
     isSubmitting,

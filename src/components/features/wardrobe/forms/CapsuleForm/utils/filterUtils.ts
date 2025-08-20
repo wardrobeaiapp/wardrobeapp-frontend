@@ -68,8 +68,7 @@ export const applySearchFilter = (
   return items.filter(item => 
     item.name.toLowerCase().includes(query) ||
     (item.brand && item.brand.toLowerCase().includes(query)) ||
-    (item.material && item.material.toLowerCase().includes(query)) ||
-    (item.tags && item.tags.some(tag => tag.toLowerCase().includes(query)))
+    (item.material && item.material.toLowerCase().includes(query))
   );
 };
 

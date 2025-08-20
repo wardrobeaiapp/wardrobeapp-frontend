@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { detectImageTags, extractTopTags } from '../../../../../../services/ximilarService';
 
 interface UseImageHandlingProps {
   initialImageUrl?: string;
@@ -65,6 +66,30 @@ export const useImageHandling = ({
     });
   };
 
+  const detectAndLogTags = useCallback(async (imageSource: string | File) => {
+    try {
+      console.log('[Ximilar] Detecting tags for image...');
+      const response = await detectImageTags(
+        imageSource instanceof File ? await fileToBase64(imageSource) : imageSource
+      );
+      const topTags = extractTopTags(response);
+      console.log('[Ximilar] Detected tags:', topTags);
+      return topTags;
+    } catch (error) {
+      console.error('[Ximilar] Error detecting tags:', error);
+      return [];
+    }
+  }, []);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileSelect = async (file: File, setImageUrl: (url: string) => void) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
@@ -87,6 +112,9 @@ export const useImageHandling = ({
       setPreviewImage(compressedImageUrl);
       onImageSuccess();
       
+      // Detect and log tags for the uploaded file
+      await detectAndLogTags(file);
+      
       // Reset any background removal state when new image is selected
       onNewImageSelected?.();
     } catch (error) {
@@ -107,7 +135,7 @@ export const useImageHandling = ({
     e.preventDefault();
   };
 
-  const handleUrlChange = (
+  const handleUrlChange = async (
     url: string, 
     setImageUrl: (url: string) => void
   ) => {
@@ -115,6 +143,13 @@ export const useImageHandling = ({
     if (url) {
       setPreviewImage(url);
       onImageSuccess();
+      
+      // Detect and log tags for the URL image
+      try {
+        await detectAndLogTags(url);
+      } catch (error) {
+        console.error('Error detecting tags for URL image:', error);
+      }
     } else {
       setPreviewImage(null);
     }
