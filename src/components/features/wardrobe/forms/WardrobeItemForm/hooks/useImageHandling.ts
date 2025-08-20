@@ -121,6 +121,7 @@ export const useImageHandling = ({
     isDownloadingImage,
     setIsDownloadingImage,
     selectedFile,
+    setSelectedFile,
     handleFileSelect,
     handleDrop,
     handleDragOver,
