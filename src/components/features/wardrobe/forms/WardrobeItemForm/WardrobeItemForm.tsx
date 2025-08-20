@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
@@ -23,6 +23,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   onSubmit,
   onCancel
 }) => {
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [isImageFromUrl, setIsImageFromUrl] = useState(false);
+  const [isCurrentlyLoadingFromUrl, setIsCurrentlyLoadingFromUrl] = useState(false);
+  
   const formState = useWardrobeItemForm({
     initialItem,
     defaultWishlist
@@ -55,6 +59,9 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     },
     onNewImageSelected: () => {
       backgroundRemoval.resetProcessedState();
+      if (!isCurrentlyLoadingFromUrl) {
+        setIsImageFromUrl(false);
+      }
     }
   });
 
@@ -70,6 +77,49 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       formState.setImageUrl,
       setSelectedFile
     );
+  };
+
+  const handleUrlLoad = async (url: string) => {
+    setIsLoadingUrl(true);
+    setIsCurrentlyLoadingFromUrl(true);
+    formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    
+    try {
+      // Import the image proxy service
+      const { fetchImageViaProxy } = await import('../../../../../services/imageProxyService');
+      
+      // Fetch the image via proxy to get a blob and extension
+      const { blob, fileExt } = await fetchImageViaProxy(url);
+      
+      // Convert blob to File object
+      const fileName = `image-from-url.${fileExt}`;
+      const file = new File([blob], fileName, { type: blob.type });
+      
+      // Use the existing file selection logic
+      handleFileSelect(file, formState.setImageUrl);
+      
+      // Reset processed state when new image is loaded
+      backgroundRemoval.resetProcessedState();
+      
+      // Store the original URL
+      formState.setImageUrl(url);
+      
+      // Mark that this image came from URL AFTER everything else
+      setTimeout(() => {
+        setIsImageFromUrl(true);
+        console.log('Set isImageFromUrl to true for URL image');
+      }, 100);
+    } catch (error) {
+      console.error('Failed to load image from URL:', error);
+      formState.setErrors(prev => ({ 
+        ...prev, 
+        imageUrl: 'Failed to load image from URL. Please check the URL and try again.' 
+      }));
+      setIsImageFromUrl(false);
+    } finally {
+      setIsLoadingUrl(false);
+      setIsCurrentlyLoadingFromUrl(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -119,10 +169,13 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
           onDragOver={handleDragOver}
           onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
+          onUrlLoad={handleUrlLoad}
           onRemoveBackground={handleRemoveBackground}
           isProcessingBackground={backgroundRemoval.isProcessing}
           isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
-          error={formState.errors.image || ''}
+          isLoadingUrl={isLoadingUrl}
+          isImageFromUrl={isImageFromUrl}
+          error={formState.errors.imageUrl || ''}
         />
 
         <BackgroundRemovalPreview
