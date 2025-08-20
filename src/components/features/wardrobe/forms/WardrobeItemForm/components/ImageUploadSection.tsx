@@ -60,6 +60,7 @@ interface ImageUploadSectionProps {
   onFileSelect: (file: File) => void;
   onRemoveBackground?: () => void;
   isProcessingBackground?: boolean;
+  isUsingProcessedImage?: boolean;
   error?: string;
 }
 
@@ -71,6 +72,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   onFileSelect,
   onRemoveBackground,
   isProcessingBackground = false,
+  isUsingProcessedImage = false,
   error
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,7 +106,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 borderRadius: '8px'
               }}
             />
-            {selectedFile && onRemoveBackground && (
+            {selectedFile && onRemoveBackground && !isUsingProcessedImage && (
               <RemoveBackgroundButton
                 type="button"
                 onClick={onRemoveBackground}
