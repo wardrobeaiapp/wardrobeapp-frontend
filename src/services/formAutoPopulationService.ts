@@ -41,6 +41,8 @@ export class FormAutoPopulationService {
     'cardigan': ItemCategory.TOP,
     'hoodie': ItemCategory.TOP,
     'polo': ItemCategory.TOP,
+    'blazer': ItemCategory.TOP,
+    'suit jackets': ItemCategory.TOP,
     
     // Bottoms
     'pants': ItemCategory.BOTTOM,
@@ -59,7 +61,6 @@ export class FormAutoPopulationService {
     // Outerwear
     'jacket': ItemCategory.OUTERWEAR,
     'coat': ItemCategory.OUTERWEAR,
-    'blazer': ItemCategory.OUTERWEAR,
     'vest': ItemCategory.OUTERWEAR,
     'parka': ItemCategory.OUTERWEAR,
     
@@ -103,6 +104,9 @@ export class FormAutoPopulationService {
     'hoodies': 'Hoodie',
     'hoodie': 'Hoodie',
     'polo': 'Polo Shirt',
+    'sweatshirts': 'Sweatshirt',
+    'sweatshirt': 'Sweatshirt',
+    'suit': 'Blazer',
     
     // Bottoms
     'jeans': 'Jeans',
@@ -377,44 +381,75 @@ export class FormAutoPopulationService {
   private static extractSubcategory(tags: DetectedTags): string | null {
     let rawSubcategory: string | null = null;
     
-    // First check hierarchical Category tag like "Accessories/Belts" or "Clothing/Upper"
-    if (tags.Category) {
+    // Debug logging
+    console.log('[FormAutoPopulation] extractSubcategory - Available tags:', Object.keys(tags));
+    console.log('[FormAutoPopulation] extractSubcategory - Tag values:', tags);
+    
+    // PRIORITY 1: Direct Subcategory tag (highest priority)
+    if (tags.Subcategory) {
+      rawSubcategory = tags.Subcategory;
+      console.log('[FormAutoPopulation] extractSubcategory - Using direct Subcategory tag:', rawSubcategory);
+    }
+    
+    // PRIORITY 2: Check hierarchical Category tag like "Accessories/Belts" or "Clothing/Upper"  
+    if (!rawSubcategory && tags.Category) {
       const categoryPath = tags.Category;
       const pathParts = categoryPath.split('/');
       
       // If there are multiple parts, the second part is usually the subcategory
       if (pathParts.length >= 2) {
         rawSubcategory = pathParts[1]; // "Belts" from "Accessories/Belts" or "Upper" from "Clothing/Upper"
+        console.log('[FormAutoPopulation] extractSubcategory - Using Category path subcategory:', rawSubcategory);
       }
     }
     
-    // Then check direct Subcategory tag
-    if (!rawSubcategory && tags.Subcategory) {
-      rawSubcategory = tags.Subcategory;
-    }
-    
-    // Check for other subcategory-related tag names
+    // Check for other subcategory-related tag names, prioritizing direct subcategory fields
     if (!rawSubcategory) {
-      const subcategoryTags = ['SubCategory', 'Sub_Category', 'subcategory', 'Type', 'ItemType', 'Garment', 'Style'];
-      for (const tagName of subcategoryTags) {
+      // First priority: direct subcategory fields
+      const directSubcategoryTags = ['Subcategory', 'SubCategory', 'Sub_Category', 'subcategory'];
+      for (const tagName of directSubcategoryTags) {
         if (tags[tagName] && typeof tags[tagName] === 'string') {
           rawSubcategory = tags[tagName] as string;
           break;
         }
       }
+      
+      // Second priority: other type-related fields
+      if (!rawSubcategory) {
+        const otherTypeTags = ['Type', 'ItemType', 'Garment', 'Style'];
+        for (const tagName of otherTypeTags) {
+          if (tags[tagName] && typeof tags[tagName] === 'string') {
+            rawSubcategory = tags[tagName] as string;
+            break;
+          }
+        }
+      }
     }
     
     // Special handling for "Clothing/" prefixed categories - look for more specific subcategory info
-    if (tags.Category && tags.Category.startsWith('Clothing/')) {
-      // Check if there's a more specific subcategory in other tags
-      const specificTags = ['Type', 'ItemType', 'Garment', 'Product', 'Subcategory'];
+    // But only if we haven't already found a mappable subcategory
+    if (tags.Category && tags.Category.startsWith('Clothing/') && (!rawSubcategory || !this.subcategoryMappings[rawSubcategory.toLowerCase()])) {
+      console.log('[FormAutoPopulation] extractSubcategory - Checking Clothing/ special handling. Current rawSubcategory:', rawSubcategory);
+      console.log('[FormAutoPopulation] extractSubcategory - Is current mappable?', rawSubcategory ? this.subcategoryMappings[rawSubcategory.toLowerCase()] : 'no rawSubcategory');
+      
+      // Check if there's a more specific subcategory in other tags (excluding Subcategory since we already checked it)
+      const specificTags = ['Type', 'ItemType', 'Garment', 'Product'];
       for (const tagName of specificTags) {
         if (tags[tagName] && typeof tags[tagName] === 'string') {
           const tagValue = tags[tagName] as string;
-          // If we find a more specific subcategory, use it instead
+          console.log('[FormAutoPopulation] extractSubcategory - Checking specificTag:', tagName, 'value:', tagValue);
+          // If we find a more specific subcategory that's actually mappable, use it instead
           if (tagValue.toLowerCase() !== 'upper' && tagValue.toLowerCase() !== 'lower' && tagValue.toLowerCase() !== 'clothing') {
-            rawSubcategory = tagValue;
-            break;
+            // Only override if this new value is mappable or if we don't have a mappable value yet
+            const isNewValueMappable = this.subcategoryMappings[tagValue.toLowerCase()];
+            const isCurrentMappable = this.subcategoryMappings[rawSubcategory?.toLowerCase() || ''];
+            console.log('[FormAutoPopulation] extractSubcategory - isNewValueMappable:', isNewValueMappable, 'isCurrentMappable:', isCurrentMappable);
+            
+            if (isNewValueMappable || !isCurrentMappable) {
+              console.log('[FormAutoPopulation] extractSubcategory - Overriding with:', tagValue);
+              rawSubcategory = tagValue;
+              break;
+            }
           }
         }
       }
@@ -422,16 +457,20 @@ export class FormAutoPopulationService {
 
     // Map the raw subcategory to our normalized format
     if (rawSubcategory) {
+      console.log('[FormAutoPopulation] extractSubcategory - Raw subcategory found:', rawSubcategory);
       const lowerSubcategory = rawSubcategory.toLowerCase();
+      console.log('[FormAutoPopulation] extractSubcategory - Lowercase subcategory:', lowerSubcategory);
       
       // Skip generic terms that don't provide specific subcategory info
       const genericTerms = ['upper', 'lower', 'clothing', 'apparel', 'garment'];
       if (genericTerms.includes(lowerSubcategory)) {
+        console.log('[FormAutoPopulation] extractSubcategory - Skipping generic term:', lowerSubcategory);
         return null; // Let category extraction handle these cases
       }
       
       // Direct mapping check
       if (this.subcategoryMappings[lowerSubcategory]) {
+        console.log('[FormAutoPopulation] extractSubcategory - Direct mapping found:', this.subcategoryMappings[lowerSubcategory]);
         return this.subcategoryMappings[lowerSubcategory];
       }
       
