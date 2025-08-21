@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
 import { 
   getWardrobeItems, 
@@ -9,7 +9,18 @@ import {
 } from '../services/wardrobeItemsService';
 import { fetchOutfits } from '../services/outfitService';
 
-export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []) => {
+interface UseWardrobeItemsDBReturn {
+  items: WardrobeItem[];
+  setItems: React.Dispatch<React.SetStateAction<WardrobeItem[]>>;
+  isLoading: boolean;
+  error: string | null;
+  addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
+  updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
+  deleteItem: (id: string) => Promise<boolean>;
+  refreshItems: () => Promise<void>;
+}
+
+export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardrobeItemsDBReturn => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,186 +28,181 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []) => {
   // Use a ref to track if the component is mounted
   const isMountedRef = useRef<boolean>(true);
 
-  // Load items from database on component mount
-  useEffect(() => {
-    // Set mounted flag to true when component mounts
-    isMountedRef.current = true;
+  // Memoize the loadItems function to prevent recreation on every render
+  const loadItems = useCallback(async () => {
+    if (!isMountedRef.current) return;
     
-    const loadItems = async () => {
-      // Set loading state to true immediately and ensure it's visible
-      setIsLoading(true);
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Always attempt to load from the database first
+      const dbItems = await getWardrobeItems();
       
-      // Removed artificial delay that may cause blinking
+      if (!isMountedRef.current) return;
       
-      // Removed unused startTime variable that was previously used for minimum loading duration
-      try {
-        // Always attempt to load from the database first
-        const dbItems = await getWardrobeItems();
+      if (dbItems && dbItems.length > 0) {
+        setItems(dbItems);
+        return;
+      }
+      
+      // If no items in database, try to migrate from localStorage if there are any
+      const localStorageItems = JSON.parse(localStorage.getItem('wardrobe-items-guest') || '[]');
+      
+      if (localStorageItems.length > 0) {
+        const migrationSuccess = await migrateLocalStorageItemsToSupabase();
         
-        if (dbItems && dbItems.length > 0) {
-          setItems(dbItems);
-        } else {
-          // If no items in database, try to migrate from localStorage if there are any
-          const localStorageItems = JSON.parse(localStorage.getItem('wardrobe-items-guest') || '[]');
-          
-          if (localStorageItems.length > 0) {
-            // Removed excessive logging for performance
-            const migrationSuccess = await migrateLocalStorageItemsToSupabase();
-            if (migrationSuccess) {
-              // If migration was successful, fetch the items again
-              const migratedItems = await getWardrobeItems();
-              setItems(migratedItems);
-              // Clear localStorage after successful migration
-              localStorage.removeItem('wardrobe-items-guest');
-            }
+        if (!isMountedRef.current) return;
+        
+        if (migrationSuccess) {
+          // If migration was successful, fetch the items again
+          const migratedItems = await getWardrobeItems();
+          if (isMountedRef.current) {
+            setItems(migratedItems);
+            // Clear localStorage after successful migration
+            localStorage.removeItem('wardrobe-items-guest');
           }
-        }
-      } catch (err: any) {
-        setError(err.message || 'Failed to load wardrobe items');
-      } finally {
-        // Set loading state to false immediately when data is ready
-        if (isMountedRef.current) {
-          setIsLoading(false);
+        } else {
+          // If migration failed, use the localStorage items
+          setItems(localStorageItems);
         }
       }
-    };
+    } catch (error) {
+      console.error('Error loading items:', error);
+      if (isMountedRef.current) {
+        setError('Failed to load items');
+      }
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
 
+  // Load items from database on component mount
+  useEffect(() => {
+    isMountedRef.current = true;
     loadItems();
     
-    // Cleanup function to run when component unmounts
+    // Cleanup function to set isMounted to false when component unmounts
     return () => {
       isMountedRef.current = false;
     };
+  }, [loadItems]);
+
+  // Add a new item
+  const addItem = useCallback(async (item: Omit<WardrobeItem, 'id'>, file?: File): Promise<WardrobeItem | null> => {
+    try {
+      setIsLoading(true);
+      const newItem = await addWardrobeItem(item, file);
+      if (newItem) {
+        setItems(prevItems => [...prevItems, newItem]);
+        return newItem;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error adding item:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Add a new wardrobe item
-  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>, file?: File) => {
-    try {
-      setIsLoading(true);
-      console.log('[useWardrobeItemsDB] Adding item with file:', !!file);
-      
-      // Set default wishlist status for wishlist items
-      const wishlistStatus = item.wishlist ? WishlistStatus.NOT_REVIEWED : undefined;
-      
-      const newItemData = {
-        ...item,
-        dateAdded: new Date().toISOString(),
-        timesWorn: 0,
-        wishlistStatus,
-      };
-      
-      const newItem = await addWardrobeItem(newItemData, file);
-      
-      if (newItem) {
-        // Removed excessive logging for performance
-        setItems(prevItems => [newItem, ...prevItems]);
-        return newItem;
-      } else {
-        throw new Error('Failed to add item to database');
-      }
-    } catch (err: any) {
-      // Removed excessive logging for performance
-      setError(err.message || 'Failed to add item');
-      return null;
-    } finally {
+  // Update an existing item with optimistic updates
+  const updateItem = useCallback(async (id: string, updates: Partial<WardrobeItem>): Promise<WardrobeItem | null> => {
+    if (!isMountedRef.current) return null;
+    
+    setIsLoading(true);
+    const currentItem = items.find(item => item.id === id);
+    if (!currentItem) {
       setIsLoading(false);
+      throw new Error('Item not found');
     }
-  };
-
-  // Update an existing wardrobe item
-  const updateItem = async (id: string, updatedFields: Partial<WardrobeItem>) => {
+    
+    // Optimistically update the UI
+    const optimisticUpdate = { ...currentItem, ...updates };
+    setItems(prevItems => 
+      prevItems.map(item => item.id === id ? optimisticUpdate : item)
+    );
+    
     try {
-      setIsLoading(true);
-      // Removed excessive logging for performance
+      const updatedItem = await updateWardrobeItem(optimisticUpdate);
       
-      // Find the current item
-      const currentItem = items.find(item => item.id === id);
-      if (!currentItem) {
-        throw new Error(`Item with ID ${id} not found`);
-      }
-      
-      // Merge current item with updated fields
-      const updatedItem = {
-        ...currentItem,
-        ...updatedFields
-      };
-      
-      const result = await updateWardrobeItem(updatedItem);
-      
-      if (result) {
-        console.log('[useWardrobeItemsDB] Item updated successfully:', result);
-        
-        // Update local state
-        setItems(prevItems => 
-          prevItems.map(item => item.id === id ? result : item)
-        );
-        
-        return result;
-      } else {
-        throw new Error('Failed to update item in database');
-      }
-    } catch (err: any) {
-      console.error('[useWardrobeItemsDB] Error updating item:', err);
-      setError(err.message || 'Failed to update item');
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Delete a wardrobe item
-  const deleteItem = async (id: string) => {
-    try {
-      setIsLoading(true);
-      // Removed excessive logging for performance
-      
-      const success = await deleteWardrobeItem(id);
-      
-      if (success) {
-        // Removed excessive logging for performance
-        
-        // Update local state
-        setItems(prevItems => prevItems.filter(item => item.id !== id));
-        
-        // Refresh outfits to reflect the changes in the join table
-        try {
-          // Removed excessive logging for performance
-          // This will trigger a re-fetch of outfits from the database
-          // which will reflect the cascaded deletions in the join table
-          const updatedOutfits = await fetchOutfits();
-          
-          // We need to dispatch this update to the WardrobeContext
-          // This is handled by the custom event below
-          window.dispatchEvent(new CustomEvent('wardrobeItemDeleted', { 
-            detail: { updatedOutfits } 
-          }));
-          
-          // Removed excessive logging for performance
-        } catch (outfitError) {
-          // Removed excessive logging for performance
-          // Continue with the deletion process even if outfit refresh fails
+      if (isMountedRef.current) {
+        if (updatedItem) {
+          // Update with server response
+          setItems(prevItems => 
+            prevItems.map(item => item.id === id ? updatedItem : item)
+          );
+          return updatedItem;
         }
-        
-        return true;
-      } else {
-        throw new Error('Failed to delete item from database');
+        // If no updated item from server, revert to current item
+        setItems(prevItems => 
+          prevItems.map(item => item.id === id ? currentItem : item)
+        );
+        return null;
       }
-    } catch (err: any) {
-      // Removed excessive logging for performance
-      setError(err.message || 'Failed to delete item');
-      return false;
+      return null;
+    } catch (error) {
+      console.error('Error updating item:', error);
+      // Revert to original item on error
+      if (isMountedRef.current) {
+        setItems(prevItems => 
+          prevItems.map(item => item.id === id ? currentItem : item)
+        );
+      }
+      throw error;
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [items]);
 
-  return {
+  // Delete an item with optimistic updates
+  const deleteItem = useCallback(async (id: string): Promise<boolean> => {
+    if (!isMountedRef.current) return false;
+    
+    setIsLoading(true);
+    const itemToDelete = items.find(item => item.id === id);
+    if (!itemToDelete) {
+      setIsLoading(false);
+      return false;
+    }
+    
+    // Optimistically remove the item from the UI
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
+    
+    try {
+      await deleteWardrobeItem(id);
+      return true;
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      // Revert the optimistic update on error
+      if (isMountedRef.current) {
+        setItems(prevItems => {
+          // Only add back if not already present
+          const exists = prevItems.some(item => item.id === id);
+          return exists ? prevItems : [...prevItems, itemToDelete];
+        });
+      }
+      throw error; // Re-throw to allow error handling in the component
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [items]);
+
+  // Memoize the returned object to prevent unnecessary re-renders
+  return useMemo(() => ({
     items,
     setItems,
+    isLoading,
+    error,
     addItem,
     updateItem,
     deleteItem,
-    isLoading,
-    error
-  };
+    refreshItems: loadItems
+  }), [items, isLoading, error, addItem, updateItem, deleteItem, loadItems]);
 };
