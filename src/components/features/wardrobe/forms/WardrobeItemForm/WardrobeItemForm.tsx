@@ -64,9 +64,33 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       setIsImageFromUrl(false);
       console.log('Reset isImageFromUrl to false for new file selection');
     },
-    onTagsDetected: (tags) => {
+    onTagsDetected: async (tags) => {
       console.log('[WardrobeItemForm] Received detected tags:', tags);
       formState.setDetectedTags(tags);
+      
+      // Auto-fill form fields using the dedicated service
+      if (tags) {
+        const { FormAutoPopulationService } = await import('../../../../../services/formAutoPopulationService');
+        
+        FormAutoPopulationService.autoPopulateForm(
+          tags,
+          {
+            setCategory: formState.setCategory,
+            setSubcategory: formState.setSubcategory,
+            setColor: formState.setColor,
+            setMaterial: formState.setMaterial,
+            setBrand: formState.setBrand,
+            setSize: formState.setSize,
+            setName: formState.setName,
+            toggleSeason: formState.toggleSeason,
+          },
+          formState.getFormData(),
+          {
+            overwriteExisting: false,
+            skipFields: [],
+          }
+        );
+      }
     }
   });
 
@@ -110,42 +134,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         const allTags = extractTopTags(response);
         console.log('[Ximilar] All detected tags:', allTags);
         
-        // Store all detected tags in form state
+        // Store all detected tags in form state - auto-population happens via onTagsDetected callback
         formState.setDetectedTags?.(allTags);
-        
-        // Auto-fill form fields based on tags
-        if (allTags) {
-          const { Category, Color, Material, Style, Subcategory, ...otherTags } = allTags;
-          
-          if (Category) {
-            const category = Category.split('/').pop(); // Get the last part of the category path
-            if (category) {
-              // Only set category if it's a valid ItemCategory
-              const validCategories = Object.values(ItemCategory);
-              if (validCategories.includes(category as ItemCategory)) {
-                formState.setCategory(category as ItemCategory);
-              }
-            }
-          }
-          
-          if (Color) {
-            formState.setColor(Color);
-          }
-          
-          if (Material) {
-            formState.setMaterial(Material);
-          }
-          
-          if (Subcategory) {
-            formState.setSubcategory(Subcategory);
-          }
-          
-          // Log any additional tags that weren't mapped to specific fields
-          const unmappedTags = Object.entries(otherTags);
-          if (unmappedTags.length > 0) {
-            console.log('[Ximilar] Additional unmapped tags:', unmappedTags);
-          }
-        }
       } catch (error: unknown) {
         console.error('[Ximilar] Error detecting tags from URL:', error);
         // Log additional error details if available
