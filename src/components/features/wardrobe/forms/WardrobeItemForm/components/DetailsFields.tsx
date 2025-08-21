@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
-import { Season, ItemCategory } from '../../../../../../types';
-import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
-import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup } from '../../../../../../components/common/Form';
+import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
+import { ItemCategory, Season } from '../../../../../../types';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -16,6 +16,10 @@ interface DetailsFieldsProps {
   onSilhouetteChange: (silhouette: string) => void;
   length: string;
   onLengthChange: (length: string) => void;
+  sleeves: string;
+  onSleeveChange: (sleeve: string) => void;
+  style: string;
+  onStyleChange: (style: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
@@ -37,6 +41,10 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onSilhouetteChange,
   length,
   onLengthChange,
+  sleeves,
+  onSleeveChange,
+  style,
+  onStyleChange,
   seasons,
   onToggleSeason,
   isWishlistItem,
@@ -45,8 +53,34 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   errors
 }) => {
   // Hide silhouette and length fields for accessories, footwear, and other categories
-  const shouldShowSilhouetteAndLength = category && 
+  const shouldShowSilhouette = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER].includes(category as ItemCategory);
+  
+  const shouldShowLength = category && 
+    ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER, ItemCategory.TOP].includes(category as ItemCategory);
+
+  // Show sleeves field only for TOP category
+  const shouldShowSleeves = category === ItemCategory.TOP || category === ItemCategory.ONE_PIECE;
+
+  // Show style field for all categories except ACCESSORY and OTHER
+  const shouldShowStyle = category && 
+    ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
+
+  const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory) : [];
+  const sleeveOptions = getSleeveOptions();
+  const styleOptions = getStyleOptions();
+  
+  // Debug field visibility
+  console.log('[DetailsFields] Field visibility debug:', {
+    category,
+    shouldShowSleeves,
+    shouldShowStyle,
+    shouldShowSilhouette,
+    shouldShowLength,
+    sleeves,
+    style
+  });
+  
   return (
     <>
       <FormRow>
@@ -61,7 +95,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
           />
         </FormField>
         
-        <FormField label="Brand" error={errors.brand}>
+        {/* <FormField label="Brand" error={errors.brand}>
           <FormInput
             type="text"
             value={brand}
@@ -70,11 +104,72 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             variant="outline"
             isFullWidth
           />
-        </FormField>
+        </FormField> */}
+
+        {shouldShowSilhouette && (
+            <FormField label="Silhouette" error={errors.silhouette}>
+              <FormSelect
+                value={silhouette}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onSilhouetteChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select silhouette</option>
+                {silhouetteOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {shouldShowLength && (
+            <FormField label="Length" error={errors.length}>
+              <FormInput
+                type="text"
+                value={length}
+                onChange={(e: ChangeEvent<HTMLInputElement>) => onLengthChange(e.target.value)}
+                placeholder="e.g., Mini, Midi, Maxi, Short, Long"
+                variant="outline"
+                isFullWidth
+              />
+            </FormField>
+          )}
+
+          {shouldShowSleeves && (
+            <FormField label="Sleeves" error={errors.sleeves}>
+              <FormSelect
+                value={sleeves}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onSleeveChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select sleeves</option>
+                {sleeveOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {shouldShowStyle && (
+            <FormField label="Style" error={errors.style}>
+              <FormSelect
+                value={style}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onStyleChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select style</option>
+                {styleOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
       </FormRow>
 
       <FormRow style={{ marginTop: '1.5rem' }}>
-        <FormField label="Size" error={errors.size}>
+        {/* <FormField label="Size" error={errors.size}>
           <FormInput
             type="text"
             value={size}
@@ -83,7 +178,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             variant="outline"
             isFullWidth
           />
-        </FormField>
+        </FormField> */}
         
         <FormField label="Purchase Price" error={errors.price}>
           <FormInput
@@ -96,32 +191,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
           />
         </FormField>
       </FormRow>
-
-      {shouldShowSilhouetteAndLength && (
-        <FormRow style={{ marginTop: '1.5rem' }}>
-          <FormField label="Silhouette" error={errors.silhouette}>
-            <FormInput
-              type="text"
-              value={silhouette}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => onSilhouetteChange(e.target.value)}
-              placeholder="e.g., A-line, Fitted, Loose"
-              variant="outline"
-              isFullWidth
-            />
-          </FormField>
-          
-          <FormField label="Length" error={errors.length}>
-            <FormInput
-              type="text"
-              value={length}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => onLengthChange(e.target.value)}
-              placeholder="e.g., Mini, Midi, Maxi, Short, Long"
-              variant="outline"
-              isFullWidth
-            />
-          </FormField>
-        </FormRow>
-      )}
 
       <FormField 
         label="Seasons" 

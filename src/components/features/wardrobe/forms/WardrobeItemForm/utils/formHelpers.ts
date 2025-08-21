@@ -52,8 +52,8 @@ export const AVAILABLE_SEASONS = [
   Season.WINTER
 ] as const;
 
-// Season display names
-export const getSeasonDisplayName = (season: Season | string): string => {
+// Get season display name
+export const getSeasonDisplayName = (season: Season): string => {
   switch (season) {
     case Season.SPRING:
       return 'Spring';
@@ -65,5 +65,36 @@ export const getSeasonDisplayName = (season: Season | string): string => {
       return 'Winter';
     default:
       return season;
+  }
+};
+
+// Get sleeve options for TOP category
+export const getSleeveOptions = (): string[] => {
+  return ['3/4 sleeves', 'long sleeves', 'one sleeve', 'short sleeves', 'sleeveless'];
+};
+
+// Get style options for most categories (except ACCESSORY and OTHER)
+export const getStyleOptions = (): string[] => {
+  return ['casual', 'elegant', 'special', 'sport'];
+};
+
+// Get silhouette options based on category or subcategory
+export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
+  // Handle based on category first
+  switch (category) {
+    case ItemCategory.TOP:
+      return ['Fitted', 'Loose', 'Regular'];
+    case ItemCategory.BOTTOM:
+      return ['Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut'];
+    case ItemCategory.ONE_PIECE:
+      return ['Body-Fitting', 'A-Line', 'Straight', 'Fit & Flare', 'Shift', 'Wrap'];
+    case ItemCategory.OUTERWEAR:
+      return ['Fitted', 'Regular Fit', 'Oversized', 'Cropped', 'Longline'];
+    case ItemCategory.FOOTWEAR:
+    case ItemCategory.ACCESSORY:
+    case ItemCategory.OTHER:
+      return []; // No silhouette options for these categories
+    default:
+      return [];
   }
 };

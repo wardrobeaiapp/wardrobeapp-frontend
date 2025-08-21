@@ -387,6 +387,14 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
     
     const snakeCaseItem = camelToSnakeCase(itemData);
     
+    // Debug logging to check if sleeves/style data is present
+    console.log('[wardrobeItemsService] Item data being inserted:', {
+      sleeves: snakeCaseItem.sleeves,
+      style: snakeCaseItem.style,
+      silhouette: snakeCaseItem.silhouette,
+      length: snakeCaseItem.length
+    });
+    
     const { data, error } = await supabase
       .from('wardrobe_items')
       .insert(snakeCaseItem)

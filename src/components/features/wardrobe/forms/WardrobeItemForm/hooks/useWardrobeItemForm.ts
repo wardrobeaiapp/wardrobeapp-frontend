@@ -16,6 +16,8 @@ export interface WardrobeItemFormData {
   price: string;
   silhouette: string;
   length: string;
+  sleeves: string;
+  style: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -39,6 +41,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [price, setPrice] = useState(initialItem?.price?.toString() || '');
   const [silhouette, setSilhouette] = useState(initialItem?.silhouette || '');
   const [length, setLength] = useState(initialItem?.length || '');
+  const [sleeves, setSleeves] = useState(initialItem?.sleeves || '');
+  const [style, setStyle] = useState(initialItem?.style || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -102,22 +106,36 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   };
 
   // Get form data
-  const getFormData = (): WardrobeItemFormData => ({
-    name: name.trim() || generateAutoName(),
-    category,
-    subcategory,
-    color,
-    material,
-    brand,
-    size,
-    price,
-    silhouette,
-    length,
-    seasons,
-    isWishlistItem,
-    imageUrl,
-    detectedTags,
-  });
+  const getFormData = (): WardrobeItemFormData => {
+    const formData = {
+      name: name.trim() || generateAutoName(),
+      category,
+      subcategory,
+      color,
+      material,
+      brand,
+      size,
+      price,
+      silhouette,
+      length,
+      sleeves,
+      style,
+      seasons,
+      isWishlistItem,
+      imageUrl,
+      detectedTags,
+    };
+    
+    // Debug logging
+    console.log('[useWardrobeItemForm] Form data collected:', {
+      sleeves: formData.sleeves,
+      style: formData.style,
+      silhouette: formData.silhouette,
+      length: formData.length
+    });
+    
+    return formData;
+  };
 
   // Reset form
   const resetForm = () => {
@@ -131,6 +149,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setPrice('');
     setSilhouette('');
     setLength('');
+    setStyle('');
+    setSleeves('');
     setSeasons([]);
     setIsWishlistItem(false);
     setImageUrl('');
@@ -166,6 +186,10 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setSilhouette,
     length,
     setLength,
+    sleeves,
+    setSleeves,
+    style,
+    setStyle,
     seasons,
     toggleSeason,
     isWishlistItem,

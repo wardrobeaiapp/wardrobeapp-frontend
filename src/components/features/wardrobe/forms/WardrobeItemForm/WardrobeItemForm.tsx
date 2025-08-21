@@ -26,7 +26,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 }) => {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
-  const [isCurrentlyLoadingFromUrl, setIsCurrentlyLoadingFromUrl] = useState(false);
   
   const formState = useWardrobeItemForm({
     initialItem,
@@ -81,6 +80,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setMaterial: formState.setMaterial,
             setBrand: formState.setBrand,
             setSize: formState.setSize,
+            setSilhouette: formState.setSilhouette,
+            setLength: formState.setLength,
+            setSleeves: formState.setSleeves,
+            setStyle: formState.setStyle,
             setName: formState.setName,
             toggleSeason: formState.toggleSeason,
           },
@@ -110,7 +113,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 
   const handleUrlLoad = async (url: string) => {
     setIsLoadingUrl(true);
-    setIsCurrentlyLoadingFromUrl(true);
     formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
     
     try {
@@ -187,7 +189,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       setIsImageFromUrl(false);
     } finally {
       setIsLoadingUrl(false);
-      setIsCurrentlyLoadingFromUrl(false);
     }
   };
 
@@ -238,6 +239,11 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         imageUrl: finalImageUrl,
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
         timesWorn: initialItem?.timesWorn || 0,
+        // Add new detail fields
+        sleeves: formData.sleeves,
+        style: formData.style,
+        silhouette: formData.silhouette,
+        length: formData.length,
         tags: tags // Save as JSON object
       } as WardrobeItem;
       
@@ -309,6 +315,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onSilhouetteChange={formState.setSilhouette}
           length={formState.length}
           onLengthChange={formState.setLength}
+          sleeves={formState.sleeves}
+          onSleeveChange={formState.setSleeves}
+          style={formState.style}
+          onStyleChange={formState.setStyle}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}

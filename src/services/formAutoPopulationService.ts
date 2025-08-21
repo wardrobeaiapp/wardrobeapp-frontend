@@ -1,9 +1,8 @@
 import { ItemCategory, Season } from '../types';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
-interface DetectedTags {
-  [key: string]: string;
-}
+type DetectedTags = Record<string, string>;
 
 interface FormFieldSetters {
   setCategory?: (category: ItemCategory) => void;
@@ -15,6 +14,8 @@ interface FormFieldSetters {
   setPrice?: (price: string) => void;
   setSilhouette?: (silhouette: string) => void;
   setLength?: (length: string) => void;
+  setSleeves?: (sleeves: string) => void;
+  setStyle?: (style: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -251,8 +252,18 @@ export class FormAutoPopulationService {
     }
 
     // 7. Silhouette mapping
+    console.log('[DEBUG] Silhouette check:', {
+      hasSetter: !!formSetters.setSilhouette,
+      shouldUpdate: shouldUpdateField('silhouette', currentFormData?.silhouette),
+      currentSilhouette: currentFormData?.silhouette
+    });
+    
     if (formSetters.setSilhouette && shouldUpdateField('silhouette', currentFormData?.silhouette)) {
-      const silhouette = this.extractSilhouette(detectedTags);
+      // Get category for silhouette validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      console.log('[DEBUG] Category for silhouette:', category);
+      const silhouette = this.extractSilhouette(detectedTags, category);
+      console.log('[DEBUG] Extracted silhouette result:', silhouette);
       if (silhouette) {
         console.log('[FormAutoPopulation] Setting silhouette:', silhouette);
         formSetters.setSilhouette(silhouette);
@@ -268,7 +279,29 @@ export class FormAutoPopulationService {
       }
     }
 
-    // 9. Season mapping
+    // 9. Sleeves mapping
+    if (formSetters.setSleeves && shouldUpdateField('sleeves', currentFormData?.sleeves)) {
+      // Get category for sleeves validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const sleeves = this.extractSleeves(detectedTags, category);
+      if (sleeves) {
+        console.log('[FormAutoPopulation] Setting sleeves:', sleeves);
+        formSetters.setSleeves(sleeves);
+      }
+    }
+
+    // 10. Style mapping
+    if (formSetters.setStyle && shouldUpdateField('style', currentFormData?.style)) {
+      // Get category for style validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const style = this.extractStyle(detectedTags, category);
+      if (style) {
+        console.log('[FormAutoPopulation] Setting style:', style);
+        formSetters.setStyle(style);
+      }
+    }
+
+    // 11. Season mapping
     if (formSetters.toggleSeason && shouldUpdateField('seasons', currentFormData?.seasons)) {
       const seasons = this.extractSeasons(detectedTags);
       if (seasons.length > 0) {
@@ -344,14 +377,14 @@ export class FormAutoPopulationService {
   private static extractSubcategory(tags: DetectedTags): string | null {
     let rawSubcategory: string | null = null;
     
-    // First check hierarchical Category tag like "Accessories/Belts"
+    // First check hierarchical Category tag like "Accessories/Belts" or "Clothing/Upper"
     if (tags.Category) {
       const categoryPath = tags.Category;
       const pathParts = categoryPath.split('/');
       
       // If there are multiple parts, the second part is usually the subcategory
       if (pathParts.length >= 2) {
-        rawSubcategory = pathParts[1]; // "Belts" from "Accessories/Belts"
+        rawSubcategory = pathParts[1]; // "Belts" from "Accessories/Belts" or "Upper" from "Clothing/Upper"
       }
     }
     
@@ -360,14 +393,42 @@ export class FormAutoPopulationService {
       rawSubcategory = tags.Subcategory;
     }
     
-    // Look for subcategory hints in other tags
-    if (!rawSubcategory && tags.Style) {
-      rawSubcategory = tags.Style;
+    // Check for other subcategory-related tag names
+    if (!rawSubcategory) {
+      const subcategoryTags = ['SubCategory', 'Sub_Category', 'subcategory', 'Type', 'ItemType', 'Garment', 'Style'];
+      for (const tagName of subcategoryTags) {
+        if (tags[tagName] && typeof tags[tagName] === 'string') {
+          rawSubcategory = tags[tagName] as string;
+          break;
+        }
+      }
+    }
+    
+    // Special handling for "Clothing/" prefixed categories - look for more specific subcategory info
+    if (tags.Category && tags.Category.startsWith('Clothing/')) {
+      // Check if there's a more specific subcategory in other tags
+      const specificTags = ['Type', 'ItemType', 'Garment', 'Product', 'Subcategory'];
+      for (const tagName of specificTags) {
+        if (tags[tagName] && typeof tags[tagName] === 'string') {
+          const tagValue = tags[tagName] as string;
+          // If we find a more specific subcategory, use it instead
+          if (tagValue.toLowerCase() !== 'upper' && tagValue.toLowerCase() !== 'lower' && tagValue.toLowerCase() !== 'clothing') {
+            rawSubcategory = tagValue;
+            break;
+          }
+        }
+      }
     }
 
     // Map the raw subcategory to our normalized format
     if (rawSubcategory) {
       const lowerSubcategory = rawSubcategory.toLowerCase();
+      
+      // Skip generic terms that don't provide specific subcategory info
+      const genericTerms = ['upper', 'lower', 'clothing', 'apparel', 'garment'];
+      if (genericTerms.includes(lowerSubcategory)) {
+        return null; // Let category extraction handle these cases
+      }
       
       // Direct mapping check
       if (this.subcategoryMappings[lowerSubcategory]) {
@@ -485,8 +546,8 @@ export class FormAutoPopulationService {
       return tags.Size;
     }
 
-    // Look for size hints in other tags
-    const sizeKeywords = ['size', 'fit'];
+    // Look for size hints in other tags (excluding 'fit' to avoid conflict with silhouette)
+    const sizeKeywords = ['size'];
     for (const [key, value] of Object.entries(tags)) {
       if (typeof value === 'string' && sizeKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
         return value;
@@ -497,31 +558,107 @@ export class FormAutoPopulationService {
   }
 
   /**
-   * Extract silhouette from detected tags
+   * Extract silhouette from detected tags, validating against category-specific options
    */
-  private static extractSilhouette(tags: DetectedTags): string | null {
-    if (tags.Silhouette) {
-      return tags.Silhouette;
-    }
+  private static extractSilhouette(tags: DetectedTags, category?: ItemCategory): string | null {
+    let rawSilhouette: string | null = null;
 
-    // Look for silhouette hints in other tags
-    const silhouetteKeywords = ['silhouette', 'fit', 'shape', 'cut'];
-    for (const [key, value] of Object.entries(tags)) {
-      if (typeof value === 'string' && silhouetteKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
-        // Common silhouette mappings
-        const lowerValue = value.toLowerCase();
-        if (lowerValue.includes('slim') || lowerValue.includes('fitted')) return 'Slim Fit';
-        if (lowerValue.includes('regular') || lowerValue.includes('standard')) return 'Regular Fit';
-        if (lowerValue.includes('loose') || lowerValue.includes('relaxed')) return 'Relaxed Fit';
-        if (lowerValue.includes('oversized') || lowerValue.includes('baggy')) return 'Oversized';
-        if (lowerValue.includes('bodycon') || lowerValue.includes('tight')) return 'Body-Fitting';
-        if (lowerValue.includes('a-line')) return 'A-Line';
-        if (lowerValue.includes('straight')) return 'Straight';
-        return value; // Return original if no mapping found
+    console.log('[DEBUG] extractSilhouette called with:', { tags, category });
+
+    // First try direct silhouette tag
+    if (tags.Silhouette) {
+      rawSilhouette = tags.Silhouette;
+      console.log('[DEBUG] Found direct Silhouette tag:', rawSilhouette);
+    } 
+    // Special handling for Fit tag (commonly used for tops silhouette)
+    else if (tags.Fit && category === ItemCategory.TOP) {
+      console.log('[DEBUG] Using Fit tag for TOP category:', tags.Fit);
+      rawSilhouette = this.mapFitToSilhouette(tags.Fit);
+      console.log('[DEBUG] Mapped Fit to silhouette:', rawSilhouette);
+    }
+    else {
+      console.log('[DEBUG] Searching for silhouette in other tags...');
+      // Look for silhouette hints in other tags
+      const silhouetteKeywords = ['silhouette', 'fit', 'shape', 'cut'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && silhouetteKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawSilhouette = value;
+          console.log('[DEBUG] Found silhouette hint in', key, ':', value);
+          break;
+        }
       }
     }
 
-    return null;
+    // If no raw silhouette found, return null
+    if (!rawSilhouette || !category) {
+      return null;
+    }
+
+    // Get valid options for this category
+    const validOptions = getSilhouetteOptions(category);
+    if (validOptions.length === 0) {
+      return null; // Category doesn't support silhouettes
+    }
+
+    // Check if raw silhouette matches any valid option (case-insensitive)
+    const lowerRaw = rawSilhouette.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Try partial matching with common mappings
+    const partialMatch = validOptions.find(option => {
+      const lowerOption = option.toLowerCase();
+      return lowerRaw.includes(lowerOption) || lowerOption.includes(lowerRaw);
+    });
+    if (partialMatch) {
+      return partialMatch;
+    }
+
+    // Try semantic matching for common silhouette terms
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (
+        ((lowerRaw.includes('slim') || lowerRaw.includes('fitted')) && lowerOption.includes('fitted')) ||
+        ((lowerRaw.includes('regular') || lowerRaw.includes('standard')) && lowerOption.includes('regular')) ||
+        ((lowerRaw.includes('loose') || lowerRaw.includes('relaxed')) && lowerOption.includes('loose')) ||
+        ((lowerRaw.includes('oversized') || lowerRaw.includes('baggy')) && lowerOption.includes('oversized'))
+      ) {
+        return option;
+      }
+    }
+
+    return null; // No valid match found
+  }
+
+  /**
+   * Map Fit tag values to silhouette options for tops
+   */
+  private static mapFitToSilhouette(fitValue: string): string | null {
+    if (!fitValue) return null;
+
+    console.log('[DEBUG] mapFitToSilhouette input:', fitValue);
+    const lowerFit = fitValue.toLowerCase();
+    console.log('[DEBUG] lowerFit:', lowerFit);
+    
+    // Map common fit values to TOP silhouette options: ['Fitted', 'Loose', 'Regular']
+    if (lowerFit.includes('tight') || lowerFit.includes('slim') || lowerFit.includes('fitted') || lowerFit.includes('snug')) {
+      console.log('[DEBUG] Mapped to Fitted');
+      return 'Fitted';
+    }
+    if (lowerFit.includes('loose') || lowerFit.includes('baggy') || lowerFit.includes('oversized') || lowerFit.includes('relaxed')) {
+      console.log('[DEBUG] Mapped to Loose');
+      return 'Loose';
+    }
+    if (lowerFit.includes('regular') || lowerFit.includes('standard') || lowerFit.includes('normal') || lowerFit.includes('classic')) {
+      console.log('[DEBUG] Mapped to Regular');
+      return 'Regular';
+    }
+
+    // If no mapping found, return the original value and let validation handle it
+    console.log('[DEBUG] No mapping found, returning original:', fitValue);
+    return fitValue;
   }
 
   /**
@@ -549,6 +686,128 @@ export class FormAutoPopulationService {
     }
 
     return null;
+  }
+
+  /**
+   * Extract sleeves from detected tags, validating against category-specific options
+   */
+  private static extractSleeves(tags: DetectedTags, category?: ItemCategory): string | null {
+    // Only TOP category supports sleeves
+    if (category !== ItemCategory.TOP) {
+      return null;
+    }
+
+    let rawSleeves: string | null = null;
+
+    // First try direct Sleeves tag
+    if (tags.Sleeves) {
+      rawSleeves = tags.Sleeves;
+    } else {
+      // Look for sleeve hints in other tags
+      const sleeveKeywords = ['sleeve', 'sleeves'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && sleeveKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawSleeves = value;
+          break;
+        }
+      }
+    }
+
+    // If no raw sleeves found, return null
+    if (!rawSleeves) {
+      return null;
+    }
+
+    // Get valid sleeve options
+    const validOptions = getSleeveOptions();
+
+    // Check if raw sleeves matches any valid option (case-insensitive)
+    const lowerRaw = rawSleeves.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Try partial matching
+    const partialMatch = validOptions.find(option => {
+      const lowerOption = option.toLowerCase();
+      return lowerRaw.includes(lowerOption) || lowerOption.includes(lowerRaw);
+    });
+    if (partialMatch) {
+      return partialMatch;
+    }
+
+    // Try semantic matching for common sleeve terms
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (
+        (lowerRaw.includes('short') && lowerOption.includes('short')) ||
+        (lowerRaw.includes('long') && lowerOption.includes('long')) ||
+        ((lowerRaw.includes('3/4') || lowerRaw.includes('three quarter')) && lowerOption.includes('3/4')) ||
+        ((lowerRaw.includes('one') || lowerRaw.includes('single')) && lowerOption.includes('one')) ||
+        ((lowerRaw.includes('sleeveless') || lowerRaw.includes('no sleeve')) && lowerOption.includes('sleeveless'))
+      ) {
+        return option;
+      }
+    }
+
+    return null; // No valid match found
+  }
+
+  /**
+   * Extract style from detected tags, validating against available options
+   */
+  private static extractStyle(tags: DetectedTags, category?: ItemCategory): string | null {
+    // Style field applies to all categories except ACCESSORY and OTHER
+    if (category === ItemCategory.ACCESSORY || category === ItemCategory.OTHER) {
+      return null;
+    }
+
+    let rawStyle: string | null = null;
+
+    // First try direct Style tag
+    if (tags.Style) {
+      rawStyle = tags.Style;
+    } else {
+      // Look for style hints in other tags
+      const styleKeywords = ['style', 'occasion', 'wear', 'look'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && styleKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawStyle = value;
+          break;
+        }
+      }
+    }
+
+    // If no raw style found, return null
+    if (!rawStyle) {
+      return null;
+    }
+
+    // Get valid style options
+    const validOptions = getStyleOptions();
+
+    // Check if raw style matches any valid option (case-insensitive)
+    const lowerRaw = rawStyle.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Try semantic matching for common style terms
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (
+        (lowerRaw.includes('casual') && lowerOption === 'casual') ||
+        ((lowerRaw.includes('elegant') || lowerRaw.includes('formal') || lowerRaw.includes('dressy')) && lowerOption === 'elegant') ||
+        ((lowerRaw.includes('special') || lowerRaw.includes('party') || lowerRaw.includes('evening')) && lowerOption === 'special') ||
+        ((lowerRaw.includes('sport') || lowerRaw.includes('athletic') || lowerRaw.includes('gym') || lowerRaw.includes('workout')) && lowerOption === 'sport')
+      ) {
+        return option;
+      }
+    }
+
+    return null; // No valid match found
   }
 
   /**
