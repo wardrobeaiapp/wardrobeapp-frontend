@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WardrobeItem } from '../../../../types';
 import WardrobeItemForm from '../forms/WardrobeItemForm';
 import { Modal } from '../../../common/Modal';
@@ -33,19 +33,23 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
     };
   }, []);
   
-  console.log('[ItemFormModal] defaultWishlist:', defaultWishlist);
-  console.log('[ItemFormModal] initialItem:', initialItem);
-  
-  // Add null check before spreading initialItem
-  console.log('[ItemFormModal] initialItem with wishlist:', initialItem ? {
-    ...initialItem,
-    wishlist: initialItem?.wishlist ?? defaultWishlist
-  } : { wishlist: defaultWishlist });
+  useEffect(() => {
+    if (isOpen) {
+      console.log('[ItemFormModal] Modal opened with defaultWishlist:', defaultWishlist);
+      console.log('[ItemFormModal] Modal opened with initialItem:', initialItem);
+      
+      // Add null check before spreading initialItem
+      console.log('[ItemFormModal] initialItem with wishlist:', initialItem ? {
+        ...initialItem,
+        wishlist: initialItem?.wishlist ?? defaultWishlist
+      } : { wishlist: defaultWishlist });
+    }
+  }, [isOpen, initialItem, defaultWishlist]);
 
-  const handleSubmit = (item: any, file?: File) => {
+  const handleSubmit = useCallback((item: any, file?: File) => {
     console.log('[ItemFormModal] Handling submit with file:', !!file);
     onSubmit(item, file);
-  };
+  }, [onSubmit]);
 
   if (!isMounted) return null;
 
