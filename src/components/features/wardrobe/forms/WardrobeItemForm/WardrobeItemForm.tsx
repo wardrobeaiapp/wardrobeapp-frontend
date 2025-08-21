@@ -45,6 +45,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   const {
     previewImage,
     selectedFile,
+    detectedTags,
     handleDrop,
     handleDragOver,
     handleFileSelect,
@@ -60,9 +61,12 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     },
     onNewImageSelected: () => {
       backgroundRemoval.resetProcessedState();
-      if (!isCurrentlyLoadingFromUrl) {
-        setIsImageFromUrl(false);
-      }
+      setIsImageFromUrl(false);
+      console.log('Reset isImageFromUrl to false for new file selection');
+    },
+    onTagsDetected: (tags) => {
+      console.log('[WardrobeItemForm] Received detected tags:', tags);
+      formState.setDetectedTags(tags);
     }
   });
 
@@ -203,14 +207,14 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       const formData = formState.getFormData();
       const finalImageUrl = formData.imageUrl || previewImage || '';
       
-      // Get all detected tags from the form state
-      const detectedTags = formData.detectedTags || {};
+      // Use the detected tags from useImageHandling hook
+      const currentDetectedTags = detectedTags || {};
       
       // Create tags object with all detected tags plus any form field overrides
       const tags: Record<string, string> = {};
       
       // First add all detected tags in their original format
-      Object.entries(detectedTags).forEach(([key, value]) => {
+      Object.entries(currentDetectedTags).forEach(([key, value]) => {
         if (value) {
           // Convert keys to lowercase for consistency
           const normalizedKey = key.toLowerCase();
