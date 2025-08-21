@@ -13,6 +13,8 @@ interface FormFieldSetters {
   setBrand?: (brand: string) => void;
   setSize?: (size: string) => void;
   setPrice?: (price: string) => void;
+  setSilhouette?: (silhouette: string) => void;
+  setLength?: (length: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -73,10 +75,12 @@ export class FormAutoPopulationService {
     'purse': ItemCategory.ACCESSORY,
     'backpack': ItemCategory.ACCESSORY,
     'belt': ItemCategory.ACCESSORY,
-    'scarf': ItemCategory.ACCESSORY,
+    'scarves': ItemCategory.ACCESSORY,
     'jewelry': ItemCategory.ACCESSORY,
     'watch': ItemCategory.ACCESSORY,
     'sunglasses': ItemCategory.ACCESSORY,
+    'socks': ItemCategory.ACCESSORY,
+    'ties': ItemCategory.ACCESSORY,
   };
 
   // Subcategory mapping from detected subcategories to normalized subcategories
@@ -151,7 +155,10 @@ export class FormAutoPopulationService {
     'watches': 'Watch',
     'watch': 'Watch',
     'sunglasses': 'Sunglasses',
+    'eyewear': 'Sunglasses',
     'glasses': 'Glasses',
+    'ties': 'Ties',
+    'socks': 'Socks',
   };
 
   // Season mapping from detected style/occasion tags
@@ -243,7 +250,25 @@ export class FormAutoPopulationService {
       }
     }
 
-    // 7. Season mapping
+    // 7. Silhouette mapping
+    if (formSetters.setSilhouette && shouldUpdateField('silhouette', currentFormData?.silhouette)) {
+      const silhouette = this.extractSilhouette(detectedTags);
+      if (silhouette) {
+        console.log('[FormAutoPopulation] Setting silhouette:', silhouette);
+        formSetters.setSilhouette(silhouette);
+      }
+    }
+
+    // 8. Length mapping
+    if (formSetters.setLength && shouldUpdateField('length', currentFormData?.length)) {
+      const length = this.extractLength(detectedTags);
+      if (length) {
+        console.log('[FormAutoPopulation] Setting length:', length);
+        formSetters.setLength(length);
+      }
+    }
+
+    // 9. Season mapping
     if (formSetters.toggleSeason && shouldUpdateField('seasons', currentFormData?.seasons)) {
       const seasons = this.extractSeasons(detectedTags);
       if (seasons.length > 0) {
@@ -465,6 +490,61 @@ export class FormAutoPopulationService {
     for (const [key, value] of Object.entries(tags)) {
       if (typeof value === 'string' && sizeKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
         return value;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract silhouette from detected tags
+   */
+  private static extractSilhouette(tags: DetectedTags): string | null {
+    if (tags.Silhouette) {
+      return tags.Silhouette;
+    }
+
+    // Look for silhouette hints in other tags
+    const silhouetteKeywords = ['silhouette', 'fit', 'shape', 'cut'];
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value === 'string' && silhouetteKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+        // Common silhouette mappings
+        const lowerValue = value.toLowerCase();
+        if (lowerValue.includes('slim') || lowerValue.includes('fitted')) return 'Slim Fit';
+        if (lowerValue.includes('regular') || lowerValue.includes('standard')) return 'Regular Fit';
+        if (lowerValue.includes('loose') || lowerValue.includes('relaxed')) return 'Relaxed Fit';
+        if (lowerValue.includes('oversized') || lowerValue.includes('baggy')) return 'Oversized';
+        if (lowerValue.includes('bodycon') || lowerValue.includes('tight')) return 'Body-Fitting';
+        if (lowerValue.includes('a-line')) return 'A-Line';
+        if (lowerValue.includes('straight')) return 'Straight';
+        return value; // Return original if no mapping found
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Extract length from detected tags
+   */
+  private static extractLength(tags: DetectedTags): string | null {
+    if (tags.Length) {
+      return tags.Length;
+    }
+
+    // Look for length hints in other tags
+    const lengthKeywords = ['length', 'hem', 'size'];
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value === 'string' && lengthKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+        // Common length mappings
+        const lowerValue = value.toLowerCase();
+        if (lowerValue.includes('mini') || lowerValue.includes('short')) return 'Mini';
+        if (lowerValue.includes('midi') || lowerValue.includes('knee')) return 'Midi';
+        if (lowerValue.includes('maxi') || lowerValue.includes('long') || lowerValue.includes('full')) return 'Maxi';
+        if (lowerValue.includes('crop') || lowerValue.includes('cropped')) return 'Cropped';
+        if (lowerValue.includes('ankle')) return 'Ankle Length';
+        if (lowerValue.includes('floor')) return 'Floor Length';
+        return value; // Return original if no mapping found
       }
     }
 
