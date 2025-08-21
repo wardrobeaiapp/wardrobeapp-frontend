@@ -70,7 +70,7 @@ export const ItemImageContainer = styled.div`
   margin: 0 auto 1rem;
   aspect-ratio: 1;
   flex-shrink: 0;
-  background-color: #f3f4f6;
+  // background-color: #f3f4f6;
   border-radius: 0.375rem;
   overflow: hidden;
   display: flex;
