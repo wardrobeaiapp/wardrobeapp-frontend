@@ -7,7 +7,6 @@ import {
   deleteWardrobeItem,
   migrateLocalStorageItemsToSupabase
 } from '../services/wardrobeItemsService';
-import { fetchOutfits } from '../services/outfitService';
 
 interface UseWardrobeItemsDBReturn {
   items: WardrobeItem[];
@@ -90,21 +89,61 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     };
   }, [loadItems]);
 
-  // Add a new item
+  // Add a new item with optimistic updates
   const addItem = useCallback(async (item: Omit<WardrobeItem, 'id'>, file?: File): Promise<WardrobeItem | null> => {
+    if (!isMountedRef.current) return null;
+    
+    setIsLoading(true);
+    
+    // Create a temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}`;
+    const optimisticItem: WardrobeItem = {
+      ...item,
+      id: tempId,
+      dateAdded: new Date().toISOString(),
+      timesWorn: 0,
+      wishlistStatus: WishlistStatus.NOT_REVIEWED,
+      lastWorn: undefined,
+      silhouette: item.silhouette || '',
+      length: item.length || '',
+      sleeves: item.sleeves || 'SHORT',
+      style: item.style || 'casual',
+      season: item.season || [],
+      scenarios: item.scenarios || [],
+      wishlist: item.wishlist || false,
+      tags: item.tags || {}
+    };
+    
+    // Optimistically add the item to the UI
+    setItems(prevItems => [...prevItems, optimisticItem]);
+    
     try {
-      setIsLoading(true);
       const newItem = await addWardrobeItem(item, file);
-      if (newItem) {
-        setItems(prevItems => [...prevItems, newItem]);
-        return newItem;
+      
+      if (isMountedRef.current) {
+        if (newItem) {
+          // Replace the optimistic item with the actual item from the server
+          setItems(prevItems => 
+            prevItems.map(i => i.id === tempId ? newItem : i)
+          );
+          return newItem;
+        }
+        // If no item was returned, remove the optimistic update
+        setItems(prevItems => prevItems.filter(i => i.id !== tempId));
+        return null;
       }
       return null;
     } catch (error) {
       console.error('Error adding item:', error);
+      // Remove the optimistic update on error
+      if (isMountedRef.current) {
+        setItems(prevItems => prevItems.filter(i => i.id !== tempId));
+      }
       throw error;
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
