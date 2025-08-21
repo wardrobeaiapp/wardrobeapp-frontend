@@ -6,17 +6,20 @@ interface UseImageHandlingProps {
   onImageError: (error: string) => void;
   onImageSuccess: () => void;
   onNewImageSelected?: () => void;
+  onTagsDetected?: (tags: Record<string, string>) => void;
 }
 
 export const useImageHandling = ({ 
   initialImageUrl = '', 
   onImageError, 
   onImageSuccess,
-  onNewImageSelected
+  onNewImageSelected,
+  onTagsDetected
 }: UseImageHandlingProps) => {
   const [previewImage, setPreviewImage] = useState<string | null>(initialImageUrl || null);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [detectedTags, setDetectedTags] = useState<Record<string, string>>({});
 
   const compressImage = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -74,12 +77,17 @@ export const useImageHandling = ({
       );
       const topTags = extractTopTags(response);
       console.log('[Ximilar] Detected tags:', topTags);
+      
+      // Update local state and notify parent component
+      setDetectedTags(topTags);
+      onTagsDetected?.(topTags);
+      
       return topTags;
     } catch (error) {
       console.error('[Ximilar] Error detecting tags:', error);
-      return [];
+      return {};
     }
-  }, []);
+  }, [onTagsDetected]);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -162,6 +170,7 @@ export const useImageHandling = ({
     setIsDownloadingImage,
     selectedFile,
     setSelectedFile,
+    detectedTags,
     handleFileSelect,
     handleDrop,
     handleDragOver,
