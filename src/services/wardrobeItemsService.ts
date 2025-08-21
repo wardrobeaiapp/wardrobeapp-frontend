@@ -63,24 +63,176 @@ const uploadAndSignUrl = async (file: File, itemId: string, userId: string): Pro
 const deleteImageFromStorage = async (imageUrl: string | null, userId: string): Promise<void> => {
   try {
     if (!imageUrl) {
-      console.log('No image URL provided, skipping deletion');
+      console.log('[deleteImageFromStorage] No image URL provided, skipping deletion');
       return;
     }
     
-    // Extract filename from the signed URL or imageUrl
-    const urlParts = imageUrl.split('/');
-    const filename = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
-    const filePath = `${userId}/${filename}`;
+    console.log('[deleteImageFromStorage] Attempting to delete image:', imageUrl);
+    console.log('[deleteImageFromStorage] User ID:', userId);
     
+    let filePath: string;
+    
+    try {
+      // Parse the URL to handle different formats (signed URLs, public URLs, or file paths)
+      if (imageUrl.startsWith('http')) {
+        const url = new URL(imageUrl);
+        console.log('[deleteImageFromStorage] URL pathname:', url.pathname);
+        
+        // For Supabase storage URLs, the path typically looks like:
+        // /storage/v1/object/sign/wardrobe-images/{userId}/{filename}
+        // or /storage/v1/object/public/wardrobe-images/{userId}/{filename}
+        const pathParts = url.pathname.split('/');
+        console.log('[deleteImageFromStorage] Path parts:', pathParts);
+        
+        // Find 'wardrobe-images' in the path and get everything after it
+        const bucketIndex = pathParts.findIndex(part => part === 'wardrobe-images');
+        if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
+          // Get the path after 'wardrobe-images' (should be userId/filename)
+          const pathAfterBucket = pathParts.slice(bucketIndex + 1).join('/');
+          filePath = pathAfterBucket;
+          console.log('[deleteImageFromStorage] Extracted path from bucket structure:', filePath);
+        } else {
+          // Fallback: extract filename and combine with userId
+          const filename = pathParts[pathParts.length - 1];
+          filePath = `${userId}/${filename}`;
+          console.log('[deleteImageFromStorage] Fallback: constructed path from filename:', filePath);
+        }
+      } else {
+        // Assume it's already a file path
+        filePath = imageUrl.startsWith(userId) ? imageUrl : `${userId}/${imageUrl}`;
+        console.log('[deleteImageFromStorage] Treating as file path:', filePath);
+      }
+    } catch (parseError) {
+      console.error('[deleteImageFromStorage] URL parsing failed:', parseError);
+      // Ultimate fallback: extract filename from URL string
+      const urlParts = imageUrl.split('/');
+      const filename = urlParts[urlParts.length - 1].split('?')[0];
+      filePath = `${userId}/${filename}`;
+      console.log('[deleteImageFromStorage] Ultimate fallback path:', filePath);
+    }
+    
+    console.log('[deleteImageFromStorage] Final file path to delete:', filePath);
+    
+    // First, let's check if the file exists in storage
+    const { data: fileList, error: listError } = await supabase.storage
+      .from('wardrobe-images')
+      .list(userId);
+    
+    if (listError) {
+      console.error('[deleteImageFromStorage] Error listing files:', listError);
+    } else {
+      console.log('[deleteImageFromStorage] Files in user folder:', fileList?.map(f => f.name));
+    }
+    
+    // Extract the actual filename from the URL for matching
+    const actualFilename = imageUrl.split('/').pop()?.split('?')[0]; // Remove query params
+    console.log('[deleteImageFromStorage] Looking for filename:', actualFilename);
+    
+    // Find the actual file in storage by matching the filename
+    let actualFilePath = filePath; // Default to our constructed path
+    if (fileList && actualFilename) {
+      const matchingFile = fileList.find(file => 
+        file.name === actualFilename || 
+        file.name.includes(actualFilename) ||
+        actualFilename.includes(file.name)
+      );
+      
+      if (matchingFile) {
+        actualFilePath = `${userId}/${matchingFile.name}`;
+        console.log('[deleteImageFromStorage] Found matching file in storage:', actualFilePath);
+      } else {
+        console.log('[deleteImageFromStorage] No matching file found in storage, using constructed path');
+      }
+    }
+    
+    // Attempt deletion with the verified path
     const { error } = await supabase.storage
       .from('wardrobe-images')
-      .remove([filePath]);
+      .remove([actualFilePath]);
     
     if (error) {
-      console.warn('Error deleting image from storage:', error);
+      console.error('[deleteImageFromStorage] Error deleting image from storage:', error);
+      console.error('[deleteImageFromStorage] Error details:', JSON.stringify(error, null, 2));
+      
+      // If the verified path fails, try all possible variations based on actual files in storage
+      if (fileList && actualFilename) {
+        console.log('[deleteImageFromStorage] Trying all files that might match...');
+        
+        for (const file of fileList) {
+          if (file.name.includes(actualFilename) || actualFilename.includes(file.name)) {
+            const attemptPath = `${userId}/${file.name}`;
+            console.log('[deleteImageFromStorage] Attempting to delete:', attemptPath);
+            
+            const { error: attemptError } = await supabase.storage
+              .from('wardrobe-images')
+              .remove([attemptPath]);
+            
+            if (!attemptError) {
+              console.log('[deleteImageFromStorage] Successfully deleted:', attemptPath);
+              return;
+            } else {
+              console.log('[deleteImageFromStorage] Failed to delete:', attemptPath, attemptError.message);
+            }
+          }
+        }
+      }
+      
+      // Final fallback: try alternative path formats
+      const filename = filePath.includes('/') ? filePath.split('/').pop() : filePath;
+      const alternativePaths = [
+        filename, // Just the filename
+        filename ? `${userId}/${filename}` : null, // userId/filename
+        filePath.replace(/^.*\//, ''), // Remove everything before the last slash
+      ].filter((path, index, arr) => path && typeof path === 'string' && arr.indexOf(path) === index) as string[];
+      
+      console.log('[deleteImageFromStorage] Final fallback - trying alternative paths:', alternativePaths);
+      
+      for (const altPath of alternativePaths) {
+        if (altPath !== actualFilePath) {
+          const { error: altError } = await supabase.storage
+            .from('wardrobe-images')
+            .remove([altPath]);
+          
+          if (!altError) {
+            console.log('[deleteImageFromStorage] Successfully deleted with alternative path:', altPath);
+            return;
+          } else {
+            console.log('[deleteImageFromStorage] Alternative path failed:', altPath, altError.message);
+          }
+        }
+      }
+    } else {
+      console.log('[deleteImageFromStorage] Supabase reported successful deletion');
+      
+      // Verify the deletion actually worked by re-listing files
+      const { data: verifyFileList, error: verifyListError } = await supabase.storage
+        .from('wardrobe-images')
+        .list(userId);
+      
+      if (verifyListError) {
+        console.error('[deleteImageFromStorage] Error verifying deletion:', verifyListError);
+      } else {
+        const remainingFiles = verifyFileList?.map(f => f.name) || [];
+        console.log('[deleteImageFromStorage] Files remaining after deletion:', remainingFiles);
+        
+        // Check if the file we tried to delete is still there
+        const deletedFilename = actualFilePath.split('/').pop();
+        const fileStillExists = remainingFiles.some(filename => 
+          filename === deletedFilename ||
+          filename.includes(deletedFilename || '') ||
+          (actualFilename && filename.includes(actualFilename))
+        );
+        
+        if (fileStillExists) {
+          console.error('[deleteImageFromStorage] WARNING: File still exists after "successful" deletion!');
+          console.error('[deleteImageFromStorage] This may be a permissions or caching issue');
+        } else {
+          console.log('[deleteImageFromStorage] Verification confirmed: file successfully removed');
+        }
+      }
     }
   } catch (error) {
-    console.warn('Error parsing image URL for deletion:', error);
+    console.error('[deleteImageFromStorage] Unexpected error in deleteImageFromStorage:', error);
   }
 };
 
@@ -303,22 +455,35 @@ export const updateWardrobeItem = async (item: WardrobeItem, file?: File): Promi
 // Delete a wardrobe item
 export const deleteWardrobeItem = async (itemId: string): Promise<boolean> => {
   try {
+    console.log('[deleteWardrobeItem] Starting deletion process for item:', itemId);
+    
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) {
       throw new Error('User not authenticated');
     }
+    
+    console.log('[deleteWardrobeItem] User authenticated:', authData.user.id);
 
     // Get the item first to check if it has an image
-    const { data: itemData } = await supabase
+    const { data: itemData, error: fetchError } = await supabase
       .from('wardrobe_items')
       .select('image_url')
       .eq('id', itemId)
       .eq('user_id', authData.user.id)
       .single();
+    
+    if (fetchError) {
+      console.error('[deleteWardrobeItem] Error fetching item data:', fetchError);
+    }
+    
+    console.log('[deleteWardrobeItem] Item data retrieved:', itemData);
 
     // Delete the image from storage if it exists
     if (itemData?.image_url && typeof itemData.image_url === 'string') {
+      console.log('[deleteWardrobeItem] Found image URL, calling deleteImageFromStorage');
       await deleteImageFromStorage(itemData.image_url, authData.user.id);
+    } else {
+      console.log('[deleteWardrobeItem] No image URL found or invalid format:', itemData?.image_url);
     }
 
     // With CASCADE delete in the database, deleting the item will automatically
