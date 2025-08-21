@@ -14,6 +14,8 @@ export interface WardrobeItemFormData {
   brand: string;
   size: string;
   price: string;
+  silhouette: string;
+  length: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -35,6 +37,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [brand, setBrand] = useState(initialItem?.brand || '');
   const [size, setSize] = useState(initialItem?.size || '');
   const [price, setPrice] = useState(initialItem?.price?.toString() || '');
+  const [silhouette, setSilhouette] = useState(initialItem?.silhouette || '');
+  const [length, setLength] = useState(initialItem?.length || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -107,6 +111,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     brand,
     size,
     price,
+    silhouette,
+    length,
     seasons,
     isWishlistItem,
     imageUrl,
@@ -120,6 +126,11 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setSubcategory('');
     setColor('');
     setMaterial('');
+    setBrand('');
+    setSize('');
+    setPrice('');
+    setSilhouette('');
+    setLength('');
     setSeasons([]);
     setIsWishlistItem(false);
     setImageUrl('');
@@ -151,6 +162,10 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setSize,
     price,
     setPrice,
+    silhouette,
+    setSilhouette,
+    length,
+    setLength,
     seasons,
     toggleSeason,
     isWishlistItem,

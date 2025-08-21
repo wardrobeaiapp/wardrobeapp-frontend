@@ -14,9 +14,9 @@ export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => 
     case ItemCategory.FOOTWEAR:
       return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers'];
     case ItemCategory.ACCESSORY:
-      return ['Hat', 'Scarf', 'Belt', 'Bag', 'Jewelry', 'Sunglasses', 'Watch'];
+      return ['Hat', 'Scarf', 'Belt', 'Bag', 'Jewelry', 'Sunglasses', 'Watch', 'Socks', 'Ties'];
     case ItemCategory.OTHER:
-      return ['Underwear', 'Socks', 'Sleepwear', 'Swimwear'];
+      return ['Underwear', 'Sleepwear', 'Swimwear'];
     default:
       return [];
   }

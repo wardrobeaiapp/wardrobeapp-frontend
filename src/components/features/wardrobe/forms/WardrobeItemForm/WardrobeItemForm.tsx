@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WardrobeItem, ItemCategory } from '../../../../../types';
+import { WardrobeItem } from '../../../../../types';
 import { detectImageTags, extractTopTags } from '../../../../../services/ximilarService';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
@@ -305,10 +305,15 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onSizeChange={formState.setSize}
           price={formState.price}
           onPriceChange={formState.setPrice}
+          silhouette={formState.silhouette}
+          onSilhouetteChange={formState.setSilhouette}
+          length={formState.length}
+          onLengthChange={formState.setLength}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}
           onWishlistToggle={formState.setIsWishlistItem}
+          category={formState.category}
           errors={formState.errors}
         />
 

@@ -22,6 +22,8 @@ export interface WardrobeItem {
   material?: string;
   brand?: string;
   price?: number;
+  silhouette?: string;
+  length?: string;
   season: Season[];
   scenarios?: string[]; // Array of scenario names this item is suitable for
   imageUrl?: string;
