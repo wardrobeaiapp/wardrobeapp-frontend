@@ -4,7 +4,7 @@ import { ItemCategory, Season } from '../../../../../../types';
 export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => {
   switch (category) {
     case ItemCategory.TOP:
-      return ['T-Shirt', 'Shirt', 'Blouse', 'Tank Top', 'Sweater', 'Hoodie', 'Cardigan', 'Blazer'];
+      return ['T-Shirt', 'Shirt', 'Blouse', 'Tank Top', 'Sweater', 'Hoodie', 'Sweatshirt', 'Cardigan', 'Blazer'];
     case ItemCategory.BOTTOM:
       return ['Jeans', 'Trousers', 'Shorts', 'Skirt', 'Leggings', 'Sweatpants'];
     case ItemCategory.ONE_PIECE:
