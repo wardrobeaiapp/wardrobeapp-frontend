@@ -55,7 +55,7 @@ interface ItemsTabProps {
   onDeleteItem: (id: string) => void;
 }
 
-const ItemsTab: React.FC<ItemsTabProps> = ({
+const ItemsTab = React.memo<ItemsTabProps>(({
   items,
   isLoading: externalIsLoading,
   error,
@@ -65,47 +65,43 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
   setSeasonFilter,
   searchQuery,
   setSearchQuery,
-  onViewItem,
+  onViewItem = () => {},
   onEditItem,
   onDeleteItem
 }) => {
-  // Using the isLoading prop passed from parent directly
-  // Filter items based on selected filters, search query, and exclude wishlist items
-  const filteredItems = items.filter(item => {
-    // Exclude wishlist items from the main wardrobe tab
-    const isNotWishlist = item.wishlist !== true;
-    
-    // Check category filter
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    
-    // Check season filter - handle Season enum values array
-    const matchesSeason = seasonFilter === 'all' || 
-      (item.season && item.season.length > 0 &&
-        item.season.some(season => 
-          season.toLowerCase() === seasonFilter.toLowerCase()
-        )
-      );
-    
-    // Check search query (case-insensitive)
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = searchQuery === '' || 
-      (item.name && item.name.toLowerCase().includes(searchLower)) ||
-      (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
-      (item.color && item.color.toLowerCase().includes(searchLower));
-    
-    // Only include items that match all conditions
-    return isNotWishlist && matchesCategory && matchesSeason && matchesSearch;
-  });
-  
-  // Debug logging
-  console.log('[ItemsTab] Total items:', items.length);
-  console.log('[ItemsTab] Wishlist items excluded:', items.filter(item => item.wishlist === true).length);
-  console.log('[ItemsTab] Filtered items count:', filteredItems.length);
-  console.log('[ItemsTab] Active filters:', { 
-    category: categoryFilter, 
-    season: seasonFilter, 
-    search: searchQuery 
-  });
+  // Memoize the filtered items calculation
+  const filteredItems = React.useMemo(() => {
+    return items.filter(item => {
+      const isNotWishlist = item.wishlist !== true;
+      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+      const matchesSeason = seasonFilter === 'all' || 
+        (item.season?.some(s => s.toLowerCase() === seasonFilter.toLowerCase()) ?? false);
+      
+      if (!isNotWishlist || !matchesCategory || !matchesSeason) return false;
+      
+      // Only calculate search if other filters pass
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        return (item.name?.toLowerCase().includes(searchLower) ||
+                item.brand?.toLowerCase().includes(searchLower) ||
+                item.color?.toLowerCase().includes(searchLower)) ?? false;
+      }
+      
+      return true;
+    });
+  }, [items, categoryFilter, seasonFilter, searchQuery]);
+
+  // Debug logging - only in development
+  if (process.env.NODE_ENV === 'development') {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useEffect(() => {
+      console.log('[ItemsTab] Render', { 
+        totalItems: items.length,
+        filteredCount: filteredItems.length,
+        filters: { categoryFilter, seasonFilter, searchQuery }
+      });
+    }, [items.length, filteredItems.length, categoryFilter, seasonFilter, searchQuery]);
+  }
 
   return (
     <>
@@ -166,6 +162,6 @@ const ItemsTab: React.FC<ItemsTabProps> = ({
       )}
     </>
   );
-};
+});
 
 export default ItemsTab;
