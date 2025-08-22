@@ -200,6 +200,13 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       const formData = formState.getFormData();
       const finalImageUrl = formData.imageUrl || previewImage || '';
       
+      // Debug logging for neckline data flow
+      console.log('[WardrobeItemForm] handleSubmit - Form data:', {
+        neckline: formData.neckline,
+        category: formData.category,
+        subcategory: formData.subcategory
+      });
+      
       // Use the detected tags from useImageHandling hook
       const currentDetectedTags = detectedTags || {};
       
@@ -246,6 +253,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         style: formData.style,
         silhouette: formData.silhouette,
         length: formData.length,
+        neckline: formData.neckline,
+        rise: formData.rise,
         tags: tags // Save as JSON object
       } as WardrobeItem;
       

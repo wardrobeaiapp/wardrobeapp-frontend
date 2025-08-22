@@ -274,6 +274,12 @@ export const useHomePageData = () => {
   
   const handleSubmitAdd = useCallback((item: any, file?: File) => {
     console.log('[useHomePageData] Adding item with file:', !!file);
+    console.log('[useHomePageData] Item data received:', {
+      neckline: item.neckline,
+      sleeves: item.sleeves,
+      style: item.style,
+      rise: item.rise
+    });
     addItem(item, file);
     setIsAddModalOpen(false);
     
