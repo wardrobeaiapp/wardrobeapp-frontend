@@ -4,13 +4,13 @@ import { ItemCategory, Season } from '../../../../../../types';
 export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => {
   switch (category) {
     case ItemCategory.TOP:
-      return ['T-Shirt', 'Shirt', 'Blouse', 'Tank Top', 'Sweater', 'Hoodie', 'Sweatshirt', 'Cardigan', 'Blazer'];
+      return ['T-Shirt', 'Shirt', 'Blouse', 'Top', 'Tank Top', 'Sweater', 'Hoodie', 'Sweatshirt', 'Cardigan', 'Blazer', 'Vest'];
     case ItemCategory.BOTTOM:
       return ['Jeans', 'Trousers', 'Shorts', 'Skirt', 'Leggings', 'Sweatpants'];
     case ItemCategory.ONE_PIECE:
       return ['Dress', 'Jumpsuit', 'Romper', 'Overall'];
     case ItemCategory.OUTERWEAR:
-      return ['Coat', 'Jacket', 'Vest', 'Parka', 'Trench Coat', 'Windbreaker'];
+      return ['Coat', 'Jacket', 'Parka', 'Trench Coat', 'Windbreaker'];
     case ItemCategory.FOOTWEAR:
       return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers'];
     case ItemCategory.ACCESSORY:
@@ -78,14 +78,55 @@ export const getStyleOptions = (): string[] => {
   return ['casual', 'elegant', 'special', 'sport'];
 };
 
+// Get length options based on subcategory for BOTTOM items
+export const getLengthOptions = (subcategory?: string): string[] => {
+  if (!subcategory) return [];
+  
+  const subcategoryLower = subcategory.toLowerCase();
+  
+  if (subcategoryLower === 'jeans' || subcategoryLower === 'trousers') {
+    return ['Long', '7/8', '3/4', 'Short'];
+  }
+
+  if (subcategoryLower === 'shorts') {
+    return ['Micro', 'Mini', 'Midi', 'Bermuda', 'Knee-length'];
+  }
+  
+  if (subcategoryLower === 'skirt') {
+    return ['Maxi', 'Midi', 'Mini'];
+  }
+  
+  return [];
+};
+
+// Get rise options for BOTTOM items
+export const getRiseOptions = (): string[] => {
+  return ['High', 'Mid', 'Low'];
+};
+
 // Get silhouette options based on category or subcategory
 export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
-  // Handle based on category first
+  // Handle specific subcategory cases first
+  // if (category === ItemCategory.BOTTOM && subcategory?.toLowerCase() === 'skirt') {
+  //   return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
+  // }
+
+  // if (category === ItemCategory.BOTTOM && (subcategory?.toLowerCase() === 'jeans' || subcategory?.toLowerCase() === 'trousers')) {
+  //   return ['Skinny', 'Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut', 'Flared'];
+  // }
+  
+  // Handle based on category
   switch (category) {
     case ItemCategory.TOP:
       return ['Fitted', 'Loose', 'Regular'];
     case ItemCategory.BOTTOM:
-      return ['Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut'];
+      if (subcategory?.toLowerCase() === 'skirt') {
+        return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
+      }
+      if (subcategory?.toLowerCase() === 'shorts' || subcategory?.toLowerCase() === 'sweatpants') {
+        return ['Slim Fit', 'Regular Fit', 'Relaxed Fit'];
+      }
+      return ['Skinny', 'Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut', 'Flared'];
     case ItemCategory.ONE_PIECE:
       return ['Body-Fitting', 'A-Line', 'Straight', 'Fit & Flare', 'Shift', 'Wrap'];
     case ItemCategory.OUTERWEAR:

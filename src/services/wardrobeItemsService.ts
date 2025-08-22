@@ -387,17 +387,22 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
     
     const snakeCaseItem = camelToSnakeCase(itemData);
     
+    // Remove undefined values to avoid constraint violations
+    const cleanItem = Object.fromEntries(
+      Object.entries(snakeCaseItem).filter(([_, value]) => value !== undefined)
+    );
+    
     // Debug logging to check if sleeves/style data is present
     console.log('[wardrobeItemsService] Item data being inserted:', {
-      sleeves: snakeCaseItem.sleeves,
-      style: snakeCaseItem.style,
-      silhouette: snakeCaseItem.silhouette,
-      length: snakeCaseItem.length
+      sleeves: cleanItem.sleeves,
+      style: cleanItem.style,
+      silhouette: cleanItem.silhouette,
+      length: cleanItem.length
     });
     
     const { data, error } = await supabase
       .from('wardrobe_items')
-      .insert(snakeCaseItem)
+      .insert(cleanItem)
       .select()
       .single();
 

@@ -15,9 +15,10 @@ export interface WardrobeItemFormData {
   size: string;
   price: string;
   silhouette: string;
-  length: string;
-  sleeves: string;
+  length?: string;
+  sleeves?: string;
   style: string;
+  rise?: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -41,8 +42,17 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [price, setPrice] = useState(initialItem?.price?.toString() || '');
   const [silhouette, setSilhouette] = useState(initialItem?.silhouette || '');
   const [length, setLength] = useState(initialItem?.length || '');
+  
+  // Debug wrapper for setLength
+  const setLengthWithDebug = (value: string) => {
+    console.log('[DEBUG] setLength called with:', value);
+    console.log('[DEBUG] Current length before update:', length);
+    setLength(value);
+    console.log('[DEBUG] Length setter executed');
+  };
   const [sleeves, setSleeves] = useState(initialItem?.sleeves || '');
   const [style, setStyle] = useState(initialItem?.style || '');
+  const [rise, setRise] = useState(initialItem?.rise || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -107,6 +117,14 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
 
   // Get form data
   const getFormData = (): WardrobeItemFormData => {
+    console.log('[DEBUG] getFormData - Current form values:', {
+      sleeves,
+      style,
+      rise,
+      length,
+      silhouette
+    });
+    
     const formData = {
       name: name.trim() || generateAutoName(),
       category,
@@ -117,13 +135,18 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       size,
       price,
       silhouette,
-      length,
-      sleeves,
+      sleeves: (category === ItemCategory.ONE_PIECE || 
+        (category === ItemCategory.TOP && 
+         subcategory && 
+         ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()))) 
+        ? sleeves || undefined : undefined,
+      length: (category === ItemCategory.BOTTOM) ? length || undefined : undefined,
+      rise: (category === ItemCategory.BOTTOM) ? rise || undefined : undefined,
       style,
       seasons,
       isWishlistItem,
       imageUrl,
-      detectedTags,
+      detectedTags
     };
     
     // Debug logging
@@ -131,7 +154,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       sleeves: formData.sleeves,
       style: formData.style,
       silhouette: formData.silhouette,
-      length: formData.length
+      length: formData.length,
+      rise: formData.rise
     });
     
     return formData;
@@ -151,6 +175,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setLength('');
     setStyle('');
     setSleeves('');
+    setRise('');
     setSeasons([]);
     setIsWishlistItem(false);
     setImageUrl('');
@@ -185,11 +210,13 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     silhouette,
     setSilhouette,
     length,
-    setLength,
+    setLength: setLengthWithDebug,
     sleeves,
     setSleeves,
     style,
     setStyle,
+    rise,
+    setRise,
     seasons,
     toggleSeason,
     isWishlistItem,
