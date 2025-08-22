@@ -161,6 +161,12 @@ export class FormAutoPopulationService {
     'jumpsuit': 'Jumpsuit',
     'rompers': 'Romper',
     'romper': 'Romper',
+    'overall': 'Overall',
+    'overalls': 'Overall',
+    'casual overalls': 'Overall',
+    'elegant overalls': 'Overall',
+    'winter overalls': 'Overall',
+    'work overalls': 'Overall',
     
     // Outerwear
     'jackets': 'Jacket',

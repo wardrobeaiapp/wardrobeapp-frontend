@@ -153,9 +153,12 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
       return ['Skinny', 'Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut', 'Flared'];
     case ItemCategory.ONE_PIECE:
       if (subcategory?.toLowerCase() === 'dress') {
-      return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
+        return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
       }
-      return ['Body-Fitting', 'A-Line', 'Straight', 'Fit & Flare', 'Shift', 'Wrap'];
+      if (subcategory?.toLowerCase() === 'jumpsuit') {
+        return ['Skinny', 'Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut', 'Flared'];
+      }
+      return ['Slim Fit', 'Regular Fit', 'Relaxed Fit'];
     case ItemCategory.OUTERWEAR:
       return ['Fitted', 'Regular Fit', 'Oversized', 'Cropped', 'Longline'];
     case ItemCategory.FOOTWEAR:
