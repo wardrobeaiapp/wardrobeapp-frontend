@@ -392,12 +392,13 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
       Object.entries(snakeCaseItem).filter(([_, value]) => value !== undefined)
     );
     
-    // Debug logging to check if sleeves/style data is present
+    // Debug logging to check if sleeves/style/rise data is present
     console.log('[wardrobeItemsService] Item data being inserted:', {
       sleeves: cleanItem.sleeves,
       style: cleanItem.style,
       silhouette: cleanItem.silhouette,
-      length: cleanItem.length
+      length: cleanItem.length,
+      rise: cleanItem.rise
     });
     
     const { data, error } = await supabase
