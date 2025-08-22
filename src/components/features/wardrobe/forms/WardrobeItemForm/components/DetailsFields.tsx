@@ -75,7 +75,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategory.toLowerCase())) ||
     (category === ItemCategory.ONE_PIECE && 
      subcategory && 
-     subcategory.toLowerCase() === 'dress');
+     subcategory.toLowerCase() === 'dress') ||
+    category === ItemCategory.OUTERWEAR;
 
   // Show sleeves field based on category and subcategory
   const shouldShowSleeves = (category === ItemCategory.ONE_PIECE && subcategory && !['overall'].includes(subcategory.toLowerCase())) || 

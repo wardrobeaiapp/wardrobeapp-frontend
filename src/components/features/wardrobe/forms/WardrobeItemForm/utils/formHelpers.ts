@@ -95,6 +95,10 @@ export const getLengthOptions = (subcategory?: string): string[] => {
   if (subcategoryLower === 'skirt' || subcategoryLower === 'dress') {
     return ['Maxi', 'Midi', 'Mini'];
   }
+
+  if (subcategoryLower === 'coat' || subcategoryLower === 'jacket' || subcategoryLower === 'parka' || subcategoryLower === 'trench coat' || subcategoryLower === 'windbreaker') {
+    return ['Short', 'Middle', 'Long'];
+  }
   
   return [];
 };
@@ -160,7 +164,15 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
       }
       return ['Slim Fit', 'Regular Fit', 'Relaxed Fit'];
     case ItemCategory.OUTERWEAR:
-      return ['Fitted', 'Regular Fit', 'Oversized', 'Cropped', 'Longline'];
+      if (subcategory?.toLowerCase() === 'jacket') {
+        // These options match the mapping keywords in mapJacketSubcategoryToSilhouette
+        return ['Baseball', 'Biker', 'Bomber', 'Puffer', 'Casual', 'Harrington', 'Knitted Poncho', 'Pilot', 'Racer', 'Poncho', 'Winter'];
+      }
+      if (subcategory?.toLowerCase() === 'coat') {
+        // These options match the mapping keywords in mapCoatSubcategoryToSilhouette
+        return ['Duffle', 'Kimono', 'Peacoat', 'Raincoat', 'Winter', 'Wool'];
+      }
+      return ['Fitted', 'Loose', 'Regular'];
     case ItemCategory.FOOTWEAR:
     case ItemCategory.ACCESSORY:
     case ItemCategory.OTHER:

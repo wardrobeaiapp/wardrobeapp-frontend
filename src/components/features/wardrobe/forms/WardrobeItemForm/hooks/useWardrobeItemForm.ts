@@ -143,7 +143,9 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
          subcategory && 
          ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()))) 
         ? sleeves || undefined : undefined,
-      length: (category === ItemCategory.BOTTOM) ? length || undefined : undefined,
+      length: (category === ItemCategory.BOTTOM || 
+        category === ItemCategory.ONE_PIECE || 
+        category === ItemCategory.OUTERWEAR) ? length || undefined : undefined,
       rise: (category === ItemCategory.BOTTOM) ? rise || undefined : undefined,
       neckline: (subcategory && 
         ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())) 

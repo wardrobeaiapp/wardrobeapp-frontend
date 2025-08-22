@@ -171,8 +171,29 @@ export class FormAutoPopulationService {
     // Outerwear
     'jackets': 'Jacket',
     'jacket': 'Jacket',
+    'baseball jacket': 'Jacket',
+    'biker jacket': 'Jacket',
+    'bomber jacket': 'Jacket',
+    'puffer jackets': 'Jacket',
+    'casual jackets': 'Jacket',
+    'harrington jacket': 'Jacket',
+    'knitted ponchos': 'Jacket',
+    'pilot jacket': 'Jacket',
+    'racer jacket': 'Jacket',
+    'ponchos': 'Jacket',
+    'winter jackets': 'Jacket',
     'coats': 'Coat',
     'coat': 'Coat',
+    'duffle coat': 'Coat',
+    'kimono coat': 'Coat',
+    'parka coat': 'Coat',
+    'peacoat': 'Coat',
+    'raincoats and ponchos': 'Coat',
+    'winter coats': 'Coat',
+    'wool coats': 'Coat',
+    'trench coats': 'Trench Coat',
+    'windbreakers': 'Windbreaker',
+    'windstoppers & softshells': 'Windbreaker',
     
     // Footwear
     'shoes': 'Shoes',
@@ -708,6 +729,31 @@ export class FormAutoPopulationService {
       }
     }
 
+    // Special handling for outerwear subcategories - detect from subcategory tags
+    if (!rawSilhouette && category === ItemCategory.OUTERWEAR && subcategory) {
+      console.log('[DEBUG] Checking outerwear silhouette detection:', {
+        category,
+        subcategory,
+        availableTags: Object.keys(tags),
+        subcategoryTag: tags.Subcategory
+      });
+      
+      const subcategoryLower = subcategory.toLowerCase();
+      if (subcategoryLower === 'jacket') {
+        console.log('[DEBUG] Detected jacket subcategory, using subcategory tag for mapping:', tags.Subcategory);
+        rawSilhouette = this.mapJacketSubcategoryToSilhouette(tags.Subcategory || '', tags);
+        if (rawSilhouette) {
+          console.log('[DEBUG] Mapped jacket silhouette:', rawSilhouette);
+        }
+      } else if (subcategoryLower === 'coat') {
+        console.log('[DEBUG] Detected coat subcategory, using subcategory tag for mapping:', tags.Subcategory);
+        rawSilhouette = this.mapCoatSubcategoryToSilhouette(tags.Subcategory || '', tags);
+        if (rawSilhouette) {
+          console.log('[DEBUG] Mapped coat silhouette:', rawSilhouette);
+        }
+      }
+    }
+
     // If no skirt-specific mapping, try direct silhouette tag
     if (!rawSilhouette && tags.Silhouette) {
       rawSilhouette = tags.Silhouette;
@@ -805,10 +851,10 @@ export class FormAutoPopulationService {
   }
 
   /**
-   * Extract length from detected tags for BOTTOM and ONE_PIECE category items
+   * Extract length from detected tags for BOTTOM, ONE_PIECE, and OUTERWEAR category items
    */
   private static async extractLength(tags: DetectedTags, category?: ItemCategory, subcategory?: string): Promise<string | null> {
-    // Length field applies to BOTTOM category with specific subcategories and ONE_PIECE dresses
+    // Length field applies to BOTTOM category with specific subcategories, ONE_PIECE dresses, and OUTERWEAR items
     if (!category || !subcategory) {
       return null;
     }
@@ -818,8 +864,18 @@ export class FormAutoPopulationService {
     const subcategoryLower = subcategory.toLowerCase();
     const isValidBottom = category === ItemCategory.BOTTOM && ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategoryLower);
     const isValidOnePiece = category === ItemCategory.ONE_PIECE && subcategoryLower === 'dress';
+    const isValidOuterwear = category === ItemCategory.OUTERWEAR && ['coat', 'jacket', 'parka', 'trench coat', 'windbreaker'].includes(subcategoryLower);
     
-    if (!isValidBottom && !isValidOnePiece) {
+    console.log('[DEBUG] Length validation check:', {
+      isValidBottom,
+      isValidOnePiece, 
+      isValidOuterwear,
+      categoryValue: category,
+      subcategoryLower
+    });
+    
+    if (!isValidBottom && !isValidOnePiece && !isValidOuterwear) {
+      console.log('[DEBUG] Category/subcategory not valid for length extraction');
       return null;
     }
 
@@ -879,8 +935,11 @@ export class FormAutoPopulationService {
       const lowerOption = option.toLowerCase();
       if (
         (lowerRaw.includes(lowerOption)) ||
-        (lowerOption === 'long' && (lowerRaw.includes('full') || lowerRaw.includes('ankle') || lowerRaw.includes('regular'))) ||
+        // Outerwear-specific mappings
+        (lowerOption === 'long' && (lowerRaw.includes('full') || lowerRaw.includes('ankle') || lowerRaw.includes('regular') || lowerRaw.includes('longline'))) ||
         (lowerOption === 'short' && (lowerRaw.includes('cropped') || lowerRaw.includes('capri') || lowerRaw.includes('crop'))) ||
+        (lowerOption === 'middle' && (lowerRaw.includes('mid') || lowerRaw.includes('medium') || lowerRaw.includes('regular'))) ||
+        // Bottom/dress-specific mappings
         (lowerOption === '7/8' && (lowerRaw.includes('seven eighth') || lowerRaw.includes('7-8') || lowerRaw.includes('seven-eighth'))) ||
         (lowerOption === '3/4' && (lowerRaw.includes('three quarter') || lowerRaw.includes('3-4') || lowerRaw.includes('three-quarter'))) ||
         (lowerOption === 'maxi' && (lowerRaw.includes('floor') || lowerRaw.includes('long') || lowerRaw.includes('ankle'))) ||
@@ -1159,6 +1218,120 @@ export class FormAutoPopulationService {
       }
     }
 
+    return null;
+  }
+
+  /**
+   * Map jacket subcategory and tags to silhouette
+   */
+  private static mapJacketSubcategoryToSilhouette(jacketTag: string, tags: DetectedTags): string | null {
+    console.log(`[DEBUG] Jacket tag: "${jacketTag}"`);
+    // Define jacket silhouette keywords that might appear in tags
+    const jacketSilhouetteKeywords: { [key: string]: string } = {
+      'baseball': 'Baseball',
+      'baseball jacket': 'Baseball',
+      'biker': 'Biker',
+      'biker jacket': 'Biker',
+      'bomber': 'Bomber',
+      'bomber jacket': 'Bomber',
+      'puffer': 'Puffer',
+      'puffer jacket': 'Puffer',
+      'puffer jackets': 'Puffer',
+      'casual': 'Casual',
+      'casual jacket': 'Casual',
+      'casual jackets': 'Casual',
+      'harrington': 'Harrington',
+      'harrington jacket': 'Harrington',
+      'knitted poncho': 'Knitted Poncho',
+      'knitted ponchos': 'Knitted Poncho',
+      'pilot': 'Pilot',
+      'pilot jacket': 'Pilot',
+      'racer': 'Racer',
+      'racer jacket': 'Racer',
+      'poncho': 'Poncho',
+      'ponchos': 'Poncho',
+      'winter': 'Winter',
+      'winter jacket': 'Winter',
+      'winter jackets': 'Winter'
+    };
+
+    // First check if the jacketTag itself contains a keyword
+    if (jacketTag && jacketTag.trim()) {
+      const lowerJacketTag = jacketTag.toLowerCase();
+      for (const [keyword, silhouette] of Object.entries(jacketSilhouetteKeywords)) {
+        if (lowerJacketTag.includes(keyword)) {
+          console.log(`[DEBUG] Found jacket silhouette "${silhouette}" from direct jacket tag: ${jacketTag}`);
+          return silhouette;
+        }
+      }
+    }
+
+    // Then check all tag values for jacket silhouette keywords
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value === 'string') {
+        const lowerValue = value.toLowerCase();
+        for (const [keyword, silhouette] of Object.entries(jacketSilhouetteKeywords)) {
+          if (lowerValue.includes(keyword)) {
+            console.log(`[DEBUG] Found jacket silhouette "${silhouette}" from tag ${key}: ${value}`);
+            return silhouette;
+          }
+        }
+      }
+    }
+
+    console.log(`[DEBUG] No jacket silhouette mapping found for jacketTag: "${jacketTag}"`);
+    return null;
+  }
+
+  /**
+   * Map coat subcategory and tags to silhouette
+   */
+  private static mapCoatSubcategoryToSilhouette(coatTag: string, tags: DetectedTags): string | null {
+    console.log(`[DEBUG] Coat tag: "${coatTag}"`);
+    // Define coat silhouette keywords that might appear in tags
+    const coatSilhouetteKeywords: { [key: string]: string } = {
+      'duffle': 'Duffle',
+      'duffle coat': 'Duffle',
+      'kimono': 'Kimono',
+      'kimono coat': 'Kimono',
+      'peacoat': 'Peacoat',
+      'pea coat': 'Peacoat',
+      'raincoat': 'Raincoat',
+      'rain coat': 'Raincoat',
+      'raincoats and ponchos': 'Raincoat',
+      'winter': 'Winter',
+      'winter coat': 'Winter',
+      'winter coats': 'Winter',
+      'wool': 'Wool',
+      'wool coat': 'Wool',
+      'wool coats': 'Wool'
+    };
+
+    // First check if the coatTag itself contains a keyword
+    if (coatTag && coatTag.trim()) {
+      const lowerCoatTag = coatTag.toLowerCase();
+      for (const [keyword, silhouette] of Object.entries(coatSilhouetteKeywords)) {
+        if (lowerCoatTag.includes(keyword)) {
+          console.log(`[DEBUG] Found coat silhouette "${silhouette}" from direct coat tag: ${coatTag}`);
+          return silhouette;
+        }
+      }
+    }
+
+    // Then check all tag values for coat silhouette keywords
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value === 'string') {
+        const lowerValue = value.toLowerCase();
+        for (const [keyword, silhouette] of Object.entries(coatSilhouetteKeywords)) {
+          if (lowerValue.includes(keyword)) {
+            console.log(`[DEBUG] Found coat silhouette "${silhouette}" from tag ${key}: ${value}`);
+            return silhouette;
+          }
+        }
+      }
+    }
+
+    console.log(`[DEBUG] No coat silhouette mapping found for coatTag: "${coatTag}"`);
     return null;
   }
 
