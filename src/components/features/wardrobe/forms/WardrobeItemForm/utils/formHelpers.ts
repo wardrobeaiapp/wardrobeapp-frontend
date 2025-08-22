@@ -92,7 +92,7 @@ export const getLengthOptions = (subcategory?: string): string[] => {
     return ['Micro', 'Mini', 'Midi', 'Bermuda', 'Knee-length'];
   }
   
-  if (subcategoryLower === 'skirt') {
+  if (subcategoryLower === 'skirt' || subcategoryLower === 'dress') {
     return ['Maxi', 'Midi', 'Mini'];
   }
   
@@ -102,6 +102,30 @@ export const getLengthOptions = (subcategory?: string): string[] => {
 // Get rise options for BOTTOM items
 export const getRiseOptions = (): string[] => {
   return ['High', 'Mid', 'Low'];
+};
+
+// Get neckline options for applicable items
+export const getNecklineOptions = (): string[] => {
+  return [
+    'back',
+    'boatneck', 
+    'bow',
+    'collar',
+    'cowl',
+    'crew',
+    'halter',
+    'heart',
+    'hooded',
+    'keyhole',
+    'low cut',
+    'off shoulder',
+    'one shoulder',
+    'round',
+    'square',
+    'turtleneck',
+    'v-neck',
+    'wrap'
+  ];
 };
 
 // Get silhouette options based on category or subcategory

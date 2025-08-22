@@ -27,6 +27,7 @@ export interface WardrobeItem {
   sleeves?: string;
   style?: string;
   rise?: string;
+  neckline?: string;
   season: Season[];
   scenarios?: string[]; // Array of scenario names this item is suitable for
   imageUrl?: string;

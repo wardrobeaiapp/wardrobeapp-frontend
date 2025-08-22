@@ -19,6 +19,7 @@ export interface WardrobeItemFormData {
   sleeves?: string;
   style?: string;
   rise?: string;
+  neckline?: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -53,6 +54,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [sleeves, setSleeves] = useState(initialItem?.sleeves || '');
   const [style, setStyle] = useState(initialItem?.style || '');
   const [rise, setRise] = useState(initialItem?.rise || '');
+  const [neckline, setNeckline] = useState(initialItem?.neckline || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -122,6 +124,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       style,
       rise,
       length,
+      neckline,
       silhouette
     });
     
@@ -142,6 +145,9 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         ? sleeves || undefined : undefined,
       length: (category === ItemCategory.BOTTOM) ? length || undefined : undefined,
       rise: (category === ItemCategory.BOTTOM) ? rise || undefined : undefined,
+      neckline: (subcategory && 
+        ['dress', 'top', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase())) 
+        ? neckline || undefined : undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
@@ -156,7 +162,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       style: formData.style,
       silhouette: formData.silhouette,
       length: formData.length,
-      rise: formData.rise
+      rise: formData.rise,
+      neckline: formData.neckline
     });
     
     return formData;
@@ -177,6 +184,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setStyle('');
     setSleeves('');
     setRise('');
+    setNeckline('');
     setSeasons([]);
     setIsWishlistItem(false);
     setImageUrl('');
@@ -218,6 +226,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setStyle,
     rise,
     setRise,
+    neckline,
+    setNeckline,
     seasons,
     toggleSeason,
     isWishlistItem,
