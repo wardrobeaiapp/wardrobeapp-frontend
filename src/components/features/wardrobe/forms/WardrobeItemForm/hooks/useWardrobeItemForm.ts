@@ -17,7 +17,7 @@ export interface WardrobeItemFormData {
   silhouette: string;
   length?: string;
   sleeves?: string;
-  style: string;
+  style?: string;
   rise?: string;
   seasons: Season[];
   isWishlistItem: boolean;
@@ -142,7 +142,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         ? sleeves || undefined : undefined,
       length: (category === ItemCategory.BOTTOM) ? length || undefined : undefined,
       rise: (category === ItemCategory.BOTTOM) ? rise || undefined : undefined,
-      style,
+      style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
+        ? style || undefined : undefined,
       seasons,
       isWishlistItem,
       imageUrl,
