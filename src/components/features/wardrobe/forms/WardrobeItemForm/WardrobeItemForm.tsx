@@ -85,6 +85,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setSleeves: formState.setSleeves,
             setStyle: formState.setStyle,
             setRise: formState.setRise,
+            setNeckline: formState.setNeckline,
             setName: formState.setName,
             toggleSeason: formState.toggleSeason,
           },
@@ -322,6 +323,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onStyleChange={formState.setStyle}
           rise={formState.rise}
           onRiseChange={formState.setRise}
+          neckline={formState.neckline}
+          onNecklineChange={formState.setNeckline}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}

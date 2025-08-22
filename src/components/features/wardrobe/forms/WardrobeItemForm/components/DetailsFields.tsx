@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -22,6 +22,8 @@ interface DetailsFieldsProps {
   onStyleChange: (style: string) => void;
   rise: string;
   onRiseChange: (rise: string) => void;
+  neckline: string;
+  onNecklineChange: (neckline: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
@@ -50,6 +52,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onStyleChange,
   rise,
   onRiseChange,
+  neckline,
+  onNecklineChange,
   seasons,
   onToggleSeason,
   isWishlistItem,
@@ -65,10 +69,13 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     (category !== ItemCategory.BOTTOM || 
      (subcategory && !['leggings'].includes(subcategory.toLowerCase())));
   
-  // Show length field only for BOTTOM category with specific subcategories
-  const shouldShowLength = category === ItemCategory.BOTTOM && 
+  // Show length field for BOTTOM category with specific subcategories and ONE_PIECE with dress
+  const shouldShowLength = (category === ItemCategory.BOTTOM && 
     subcategory && 
-    ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategory.toLowerCase());
+    ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategory.toLowerCase())) ||
+    (category === ItemCategory.ONE_PIECE && 
+     subcategory && 
+     subcategory.toLowerCase() === 'dress');
 
   // Show sleeves field based on category and subcategory
   const shouldShowSleeves = category === ItemCategory.ONE_PIECE || 
@@ -80,6 +87,10 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   const shouldShowStyle = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
 
+  // Show neckline field for specific subcategories
+  const shouldShowNeckline = subcategory && 
+    ['dress', 'top', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase());
+
   // Show rise field only for BOTTOM category
   const shouldShowRise = category === ItemCategory.BOTTOM;
 
@@ -88,6 +99,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   const styleOptions = getStyleOptions();
   const lengthOptions = getLengthOptions(subcategory);
   const riseOptions = getRiseOptions();
+  const necklineOptions = getNecklineOptions();
   
   // Debug field visibility
   console.log('[DetailsFields] Field visibility debug:', {
@@ -193,6 +205,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               >
                 <option value="">Select style</option>
                 {styleOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {shouldShowNeckline && (
+            <FormField label="Neckline" error={errors.neckline}>
+              <FormSelect
+                value={neckline}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onNecklineChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select neckline</option>
+                {necklineOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
