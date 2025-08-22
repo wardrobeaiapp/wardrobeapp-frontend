@@ -78,7 +78,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
      subcategory.toLowerCase() === 'dress');
 
   // Show sleeves field based on category and subcategory
-  const shouldShowSleeves = category === ItemCategory.ONE_PIECE || 
+  const shouldShowSleeves = (category === ItemCategory.ONE_PIECE && subcategory && !['overall'].includes(subcategory.toLowerCase())) || 
     (category === ItemCategory.TOP && 
      subcategory && 
      ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()));
@@ -89,7 +89,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
 
   // Show neckline field for specific subcategories
   const shouldShowNeckline = subcategory && 
-    ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase());
+    ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'jumpsuit', 'romper'].includes(subcategory.toLowerCase());
 
   // Show rise field only for BOTTOM category
   const shouldShowRise = category === ItemCategory.BOTTOM;
