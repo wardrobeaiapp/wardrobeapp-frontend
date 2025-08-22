@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -20,11 +20,14 @@ interface DetailsFieldsProps {
   onSleeveChange: (sleeve: string) => void;
   style: string;
   onStyleChange: (style: string) => void;
+  rise: string;
+  onRiseChange: (rise: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
   onWishlistToggle: (isWishlist: boolean) => void;
   category: ItemCategory | '';
+  subcategory: string;
   errors: { [key: string]: string };
 }
 
@@ -45,30 +48,46 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onSleeveChange,
   style,
   onStyleChange,
+  rise,
+  onRiseChange,
   seasons,
   onToggleSeason,
   isWishlistItem,
   onWishlistToggle,
   category,
+  subcategory,
   errors
 }) => {
-  // Hide silhouette and length fields for accessories, footwear, and other categories
+  // Show silhouette field based on category and subcategory
   const shouldShowSilhouette = category && 
-    ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER].includes(category as ItemCategory);
+    ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER].includes(category as ItemCategory) &&
+    // For BOTTOM category, only show for specific subcategories
+    (category !== ItemCategory.BOTTOM || 
+     (subcategory && !['leggings'].includes(subcategory.toLowerCase())));
   
-  const shouldShowLength = category && 
-    ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER, ItemCategory.TOP].includes(category as ItemCategory);
+  // Show length field only for BOTTOM category with specific subcategories
+  const shouldShowLength = category === ItemCategory.BOTTOM && 
+    subcategory && 
+    ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategory.toLowerCase());
 
-  // Show sleeves field only for TOP category
-  const shouldShowSleeves = category === ItemCategory.TOP || category === ItemCategory.ONE_PIECE;
+  // Show sleeves field based on category and subcategory
+  const shouldShowSleeves = category === ItemCategory.ONE_PIECE || 
+    (category === ItemCategory.TOP && 
+     subcategory && 
+     ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()));
 
-  // Show style field for all categories except ACCESSORY and OTHER
+  // Show style field based on category and subcategory
   const shouldShowStyle = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
 
-  const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory) : [];
+  // Show rise field only for BOTTOM category
+  const shouldShowRise = category === ItemCategory.BOTTOM;
+
+  const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory, subcategory) : [];
   const sleeveOptions = getSleeveOptions();
   const styleOptions = getStyleOptions();
+  const lengthOptions = getLengthOptions(subcategory);
+  const riseOptions = getRiseOptions();
   
   // Debug field visibility
   console.log('[DetailsFields] Field visibility debug:', {
@@ -77,8 +96,18 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     shouldShowStyle,
     shouldShowSilhouette,
     shouldShowLength,
+    shouldShowRise,
     sleeves,
-    style
+    style,
+    rise,
+    length: length // Add length to debug output
+  });
+  
+  // Specific debug for length field
+  console.log('[DEBUG] Length field state:', {
+    length,
+    shouldShowLength,
+    lengthOptions: lengthOptions.length
   });
   
   return (
@@ -124,14 +153,17 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
 
           {shouldShowLength && (
             <FormField label="Length" error={errors.length}>
-              <FormInput
-                type="text"
+              <FormSelect
                 value={length}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => onLengthChange(e.target.value)}
-                placeholder="e.g., Mini, Midi, Maxi, Short, Long"
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onLengthChange(e.target.value)}
                 variant="outline"
                 isFullWidth
-              />
+              >
+                <option value="">Select length</option>
+                {lengthOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
             </FormField>
           )}
 
@@ -161,6 +193,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               >
                 <option value="">Select style</option>
                 {styleOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {shouldShowRise && (
+            <FormField label="Rise" error={errors.rise}>
+              <FormSelect
+                value={rise}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onRiseChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select rise</option>
+                {riseOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>

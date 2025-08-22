@@ -1,5 +1,5 @@
 import { ItemCategory, Season } from '../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
 type DetectedTags = Record<string, string>;
@@ -16,6 +16,7 @@ interface FormFieldSetters {
   setLength?: (length: string) => void;
   setSleeves?: (sleeves: string) => void;
   setStyle?: (style: string) => void;
+  setRise?: (rise: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -37,12 +38,14 @@ export class FormAutoPopulationService {
     't-shirt': ItemCategory.TOP,
     'tshirt': ItemCategory.TOP,
     'tank': ItemCategory.TOP,
+    'top': ItemCategory.TOP,
     'sweater': ItemCategory.TOP,
     'cardigan': ItemCategory.TOP,
     'hoodie': ItemCategory.TOP,
     'polo': ItemCategory.TOP,
     'blazer': ItemCategory.TOP,
     'suit jackets': ItemCategory.TOP,
+    'vest': ItemCategory.TOP,
     
     // Bottoms
     'pants': ItemCategory.BOTTOM,
@@ -61,7 +64,6 @@ export class FormAutoPopulationService {
     // Outerwear
     'jacket': ItemCategory.OUTERWEAR,
     'coat': ItemCategory.OUTERWEAR,
-    'vest': ItemCategory.OUTERWEAR,
     'parka': ItemCategory.OUTERWEAR,
     
     // Footwear
@@ -90,11 +92,23 @@ export class FormAutoPopulationService {
     // Tops
     'shirts': 'Shirt',
     'shirt': 'Shirt',
+    'denim shirt': 'Shirt',
     'blouses': 'Blouse', 
     'blouse': 'Blouse',
+    'cropped blouse': 'Blouse',
     't-shirts': 'T-Shirt',
     't-shirt': 'T-Shirt',
     'tshirt': 'T-Shirt',
+    'polo-shirts': 'T-Shirt',
+    'top': 'Top',
+    'tops': 'Top',
+    'crop tops': 'Top',
+    'bardot tops': 'Top',
+    'knitted tops': 'Top',
+    'shell tops': 'Top',
+    'tunics': 'Top',
+    'transparent tops': 'Top',
+    'wrap tops': 'Top',
     'tank tops': 'Tank Top',
     'tank': 'Tank Top',
     'sweaters': 'Sweater',
@@ -106,16 +120,38 @@ export class FormAutoPopulationService {
     'polo': 'Polo Shirt',
     'sweatshirts': 'Sweatshirt',
     'sweatshirt': 'Sweatshirt',
+    'blazers': 'Blazer',
+    'blazer': 'Blazer',
     'suit': 'Blazer',
+    'vest': 'Vest',
+    'vests':  'Vest',
+    'knitted vests': 'Vest',
     
     // Bottoms
     'jeans': 'Jeans',
-    'pants': 'Pants',
+    'pants': 'Trousers',
     'trousers': 'Trousers',
+    'beach pants': 'Trousers',
+    'cargo': 'Trousers',
+    'casual trousers': 'Trousers',
+    'leather trousers': 'Trousers',
+    'culottes': 'Trousers',
+    'formal trousers': 'Trousers',
+    'suit trousers': 'Trousers',
     'shorts': 'Shorts',
+    'casual shorts': 'Shorts',
+    'denim shorts': 'Shorts',
+    'sportswear shorts':  'Shorts',
+    'hotpants': 'Shorts',
+    'leather shorts': 'Shorts',
     'skirts': 'Skirt',
     'skirt': 'Skirt',
     'leggings': 'Leggings',
+    'casual leggings': 'Leggings',
+    'leather leggings': 'Leggings',
+    'sportswear leggings': 'Leggings',
+    'sweat pants': 'Sweatpants',
+    'sweatpants': 'Sweatpants',
     
     // One-piece
     'dresses': 'Dress',
@@ -130,10 +166,6 @@ export class FormAutoPopulationService {
     'jacket': 'Jacket',
     'coats': 'Coat',
     'coat': 'Coat',
-    'blazers': 'Blazer',
-    'blazer': 'Blazer',
-    'vests': 'Vest',
-    'vest': 'Vest',
     
     // Footwear
     'shoes': 'Shoes',
@@ -183,12 +215,12 @@ export class FormAutoPopulationService {
   /**
    * Auto-populate form fields based on detected tags
    */
-  static autoPopulateForm(
+  public static async autoPopulateFromTags(
     detectedTags: DetectedTags,
     formSetters: FormFieldSetters,
     currentFormData?: Partial<WardrobeItemFormData>,
     options: AutoPopulationOptions = {}
-  ): void {
+  ): Promise<void> {
     const { overwriteExisting = false, skipFields = [] } = options;
 
     console.log('[FormAutoPopulation] Starting auto-population with tags:', detectedTags);
@@ -263,10 +295,11 @@ export class FormAutoPopulationService {
     });
     
     if (formSetters.setSilhouette && shouldUpdateField('silhouette', currentFormData?.silhouette)) {
-      // Get category for silhouette validation (prioritize extracted category, fall back to current form data)
+      // Get category and subcategory for silhouette validation
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      console.log('[DEBUG] Category for silhouette:', category);
-      const silhouette = this.extractSilhouette(detectedTags, category);
+      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      console.log('[DEBUG] Category for silhouette:', category, 'Subcategory:', subcategory);
+      const silhouette = this.extractSilhouette(detectedTags, category, subcategory);
       console.log('[DEBUG] Extracted silhouette result:', silhouette);
       if (silhouette) {
         console.log('[FormAutoPopulation] Setting silhouette:', silhouette);
@@ -274,23 +307,25 @@ export class FormAutoPopulationService {
       }
     }
 
-    // 8. Length mapping
-    if (formSetters.setLength && shouldUpdateField('length', currentFormData?.length)) {
-      const length = this.extractLength(detectedTags);
-      if (length) {
-        console.log('[FormAutoPopulation] Setting length:', length);
-        formSetters.setLength(length);
-      }
-    }
 
     // 9. Sleeves mapping
+    console.log('[DEBUG] Sleeves field check:', {
+      hasSetter: !!formSetters.setSleeves,
+      currentSleeves: currentFormData?.sleeves,
+      shouldUpdate: shouldUpdateField('sleeves', currentFormData?.sleeves)
+    });
+    
     if (formSetters.setSleeves && shouldUpdateField('sleeves', currentFormData?.sleeves)) {
       // Get category for sleeves validation (prioritize extracted category, fall back to current form data)
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      console.log('[DEBUG] Category for sleeves extraction:', category);
       const sleeves = this.extractSleeves(detectedTags, category);
+      console.log('[DEBUG] Extracted sleeves value:', sleeves);
       if (sleeves) {
         console.log('[FormAutoPopulation] Setting sleeves:', sleeves);
         formSetters.setSleeves(sleeves);
+      } else {
+        console.log('[DEBUG] No sleeves extracted from tags');
       }
     }
 
@@ -302,6 +337,43 @@ export class FormAutoPopulationService {
       if (style) {
         console.log('[FormAutoPopulation] Setting style:', style);
         formSetters.setStyle(style);
+      }
+    }
+
+    // 10.5. Rise mapping
+    if (formSetters.setRise && shouldUpdateField('rise', currentFormData?.rise)) {
+      // Get category for rise validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const rise = this.extractRise(detectedTags, category);
+      if (rise) {
+        console.log('[FormAutoPopulation] Setting rise:', rise);
+        formSetters.setRise(rise);
+      }
+    }
+
+    // 11. Length mapping
+    console.log('[DEBUG] Length field check:', {
+      hasSetLength: !!formSetters.setLength,
+      currentLength: currentFormData?.length,
+      shouldUpdate: shouldUpdateField('length', currentFormData?.length),
+      overwriteExisting,
+      skipFields
+    });
+    
+    if (formSetters.setLength && shouldUpdateField('length', currentFormData?.length)) {
+      // Get category and subcategory for length validation
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const length = await this.extractLength(detectedTags, category, subcategory);
+      if (length) {
+        console.log('[FormAutoPopulation] Setting length:', length);
+        console.log('[DEBUG] setLength function available:', !!formSetters.setLength);
+        if (formSetters.setLength) {
+          formSetters.setLength(length);
+          console.log('[DEBUG] setLength called with value:', length);
+        }
+      } else {
+        console.log('[DEBUG] No length extracted from tags');
       }
     }
 
@@ -599,18 +671,27 @@ export class FormAutoPopulationService {
   /**
    * Extract silhouette from detected tags, validating against category-specific options
    */
-  private static extractSilhouette(tags: DetectedTags, category?: ItemCategory): string | null {
+  private static extractSilhouette(tags: DetectedTags, category?: ItemCategory, subcategory?: string): string | null {
     let rawSilhouette: string | null = null;
 
-    console.log('[DEBUG] extractSilhouette called with:', { tags, category });
+    console.log('[DEBUG] extractSilhouette called with:', { tags, category, subcategory });
 
-    // First try direct silhouette tag
-    if (tags.Silhouette) {
+    // Special handling for skirt subcategory - detect from subcategory name
+    if (category === ItemCategory.BOTTOM && subcategory?.toLowerCase() === 'skirt') {
+      console.log('[DEBUG] Detected skirt subcategory, checking for silhouette mapping');
+      rawSilhouette = this.mapSkirtSubcategoryToSilhouette(subcategory, tags);
+      if (rawSilhouette) {
+        console.log('[DEBUG] Mapped skirt subcategory to silhouette:', rawSilhouette);
+      }
+    }
+
+    // If no skirt-specific mapping, try direct silhouette tag
+    if (!rawSilhouette && tags.Silhouette) {
       rawSilhouette = tags.Silhouette;
       console.log('[DEBUG] Found direct Silhouette tag:', rawSilhouette);
     } 
     // Special handling for Fit tag (commonly used for tops silhouette)
-    else if (tags.Fit && category === ItemCategory.TOP) {
+    else if (!rawSilhouette && tags.Fit && category === ItemCategory.TOP) {
       console.log('[DEBUG] Using Fit tag for TOP category:', tags.Fit);
       rawSilhouette = this.mapFitToSilhouette(tags.Fit);
       console.log('[DEBUG] Mapped Fit to silhouette:', rawSilhouette);
@@ -633,8 +714,8 @@ export class FormAutoPopulationService {
       return null;
     }
 
-    // Get valid options for this category
-    const validOptions = getSilhouetteOptions(category);
+    // Get valid options for this category and subcategory
+    const validOptions = getSilhouetteOptions(category, subcategory);
     if (validOptions.length === 0) {
       return null; // Category doesn't support silhouettes
     }
@@ -701,30 +782,91 @@ export class FormAutoPopulationService {
   }
 
   /**
-   * Extract length from detected tags
+   * Extract length from detected tags for BOTTOM category items
    */
-  private static extractLength(tags: DetectedTags): string | null {
-    if (tags.Length) {
-      return tags.Length;
+  private static async extractLength(tags: DetectedTags, category?: ItemCategory, subcategory?: string): Promise<string | null> {
+    // Length field only applies to BOTTOM category with specific subcategories
+    if (category !== ItemCategory.BOTTOM || !subcategory) {
+      return null;
     }
 
-    // Look for length hints in other tags
-    const lengthKeywords = ['length', 'hem', 'size'];
+    console.log('[DEBUG] extractLength called with:', { tags, category, subcategory });
+
+    const subcategoryLower = subcategory.toLowerCase();
+    const validSubcategories = ['jeans', 'trousers', 'skirt'];
+    if (!validSubcategories.includes(subcategoryLower)) {
+      return null;
+    }
+
+    let rawLength: string | null = null;
+
+    // First try direct Length tag (case insensitive)
     for (const [key, value] of Object.entries(tags)) {
-      if (typeof value === 'string' && lengthKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
-        // Common length mappings
-        const lowerValue = value.toLowerCase();
-        if (lowerValue.includes('mini') || lowerValue.includes('short')) return 'Mini';
-        if (lowerValue.includes('midi') || lowerValue.includes('knee')) return 'Midi';
-        if (lowerValue.includes('maxi') || lowerValue.includes('long') || lowerValue.includes('full')) return 'Maxi';
-        if (lowerValue.includes('crop') || lowerValue.includes('cropped')) return 'Cropped';
-        if (lowerValue.includes('ankle')) return 'Ankle Length';
-        if (lowerValue.includes('floor')) return 'Floor Length';
-        return value; // Return original if no mapping found
+      if (key.toLowerCase() === 'length' && typeof value === 'string') {
+        rawLength = value;
+        break;
       }
     }
 
-    return null;
+    // If no direct Length tag, look for length hints in tag keys and values
+    if (!rawLength) {
+      const lengthKeywords = ['length', 'size', 'fit', 'inseam', 'hem'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string') {
+          const keyLower = key.toLowerCase();
+          const valueLower = value.toLowerCase();
+          
+          // Check if key contains length keywords
+          if (lengthKeywords.some(keyword => keyLower.includes(keyword))) {
+            rawLength = value;
+            break;
+          }
+          
+          // Check if value contains length terms
+          const lengthTerms = ['long', 'short', 'cropped', 'ankle', 'full', 'capri', 'maxi', 'midi', 'mini', '7/8', '3/4', 'floor', 'above knee'];
+          if (lengthTerms.some(term => valueLower.includes(term))) {
+            rawLength = value;
+            break;
+          }
+        }
+      }
+    }
+
+    // If no raw length found, return null
+    if (!rawLength) {
+      return null;
+    }
+
+    const lowerRaw = rawLength.toLowerCase();
+
+    // Get valid length options based on subcategory (use actual options from formHelpers)
+    const { getLengthOptions } = await import('../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers');
+    const validOptions = getLengthOptions(subcategory);
+
+    // Check for exact matches first
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Try semantic matching for common length terms (case insensitive)
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (
+        (lowerRaw.includes(lowerOption)) ||
+        (lowerOption === 'long' && (lowerRaw.includes('full') || lowerRaw.includes('ankle') || lowerRaw.includes('regular'))) ||
+        (lowerOption === 'short' && (lowerRaw.includes('cropped') || lowerRaw.includes('capri') || lowerRaw.includes('crop'))) ||
+        (lowerOption === '7/8' && (lowerRaw.includes('seven eighth') || lowerRaw.includes('7-8') || lowerRaw.includes('seven-eighth'))) ||
+        (lowerOption === '3/4' && (lowerRaw.includes('three quarter') || lowerRaw.includes('3-4') || lowerRaw.includes('three-quarter'))) ||
+        (lowerOption === 'maxi' && (lowerRaw.includes('floor') || lowerRaw.includes('long') || lowerRaw.includes('ankle'))) ||
+        (lowerOption === 'midi' && (lowerRaw.includes('mid') || lowerRaw.includes('calf') || lowerRaw.includes('knee'))) ||
+        (lowerOption === 'mini' && (lowerRaw.includes('above knee') || lowerRaw.includes('short') || lowerRaw.includes('thigh')))
+      ) {
+        return option;
+      }
+    }
+
+    return null; // No valid match found
   }
 
   /**
@@ -850,6 +992,61 @@ export class FormAutoPopulationService {
   }
 
   /**
+   * Extract rise from detected tags, validating against available options
+   */
+  private static extractRise(tags: DetectedTags, category?: ItemCategory): string | null {
+    // Rise field only applies to BOTTOM category
+    if (category !== ItemCategory.BOTTOM) {
+      return null;
+    }
+
+    let rawRise: string | null = null;
+
+    // First try direct Rise tag
+    if (tags.Rise) {
+      rawRise = tags.Rise;
+    } else {
+      // Look for rise hints in other tags
+      const riseKeywords = ['rise', 'waist', 'fit'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && riseKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawRise = value;
+          break;
+        }
+      }
+    }
+
+    // If no raw rise found, return null
+    if (!rawRise) {
+      return null;
+    }
+
+    // Get valid rise options
+    const validOptions = getRiseOptions();
+
+    // Check if raw rise matches any valid option (case-insensitive)
+    const lowerRaw = rawRise.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // Try semantic matching for common rise terms
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (
+        ((lowerRaw.includes('high') || lowerRaw.includes('tall')) && lowerOption === 'high') ||
+        ((lowerRaw.includes('mid') || lowerRaw.includes('medium') || lowerRaw.includes('regular')) && lowerOption === 'mid') ||
+        ((lowerRaw.includes('low') || lowerRaw.includes('short')) && lowerOption === 'low')
+      ) {
+        return option;
+      }
+    }
+
+    return null; // No valid match found
+  }
+
+  /**
    * Extract seasons from detected tags
    */
   private static extractSeasons(tags: DetectedTags): Season[] {
@@ -897,6 +1094,41 @@ export class FormAutoPopulationService {
     
     if (subcategory) {
       return this.capitalizeFirst(subcategory);
+    }
+
+    return null;
+  }
+
+  /**
+   * Map skirt subcategory and tags to silhouette
+   */
+  private static mapSkirtSubcategoryToSilhouette(subcategory: string, tags: DetectedTags): string | null {
+    console.log(`[DEBUG] Subcategory: ${subcategory}`);
+    // Define skirt silhouette keywords that might appear in tags
+    const skirtSilhouetteKeywords: { [key: string]: string } = {
+      'a-line': 'A-Line',
+      'aline': 'A-Line', 
+      'balloon': 'Balloon',
+      'mermaid': 'Mermaid',
+      'pencil': 'Pencil',
+      'straight': 'Straight',
+      'pencil and straight': 'Straight',
+      'pleated': 'Pleated',
+      'tiered ': 'Tiered',
+      'wrap': 'Wrap'
+    };
+
+    // Check all tag values for skirt silhouette keywords
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value === 'string') {
+        const lowerValue = value.toLowerCase();
+        for (const [keyword, silhouette] of Object.entries(skirtSilhouetteKeywords)) {
+          if (lowerValue.includes(keyword)) {
+            console.log(`[DEBUG] Found skirt silhouette "${silhouette}" from tag ${key}: ${value}`);
+            return silhouette;
+          }
+        }
+      }
     }
 
     return null;

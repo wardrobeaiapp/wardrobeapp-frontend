@@ -71,7 +71,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       if (tags) {
         const { FormAutoPopulationService } = await import('../../../../../services/formAutoPopulationService');
         
-        FormAutoPopulationService.autoPopulateForm(
+        await FormAutoPopulationService.autoPopulateFromTags(
           tags,
           {
             setCategory: formState.setCategory,
@@ -84,6 +84,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setLength: formState.setLength,
             setSleeves: formState.setSleeves,
             setStyle: formState.setStyle,
+            setRise: formState.setRise,
             setName: formState.setName,
             toggleSeason: formState.toggleSeason,
           },
@@ -319,11 +320,14 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onSleeveChange={formState.setSleeves}
           style={formState.style}
           onStyleChange={formState.setStyle}
+          rise={formState.rise}
+          onRiseChange={formState.setRise}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}
           onWishlistToggle={formState.setIsWishlistItem}
           category={formState.category}
+          subcategory={formState.subcategory}
           errors={formState.errors}
         />
 
