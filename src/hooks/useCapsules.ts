@@ -5,6 +5,7 @@ import { replaceAllCapsuleItems } from '../services/capsuleItemsService';
 
 // Store the last fetched capsules to prevent unnecessary state updates
 let lastFetchedCapsules: Capsule[] | null = null;
+let pendingRequest: Promise<Capsule[]> | null = null;
 
 /**
  * Custom hook to manage capsules with the new capsule-items relationship
@@ -14,16 +15,53 @@ export const useCapsules = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const isMounted = useRef(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Fetch all capsules
-  const loadCapsules = useCallback(async () => {
+  // Memoize the loadCapsules function to prevent unnecessary recreations
+  const loadCapsules = useCallback(async (forceRefresh = false) => {
     if (!isMounted.current) return;
+    
+    // If we already have a pending request, return that instead of creating a new one
+    if (pendingRequest && !forceRefresh) {
+      try {
+        const data = await pendingRequest;
+        if (isMounted.current) {
+          setCapsules(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted.current) {
+          console.error('Error in pending request:', err);
+          setError('Failed to load capsules');
+          setLoading(false);
+        }
+      }
+      return;
+    }
+    
+    // If we have cached data and not forcing a refresh, use that
+    if (lastFetchedCapsules && !forceRefresh) {
+      setCapsules(lastFetchedCapsules);
+      setLoading(false);
+      return;
+    }
+    
+    // Cancel any pending requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
     
     setLoading(true);
     setError(null);
 
     try {
-      const data = await fetchCapsules();
+      // Create a new request and store it
+      pendingRequest = fetchCapsules();
+      const data = await pendingRequest;
+      
       if (!isMounted.current) return;
       
       // Only update state if data has changed
@@ -39,10 +77,14 @@ export const useCapsules = () => {
       });
     } catch (err) {
       if (!isMounted.current) return;
-      console.error('Error loading capsules:', err);
-      setError('Failed to load capsules');
-      setCapsules([]);
+      
+      // Don't show error if the request was aborted
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Error loading capsules:', err);
+        setError('Failed to load capsules');
+      }
     } finally {
+      pendingRequest = null;
       if (isMounted.current) {
         setLoading(false);
       }
@@ -53,18 +95,12 @@ export const useCapsules = () => {
   useEffect(() => {
     isMounted.current = true;
     
-    // Initial load only if we don't have cached data
-    if (!lastFetchedCapsules) {
-      loadCapsules();
-    } else {
-      // Use cached data if available
-      setCapsules(lastFetchedCapsules);
-      setLoading(false);
-    }
+    // Initial load
+    loadCapsules();
     
     // Set up refresh event listener
     const handleRefreshCapsules = () => {
-      loadCapsules();
+      loadCapsules(true); // Force refresh
     };
     
     window.addEventListener('refreshCapsules', handleRefreshCapsules);
@@ -73,6 +109,11 @@ export const useCapsules = () => {
     return () => {
       isMounted.current = false;
       window.removeEventListener('refreshCapsules', handleRefreshCapsules);
+      
+      // Abort any pending requests on unmount
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
     };
   }, [loadCapsules]);
   
