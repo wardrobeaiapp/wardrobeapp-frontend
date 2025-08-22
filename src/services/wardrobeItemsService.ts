@@ -385,20 +385,37 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
       console.log('[wardrobeItemsService] Skipping imageExpiry - column may not exist yet');
     }
     
+    // Debug logging before case conversion
+    console.log('[wardrobeItemsService] Item data before camelToSnakeCase:', {
+      neckline: (itemData as any).neckline,
+      sleeves: (itemData as any).sleeves,
+      style: (itemData as any).style,
+      rise: (itemData as any).rise
+    });
+    
     const snakeCaseItem = camelToSnakeCase(itemData);
+    
+    // Debug logging after case conversion
+    console.log('[wardrobeItemsService] Item data after camelToSnakeCase:', {
+      neckline: snakeCaseItem.neckline,
+      sleeves: snakeCaseItem.sleeves,
+      style: snakeCaseItem.style,
+      rise: snakeCaseItem.rise
+    });
     
     // Remove undefined values to avoid constraint violations
     const cleanItem = Object.fromEntries(
       Object.entries(snakeCaseItem).filter(([_, value]) => value !== undefined)
     );
     
-    // Debug logging to check if sleeves/style/rise data is present
+    // Debug logging to check if sleeves/style/rise/neckline data is present
     console.log('[wardrobeItemsService] Item data being inserted:', {
       sleeves: cleanItem.sleeves,
       style: cleanItem.style,
       silhouette: cleanItem.silhouette,
       length: cleanItem.length,
-      rise: cleanItem.rise
+      rise: cleanItem.rise,
+      neckline: cleanItem.neckline
     });
     
     const { data, error } = await supabase

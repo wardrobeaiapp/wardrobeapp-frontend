@@ -146,7 +146,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       length: (category === ItemCategory.BOTTOM) ? length || undefined : undefined,
       rise: (category === ItemCategory.BOTTOM) ? rise || undefined : undefined,
       neckline: (subcategory && 
-        ['dress', 'top', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase())) 
+        ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())) 
         ? neckline || undefined : undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
@@ -157,13 +157,16 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     };
     
     // Debug logging
-    console.log('[useWardrobeItemForm] Form data collected:', {
-      sleeves: formData.sleeves,
-      style: formData.style,
+    console.log('[useWardrobeItemForm] Form data debug:', {
+      category,
+      subcategory,
       silhouette: formData.silhouette,
       length: formData.length,
       rise: formData.rise,
-      neckline: formData.neckline
+      neckline: formData.neckline,
+      necklineValue: neckline,
+      shouldIncludeNeckline: subcategory && 
+        ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())
     });
     
     return formData;

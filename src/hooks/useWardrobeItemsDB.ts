@@ -108,6 +108,8 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       length: item.length || '',
       sleeves: item.sleeves || 'SHORT',
       style: item.style || 'casual',
+      rise: item.rise || undefined,
+      neckline: item.neckline || undefined,
       season: item.season || [],
       scenarios: item.scenarios || [],
       wishlist: item.wishlist || false,

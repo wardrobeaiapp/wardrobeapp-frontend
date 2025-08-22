@@ -89,7 +89,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
 
   // Show neckline field for specific subcategories
   const shouldShowNeckline = subcategory && 
-    ['dress', 'top', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase());
+    ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase());
 
   // Show rise field only for BOTTOM category
   const shouldShowRise = category === ItemCategory.BOTTOM;

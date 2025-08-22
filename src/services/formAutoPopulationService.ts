@@ -1161,7 +1161,7 @@ export class FormAutoPopulationService {
    */
   private static extractNeckline(tags: DetectedTags, subcategory?: string): string | null {
     // Only certain subcategories support neckline
-    if (!subcategory || !['dress', 'top', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase())) {
+    if (!subcategory || !['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())) {
       return null;
     }
 
