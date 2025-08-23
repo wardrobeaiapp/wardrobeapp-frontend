@@ -22,6 +22,7 @@ export interface WardrobeItemFormData {
   neckline?: string;
   heelHeight?: string;
   bootHeight?: string;
+  type?: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -59,6 +60,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [neckline, setNeckline] = useState(initialItem?.neckline || '');
   const [heelHeight, setHeelHeight] = useState(initialItem?.heelHeight || '');
   const [bootHeight, setBootHeight] = useState(initialItem?.bootHeight || '');
+  const [type, setType] = useState(initialItem?.type || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -162,6 +164,11 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         subcategory && 
         subcategory.toLowerCase() === 'boots')
         ? bootHeight || undefined : undefined,
+      type: ((category === ItemCategory.FOOTWEAR && subcategory && 
+        ['boots', 'formal shoes'].includes(subcategory.toLowerCase())) ||
+        (category === ItemCategory.ACCESSORY && subcategory && 
+        ['bag', 'jewelry'].includes(subcategory.toLowerCase())))
+        ? type || undefined : undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
@@ -209,6 +216,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setNeckline('');
     setHeelHeight('');
     setBootHeight('');
+    setType('');
     setSeasons([]);
     setIsWishlistItem(defaultWishlist);
     setImageUrl('');
@@ -256,6 +264,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setHeelHeight,
     bootHeight,
     setBootHeight,
+    type,
+    setType,
     seasons,
     toggleSeason,
     isWishlistItem,
