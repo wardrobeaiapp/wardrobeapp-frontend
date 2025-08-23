@@ -1052,8 +1052,8 @@ export class FormAutoPopulationService {
       return null;
     }
 
-    // Get valid style options
-    const validOptions = getStyleOptions();
+    // Get valid style options based on category and subcategory
+    const validOptions = getStyleOptions(category || '');
 
     // Check if raw style matches any valid option (case-insensitive)
     const lowerRaw = rawStyle.toLowerCase();

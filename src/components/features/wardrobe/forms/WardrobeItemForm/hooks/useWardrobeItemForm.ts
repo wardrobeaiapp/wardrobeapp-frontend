@@ -20,6 +20,8 @@ export interface WardrobeItemFormData {
   style?: string;
   rise?: string;
   neckline?: string;
+  heelHeight?: string;
+  bootHeight?: string;
   seasons: Season[];
   isWishlistItem: boolean;
   imageUrl: string;
@@ -55,6 +57,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [style, setStyle] = useState(initialItem?.style || '');
   const [rise, setRise] = useState(initialItem?.rise || '');
   const [neckline, setNeckline] = useState(initialItem?.neckline || '');
+  const [heelHeight, setHeelHeight] = useState(initialItem?.heelHeight || '');
+  const [bootHeight, setBootHeight] = useState(initialItem?.bootHeight || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -150,6 +154,11 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       neckline: (subcategory && 
         ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())) 
         ? neckline || undefined : undefined,
+      heelHeight: (category === ItemCategory.FOOTWEAR && 
+        subcategory && 
+        ['heels', 'boots', 'sandals', 'flats', 'formal shoes'].includes(subcategory.toLowerCase()))
+        ? heelHeight || undefined : undefined,
+      bootHeight: bootHeight || undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
@@ -186,12 +195,14 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setPrice('');
     setSilhouette('');
     setLength('');
-    setStyle('');
     setSleeves('');
+    setStyle('');
     setRise('');
     setNeckline('');
+    setHeelHeight('');
+    setBootHeight('');
     setSeasons([]);
-    setIsWishlistItem(false);
+    setIsWishlistItem(defaultWishlist);
     setImageUrl('');
     setDetectedTags({});
     setErrors({});
@@ -233,6 +244,10 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setRise,
     neckline,
     setNeckline,
+    heelHeight,
+    setHeelHeight,
+    bootHeight,
+    setBootHeight,
     seasons,
     toggleSeason,
     isWishlistItem,

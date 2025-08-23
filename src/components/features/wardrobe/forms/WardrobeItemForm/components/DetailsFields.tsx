@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -24,6 +24,10 @@ interface DetailsFieldsProps {
   onRiseChange: (rise: string) => void;
   neckline: string;
   onNecklineChange: (neckline: string) => void;
+  heelHeight: string;
+  onHeelHeightChange: (heelHeight: string) => void;
+  bootHeight: string;
+  onBootHeightChange: (bootHeight: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
@@ -54,6 +58,10 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onRiseChange,
   neckline,
   onNecklineChange,
+  heelHeight,
+  onHeelHeightChange,
+  bootHeight,
+  onBootHeightChange,
   seasons,
   onToggleSeason,
   isWishlistItem,
@@ -94,13 +102,25 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
 
   // Show rise field only for BOTTOM category
   const shouldShowRise = category === ItemCategory.BOTTOM;
+  
+  // Show heel height field for footwear
+  const shouldShowHeelHeight = category === ItemCategory.FOOTWEAR && 
+    subcategory && 
+    ['heels', 'boots', 'sandals', 'flats', 'formal shoes'].includes(subcategory.toLowerCase());
+    
+  // Show boot height field for boots subcategory
+  const shouldShowBootHeight = category === ItemCategory.FOOTWEAR && 
+    subcategory && 
+    subcategory.toLowerCase() === 'boots';
 
   const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory, subcategory) : [];
   const sleeveOptions = getSleeveOptions();
-  const styleOptions = getStyleOptions();
+  const styleOptions = getStyleOptions(category, subcategory);
   const lengthOptions = getLengthOptions(subcategory);
   const riseOptions = getRiseOptions();
   const necklineOptions = getNecklineOptions();
+  const heelHeightOptions = getHeelHeightOptions();
+  const bootHeightOptions = getBootHeightOptions();
   
   // Debug field visibility
   console.log('[DetailsFields] Field visibility debug:', {
@@ -238,6 +258,40 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               >
                 <option value="">Select rise</option>
                 {riseOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {shouldShowHeelHeight && (
+            <FormField label="Heel Height" error={errors.heelHeight}>
+              <FormSelect
+                value={heelHeight}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onHeelHeightChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select heel height</option>
+                {heelHeightOptions.map(option => (
+                  <option key={option} value={option}>
+                    {option.charAt(0).toUpperCase() + option.slice(1)}
+                  </option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+          
+          {shouldShowBootHeight && (
+            <FormField label="Boot Height" error={errors.bootHeight}>
+              <FormSelect
+                value={bootHeight}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onBootHeightChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select boot height</option>
+                {bootHeightOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>

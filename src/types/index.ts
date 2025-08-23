@@ -28,6 +28,8 @@ export interface WardrobeItem {
   style?: string;
   rise?: string;
   neckline?: string;
+  heelHeight?: string;
+  bootHeight?: string;
   season: Season[];
   scenarios?: string[]; // Array of scenario names this item is suitable for
   imageUrl?: string;
