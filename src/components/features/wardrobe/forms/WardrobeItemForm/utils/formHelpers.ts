@@ -144,7 +144,7 @@ export const getNecklineOptions = (): string[] => {
 };
 
 // Heel height options for footwear
-export const HEEL_HEIGHT_OPTIONS = ['high', 'mid', 'low', 'flat', 'kitten', 'block', 'stiletto', 'wedge', 'platform'] as const;
+export const HEEL_HEIGHT_OPTIONS = ['high', 'middle', 'low', 'ho-heels'] as const;
 export type HeelHeight = typeof HEEL_HEIGHT_OPTIONS[number];
 
 // Boot height options
