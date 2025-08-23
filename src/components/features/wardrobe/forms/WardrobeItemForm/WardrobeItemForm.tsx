@@ -85,6 +85,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setStyle: formState.setStyle,
             setRise: formState.setRise,
             setNeckline: formState.setNeckline,
+            setHeelHeight: formState.setHeelHeight,
             setName: formState.setName,
             toggleSeason: formState.toggleSeason,
           },
