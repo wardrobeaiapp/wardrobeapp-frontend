@@ -12,7 +12,7 @@ export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => 
     case ItemCategory.OUTERWEAR:
       return ['Coat', 'Jacket', 'Parka', 'Trench Coat', 'Windbreaker'];
     case ItemCategory.FOOTWEAR:
-      return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers'];
+      return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers', 'Formal Shoes', 'Slippers'];
     case ItemCategory.ACCESSORY:
       return ['Hat', 'Scarf', 'Belt', 'Bag', 'Jewelry', 'Sunglasses', 'Watch', 'Socks', 'Ties'];
     case ItemCategory.OTHER:
@@ -73,8 +73,31 @@ export const getSleeveOptions = (): string[] => {
   return ['3/4 sleeves', 'long sleeves', 'one sleeve', 'short sleeves', 'sleeveless'];
 };
 
-// Get style options for most categories (except ACCESSORY and OTHER)
-export const getStyleOptions = (): string[] => {
+// Get style options based on category and subcategory
+export const getStyleOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
+  // For footwear, return specific styles based on subcategory
+  if (category === ItemCategory.FOOTWEAR && subcategory) {
+    switch (subcategory.toLowerCase()) {
+      case 'sneakers':
+        return ['running', 'casual', 'basketball', 'tennis'];
+      case 'boots':
+        return ['combat', 'chelsea', 'cowboy', 'hiking', 'dress'];
+      case 'sandals':
+        return ['casual', 'dressy', 'sport'];
+      case 'heels':
+        return ['formal', 'party', 'casual'];
+      case 'flats':
+        return ['casual', 'formal', 'ballet'];
+      case 'loafers':
+        return ['formal', 'casual'];
+      case 'formal shoes':
+        return ['oxford', 'derby', 'monk strap'];
+      case 'slippers':
+        return ['cozy', 'minimal', 'supportive'];
+    }
+  }
+  
+  // Default styles for other categories
   return ['casual', 'elegant', 'special', 'sport'];
 };
 
@@ -111,38 +134,48 @@ export const getRiseOptions = (): string[] => {
 // Get neckline options for applicable items
 export const getNecklineOptions = (): string[] => {
   return [
-    'back',
-    'boatneck', 
-    'bow',
-    'collar',
-    'cowl',
-    'crew',
-    'halter',
-    'heart',
-    'hooded',
-    'keyhole',
-    'low cut',
-    'off shoulder',
-    'one shoulder',
-    'round',
-    'square',
-    'turtleneck',
-    'v-neck',
-    'wrap'
+    'scoop', 'v-neck', 'crew', 'boat', 'square', 'sweetheart', 'halter',
+    'one shoulder', 'off shoulder', 'turtleneck', 'mock', 'asymmetric',
+    'high neck', 'scoop neck', 'deep v', 'jewel', 'plunge', 'scoop neck',
+    'surplice', 'square', 'sweetheart', 'illusion', 'keyhole', 'portrait',
+    'queen anne', 'sabrina', 'scoop neck', 'slash', 'square', 'straight',
+    'sweetheart', 'v-neck', 'wrap'
   ];
 };
 
+// Heel height options for footwear
+export const HEEL_HEIGHT_OPTIONS = ['high', 'mid', 'low', 'flat', 'kitten', 'block', 'stiletto', 'wedge', 'platform'] as const;
+export type HeelHeight = typeof HEEL_HEIGHT_OPTIONS[number];
+
+// Boot height options
+export const BOOT_HEIGHT_OPTIONS = ['ankle', 'mid-calf', 'knee-high', 'thigh-high'] as const;
+export type BootHeight = typeof BOOT_HEIGHT_OPTIONS[number];
+
+/**
+ * Get heel height options for footwear
+ * @returns Array of heel height options with proper formatting
+ */
+export function getHeelHeightOptions(): string[] {
+  return HEEL_HEIGHT_OPTIONS.map(option => 
+    option.charAt(0).toUpperCase() + option.slice(1).toLowerCase()
+  );
+}
+
+/**
+ * Get boot height options for boots
+ * @returns Array of boot height options with proper formatting
+ */
+export function getBootHeightOptions(): string[] {
+  return BOOT_HEIGHT_OPTIONS.map(option => {
+    // Handle hyphenated options
+    return option.split('-').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join('-');
+  });
+}
+
 // Get silhouette options based on category or subcategory
 export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
-  // Handle specific subcategory cases first
-  // if (category === ItemCategory.BOTTOM && subcategory?.toLowerCase() === 'skirt') {
-  //   return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
-  // }
-
-  // if (category === ItemCategory.BOTTOM && (subcategory?.toLowerCase() === 'jeans' || subcategory?.toLowerCase() === 'trousers')) {
-  //   return ['Skinny', 'Slim Fit', 'Regular Fit', 'Relaxed Fit', 'Wide Leg', 'Straight', 'Bootcut', 'Flared'];
-  // }
-  
   // Handle based on category
   switch (category) {
     case ItemCategory.TOP:

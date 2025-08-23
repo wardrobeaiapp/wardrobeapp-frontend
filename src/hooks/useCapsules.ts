@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capsule, Season } from '../types';
 import { fetchCapsules, createCapsule, updateCapsule, deleteCapsule } from '../services/api';
 import { replaceAllCapsuleItems } from '../services/capsuleItemsService';
@@ -269,30 +269,6 @@ export const useCapsules = () => {
       }
     }
   }, []);
-
-  // Get a capsule by ID
-  const getCapsuleById = useCallback((id: string) => {
-    return capsules.find(capsule => capsule.id === id) || null;
-  }, [capsules]);
-
-  // Filter capsules by season
-  const filterCapsulesBySeason = useCallback((season: string) => {
-    if (season === 'all') return capsules;
-    return capsules.filter(capsule => 
-      capsule.seasons && Array.isArray(capsule.seasons) && 
-      capsule.seasons.includes(season as any)
-    );
-  }, [capsules]);
-
-  // Filter capsules by scenario
-  const filterCapsulesByScenario = useCallback((scenario: string) => {
-    if (scenario === 'all') return capsules;
-    return capsules.filter(capsule => 
-      capsule.scenarios && 
-      Array.isArray(capsule.scenarios) && 
-      capsule.scenarios.includes(scenario)
-    );
-  }, [capsules]);
 
   // Load capsules on mount
   useEffect(() => {

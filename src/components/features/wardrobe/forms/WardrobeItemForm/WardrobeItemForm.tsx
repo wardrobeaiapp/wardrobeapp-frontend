@@ -7,7 +7,6 @@ import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
 import { ImageUploadSection } from './components/ImageUploadSection';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { DetailsFields } from './components/DetailsFields';
-import { FormActions } from './components/FormActions';
 import { BackgroundRemovalPreview } from './components/BackgroundRemovalPreview';
 import { FormContainer } from '../../shared/styles/form.styles';
 
@@ -254,6 +253,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         silhouette: formData.silhouette,
         length: formData.length,
         neckline: formData.neckline,
+        heelHeight: formData.heelHeight,
         rise: formData.rise,
         tags: tags // Save as JSON object
       } as WardrobeItem;
@@ -334,6 +334,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onRiseChange={formState.setRise}
           neckline={formState.neckline}
           onNecklineChange={formState.setNeckline}
+          heelHeight={formState.heelHeight}
+          onHeelHeightChange={formState.setHeelHeight}
+          bootHeight={formState.bootHeight}
+          onBootHeightChange={formState.setBootHeight}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}
@@ -341,11 +345,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           category={formState.category}
           subcategory={formState.subcategory}
           errors={formState.errors}
-        />
-
-        <FormActions
-          onCancel={onCancel}
-          isSubmitting={formState.isSubmitting}
         />
       </form>
     </FormContainer>
