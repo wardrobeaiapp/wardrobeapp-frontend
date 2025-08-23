@@ -79,21 +79,17 @@ export const getStyleOptions = (category: ItemCategory | '', subcategory?: strin
   if (category === ItemCategory.FOOTWEAR && subcategory) {
     switch (subcategory.toLowerCase()) {
       case 'sneakers':
-        return ['running', 'casual', 'trainers', 'tennis'];
+        return [ 'casual', 'special', 'sport'];
       case 'boots':
         return ['chelsea', 'desert', 'hiking', 'high boots', 'rubber', 'snow', 'ski'];
       case 'sandals':
-        return ['casual', 'dressy', 'sport'];
       case 'heels':
-        return ['formal', 'party', 'casual'];
+      case 'slippers':
+        return ['casual', 'elegant', 'special', 'sport'];
       case 'flats':
         return ['casual', 'formal', 'ballet'];
-      case 'loafers':
-        return ['formal', 'casual'];
       case 'formal shoes':
-        return ['oxford', 'derby', 'monk strap'];
-      case 'slippers':
-        return ['cozy', 'minimal', 'supportive'];
+        return ['loafers', 'oxford', 'derby', 'monk strap'];
     }
   }
   

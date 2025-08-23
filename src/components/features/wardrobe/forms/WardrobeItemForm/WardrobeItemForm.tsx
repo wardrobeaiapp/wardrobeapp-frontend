@@ -8,6 +8,7 @@ import { ImageUploadSection } from './components/ImageUploadSection';
 import { BasicInfoFields } from './components/BasicInfoFields';
 import { DetailsFields } from './components/DetailsFields';
 import { BackgroundRemovalPreview } from './components/BackgroundRemovalPreview';
+import { FormActions } from './components/FormActions';
 import { FormContainer } from '../../shared/styles/form.styles';
 
 interface WardrobeItemFormProps {
@@ -256,6 +257,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         length: formData.length,
         neckline: formData.neckline,
         heelHeight: formData.heelHeight,
+        bootHeight: formData.bootHeight,
         rise: formData.rise,
         tags: tags // Save as JSON object
       } as WardrobeItem;
@@ -347,6 +349,12 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           category={formState.category}
           subcategory={formState.subcategory}
           errors={formState.errors}
+        />
+
+        <FormActions
+          onCancel={onCancel}
+          isSubmitting={formState.isSubmitting}
+          isDownloadingImage={isLoadingUrl}
         />
       </form>
     </FormContainer>
