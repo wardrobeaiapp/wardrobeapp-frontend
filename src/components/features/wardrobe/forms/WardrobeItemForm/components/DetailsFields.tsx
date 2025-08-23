@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -28,6 +28,8 @@ interface DetailsFieldsProps {
   onHeelHeightChange: (heelHeight: string) => void;
   bootHeight: string;
   onBootHeightChange: (bootHeight: string) => void;
+  type: string;
+  onTypeChange: (type: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
@@ -62,6 +64,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onHeelHeightChange,
   bootHeight,
   onBootHeightChange,
+  type,
+  onTypeChange,
   seasons,
   onToggleSeason,
   isWishlistItem,
@@ -112,15 +116,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   const shouldShowBootHeight = category === ItemCategory.FOOTWEAR && 
     subcategory && 
     subcategory.toLowerCase() === 'boots';
+    
+  // Show type field for specific subcategories
+  const shouldShowType = (category === ItemCategory.FOOTWEAR && subcategory && 
+    ['boots', 'formal shoes'].includes(subcategory.toLowerCase())) ||
+    (category === ItemCategory.ACCESSORY && subcategory && 
+    ['bag', 'jewelry'].includes(subcategory.toLowerCase()));
 
   const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory, subcategory) : [];
   const sleeveOptions = getSleeveOptions();
-  const styleOptions = getStyleOptions(category, subcategory);
+  const styleOptions = getStyleOptions();
   const lengthOptions = getLengthOptions(subcategory);
   const riseOptions = getRiseOptions();
   const necklineOptions = getNecklineOptions();
   const heelHeightOptions = getHeelHeightOptions();
   const bootHeightOptions = getBootHeightOptions();
+  const typeOptions = getTypeOptions(category, subcategory);
   
   // Debug field visibility
   console.log('[DetailsFields] Field visibility debug:', {
@@ -292,6 +303,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               >
                 <option value="">Select boot height</option>
                 {bootHeightOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+          
+          {shouldShowType && (
+            <FormField label="Type" error={errors.type}>
+              <FormSelect
+                value={type}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onTypeChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select type</option>
+                {typeOptions.map(option => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>

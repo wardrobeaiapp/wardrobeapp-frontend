@@ -12,7 +12,7 @@ export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => 
     case ItemCategory.OUTERWEAR:
       return ['Coat', 'Jacket', 'Parka', 'Trench Coat', 'Windbreaker'];
     case ItemCategory.FOOTWEAR:
-      return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Loafers', 'Formal Shoes', 'Slippers'];
+      return ['Sneakers', 'Boots', 'Sandals', 'Heels', 'Flats', 'Formal Shoes', 'Slippers'];
     case ItemCategory.ACCESSORY:
       return ['Hat', 'Scarf', 'Belt', 'Bag', 'Jewelry', 'Sunglasses', 'Watch', 'Socks', 'Ties'];
     case ItemCategory.OTHER:
@@ -73,28 +73,36 @@ export const getSleeveOptions = (): string[] => {
   return ['3/4 sleeves', 'long sleeves', 'one sleeve', 'short sleeves', 'sleeveless'];
 };
 
-// Get style options based on category and subcategory
-export const getStyleOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
-  // For footwear, return specific styles based on subcategory
+// Get style options
+export const getStyleOptions = (): string[] => {
+  return ['casual', 'elegant', 'special', 'sport'];
+};
+
+// Get type options based on category and subcategory
+export const getTypeOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
   if (category === ItemCategory.FOOTWEAR && subcategory) {
     switch (subcategory.toLowerCase()) {
-      case 'sneakers':
-        return [ 'casual', 'special', 'sport'];
       case 'boots':
         return ['chelsea', 'desert', 'hiking', 'high boots', 'rubber', 'snow', 'ski'];
-      case 'sandals':
-      case 'heels':
-      case 'slippers':
-        return ['casual', 'elegant', 'special', 'sport'];
-      case 'flats':
-        return ['casual', 'formal', 'ballet'];
       case 'formal shoes':
         return ['loafers', 'oxford', 'derby', 'monk strap'];
+      default:
+        return [];
     }
   }
   
-  // Default styles for other categories
-  return ['casual', 'elegant', 'special', 'sport'];
+  if (category === ItemCategory.ACCESSORY && subcategory) {
+    switch (subcategory.toLowerCase()) {
+      case 'bag':
+        return ['baguette', 'bucket', 'clutch', 'hobo', 'crossbody', 'tote', 'briefcase', 'satchel', 'messenger'];
+      case 'jewelry':
+        return ['Bracelets', 'Brooches', 'Cufflinks', 'Earrings', 'Necklaces', 'Rings'];
+      default:
+        return [];
+    }
+  }
+  
+  return [];
 };
 
 // Get length options based on subcategory for BOTTOM items

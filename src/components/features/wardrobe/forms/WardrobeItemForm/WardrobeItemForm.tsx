@@ -88,6 +88,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setNeckline: formState.setNeckline,
             setHeelHeight: formState.setHeelHeight,
             setBootHeight: formState.setBootHeight,
+            setType: formState.setType,
             setName: formState.setName,
             toggleSeason: formState.toggleSeason,
           },
@@ -258,6 +259,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         neckline: formData.neckline,
         heelHeight: formData.heelHeight,
         bootHeight: formData.bootHeight,
+        type: formData.type,
         rise: formData.rise,
         tags: tags // Save as JSON object
       } as WardrobeItem;
@@ -342,6 +344,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onHeelHeightChange={formState.setHeelHeight}
           bootHeight={formState.bootHeight}
           onBootHeightChange={formState.setBootHeight}
+          type={formState.type}
+          onTypeChange={formState.setType}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}

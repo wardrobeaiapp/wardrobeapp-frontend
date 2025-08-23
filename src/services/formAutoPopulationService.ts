@@ -20,6 +20,7 @@ interface FormFieldSetters {
   setNeckline?: (neckline: string) => void;
   setHeelHeight?: (heelHeight: string) => void;
   setBootHeight?: (bootHeight: string) => void;
+  setType?: (type: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -434,6 +435,32 @@ export class FormAutoPopulationService {
         console.log('[FormAutoPopulation] Setting boot height:', bootHeight);
         formSetters.setBootHeight(bootHeight);
       }
+    }
+
+    // 10.9. Type mapping
+    console.log('[DEBUG] Type field check:', {
+      hasSetType: !!formSetters.setType,
+      currentType: currentFormData?.type,
+      shouldUpdate: shouldUpdateField('type', currentFormData?.type),
+      overwriteExisting,
+      skipFields
+    });
+    
+    if (formSetters.setType && shouldUpdateField('type', currentFormData?.type)) {
+      // Get category and subcategory for type validation
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      console.log('[DEBUG] Type extraction - category:', category, 'subcategory:', subcategory);
+      const type = this.extractType(detectedTags, category, subcategory);
+      console.log('[DEBUG] Extracted type result:', type);
+      if (type) {
+        console.log('[FormAutoPopulation] Setting type:', type);
+        formSetters.setType(type);
+      } else {
+        console.log('[DEBUG] No type extracted from tags');
+      }
+    } else {
+      console.log('[DEBUG] Type mapping skipped - setter missing or field should not update');
     }
 
     // 11. Length mapping
@@ -1107,9 +1134,9 @@ export class FormAutoPopulationService {
 
     console.log('[DEBUG] extractStyle called with category:', category, 'subcategory:', subcategory, 'tags:', Object.keys(tags));
 
-    // Get valid style options based on category and subcategory for validation
-    const validOptions = getStyleOptions(category || '', subcategory);
-    console.log('[DEBUG] extractStyle - Valid style options for', subcategory, ':', validOptions);
+    // Get valid style options for validation
+    const validOptions = getStyleOptions();
+    console.log('[DEBUG] extractStyle - Valid style options:', validOptions);
 
     // PRIORITY 1: Check hierarchical Category tag for footwear like "Footwear/Ladies High Boots"
     if (category === ItemCategory.FOOTWEAR && tags.Category) {
@@ -1278,23 +1305,20 @@ export class FormAutoPopulationService {
    * Generate an item name based on detected tags
    */
   private static generateItemName(tags: DetectedTags): string | null {
-    const color = this.extractColor(tags);
-    const subcategory = this.extractSubcategory(tags); // Only use mapped subcategory, no fallback
-    const category = this.extractCategory(tags);
+    const brand = tags.Brand;
+    let name = tags.Name || '';
     
-    if (color && subcategory) {
-      return `${this.capitalizeFirst(color)} ${this.capitalizeFirst(subcategory)}`;
-    }
-    
-    if (color && category) {
-      return `${this.capitalizeFirst(color)} ${this.formatCategoryName(category)}`;
-    }
-    
-    if (subcategory) {
-      return this.capitalizeFirst(subcategory);
+    if (brand && name) {
+      name = this.capitalize(name) + ' ' + this.capitalize(brand);
+    } else if (name) {
+      name = this.capitalize(name);
+    } else if (brand) {
+      name = this.capitalize(brand);
+    } else {
+      return null;
     }
 
-    return null;
+    return name;
   }
 
   /**
@@ -1710,9 +1734,195 @@ export class FormAutoPopulationService {
   }
 
   /**
+   * Extract type from detected tags using category path parsing logic
+   */
+  private static extractType(tags: DetectedTags, category?: ItemCategory, subcategory?: string): string | null {
+    console.log('[DEBUG] extractType called with:', { tags, category, subcategory });
+    
+    // Type field only applies to specific subcategories
+    const validSubcategories = ['boots', 'formal shoes', 'bag', 'jewelry'];
+    if (!category || !subcategory || !validSubcategories.includes(subcategory.toLowerCase())) {
+      console.log('[DEBUG] Type field not applicable for category/subcategory:', category, subcategory);
+      return null;
+    }
+
+    let extractedType: string | null = null;
+
+    // PRIORITY 1: Check hierarchical Category tag like "Footwear/Ladies High Boots" or "Accessories/Leather Tote"
+    if (tags.Category) {
+      console.log('[DEBUG] extractType - Found Category tag:', tags.Category);
+      const categoryPath = tags.Category;
+      const pathParts = categoryPath.split('/');
+      console.log('[DEBUG] extractType - Category path parts:', pathParts);
+      
+      // If there are multiple parts, second part is the type
+      if (pathParts.length >= 2) {
+        const secondPart = pathParts[1]; // "Ladies High Boots" from "Footwear/Ladies High Boots"
+        console.log('[DEBUG] extractType - Found Category path second part:', secondPart);
+        
+        // Extract meaningful type keywords from the second part
+        console.log('[DEBUG] extractType - About to call extractTypeKeywordsFromText with:', secondPart, subcategory);
+        const typeKeywords = this.extractTypeKeywordsFromText(secondPart, subcategory);
+        console.log('[DEBUG] extractType - Result from extractTypeKeywordsFromText:', typeKeywords);
+        if (typeKeywords) {
+          console.log('[DEBUG] extractType - Extracted type from category path:', typeKeywords);
+          extractedType = typeKeywords;
+        }
+      } else {
+        console.log('[DEBUG] extractType - Category path has only one part, skipping');
+      }
+    } else {
+      console.log('[DEBUG] extractType - No Category tag found in tags');
+    }
+
+    // PRIORITY 2: Direct Type or Style tag (fallback)
+    if (!extractedType && tags.Type) {
+      extractedType = tags.Type;
+      console.log('[DEBUG] extractType - Using direct Type tag:', extractedType);
+    } else if (!extractedType && tags.Style) {
+      extractedType = tags.Style;
+      console.log('[DEBUG] extractType - Using Style tag as type fallback:', extractedType);
+    }
+    
+    // PRIORITY 3: Look for type hints in other tags
+    if (!extractedType) {
+      const typeKeywords = ['type', 'subtype', 'kind', 'variant'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && typeKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          extractedType = value;
+          console.log('[DEBUG] extractType - Using type keyword hint from', key, ':', extractedType);
+          break;
+        }
+      }
+    }
+
+    // PRIORITY 4: Extract from item name
+    if (!extractedType && tags.Name) {
+      const typeFromName = this.extractTypeKeywordsFromText(tags.Name, subcategory);
+      if (typeFromName) {
+        extractedType = typeFromName;
+        console.log('[DEBUG] extractType - Extracted type from name:', typeFromName);
+      }
+    }
+
+    // If no type found, return null
+    if (!extractedType) {
+      console.log('[DEBUG] extractType - No type found in tags');
+      return null;
+    }
+
+    // Clean and format the extracted type
+    const cleanedType = this.formatTypeForSubcategory(extractedType, subcategory);
+    console.log('[DEBUG] extractType - Final cleaned type:', cleanedType);
+    
+    return cleanedType;
+  }
+
+  /**
+   * Extract type keywords from text based on subcategory
+   */
+  private static extractTypeKeywordsFromText(text: string, subcategory: string): string | null {
+    const lowerText = text.toLowerCase();
+    const lowerSubcat = subcategory.toLowerCase();
+
+    console.log('[DEBUG] extractTypeKeywordsFromText called with:', { text, subcategory });
+    
+    // Define type mappings for each subcategory
+    const typeKeywordMappings: { [subcategory: string]: { [keyword: string]: string } } = {
+      'boots': {
+        'ankle': 'Ankle',
+        'chelsea': 'Chelsea', 
+        'combat': 'Combat',
+        'riding': 'Riding',
+        'cowboy': 'Cowboy',
+        'work': 'Work',
+        'desert': 'Desert',
+        'hiking': 'Hiking',
+        'snow': 'Snow',
+        'rain': 'Rain',
+        'wellington': 'Wellington',
+        'high': 'High Boots'
+      },
+      'formal shoes': {
+        'oxford': 'Oxford',
+        'derby': 'Derby', 
+        'loafer': 'Loafer',
+        'monk': 'Monk Strap',
+        'pump': 'Pump',
+        'brogue': 'Brogue'
+      },
+      'bag': {
+        'tote': 'Tote',
+        'clutch': 'Clutch',
+        'crossbody': 'Crossbody',
+        'backpack': 'Backpack',
+        'shoulder': 'Shoulder',
+        'messenger': 'Messenger',
+        'satchel': 'Satchel',
+        'hobo': 'Hobo',
+        'bucket': 'Bucket',
+        'baguette': 'Baguette'
+      },
+      'jewelry': {
+        'ring': 'Ring',
+        'necklace': 'Necklace',
+        'bracelet': 'Bracelet',
+        'earring': 'Earrings',
+        'watch': 'Watch',
+        'brooch': 'Brooch',
+        'pendant': 'Pendant',
+        'chain': 'Chain'
+      }
+    };
+
+    const mappings = typeKeywordMappings[lowerSubcat];
+    if (!mappings) return null;
+
+    // Look for keyword matches in the text
+    for (const [keyword, mappedType] of Object.entries(mappings)) {
+      if (lowerText.includes(keyword)) {
+        return mappedType;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Format and clean the type string for a specific subcategory
+   */
+  private static formatTypeForSubcategory(rawType: string, subcategory: string): string {
+    // Clean the raw type
+    let cleaned = rawType.trim();
+    
+    // Remove common prefixes
+    cleaned = cleaned.replace(/^(ladies|mens|women|men|womens|mens)\s+/i, '');
+    
+    // For boots subcategory, keep "Boots" suffix for clarity (e.g., "High Boots", "Chelsea Boots")
+    // For other subcategories, remove redundant suffixes
+    if (subcategory.toLowerCase() !== 'boots') {
+      cleaned = cleaned.replace(/\s+(boot|boots|shoe|shoes|bag|bags)$/i, '');
+    }
+    
+    // Format to match dropdown options exactly
+    if (subcategory.toLowerCase() === 'boots') {
+      // Boots dropdown uses lowercase format (e.g., "high boots", "chelsea", "desert")
+      return cleaned.toLowerCase();
+    } else if (subcategory.toLowerCase() === 'formal shoes') {
+      // Formal shoes dropdown uses lowercase format (e.g., "oxford", "derby")
+      return cleaned.toLowerCase();
+    } else {
+      // For bags and jewelry, capitalize properly
+      return cleaned.split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      ).join(' ');
+    }
+  }
+
+  /**
    * Helper to capitalize first letter
    */
-  private static capitalizeFirst(str: string): string {
+  private static capitalize(str: string): string {
     return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
 
