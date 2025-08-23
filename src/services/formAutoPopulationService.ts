@@ -1,5 +1,5 @@
 import { ItemCategory, Season } from '../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
 type DetectedTags = Record<string, string>;
@@ -18,6 +18,7 @@ interface FormFieldSetters {
   setStyle?: (style: string) => void;
   setRise?: (rise: string) => void;
   setNeckline?: (neckline: string) => void;
+  setHeelHeight?: (heelHeight: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -389,6 +390,17 @@ export class FormAutoPopulationService {
       if (neckline) {
         console.log('[FormAutoPopulation] Setting neckline:', neckline);
         formSetters.setNeckline(neckline);
+      }
+    }
+
+    // 10.7. Heel height mapping
+    if (formSetters.setHeelHeight && shouldUpdateField('heelHeight', currentFormData?.heelHeight)) {
+      // Get category for heel height validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const heelHeight = this.extractHeelHeight(detectedTags, category);
+      if (heelHeight) {
+        console.log('[FormAutoPopulation] Setting heel height:', heelHeight);
+        formSetters.setHeelHeight(heelHeight);
       }
     }
 
@@ -1413,6 +1425,93 @@ export class FormAutoPopulationService {
       }
     }
 
+    return null;
+  }
+
+  /**
+   * Extract heel height from detected tags, validating against footwear categories
+   */
+  private static extractHeelHeight(tags: DetectedTags, category?: ItemCategory): string | null {
+    let rawHeelHeight: string | null = null;
+
+    console.log('[DEBUG] extractHeelHeight called with:', { tags, category });
+
+    // Only apply to footwear category
+    if (category !== ItemCategory.FOOTWEAR) {
+      console.log('[DEBUG] Not footwear category, skipping heel height extraction');
+      return null;
+    }
+
+    // Check for direct "Heel height" tag (case insensitive)
+    const heelHeightKeys = ['Heel height', 'heel height', 'HeelHeight', 'heelHeight', 'Heel Height'];
+    for (const key of heelHeightKeys) {
+      if (tags[key]) {
+        rawHeelHeight = tags[key];
+        console.log('[DEBUG] Found heel height tag:', key, '=', rawHeelHeight);
+        break;
+      }
+    }
+
+    // Look for heel height hints in other tags
+    if (!rawHeelHeight) {
+      const heelKeywords = ['heel', 'height'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && 
+            heelKeywords.every(keyword => key.toLowerCase().includes(keyword))) {
+          rawHeelHeight = value;
+          console.log('[DEBUG] Found heel height hint in', key, ':', value);
+          break;
+        }
+      }
+    }
+
+    // If no raw heel height found, return null
+    if (!rawHeelHeight) {
+      console.log('[DEBUG] No heel height found in tags');
+      return null;
+    }
+
+    // Get valid heel height options from form helpers
+    const validOptions = getHeelHeightOptions(); // ['High', 'Middle', 'Low', 'Ho-heels']
+    console.log('[DEBUG] Valid heel height options:', validOptions);
+
+    // Check if raw heel height matches any valid option (case-insensitive)
+    const lowerRaw = rawHeelHeight.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      console.log('[DEBUG] Found exact heel height match:', exactMatch);
+      return exactMatch;
+    }
+
+    // Try semantic matching for common heel height terms
+    const semanticMappings: { [key: string]: string } = {
+      'high': 'High',
+      'tall': 'High',
+      'stiletto': 'High',
+      'platform': 'High',
+      'middle': 'Middle',
+      'mid': 'Middle',
+      'medium': 'Middle',
+      'moderate': 'Middle',
+      'low': 'Low',
+      'short': 'Low',
+      'small': 'Low',
+      'flat': 'Low',
+      'no heel': 'Ho-heels',
+      'no-heel': 'Ho-heels',
+      'no heels': 'Ho-heels',
+      'ho-heels': 'Ho-heels',
+      'heelless': 'Ho-heels'
+    };
+
+    for (const [keyword, heelHeight] of Object.entries(semanticMappings)) {
+      if (lowerRaw.includes(keyword)) {
+        console.log('[DEBUG] Found semantic heel height match:', keyword, '->', heelHeight);
+        return heelHeight;
+      }
+    }
+
+    console.log('[DEBUG] No valid heel height match found for:', rawHeelHeight);
     return null;
   }
 
