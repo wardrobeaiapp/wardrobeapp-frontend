@@ -390,7 +390,9 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
       neckline: (itemData as any).neckline,
       sleeves: (itemData as any).sleeves,
       style: (itemData as any).style,
-      rise: (itemData as any).rise
+      rise: (itemData as any).rise,
+      heelHeight: (itemData as any).heelHeight,
+      bootHeight: (itemData as any).bootHeight
     });
     
     const snakeCaseItem = camelToSnakeCase(itemData);
@@ -400,7 +402,9 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
       neckline: snakeCaseItem.neckline,
       sleeves: snakeCaseItem.sleeves,
       style: snakeCaseItem.style,
-      rise: snakeCaseItem.rise
+      rise: snakeCaseItem.rise,
+      heel_height: snakeCaseItem.heel_height,
+      boot_height: snakeCaseItem.boot_height
     });
     
     // Remove undefined values to avoid constraint violations
@@ -408,14 +412,16 @@ export const addWardrobeItem = async (item: Omit<WardrobeItem, 'id'>, file?: Fil
       Object.entries(snakeCaseItem).filter(([_, value]) => value !== undefined)
     );
     
-    // Debug logging to check if sleeves/style/rise/neckline data is present
+    // Debug logging to check if all detail fields are present
     console.log('[wardrobeItemsService] Item data being inserted:', {
       sleeves: cleanItem.sleeves,
       style: cleanItem.style,
       silhouette: cleanItem.silhouette,
       length: cleanItem.length,
       rise: cleanItem.rise,
-      neckline: cleanItem.neckline
+      neckline: cleanItem.neckline,
+      heel_height: cleanItem.heel_height,
+      boot_height: cleanItem.boot_height
     });
     
     const { data, error } = await supabase

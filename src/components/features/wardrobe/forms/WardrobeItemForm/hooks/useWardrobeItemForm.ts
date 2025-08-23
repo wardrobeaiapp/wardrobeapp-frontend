@@ -158,7 +158,10 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         subcategory && 
         ['heels', 'boots', 'sandals', 'flats', 'formal shoes'].includes(subcategory.toLowerCase()))
         ? heelHeight || undefined : undefined,
-      bootHeight: bootHeight || undefined,
+      bootHeight: (category === ItemCategory.FOOTWEAR && 
+        subcategory && 
+        subcategory.toLowerCase() === 'boots')
+        ? bootHeight || undefined : undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
@@ -176,8 +179,13 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       rise: formData.rise,
       neckline: formData.neckline,
       necklineValue: neckline,
+      heelHeight: formData.heelHeight,
+      heelHeightValue: heelHeight,
+      bootHeight: formData.bootHeight,
+      bootHeightValue: bootHeight,
       shouldIncludeNeckline: subcategory && 
-        ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase())
+        ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase()),
+      shouldIncludeBootHeight: category === ItemCategory.FOOTWEAR && subcategory && subcategory.toLowerCase() === 'boots'
     });
     
     return formData;

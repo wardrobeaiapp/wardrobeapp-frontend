@@ -201,9 +201,27 @@ export class FormAutoPopulationService {
     'shoes': 'Shoes',
     'boots': 'Boots',
     'sneakers': 'Sneakers',
+    'free time shoes': 'Sneakers',
+    'trainers': 'Sneakers',
     'sandals': 'Sandals',
+    'espadrilles': 'Sandals',
     'heels': 'Heels',
+    'pumps': 'Heels',
     'flats': 'Flats',
+    'mary jane shoes': 'Flats',
+    'mules': 'Flats',
+    'ballerinas': 'Flats',
+    'crocs': 'Flats',
+    'formal shoes': 'Formal Shoes',
+    'slippers': 'Slippers',
+    'flip-flops': 'Slippers',
+    'chelsea and ankle boots': 'Boots',
+    'desert boots': 'Boots',
+    'hiking boots': 'Boots',
+    'high boots': 'Boots',
+    'rubber boots': 'Boots',
+    'snow boots': 'Boots',
+    'ski boots': 'Boots',
     
     // Accessories
     'belts': 'Belt',
@@ -363,9 +381,11 @@ export class FormAutoPopulationService {
 
     // 10. Style mapping
     if (formSetters.setStyle && shouldUpdateField('style', currentFormData?.style)) {
-      // Get category for style validation (prioritize extracted category, fall back to current form data)
+      // Get category and subcategory for style validation (prioritize extracted values, fall back to current form data)
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const style = this.extractStyle(detectedTags, category);
+      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      console.log('[DEBUG] Style extraction - category:', category, 'subcategory:', subcategory);
+      const style = this.extractStyle(detectedTags, category, subcategory);
       if (style) {
         console.log('[FormAutoPopulation] Setting style:', style);
         formSetters.setStyle(style);
@@ -533,8 +553,36 @@ export class FormAutoPopulationService {
       const categoryPath = tags.Category;
       const pathParts = categoryPath.split('/');
       
-      // If there are multiple parts, the second part is usually the subcategory
-      if (pathParts.length >= 2) {
+      // Special handling for footwear: "Footwear/Ladies High Boots" -> map to appropriate subcategory
+      if (pathParts.length >= 2 && pathParts[0].toLowerCase() === 'footwear') {
+        const footwearType = pathParts[1].toLowerCase(); // "ladies high boots"
+        console.log('[FormAutoPopulation] extractSubcategory - Found footwear type:', footwearType);
+        
+        // Map footwear type to subcategory
+        if (footwearType.includes('boot') || footwearType.includes('boots')) {
+          rawSubcategory = 'boots';
+        } else if (footwearType.includes('sneaker') || footwearType.includes('sneakers') || footwearType.includes('trainer')) {
+          rawSubcategory = 'sneakers';
+        } else if (footwearType.includes('sandal') || footwearType.includes('sandals')) {
+          rawSubcategory = 'sandals';
+        } else if (footwearType.includes('heel') || footwearType.includes('heels') || footwearType.includes('pump')) {
+          rawSubcategory = 'heels';
+        } else if (footwearType.includes('flat') || footwearType.includes('flats') || footwearType.includes('ballet')) {
+          rawSubcategory = 'flats';
+        } else if (footwearType.includes('loafer') || footwearType.includes('loafers')) {
+          rawSubcategory = 'formal shoes';
+        } else if (footwearType.includes('slipper') || footwearType.includes('slippers')) {
+          rawSubcategory = 'slippers';
+        } else if (footwearType.includes('formal shoes') || footwearType.includes('oxford') || footwearType.includes('derby') || footwearType.includes('formal') || footwearType.includes('dress shoe')) {
+          rawSubcategory = 'formal shoes';
+        } else {
+          // Default to using the raw footwear type if no specific mapping
+          rawSubcategory = pathParts[1];
+        }
+        console.log('[FormAutoPopulation] extractSubcategory - Mapped footwear to subcategory:', rawSubcategory);
+      }
+      // General hierarchical handling for non-footwear categories
+      else if (pathParts.length >= 2) {
         rawSubcategory = pathParts[1]; // "Belts" from "Accessories/Belts" or "Upper" from "Clothing/Upper"
         console.log('[FormAutoPopulation] extractSubcategory - Using Category path subcategory:', rawSubcategory);
       }
@@ -1049,7 +1097,7 @@ export class FormAutoPopulationService {
   /**
    * Extract style from detected tags, validating against available options
    */
-  private static extractStyle(tags: DetectedTags, category?: ItemCategory): string | null {
+  private static extractStyle(tags: DetectedTags, category?: ItemCategory, subcategory?: string): string | null {
     // Style field applies to all categories except ACCESSORY and OTHER
     if (category === ItemCategory.ACCESSORY || category === ItemCategory.OTHER) {
       return null;
@@ -1057,15 +1105,56 @@ export class FormAutoPopulationService {
 
     let rawStyle: string | null = null;
 
-    // First try direct Style tag
+    console.log('[DEBUG] extractStyle called with category:', category, 'subcategory:', subcategory, 'tags:', Object.keys(tags));
+
+    // Get valid style options based on category and subcategory for validation
+    const validOptions = getStyleOptions(category || '', subcategory);
+    console.log('[DEBUG] extractStyle - Valid style options for', subcategory, ':', validOptions);
+
+    // PRIORITY 1: Check hierarchical Category tag for footwear like "Footwear/Ladies High Boots"
+    if (category === ItemCategory.FOOTWEAR && tags.Category) {
+      const categoryPath = tags.Category;
+      const pathParts = categoryPath.split('/');
+      
+      // If there are multiple parts and first part is "Footwear", second part is the style
+      if (pathParts.length >= 2 && pathParts[0].toLowerCase() === 'footwear') {
+        const footwearStyle = pathParts[1]; // "Ladies High Boots" from "Footwear/Ladies High Boots"
+        console.log('[DEBUG] extractStyle - Found Footwear Category path style:', footwearStyle);
+        
+        // Check if this footwear style matches any valid option
+        const lowerFootwearStyle = footwearStyle.toLowerCase();
+        const exactMatch = validOptions.find(option => option.toLowerCase() === lowerFootwearStyle);
+        if (exactMatch) {
+          console.log('[DEBUG] extractStyle - Footwear style matches valid option:', exactMatch);
+          return exactMatch;
+        }
+        
+        // Try semantic matching for the footwear style
+        for (const option of validOptions) {
+          const lowerOption = option.toLowerCase();
+          if (lowerFootwearStyle.includes(lowerOption) || lowerOption.includes(lowerFootwearStyle)) {
+            console.log('[DEBUG] extractStyle - Footwear style semantic match:', option);
+            return option;
+          }
+        }
+        
+        console.log('[DEBUG] extractStyle - Footwear style did not match valid options, trying fallback');
+      }
+    }
+
+    // PRIORITY 2: Direct Style tag (fallback for footwear or primary for other categories)
     if (tags.Style) {
       rawStyle = tags.Style;
-    } else {
-      // Look for style hints in other tags
+      console.log('[DEBUG] extractStyle - Using direct Style tag:', rawStyle);
+    } 
+    
+    // PRIORITY 3: Look for style hints in other tags
+    if (!rawStyle) {
       const styleKeywords = ['style', 'occasion', 'wear', 'look'];
       for (const [key, value] of Object.entries(tags)) {
         if (typeof value === 'string' && styleKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
           rawStyle = value;
+          console.log('[DEBUG] extractStyle - Using style keyword hint from', key, ':', rawStyle);
           break;
         }
       }
@@ -1073,11 +1162,9 @@ export class FormAutoPopulationService {
 
     // If no raw style found, return null
     if (!rawStyle) {
+      console.log('[DEBUG] extractStyle - No raw style found');
       return null;
     }
-
-    // Get valid style options based on category and subcategory
-    const validOptions = getStyleOptions(category || '');
 
     // Check if raw style matches any valid option (case-insensitive)
     const lowerRaw = rawStyle.toLowerCase();
@@ -1595,6 +1682,7 @@ export class FormAutoPopulationService {
       'midcalf': 'Mid-Calf',
       'mid calves': 'Mid-Calf',
       'calf': 'Mid-Calf',
+      'high': 'Knee-High',
       'knee': 'Knee-High',
       'knee high': 'Knee-High',
       'knee-high': 'Knee-High',
