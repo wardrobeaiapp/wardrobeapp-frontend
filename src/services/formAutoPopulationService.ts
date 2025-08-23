@@ -1,5 +1,5 @@
 import { ItemCategory, Season } from '../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
 type DetectedTags = Record<string, string>;
@@ -19,6 +19,7 @@ interface FormFieldSetters {
   setRise?: (rise: string) => void;
   setNeckline?: (neckline: string) => void;
   setHeelHeight?: (heelHeight: string) => void;
+  setBootHeight?: (bootHeight: string) => void;
   setName?: (name: string) => void;
   toggleSeason?: (season: Season) => void;
 }
@@ -401,6 +402,17 @@ export class FormAutoPopulationService {
       if (heelHeight) {
         console.log('[FormAutoPopulation] Setting heel height:', heelHeight);
         formSetters.setHeelHeight(heelHeight);
+      }
+    }
+
+    // 10.8. Boot height mapping
+    if (formSetters.setBootHeight && shouldUpdateField('bootHeight', currentFormData?.bootHeight)) {
+      // Get category for boot height validation (prioritize extracted category, fall back to current form data)
+      const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
+      const bootHeight = this.extractBootHeight(detectedTags, category);
+      if (bootHeight) {
+        console.log('[FormAutoPopulation] Setting boot height:', bootHeight);
+        formSetters.setBootHeight(bootHeight);
       }
     }
 
@@ -1512,6 +1524,100 @@ export class FormAutoPopulationService {
     }
 
     console.log('[DEBUG] No valid heel height match found for:', rawHeelHeight);
+    return null;
+  }
+
+  /**
+   * Extract boot height from detected tags, validating against footwear categories
+   */
+  private static extractBootHeight(tags: DetectedTags, category?: ItemCategory): string | null {
+    let rawBootHeight: string | null = null;
+
+    console.log('[DEBUG] extractBootHeight called with:', { tags, category });
+
+    // Only apply to footwear category
+    if (category !== ItemCategory.FOOTWEAR) {
+      console.log('[DEBUG] Not footwear category, skipping boot height extraction');
+      return null;
+    }
+
+    // Check for direct "Height" tag (case insensitive)
+    const heightKeys = ['Height', 'height', 'Boot height', 'boot height', 'BootHeight', 'bootHeight'];
+    for (const key of heightKeys) {
+      if (tags[key]) {
+        rawBootHeight = tags[key];
+        console.log('[DEBUG] Found boot height tag:', key, '=', rawBootHeight);
+        break;
+      }
+    }
+
+    // Look for height hints in other tags
+    if (!rawBootHeight) {
+      const heightKeywords = ['height'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && 
+            heightKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawBootHeight = value;
+          console.log('[DEBUG] Found boot height hint in', key, ':', value);
+          break;
+        }
+      }
+    }
+
+    // If no raw boot height found, return null
+    if (!rawBootHeight) {
+      console.log('[DEBUG] No boot height found in tags');
+      return null;
+    }
+
+    // Get valid boot height options from form helpers
+    const validOptions = getBootHeightOptions(); // ['Ankle', 'Mid-Calf', 'Knee-High', 'Thigh-High']
+    console.log('[DEBUG] Valid boot height options:', validOptions);
+
+    // Check if raw boot height matches any valid option (case-insensitive)
+    const lowerRaw = rawBootHeight.toLowerCase();
+    const exactMatch = validOptions.find(option => option.toLowerCase() === lowerRaw);
+    if (exactMatch) {
+      console.log('[DEBUG] Found exact boot height match:', exactMatch);
+      return exactMatch;
+    }
+
+    // Try semantic matching for common boot height terms
+    const semanticMappings: { [key: string]: string } = {
+      'ankle': 'Ankle',
+      'ankle boot': 'Ankle',
+      'ankle boots': 'Ankle',
+      'low': 'Ankle',
+      'short': 'Ankle',
+      'mid': 'Mid-Calf',
+      'mid calf': 'Mid-Calf',
+      'mid-calf': 'Mid-Calf',
+      'midcalf': 'Mid-Calf',
+      'mid calves': 'Mid-Calf',
+      'calf': 'Mid-Calf',
+      'knee': 'Knee-High',
+      'knee high': 'Knee-High',
+      'knee-high': 'Knee-High',
+      'kneehigh': 'Knee-High',
+      'tall': 'Knee-High',
+      'riding': 'Knee-High',
+      'thigh': 'Thigh-High',
+      'thigh high': 'Thigh-High',
+      'thigh-high': 'Thigh-High',
+      'thighhigh': 'Thigh-High',
+      'over knee': 'Thigh-High',
+      'over the knee': 'Thigh-High',
+      'otk': 'Thigh-High'
+    };
+
+    for (const [keyword, bootHeight] of Object.entries(semanticMappings)) {
+      if (lowerRaw.includes(keyword)) {
+        console.log('[DEBUG] Found semantic boot height match:', keyword, '->', bootHeight);
+        return bootHeight;
+      }
+    }
+
+    console.log('[DEBUG] No valid boot height match found for:', rawBootHeight);
     return null;
   }
 

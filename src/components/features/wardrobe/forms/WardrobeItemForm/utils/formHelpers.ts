@@ -79,9 +79,9 @@ export const getStyleOptions = (category: ItemCategory | '', subcategory?: strin
   if (category === ItemCategory.FOOTWEAR && subcategory) {
     switch (subcategory.toLowerCase()) {
       case 'sneakers':
-        return ['running', 'casual', 'basketball', 'tennis'];
+        return ['running', 'casual', 'trainers', 'tennis'];
       case 'boots':
-        return ['combat', 'chelsea', 'cowboy', 'hiking', 'dress'];
+        return ['chelsea', 'desert', 'hiking', 'high boots', 'rubber', 'snow', 'ski'];
       case 'sandals':
         return ['casual', 'dressy', 'sport'];
       case 'heels':
