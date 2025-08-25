@@ -218,3 +218,14 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
       return [];
   }
 };
+
+// Get color options for all items
+export const getColorOptions = (): string[] => {
+  return [
+    'Black', 'White', 'Grey', 'Navy', 'Blue', 'Light Blue', 'Turquoise', 'Teal',
+    'Green', 'Olive', 'Lime', 'Yellow', 'Gold', 'Orange', 'Rust', 'Brown',
+    'Tan', 'Beige', 'Cream', 'Ivory', 'Pink', 'Light Pink', 'Hot Pink', 'Red',
+    'Burgundy', 'Maroon', 'Purple', 'Lavender', 'Silver', 'Multicolor', 
+    'Floral', 'Patterned'
+  ];
+};
