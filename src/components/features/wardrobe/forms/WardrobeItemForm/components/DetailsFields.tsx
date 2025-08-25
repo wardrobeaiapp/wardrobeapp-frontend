@@ -128,7 +128,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     ['bag', 'jewelry'].includes(subcategory.toLowerCase()));
 
   const silhouetteOptions = category ? getSilhouetteOptions(category) : [];
-  const lengthOptions = getLengthOptions(category);
+  const lengthOptions = getLengthOptions(subcategory);
   const sleeveOptions = getSleeveOptions();
   const styleOptions = getStyleOptions();
   const riseOptions = getRiseOptions();

@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import { ItemCategory } from '../../../../../../types';
-import { getSubcategoryOptions, getColorOptions, getPatternOptions } from '../utils/formHelpers';
+import { getSubcategoryOptions, getColorOptions } from '../utils/formHelpers';
 import { FormField, FormInput, FormSelect, FormRow } from '../../../../../../components/common/Form';
 
 interface BasicInfoFieldsProps {

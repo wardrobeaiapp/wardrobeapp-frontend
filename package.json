@@ -39,6 +39,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:auto-population": "ts-node --transpile-only --skip-project src/services/formAutoPopulation/test/testFormAutoPopulation.ts",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -61,6 +62,7 @@
   },
   "proxy": "http://localhost:5000",
   "devDependencies": {
-    "@fortawesome/fontawesome-common-types": "^7.0.0"
+    "@fortawesome/fontawesome-common-types": "^7.0.0",
+    "ts-node": "^10.9.2"
   }
 }
