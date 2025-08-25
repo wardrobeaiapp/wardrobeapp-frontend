@@ -18,6 +18,7 @@ export interface WardrobeItem {
   category: ItemCategory;
   subcategory?: string;
   color: string;
+  pattern?: string;
   size?: string;
   material?: string;
   brand?: string;
