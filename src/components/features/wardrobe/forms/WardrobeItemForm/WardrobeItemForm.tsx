@@ -125,47 +125,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       // Import the image proxy service
       const { fetchImageViaProxy } = await import('../../../../../services/imageProxyService');
       
-      // First, detect tags from the URL before processing the image
-      try {
-        console.log('[Ximilar] Detecting tags from URL:', url);
-        const response = await detectImageTags(url);
-        
-        if (!response.records || response.records.length === 0) {
-          console.warn('[Ximilar] No records found in response');
-          return;
-        }
-        
-        // Log the full response for debugging
-        console.log('[Ximilar] Full response:', JSON.stringify(response, null, 2));
-        
-        // Extract all tags from the response
-        const allTags = extractTopTags(response);
-        console.log('[Ximilar] All detected tags:', allTags);
-        
-        // Store all detected tags in form state - auto-population happens via onTagsDetected callback
-        formState.setDetectedTags?.(allTags);
-      } catch (error: unknown) {
-        console.error('[Ximilar] Error detecting tags from URL:', error);
-        // Log additional error details if available
-        if (error && typeof error === 'object') {
-          const err = error as { 
-            response?: { data?: any; status?: number };
-            request?: any;
-            message?: string;
-          };
-          
-          if (err.response) {
-            console.error('[Ximilar] Error response data:', err.response.data);
-            console.error('[Ximilar] Error status:', err.response.status);
-          } else if (err.request) {
-            console.error('[Ximilar] No response received:', err.request);
-          } else if (err.message) {
-            console.error('[Ximilar] Error details:', err.message);
-          }
-        }
-      }
-      
       // Fetch the image via proxy to get a blob and extension
+      // Note: Tag detection will happen automatically in handleFileSelect
       const { blob, fileExt } = await fetchImageViaProxy(url);
       
       // Convert blob to File object
