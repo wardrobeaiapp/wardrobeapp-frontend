@@ -85,6 +85,7 @@ export class FormAutoPopulationService {
     'belt': ItemCategory.ACCESSORY,
     'scarves': ItemCategory.ACCESSORY,
     'jewelry': ItemCategory.ACCESSORY,
+    'jewellery': ItemCategory.ACCESSORY,
     'watch': ItemCategory.ACCESSORY,
     'sunglasses': ItemCategory.ACCESSORY,
     'socks': ItemCategory.ACCESSORY,
@@ -238,6 +239,7 @@ export class FormAutoPopulationService {
     'scarves': 'Scarf',
     'scarf': 'Scarf',
     'jewelry': 'Jewelry',
+    'jewellery': 'Jewelry',
     'watches': 'Watch',
     'watch': 'Watch',
     'sunglasses': 'Sunglasses',
@@ -607,6 +609,11 @@ export class FormAutoPopulationService {
           rawSubcategory = pathParts[1];
         }
         console.log('[FormAutoPopulation] extractSubcategory - Mapped footwear to subcategory:', rawSubcategory);
+      }
+      // Special handling for jewellery: "Jewellery/Bracelets" -> always maps to "Jewelry" subcategory
+      else if (pathParts.length >= 2 && pathParts[0].toLowerCase() === 'jewellery') {
+        rawSubcategory = 'Jewelry';
+        console.log('[FormAutoPopulation] extractSubcategory - Found jewellery path, mapping to Jewelry subcategory');
       }
       // General hierarchical handling for non-footwear categories
       else if (pathParts.length >= 2) {
@@ -1757,16 +1764,24 @@ export class FormAutoPopulationService {
       
       // If there are multiple parts, second part is the type
       if (pathParts.length >= 2) {
+        const firstPart = pathParts[0];
         const secondPart = pathParts[1]; // "Ladies High Boots" from "Footwear/Ladies High Boots"
         console.log('[DEBUG] extractType - Found Category path second part:', secondPart);
         
-        // Extract meaningful type keywords from the second part
-        console.log('[DEBUG] extractType - About to call extractTypeKeywordsFromText with:', secondPart, subcategory);
-        const typeKeywords = this.extractTypeKeywordsFromText(secondPart, subcategory);
-        console.log('[DEBUG] extractType - Result from extractTypeKeywordsFromText:', typeKeywords);
-        if (typeKeywords) {
-          console.log('[DEBUG] extractType - Extracted type from category path:', typeKeywords);
-          extractedType = typeKeywords;
+        // Special handling for Jewellery/* paths - use the word after / but still apply jewelry type mapping
+        if (firstPart.toLowerCase() === 'jewellery') {
+          console.log('[DEBUG] extractType - Jewellery path detected, applying jewelry type mapping to:', secondPart);
+          const mappedType = this.extractTypeKeywordsFromText(secondPart, 'jewelry');
+          extractedType = mappedType || secondPart;
+        } else {
+          // Extract meaningful type keywords from the second part for other categories
+          console.log('[DEBUG] extractType - About to call extractTypeKeywordsFromText with:', secondPart, subcategory);
+          const typeKeywords = this.extractTypeKeywordsFromText(secondPart, subcategory);
+          console.log('[DEBUG] extractType - Result from extractTypeKeywordsFromText:', typeKeywords);
+          if (typeKeywords) {
+            console.log('[DEBUG] extractType - Extracted type from category path:', typeKeywords);
+            extractedType = typeKeywords;
+          }
         }
       } else {
         console.log('[DEBUG] extractType - Category path has only one part, skipping');
@@ -1866,10 +1881,13 @@ export class FormAutoPopulationService {
       'jewelry': {
         'ring': 'Ring',
         'necklace': 'Necklace',
+        'necklaces, pendants and chains': 'Necklace',
         'bracelet': 'Bracelet',
         'earring': 'Earrings',
+        'earrings and earcuffs': 'Earrings',
         'watch': 'Watch',
         'brooch': 'Brooch',
+        'brooches, badges and pins': 'Brooch',
         'pendant': 'Pendant',
         'chain': 'Chain'
       }
