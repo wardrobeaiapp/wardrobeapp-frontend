@@ -1,5 +1,5 @@
 import { ItemCategory, Season } from '../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getColorOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
 type DetectedTags = Record<string, string>;
@@ -727,8 +727,13 @@ export class FormAutoPopulationService {
     }
 
     if (rawColor) {
-      // Extract actual color from phrases like "brown belt" -> "brown"
-      return this.extractColorFromPhrase(rawColor);
+      console.log('[FormAutoPopulation] Found raw color in tags:', rawColor);
+      // Extract basic color from phrases like "brown belt" -> "brown"
+      const extractedColor = this.extractColorFromPhrase(rawColor);
+      console.log('[FormAutoPopulation] Extracted color phrase:', extractedColor);
+      
+      // Map the extracted color to one of our standard dropdown options
+      return this.mapColorToStandardOption(extractedColor);
     }
 
     return null;
@@ -756,6 +761,99 @@ export class FormAutoPopulationService {
     
     // If no known color found, return the first word (likely still a color)
     return words[0] || phrase;
+  }
+
+  /**
+   * Map an extracted color to one of the standardized dropdown options
+   */
+  private static mapColorToStandardOption(extractedColor: string): string | null {
+    console.log('[FormAutoPopulation] Mapping color:', extractedColor);
+    const colorOptions = getColorOptions();
+    const lowerExtractedColor = extractedColor.toLowerCase();
+    
+    // Try exact match first (case insensitive)
+    const exactMatch = colorOptions.find(option => option.toLowerCase() === lowerExtractedColor);
+    if (exactMatch) {
+      console.log('[FormAutoPopulation] Found exact color match:', exactMatch);
+      return exactMatch;
+    }
+    
+    // Try partial match next
+    const colorMappings: Record<string, string> = {
+      // Blues
+      'aqua': 'Light Blue',
+      'azure': 'Light Blue',
+      'sky': 'Light Blue',
+      'denim': 'Blue',
+      'indigo': 'Navy',
+      'royal': 'Blue',
+      'cyan': 'Turquoise',
+      // Reds
+      'crimson': 'Red',
+      'scarlet': 'Red',
+      'wine': 'Burgundy',
+      'cherry': 'Red',
+      'ruby': 'Red',
+      'salmon': 'Pink',
+      'coral': 'Pink',
+      'peach': 'Light Pink',
+      'rose': 'Pink',
+      'fuchsia': 'Hot Pink',
+      'magenta': 'Hot Pink',
+      // Greens
+      'mint': 'Green',
+      'emerald': 'Green',
+      'sage': 'Olive',
+      'khaki': 'Olive',
+      // Browns
+      'chocolate': 'Brown',
+      'caramel': 'Brown',
+      'coffee': 'Brown',
+      'bronze': 'Brown',
+      'chestnut': 'Brown',
+      'copper': 'Rust',
+      // Neutrals
+      'charcoal': 'Grey',
+      'ash': 'Grey',
+      'off-white': 'Cream',
+      'eggshell': 'Ivory',
+      'platinum': 'Silver',
+      // Patterns
+      'checkered': 'Patterned',
+      'striped': 'Patterned',
+      'dotted': 'Patterned',
+      'leopard': 'Patterned',
+      'animal': 'Patterned',
+      'print': 'Patterned',
+      'polka': 'Patterned',
+      'flower': 'Floral',
+      'floral': 'Floral',
+      'botanical': 'Floral',
+      'rainbow': 'Multicolor',
+      'colorful': 'Multicolor',
+      'multi': 'Multicolor'
+    };
+    
+    // Check for specific color keywords in mapping
+    for (const [keyword, mappedColor] of Object.entries(colorMappings)) {
+      if (lowerExtractedColor.includes(keyword)) {
+        console.log(`[FormAutoPopulation] Mapped color ${extractedColor} to ${mappedColor} via keyword ${keyword}`);
+        return mappedColor;
+      }
+    }
+    
+    // Try partial match with dropdown options
+    for (const option of colorOptions) {
+      if (lowerExtractedColor.includes(option.toLowerCase()) || option.toLowerCase().includes(lowerExtractedColor)) {
+        console.log('[FormAutoPopulation] Found partial color match:', option);
+        return option;
+      }
+    }
+    
+    // Capitalize first letter as fallback
+    const capitalized = extractedColor.charAt(0).toUpperCase() + extractedColor.slice(1).toLowerCase();
+    console.log('[FormAutoPopulation] No match found, using capitalized color:', capitalized);
+    return capitalized;
   }
 
   /**

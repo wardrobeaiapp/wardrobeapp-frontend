@@ -1,6 +1,6 @@
 import React, { ChangeEvent } from 'react';
 import { ItemCategory } from '../../../../../../types';
-import { getSubcategoryOptions } from '../utils/formHelpers';
+import { getSubcategoryOptions, getColorOptions } from '../utils/formHelpers';
 import { FormField, FormInput, FormSelect, FormRow } from '../../../../../../components/common/Form';
 
 interface BasicInfoFieldsProps {
@@ -27,6 +27,7 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
   errors
 }) => {
   const subcategoryOptions = getSubcategoryOptions(category);
+  const colorOptions = getColorOptions();
 
   return (
     <>
@@ -78,14 +79,19 @@ export const BasicInfoFields: React.FC<BasicInfoFieldsProps> = ({
         </FormField>
         
         <FormField label="Color " error={errors.color} required>
-          <FormInput
-            type="text"
+          <FormSelect
             value={color}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => onColorChange(e.target.value)}
-            placeholder="Enter color"
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => onColorChange(e.target.value)}
             variant="outline"
             isFullWidth
-          />
+          >
+            <option value="">Select a color</option>
+            {colorOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </FormSelect>
         </FormField>
       </FormRow>
     </>
