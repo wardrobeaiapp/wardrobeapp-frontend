@@ -1,7 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, getPatternOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
   material: string;
@@ -12,6 +12,8 @@ interface DetailsFieldsProps {
   onSizeChange: (size: string) => void;
   price: string;
   onPriceChange: (price: string) => void;
+  pattern: string;
+  onPatternChange: (pattern: string) => void;
   silhouette: string;
   onSilhouetteChange: (silhouette: string) => void;
   length: string;
@@ -48,6 +50,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onSizeChange,
   price,
   onPriceChange,
+  pattern,
+  onPatternChange,
   silhouette,
   onSilhouetteChange,
   length,
@@ -123,15 +127,16 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     (category === ItemCategory.ACCESSORY && subcategory && 
     ['bag', 'jewelry'].includes(subcategory.toLowerCase()));
 
-  const silhouetteOptions = category ? getSilhouetteOptions(category as ItemCategory, subcategory) : [];
+  const silhouetteOptions = category ? getSilhouetteOptions(category) : [];
+  const lengthOptions = getLengthOptions(category);
   const sleeveOptions = getSleeveOptions();
   const styleOptions = getStyleOptions();
-  const lengthOptions = getLengthOptions(subcategory);
   const riseOptions = getRiseOptions();
   const necklineOptions = getNecklineOptions();
   const heelHeightOptions = getHeelHeightOptions();
   const bootHeightOptions = getBootHeightOptions();
   const typeOptions = getTypeOptions(category, subcategory);
+  const patternOptions = getPatternOptions();
   
   // Debug field visibility
   console.log('[DetailsFields] Field visibility debug:', {
@@ -166,6 +171,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             variant="outline"
             isFullWidth
           />
+        </FormField>
+        
+        <FormField label="Pattern">
+          <FormSelect
+            value={pattern}
+            onChange={(e: ChangeEvent<HTMLSelectElement>) => onPatternChange(e.target.value)}
+            variant="outline"
+            isFullWidth
+          >
+            <option value="">Select a pattern (optional)</option>
+            {patternOptions.map((option: string) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </FormSelect>
         </FormField>
         
         {/* <FormField label="Brand" error={errors.brand}>

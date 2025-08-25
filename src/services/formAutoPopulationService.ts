@@ -1,5 +1,5 @@
 import { ItemCategory, Season } from '../types';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getColorOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getColorOptions, getPatternOptions } from '../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
 import { WardrobeItemFormData } from '../components/features/wardrobe/forms/WardrobeItemForm/hooks/useWardrobeItemForm';
 
 type DetectedTags = Record<string, string>;
@@ -8,6 +8,7 @@ interface FormFieldSetters {
   setCategory?: (category: ItemCategory) => void;
   setSubcategory?: (subcategory: string) => void;
   setColor?: (color: string) => void;
+  setPattern?: (pattern: string) => void;
   setMaterial?: (material: string) => void;
   setBrand?: (brand: string) => void;
   setSize?: (size: string) => void;
@@ -308,6 +309,15 @@ export class FormAutoPopulationService {
       if (color) {
         console.log('[FormAutoPopulation] Setting color:', color);
         formSetters.setColor(color);
+      }
+    }
+
+    // 3.5 Pattern mapping
+    if (formSetters.setPattern && shouldUpdateField('pattern', currentFormData?.pattern)) {
+      const pattern = this.extractPattern(detectedTags);
+      if (pattern) {
+        console.log('[FormAutoPopulation] Setting pattern:', pattern);
+        formSetters.setPattern(pattern);
       }
     }
 
@@ -854,6 +864,137 @@ export class FormAutoPopulationService {
     const capitalized = extractedColor.charAt(0).toUpperCase() + extractedColor.slice(1).toLowerCase();
     console.log('[FormAutoPopulation] No match found, using capitalized color:', capitalized);
     return capitalized;
+  }
+
+  /**
+   * Extract pattern from detected tags
+   */
+  private static extractPattern(tags: DetectedTags): string | null {
+    let rawPattern: string | null = null;
+    
+    // First check for direct Pattern tag
+    if (tags.Pattern) {
+      rawPattern = tags.Pattern;
+    } else {
+      // Look for pattern hints in other tags
+      const patternKeywords = ['pattern', 'print', 'design'];
+      for (const [key, value] of Object.entries(tags)) {
+        if (typeof value === 'string' && patternKeywords.some(keyword => key.toLowerCase().includes(keyword))) {
+          rawPattern = value;
+          break;
+        }
+      }
+      
+      // Also check in tag values for common pattern descriptors
+      if (!rawPattern) {
+        for (const [, value] of Object.entries(tags)) {
+          if (typeof value === 'string') {
+            const lowerValue = value.toLowerCase();
+            const patternTerms = ['stripe', 'check', 'floral', 'dot', 'polka', 'plaid', 'animal', 'leopard', 'zebra', 'geometric', 'abstract'];
+            if (patternTerms.some(term => lowerValue.includes(term))) {
+              rawPattern = value;
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    if (rawPattern) {
+      return this.mapPatternToStandardOption(rawPattern);
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Map a raw pattern string to one of the standardized pattern options
+   */
+  private static mapPatternToStandardOption(rawPattern: string): string | null {
+    console.log('[FormAutoPopulation] Mapping pattern:', rawPattern);
+    const patternOptions = getPatternOptions();
+    const lowerRawPattern = rawPattern.toLowerCase();
+    
+    // Try exact match first (case insensitive)
+    const exactMatch = patternOptions.find(option => option.toLowerCase() === lowerRawPattern);
+    if (exactMatch) {
+      console.log('[FormAutoPopulation] Found exact pattern match:', exactMatch);
+      return exactMatch;
+    }
+    
+    // Try semantic matching for common pattern terms
+    const patternMappings: Record<string, string> = {
+      // Animal patterns
+      'animal': 'Animalistic',
+      'leopard': 'Animalistic',
+      'zebra': 'Animalistic',
+      'snake': 'Animalistic',
+      'crocodile': 'Animalistic',
+      'tiger': 'Animalistic',
+      'giraffe': 'Animalistic',
+      
+      // Checked patterns
+      'check': 'Checked',
+      'plaid': 'Checked',
+      'tartan': 'Checked',
+      'gingham': 'Checked',
+      'houndstooth': 'Checked',
+      
+      // Dots
+      'dot': 'Polka Dot',
+      'polka': 'Polka Dot',
+      'spot': 'Polka Dot',
+      
+      // Floral
+      'floral': 'Floral',
+      'flower': 'Floral',
+      'botanical': 'Floral',
+      
+      // Stripes
+      'stripe': 'Stripe',
+      'lined': 'Stripe',
+      'pinstripe': 'Stripe',
+      
+      // Geometric
+      'geometric': 'Geometric & Abstract',
+      'abstract': 'Geometric & Abstract',
+      'diamond': 'Geometric & Abstract',
+      'triangle': 'Geometric & Abstract',
+      
+      // Camouflage
+      'camo': 'Camouflage',
+      'camouflage': 'Camouflage',
+      'military': 'Camouflage',
+      
+      // Chevron
+      'chevron': 'Chevron',
+      'zigzag': 'Chevron',
+      'herringbone': 'Chevron'
+    };
+    
+    // Check for specific pattern keywords in mapping
+    for (const [keyword, mappedPattern] of Object.entries(patternMappings)) {
+      if (lowerRawPattern.includes(keyword)) {
+        console.log(`[FormAutoPopulation] Mapped pattern ${rawPattern} to ${mappedPattern} via keyword ${keyword}`);
+        return mappedPattern;
+      }
+    }
+    
+    // Try partial match with dropdown options
+    for (const option of patternOptions) {
+      if (lowerRawPattern.includes(option.toLowerCase()) || option.toLowerCase().includes(lowerRawPattern)) {
+        console.log('[FormAutoPopulation] Found partial pattern match:', option);
+        return option;
+      }
+    }
+    
+    // If no standard option matches, use 'Other' if it's clearly a pattern
+    if (lowerRawPattern.includes('pattern') || lowerRawPattern.includes('print') || lowerRawPattern.includes('design')) {
+      console.log('[FormAutoPopulation] No specific match found, using Other pattern category');
+      return 'Other';
+    }
+    
+    return null;
   }
 
   /**

@@ -229,3 +229,11 @@ export const getColorOptions = (): string[] => {
     'Floral', 'Patterned'
   ];
 };
+
+// Get pattern options for all items
+export const getPatternOptions = (): string[] => {
+  return [
+    'Animalistic', 'Camouflage', 'Checked', 'Chevron', 'Floral', 
+    'Geometric & Abstract', 'Other', 'Polka Dot', 'Stripe'
+  ];
+};

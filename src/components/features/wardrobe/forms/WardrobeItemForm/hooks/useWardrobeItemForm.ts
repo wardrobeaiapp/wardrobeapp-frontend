@@ -10,6 +10,7 @@ export interface WardrobeItemFormData {
   category: ItemCategory | '';
   subcategory: string;
   color: string;
+  pattern?: string;
   material: string;
   brand: string;
   size: string;
@@ -40,6 +41,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [category, setCategory] = useState<ItemCategory | ''>(initialItem?.category || '');
   const [subcategory, setSubcategory] = useState(initialItem?.subcategory || '');
   const [color, setColor] = useState(initialItem?.color || '');
+  const [pattern, setPattern] = useState(initialItem?.pattern || '');
   const [material, setMaterial] = useState(initialItem?.material || '');
   const [brand, setBrand] = useState(initialItem?.brand || '');
   const [size, setSize] = useState(initialItem?.size || '');
@@ -131,7 +133,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       rise,
       length,
       neckline,
-      silhouette
+      silhouette,
+      pattern
     });
     
     const formData = {
@@ -139,6 +142,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       category,
       subcategory,
       color,
+      pattern,
       material,
       brand,
       size,
@@ -204,6 +208,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setCategory('');
     setSubcategory('');
     setColor('');
+    setPattern('');
     setMaterial('');
     setBrand('');
     setSize('');
@@ -240,6 +245,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setSubcategory,
     color,
     setColor,
+    pattern,
+    setPattern,
     material,
     setMaterial,
     brand,

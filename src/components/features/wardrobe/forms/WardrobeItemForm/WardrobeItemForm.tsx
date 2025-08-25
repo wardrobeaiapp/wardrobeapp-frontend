@@ -77,6 +77,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             setCategory: formState.setCategory,
             setSubcategory: formState.setSubcategory,
             setColor: formState.setColor,
+            setPattern: formState.setPattern,
             setMaterial: formState.setMaterial,
             setBrand: formState.setBrand,
             setSize: formState.setSize,
@@ -228,6 +229,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       // Then override with any explicitly set form fields
       if (formData.category) tags.category = formData.category.toLowerCase();
       if (formData.color) tags.color = formData.color.toLowerCase();
+      if (formData.pattern) tags.pattern = formData.pattern.toLowerCase();
       if (formData.material) tags.material = formData.material.toLowerCase();
       if (formData.brand) tags.brand = formData.brand;
       if (formData.subcategory) tags.subcategory = formData.subcategory.toLowerCase();
@@ -242,6 +244,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         category: formData.category as any,
         subcategory: formData.subcategory,
         color: formData.color,
+        pattern: formData.pattern,
         material: formData.material,
         brand: formData.brand,
         size: formData.size,
@@ -328,6 +331,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onSizeChange={formState.setSize}
           price={formState.price}
           onPriceChange={formState.setPrice}
+          pattern={formState.pattern}
+          onPatternChange={formState.setPattern}
           silhouette={formState.silhouette}
           onSilhouetteChange={formState.setSilhouette}
           length={formState.length}
