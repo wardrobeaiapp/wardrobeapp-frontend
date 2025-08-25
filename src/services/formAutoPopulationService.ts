@@ -264,6 +264,31 @@ export class FormAutoPopulationService {
     'cold': [Season.FALL, Season.WINTER],
   };
 
+  // Cache for extracted values to avoid repeated computation
+  private static extractionCache: {
+    category?: string | null;
+    subcategory?: string | null;
+    tags?: DetectedTags;
+  } = {};
+
+  /**
+   * Clear the extraction cache (call when processing new image)
+   */
+  static clearCache(): void {
+    this.extractionCache = {};
+  }
+
+  /**
+   * Get cached subcategory or extract and cache it
+   */
+  private static getCachedSubcategory(tags: DetectedTags): string | null {
+    if (this.extractionCache.tags !== tags || this.extractionCache.subcategory === undefined) {
+      this.extractionCache.subcategory = this.extractSubcategory(tags);
+      this.extractionCache.tags = tags;
+    }
+    return this.extractionCache.subcategory;
+  }
+
   /**
    * Auto-populate form fields based on detected tags
    */
@@ -273,6 +298,9 @@ export class FormAutoPopulationService {
     currentFormData?: Partial<WardrobeItemFormData>,
     options: AutoPopulationOptions = {}
   ): Promise<void> {
+    // Clear cache for new processing
+    this.clearCache();
+
     const { overwriteExisting = false, skipFields = [] } = options;
 
     console.log('[FormAutoPopulation] Starting auto-population with tags:', detectedTags);
@@ -296,7 +324,7 @@ export class FormAutoPopulationService {
 
     // 2. Subcategory mapping
     if (formSetters.setSubcategory && shouldUpdateField('subcategory', currentFormData?.subcategory)) {
-      const subcategory = this.extractSubcategory(detectedTags);
+      const subcategory = this.getCachedSubcategory(detectedTags);
       if (subcategory) {
         console.log('[FormAutoPopulation] Setting subcategory:', subcategory);
         formSetters.setSubcategory(subcategory);
@@ -358,7 +386,7 @@ export class FormAutoPopulationService {
     if (formSetters.setSilhouette && shouldUpdateField('silhouette', currentFormData?.silhouette)) {
       // Get category and subcategory for silhouette validation
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       console.log('[DEBUG] Category for silhouette:', category, 'Subcategory:', subcategory);
       const silhouette = this.extractSilhouette(detectedTags, category, subcategory);
       console.log('[DEBUG] Extracted silhouette result:', silhouette);
@@ -379,7 +407,7 @@ export class FormAutoPopulationService {
     if (formSetters.setSleeves && shouldUpdateField('sleeves', currentFormData?.sleeves)) {
       // Get category and subcategory for sleeves validation (prioritize extracted values, fall back to current form data)
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       console.log('[DEBUG] Category for sleeves extraction:', category);
       console.log('[DEBUG] Subcategory for sleeves extraction:', subcategory);
       const sleeves = this.extractSleeves(detectedTags, category, subcategory);
@@ -396,7 +424,7 @@ export class FormAutoPopulationService {
     if (formSetters.setStyle && shouldUpdateField('style', currentFormData?.style)) {
       // Get category and subcategory for style validation (prioritize extracted values, fall back to current form data)
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       console.log('[DEBUG] Style extraction - category:', category, 'subcategory:', subcategory);
       const style = this.extractStyle(detectedTags, category, subcategory);
       if (style) {
@@ -419,7 +447,7 @@ export class FormAutoPopulationService {
     // 10.6. Neckline mapping
     if (formSetters.setNeckline && shouldUpdateField('neckline', currentFormData?.neckline)) {
       // Get subcategory for neckline validation (prioritize extracted subcategory, fall back to current form data)
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       const neckline = this.extractNeckline(detectedTags, subcategory);
       if (neckline) {
         console.log('[FormAutoPopulation] Setting neckline:', neckline);
@@ -461,7 +489,7 @@ export class FormAutoPopulationService {
     if (formSetters.setType && shouldUpdateField('type', currentFormData?.type)) {
       // Get category and subcategory for type validation
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       console.log('[DEBUG] Type extraction - category:', category, 'subcategory:', subcategory);
       const type = this.extractType(detectedTags, category, subcategory);
       console.log('[DEBUG] Extracted type result:', type);
@@ -487,7 +515,7 @@ export class FormAutoPopulationService {
     if (formSetters.setLength && shouldUpdateField('length', currentFormData?.length)) {
       // Get category and subcategory for length validation
       const category = this.extractCategory(detectedTags) || (currentFormData?.category || undefined);
-      const subcategory = this.extractSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
+      const subcategory = this.getCachedSubcategory(detectedTags) || (currentFormData?.subcategory || undefined);
       const length = await this.extractLength(detectedTags, category, subcategory);
       if (length) {
         console.log('[FormAutoPopulation] Setting length:', length);
@@ -577,9 +605,8 @@ export class FormAutoPopulationService {
   private static extractSubcategory(tags: DetectedTags): string | null {
     let rawSubcategory: string | null = null;
     
-    // Debug logging
-    console.log('[FormAutoPopulation] extractSubcategory - Available tags:', Object.keys(tags));
-    console.log('[FormAutoPopulation] extractSubcategory - Tag values:', tags);
+    // Debug logging (reduced to avoid spam)
+    console.log('[FormAutoPopulation] extractSubcategory - Processing tags for subcategory extraction');
     
     // PRIORITY 1: Direct Subcategory tag (highest priority)
     if (tags.Subcategory) {
