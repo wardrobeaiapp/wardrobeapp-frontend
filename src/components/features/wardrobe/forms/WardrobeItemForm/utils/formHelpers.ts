@@ -96,7 +96,7 @@ export const getTypeOptions = (category: ItemCategory | '', subcategory?: string
       case 'bag':
         return ['baguette', 'bucket', 'clutch', 'hobo', 'crossbody', 'tote', 'briefcase', 'satchel', 'messenger'];
       case 'jewelry':
-        return ['Bracelets', 'Brooches', 'Cufflinks', 'Earrings', 'Necklaces', 'Rings'];
+        return ['Bracelet', 'Brooche', 'Cufflinks', 'Earrings', 'Necklace', 'Ring'];
       default:
         return [];
     }
