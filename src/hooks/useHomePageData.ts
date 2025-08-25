@@ -141,24 +141,13 @@ export const useHomePageData = () => {
     return matchesSeason && matchesScenario && matchesSearch;
   }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
 
+  // Memoize wishlist items separately for better performance
+  const wishlistItems = useMemo(() => 
+    items.filter(item => item.wishlist === true)
+  , [items]);
+
   // Filter wishlist items based on selected filters
   const filteredWishlistItems = useMemo(() => {
-    console.log('[useHomePageData] Filtering wishlist items');
-    console.log('[useHomePageData] Total items:', items.length);
-    
-    // First filter only wishlist items
-    const wishlistItems = items.filter(item => item.wishlist === true);
-    console.log('[useHomePageData] Wishlist items count:', wishlistItems.length);
-    console.log('[useHomePageData] Status filter value:', wishlistStatusFilter);
-    
-    // Debug log all wishlist items with their status
-    console.log('[useHomePageData] Wishlist items with status:', wishlistItems.map(item => ({
-      id: item.id,
-      name: item.name,
-      wishlist: item.wishlist,
-      wishlistStatus: item.wishlistStatus || WishlistStatus.NOT_REVIEWED
-    })));
-    
     // Apply all filters
     return wishlistItems.filter(item => {
       // Category filter
@@ -175,8 +164,6 @@ export const useHomePageData = () => {
       const matchesStatus = wishlistStatusFilter === 'all' || 
         itemStatus === wishlistStatusFilter;
       
-      console.log(`[useHomePageData] Item ${item.name} - status: ${itemStatus}, matches: ${matchesStatus}`);
-      
       // Search query
       const searchLower = wishlistSearchQuery.toLowerCase();
       const matchesSearch = wishlistSearchQuery === '' || 
@@ -186,7 +173,7 @@ export const useHomePageData = () => {
       
       return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
     });
-  }, [items, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
+  }, [wishlistItems, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
   
   // Event handlers
   const handleAddItem = useCallback(() => {
