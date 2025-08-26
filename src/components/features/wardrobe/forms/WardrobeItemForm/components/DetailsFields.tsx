@@ -103,6 +103,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   // Show style field based on category and subcategory
   const shouldShowStyle = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
+  
+  // Debug style field visibility
+  console.log('[DetailsFields] Style field debug:', {
+    category,
+    shouldShowStyle,
+    currentStyleValue: style,
+    styleOptions: getStyleOptions().slice(0, 3) // Show first 3 options
+  });
 
   // Show neckline field for specific subcategories
   const shouldShowNeckline = subcategory && 
@@ -125,9 +133,11 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   const shouldShowType = (category === ItemCategory.FOOTWEAR && subcategory && 
     ['boots', 'formal shoes'].includes(subcategory.toLowerCase())) ||
     (category === ItemCategory.ACCESSORY && subcategory && 
-    ['bag', 'jewelry'].includes(subcategory.toLowerCase()));
+    ['bag', 'jewelry'].includes(subcategory.toLowerCase())) ||
+    (category === ItemCategory.OUTERWEAR && subcategory && 
+    ['jacket', 'coat'].includes(subcategory.toLowerCase()));
 
-  const silhouetteOptions = category ? getSilhouetteOptions(category) : [];
+  const silhouetteOptions = category ? getSilhouetteOptions(category, subcategory) : [];
   const lengthOptions = getLengthOptions(subcategory);
   const sleeveOptions = getSleeveOptions();
   const styleOptions = getStyleOptions();

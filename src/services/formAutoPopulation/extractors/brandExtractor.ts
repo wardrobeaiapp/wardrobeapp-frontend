@@ -1,4 +1,4 @@
-import { DetectedTags, FieldExtractorFn } from '../types';
+import { FieldExtractorFn } from '../types';
 import { ExtractionHelpers } from '../utils/extractionHelpers';
 import { Logger } from '../utils/logger';
 

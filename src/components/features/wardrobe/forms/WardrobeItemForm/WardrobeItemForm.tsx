@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { WardrobeItem } from '../../../../../types';
-import { detectImageTags, extractTopTags } from '../../../../../services/ximilarService';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
@@ -69,36 +68,43 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       
       // Auto-fill form fields using the dedicated service
       if (tags) {
-        const { FormAutoPopulationService } = await import('../../../../../services/formAutoPopulationService');
-        
-        await FormAutoPopulationService.autoPopulateFromTags(
-          tags,
-          {
-            setCategory: formState.setCategory,
-            setSubcategory: formState.setSubcategory,
-            setColor: formState.setColor,
-            setPattern: formState.setPattern,
-            setMaterial: formState.setMaterial,
-            setBrand: formState.setBrand,
-            setSize: formState.setSize,
-            setSilhouette: formState.setSilhouette,
-            setLength: formState.setLength,
-            setSleeves: formState.setSleeves,
-            setStyle: formState.setStyle,
-            setRise: formState.setRise,
-            setNeckline: formState.setNeckline,
-            setHeelHeight: formState.setHeelHeight,
-            setBootHeight: formState.setBootHeight,
-            setType: formState.setType,
-            setName: formState.setName,
-            toggleSeason: formState.toggleSeason,
-          },
-          formState.getFormData(),
-          {
-            overwriteExisting: false,
-            skipFields: [],
-          }
-        );
+        try {
+          console.log('[WardrobeItemForm] Starting auto-population with tags:', tags);
+          const { FormAutoPopulationService } = await import('../../../../../services/formAutoPopulation');
+          console.log('[WardrobeItemForm] FormAutoPopulationService imported successfully');
+          
+          await FormAutoPopulationService.autoPopulateFromTags(
+            tags,
+            {
+              setCategory: formState.setCategory,
+              setSubcategory: formState.setSubcategory,
+              setColor: formState.setColor,
+              setPattern: formState.setPattern,
+              setMaterial: formState.setMaterial,
+              setBrand: formState.setBrand,
+              setSize: formState.setSize,
+              setSilhouette: formState.setSilhouette,
+              setLength: formState.setLength,
+              setSleeves: formState.setSleeves,
+              setStyle: formState.setStyle,
+              setRise: formState.setRise,
+              setNeckline: formState.setNeckline,
+              setHeelHeight: formState.setHeelHeight,
+              setBootHeight: formState.setBootHeight,
+              setType: formState.setType,
+              setName: formState.setName,
+              toggleSeason: formState.toggleSeason,
+            },
+            {
+              overwriteExisting: false,
+              skipFields: [],
+              debug: true,
+            }
+          );
+          console.log('[WardrobeItemForm] Auto-population completed successfully');
+        } catch (error) {
+          console.error('[WardrobeItemForm] Auto-population failed:', error);
+        }
       }
     }
   });

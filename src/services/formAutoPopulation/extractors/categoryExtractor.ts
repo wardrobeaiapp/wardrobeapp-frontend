@@ -56,13 +56,18 @@ export class CategoryExtractor {
   /**
    * Extracts the item subcategory from detected tags, using the detected category
    */
-  extractSubcategory: FieldExtractorFn<string> = (tags, category) => {
+  extractSubcategory: FieldExtractorFn<string> = (tags: DetectedTags, category?: ItemCategory) => {
     if (!category) {
       this.logger.debug('Cannot extract subcategory without a category');
       return null;
     }
     
     this.logger.debug('Extracting subcategory for category:', category);
+    console.log('[DEBUG] Extracting subcategory for category:', category, 'with tags:', tags);
+    
+    // Get valid subcategories for this category
+    const { getSubcategoriesForCategory } = require('../mappings/subcategoryMappings');
+    const validSubcategories = getSubcategoriesForCategory(category);
     
     // First check for direct subcategory tag
     const subcategoryTag = ExtractionHelpers.extractFromTags(tags, 'subcategory', [
@@ -71,7 +76,11 @@ export class CategoryExtractor {
     
     if (subcategoryTag) {
       this.logger.debug('Found direct subcategory tag:', subcategoryTag);
-      return subcategoryTag;
+      const mapped = this.mapToValidSubcategory(subcategoryTag, validSubcategories);
+      if (mapped) {
+        this.logger.debug('Mapped subcategory:', subcategoryTag, '=>', mapped);
+        return mapped;
+      }
     }
     
     // Then try to infer from object tags
@@ -83,23 +92,33 @@ export class CategoryExtractor {
       const mappedCategory = this.mapToCategory(tag);
       if (mappedCategory === category) continue;
       
-      // Check if this tag matches a valid subcategory
-      if (this.isValidSubcategory(tag, category)) {
-        this.logger.debug('Inferred subcategory from object tag:', tag);
-        return tag;
+      // Try to map this tag to a valid subcategory
+      const mapped = this.mapToValidSubcategory(tag, validSubcategories);
+      if (mapped) {
+        this.logger.debug('Mapped object tag to subcategory:', tag, '=>', mapped);
+        return mapped;
       }
     }
     
-    // If we couldn't determine a subcategory, return 'other'
-    this.logger.debug('Could not determine subcategory, defaulting to "other"');
-    return 'other';
+    // If we couldn't determine a subcategory, return null (don't auto-fill)
+    this.logger.debug('Could not determine subcategory');
+    return null;
   };
 
   /**
    * Maps a string value to a category using the category mappings
    */
   private mapToCategory(value: string): ItemCategory | null {
-    const lowerValue = value.toLowerCase();
+    let lowerValue = value.toLowerCase();
+    
+    // Handle cases like "Clothing/Upper" - extract the part after "/"
+    if (lowerValue.includes('/')) {
+      const parts = lowerValue.split('/');
+      if (parts.length > 1) {
+        lowerValue = parts[parts.length - 1].trim(); // Take the last part after "/"
+        this.logger.debug('Extracted category part after "/":', lowerValue);
+      }
+    }
     
     // Check for direct mapping
     if (lowerValue in categoryMappings) {
@@ -146,6 +165,76 @@ export class CategoryExtractor {
     }
     
     return objectTags;
+  }
+
+  /**
+   * Maps a detected value to a valid subcategory option
+   */
+  private mapToValidSubcategory(value: string, validSubcategories: string[]): string | null {
+    const lowerValue = value.toLowerCase();
+    
+    // First try exact match
+    for (const subcategory of validSubcategories) {
+      if (lowerValue === subcategory.toLowerCase()) {
+        return this.capitalizeSubcategory(subcategory);
+      }
+    }
+    
+    // Then try partial matches - check if detected value contains subcategory keywords
+    for (const subcategory of validSubcategories) {
+      const lowerSubcategory = subcategory.toLowerCase();
+      if (lowerValue.includes(lowerSubcategory) || lowerSubcategory.includes(lowerValue)) {
+        return this.capitalizeSubcategory(subcategory);
+      }
+    }
+    
+    // Special mappings for common variations
+    const specialMappings: Record<string, string> = {
+      'a-line skirts': 'skirt',
+      'pencil skirts': 'skirt', 
+      'mini skirts': 'skirt',
+      'midi skirts': 'skirt',
+      'maxi skirts': 'skirt',
+      'pleated skirts': 'skirt',
+      'jean': 'jeans',
+      'denim': 'jeans',
+      'trouser': 'trousers',
+      'pant': 'trousers',
+      'pants': 'trousers',
+      'short': 'shorts',
+      'dress shirt': 'shirt',
+      'button-down': 'shirt',
+      'tee': 't-shirt',
+      'top': 't-shirt'
+    };
+    
+    for (const [key, mappedValue] of Object.entries(specialMappings)) {
+      if (lowerValue.includes(key.toLowerCase())) {
+        // Find the mapped value in valid subcategories
+        for (const subcategory of validSubcategories) {
+          if (subcategory.toLowerCase() === mappedValue.toLowerCase()) {
+            return this.capitalizeSubcategory(subcategory);
+          }
+        }
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Capitalizes subcategory for form consistency
+   */
+  private capitalizeSubcategory(subcategory: string): string {
+    // Handle special cases that should be capitalized differently
+    switch (subcategory.toLowerCase()) {
+      case 't-shirt':
+        return 'T-Shirt';
+      case 'tank top':
+        return 'Tank Top';
+      default:
+        return subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase();
+    }
   }
 
   /**

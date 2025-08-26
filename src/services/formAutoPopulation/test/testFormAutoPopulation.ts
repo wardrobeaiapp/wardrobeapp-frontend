@@ -80,7 +80,22 @@ function runTest() {
   });
   logFormState();
   
-  console.log('\n4. Testing with footwear-specific tags');
+  console.log('\n4. Testing with a-line skirts tags (silhouette extraction)');
+  const skirtTags = {
+    category: 'bottom',
+    subcategory: 'a-line skirts',
+    color: 'navy',
+    material: 'cotton',
+    description: 'Navy blue a-line cotton skirt'
+  };
+  
+  // Reset form state
+  Object.keys(mockFormState).forEach(key => delete mockFormState[key]);
+  
+  service.autoPopulateFields(skirtTags, setField, { overwriteExisting: true });
+  logFormState();
+
+  console.log('\n5. Testing with footwear-specific tags');
   const footwearTags = {
     category: 'shoes',
     subcategory: 'boots',

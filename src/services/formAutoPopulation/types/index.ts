@@ -17,6 +17,7 @@ export enum FormField {
   SLEEVES = 'sleeves',
   STYLE = 'style',
   RISE = 'rise',
+  NECKLINE = 'neckline',
   HEEL_HEIGHT = 'heelHeight',
   BOOT_HEIGHT = 'bootHeight',
   TYPE = 'type',
@@ -64,6 +65,7 @@ export interface FormFieldSetters {
   setLength?: (length: string) => void;
   setSeasons?: (seasons: Season[]) => void;
   setName?: (name: string) => void;
+  toggleSeason?: (season: Season) => void;
 }
 
 /**

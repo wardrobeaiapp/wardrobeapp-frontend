@@ -267,20 +267,23 @@ export class StyleExtractor {
   /**
    * Extracts the item silhouette from detected tags
    */
-  extractSilhouette: FieldExtractorFn<string> = (tags: DetectedTags, category?: ItemCategory) => {
+  extractSilhouette: FieldExtractorFn<string> = (tags: DetectedTags, category?: ItemCategory, subcategory?: string) => {
     if (!category || !silhouetteMappings[category]) {
       this.logger.debug(`No silhouette mappings for category: ${category}`);
       return null;
     }
     
-    this.logger.debug('Extracting silhouette for category:', category);
+    this.logger.debug('Extracting silhouette for category:', category, 'subcategory:', subcategory);
+    
+    // Get valid form options for this category/subcategory combination
+    const validFormOptions = this.getValidSilhouetteOptions(category, subcategory);
+    this.logger.debug('Valid silhouette options for', category, subcategory, ':', validFormOptions);
     
     // First check for direct silhouette tag
     const silhouetteTag = ExtractionHelpers.extractFromTags(tags, 'silhouette', ['fit', 'shape', 'cut']);
     
     if (silhouetteTag) {
-      const categoryMappings = silhouetteMappings[category] || {};
-      const mappedSilhouette = ExtractionHelpers.mapToStandardOption(silhouetteTag, categoryMappings);
+      const mappedSilhouette = this.mapToValidFormOption(silhouetteTag, validFormOptions);
       if (mappedSilhouette) {
         this.logger.debug('Found silhouette from silhouette tag:', mappedSilhouette);
         return mappedSilhouette;
@@ -288,33 +291,31 @@ export class StyleExtractor {
     }
     
     // Look for silhouette keywords in all tags
-    const categoryMappings = silhouetteMappings[category] || {};
     for (const [key, value] of Object.entries(tags)) {
       if (typeof value !== 'string') continue;
       
       // Skip fields that are unlikely to contain silhouette information
+      // NOTE: Don't skip 'subcategory' as it often contains silhouette info like "a-line skirts"
       const keyLower = key.toLowerCase();
-      if (['category', 'subcategory', 'color', 'pattern', 'brand', 'size'].includes(keyLower)) {
+      if (['category', 'color', 'pattern', 'brand', 'size'].includes(keyLower)) {
         continue;
       }
       
-      // Check for silhouette keywords in tag values
-      for (const [silhouetteKeyword, mappedSilhouette] of Object.entries(categoryMappings)) {
-        if (value.toLowerCase().includes(silhouetteKeyword.toLowerCase())) {
-          this.logger.debug(`Found silhouette "${mappedSilhouette}" in tag "${key}": ${value}`);
-          return mappedSilhouette;
-        }
+      // Try to map the value to a valid form option
+      const mappedSilhouette = this.mapToValidFormOption(value, validFormOptions);
+      if (mappedSilhouette) {
+        this.logger.debug(`Found silhouette "${mappedSilhouette}" in tag "${key}": ${value}`);
+        return mappedSilhouette;
       }
     }
     
     // Check description
     const description = ExtractionHelpers.extractFromTags(tags, 'description', ['title', 'name', 'item']);
     if (description) {
-      for (const [silhouetteKeyword, mappedSilhouette] of Object.entries(categoryMappings)) {
-        if (description.toLowerCase().includes(silhouetteKeyword.toLowerCase())) {
-          this.logger.debug(`Found silhouette "${mappedSilhouette}" in description: ${description}`);
-          return mappedSilhouette;
-        }
+      const mappedSilhouette = this.mapToValidFormOption(description, validFormOptions);
+      if (mappedSilhouette) {
+        this.logger.debug(`Found silhouette "${mappedSilhouette}" in description: ${description}`);
+        return mappedSilhouette;
       }
     }
     
@@ -322,6 +323,70 @@ export class StyleExtractor {
     this.logger.debug('Could not determine silhouette');
     return null;
   };
+
+  /**
+   * Gets valid silhouette options from the form helpers
+   */
+  private getValidSilhouetteOptions(category: ItemCategory, subcategory?: string): string[] {
+    try {
+      // Import the form helper function
+      const { getSilhouetteOptions } = require('../../../components/features/wardrobe/forms/WardrobeItemForm/utils/formHelpers');
+      return getSilhouetteOptions(category, subcategory) || [];
+    } catch (error) {
+      this.logger.debug('Could not get valid silhouette options:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Maps a detected value to a valid form silhouette option
+   */
+  private mapToValidFormOption(value: string, validOptions: string[]): string | null {
+    const lowerValue = value.toLowerCase();
+    
+    // First try exact match
+    for (const option of validOptions) {
+      if (lowerValue === option.toLowerCase()) {
+        return option;
+      }
+    }
+    
+    // Then try partial matches
+    for (const option of validOptions) {
+      const lowerOption = option.toLowerCase();
+      if (lowerValue.includes(lowerOption) || lowerOption.includes(lowerValue)) {
+        return option;
+      }
+    }
+    
+    // Special keyword mappings that work across different subcategories
+    const keywordMappings: Record<string, string> = {
+      'a-line': 'A-Line',
+      'aline': 'A-Line', 
+      'pencil': 'Pencil',
+      'straight': 'Straight',
+      'pleated': 'Pleated',
+      'wrap': 'Wrap',
+      'skinny': 'Skinny',
+      'slim': 'Slim Fit',
+      'regular': 'Regular Fit',
+      'relaxed': 'Relaxed Fit',
+      'wide': 'Wide Leg',
+      'bootcut': 'Bootcut',
+      'flared': 'Flared'
+    };
+    
+    for (const [keyword, mappedValue] of Object.entries(keywordMappings)) {
+      if (lowerValue.includes(keyword)) {
+        // Check if this mapped value is valid for the current form
+        if (validOptions.includes(mappedValue)) {
+          return mappedValue;
+        }
+      }
+    }
+    
+    return null;
+  }
 
   /**
    * Extracts the item length from detected tags
@@ -521,30 +586,28 @@ export class StyleExtractor {
     
     this.logger.debug('Extracting rise for bottoms');
     
-    // Rise mappings
+    // Rise mappings (updated to match form options: High, Mid, Low)
     const riseMappings: Record<string, string> = {
-      'high': 'High-Rise',
-      'high rise': 'High-Rise',
-      'high-rise': 'High-Rise',
-      'high waist': 'High-Rise',
-      'high-waist': 'High-Rise',
-      'high-waisted': 'High-Rise',
-      'high waisted': 'High-Rise',
-      'mid': 'Mid-Rise',
-      'mid rise': 'Mid-Rise',
-      'mid-rise': 'Mid-Rise',
-      'medium': 'Mid-Rise',
-      'medium rise': 'Mid-Rise',
-      'medium-rise': 'Mid-Rise',
-      'regular': 'Mid-Rise',
-      'regular rise': 'Mid-Rise',
-      'low': 'Low-Rise',
-      'low rise': 'Low-Rise',
-      'low-rise': 'Low-Rise',
-      'hip': 'Low-Rise',
-      'hip hugger': 'Low-Rise',
-      'ultra low': 'Ultra Low-Rise',
-      'ultra-low': 'Ultra Low-Rise',
+      'high': 'High',
+      'high rise': 'High',
+      'high-rise': 'High',
+      'high waist': 'High',
+      'high-waist': 'High',
+      'high-waisted': 'High',
+      'high waisted': 'High',
+      'mid': 'Mid',
+      'mid rise': 'Mid',
+      'mid-rise': 'Mid',
+      'medium': 'Mid',
+      'medium rise': 'Mid',
+      'medium-rise': 'Mid',
+      'regular': 'Mid',
+      'regular rise': 'Mid',
+      'low': 'Low',
+      'low rise': 'Low',
+      'low-rise': 'Low',
+      'hip': 'Low',
+      'hip hugger': 'Low',
     };
     
     // First check for direct rise tag

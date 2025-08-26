@@ -1,6 +1,6 @@
-import { ItemCategory, Season } from '../../types';
+import { ItemCategory } from '../../types';
 import { FormField } from './types';
-import { DetectedTags, AutoPopulationOptions, FormFieldSetter } from './types';
+import { DetectedTags, AutoPopulationOptions, FormFieldSetter, FormFieldSetters } from './types';
 import { Logger } from './utils/logger';
 import { CategoryExtractor } from './extractors/categoryExtractor';
 import { ColorExtractor } from './extractors/colorExtractor';
@@ -11,8 +11,8 @@ import { SizeExtractor } from './extractors/sizeExtractor';
 import { SeasonExtractor } from './extractors/seasonExtractor';
 import { StyleExtractor } from './extractors/styleExtractor';
 import { FootwearExtractor } from './extractors/footwearExtractor';
+import { OuterwearExtractor } from './extractors/outerwearExtractor';
 import { NameGenerator } from './extractors/nameGenerator';
-import { ExtractionHelpers } from './utils/extractionHelpers';
 
 /**
  * Service for automatically populating form fields based on detected tags from AI analysis
@@ -28,6 +28,7 @@ export class FormAutoPopulationService {
   private seasonExtractor: SeasonExtractor;
   private styleExtractor: StyleExtractor;
   private footwearExtractor: FootwearExtractor;
+  private outerwearExtractor: OuterwearExtractor;
   private nameGenerator: NameGenerator;
 
   constructor(enableLogging = false) {
@@ -45,6 +46,7 @@ export class FormAutoPopulationService {
     this.seasonExtractor = new SeasonExtractor(this.logger);
     this.styleExtractor = new StyleExtractor(this.logger);
     this.footwearExtractor = new FootwearExtractor(this.logger);
+    this.outerwearExtractor = new OuterwearExtractor(this.logger);
     this.nameGenerator = new NameGenerator(this.logger);
   }
 
@@ -80,36 +82,25 @@ export class FormAutoPopulationService {
     // Extract category and subcategory first as they're needed for context in other extractors
     this.populateCategoryFields(tags, setField, mergedOptions);
     
-    // Get the current category and subcategory for context
-    const currentCategory = this.getCurrentFieldValue(FormField.CATEGORY, setField) as ItemCategory;
-    const currentSubcategory = this.getCurrentFieldValue(FormField.SUBCATEGORY, setField) as string;
+    // Get the extracted category and subcategory for context (not from form state)
+    const extractedCategory = this.categoryExtractor.extractCategory(tags);
+    const extractedSubcategory = this.categoryExtractor.extractSubcategory(tags, extractedCategory || undefined);
     
-    // Populate the remaining fields
-    this.populateBasicFields(tags, setField, mergedOptions, currentCategory, currentSubcategory);
-    this.populateSeasonalFields(tags, setField, mergedOptions, currentCategory, currentSubcategory);
-    this.populateStyleFields(tags, setField, mergedOptions, currentCategory, currentSubcategory);
-    this.populateFootwearFields(tags, setField, mergedOptions, currentCategory, currentSubcategory);
-    
-    // Generate name last since it depends on other fields
-    this.populateNameField(tags, setField, mergedOptions, currentCategory, currentSubcategory);
+    // Populate the remaining fields only if we have a category
+    if (extractedCategory) {
+      this.populateBasicFields(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+      this.populateSeasonalFields(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+      this.populateStyleFields(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+      this.populateFootwearFields(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+      this.populateOuterwearFields(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+      
+      // Generate name last since it depends on other fields
+      this.populateNameField(tags, setField, mergedOptions, extractedCategory, extractedSubcategory || '');
+    }
     
     this.logger.debug('Auto-population complete');
   }
 
-  /**
-   * Gets the current value of a field using the setter callback
-   */
-  private getCurrentFieldValue(field: FormField, setField: FormFieldSetter): any {
-    let currentValue: any = null;
-    
-    // Use the setter to get the current value
-    setField(field, (value: any) => {
-      currentValue = value;
-      return value; // Return unchanged value
-    });
-    
-    return currentValue;
-  }
 
   /**
    * Populates category and subcategory fields
@@ -117,23 +108,41 @@ export class FormAutoPopulationService {
   private populateCategoryFields(tags: DetectedTags, setField: FormFieldSetter, options: AutoPopulationOptions): void {
     const { overwriteExisting, skipFields } = options;
     
+    this.logger.debug('[populateCategoryFields] Starting category field population');
+    this.logger.debug('[populateCategoryFields] overwriteExisting:', overwriteExisting);
+    this.logger.debug('[populateCategoryFields] skipFields:', skipFields);
+    
     // Skip fields if in skipFields array
     if (!skipFields?.includes(FormField.CATEGORY)) {
+      this.logger.debug('[populateCategoryFields] Category field not in skipFields, extracting...');
       const category = this.categoryExtractor.extractCategory(tags);
+      this.logger.debug('[populateCategoryFields] Extracted category:', category);
       
-      if (category && (overwriteExisting || this.shouldUpdateField(FormField.CATEGORY, setField))) {
-        this.logger.debug(`Setting category to: ${category}`);
-        setField(FormField.CATEGORY, category);
+      if (category) {
+        const shouldUpdate = this.shouldUpdateField(FormField.CATEGORY, options);
+        this.logger.debug('[populateCategoryFields] shouldUpdateField result:', shouldUpdate);
+        this.logger.debug('[populateCategoryFields] Final condition check:', overwriteExisting || shouldUpdate);
+        
+        if (overwriteExisting || shouldUpdate) {
+          this.logger.debug(`[populateCategoryFields] Setting category to: ${category}`);
+          setField(FormField.CATEGORY, category);
+        } else {
+          this.logger.debug('[populateCategoryFields] Category field update skipped');
+        }
+      } else {
+        this.logger.debug('[populateCategoryFields] No category extracted');
       }
+    } else {
+      this.logger.debug('[populateCategoryFields] Category field in skipFields, skipping');
     }
     
-    // Get the current category for subcategory extraction
-    const currentCategory = this.getCurrentFieldValue(FormField.CATEGORY, setField) as ItemCategory;
+    // Get the extracted category for subcategory extraction
+    const currentCategory = this.categoryExtractor.extractCategory(tags);
     
     if (!skipFields?.includes(FormField.SUBCATEGORY) && currentCategory) {
       const subcategory = this.categoryExtractor.extractSubcategory(tags, currentCategory);
       
-      if (subcategory && (overwriteExisting || this.shouldUpdateField(FormField.SUBCATEGORY, setField))) {
+      if (subcategory && (overwriteExisting || this.shouldUpdateField(FormField.SUBCATEGORY, options))) {
         this.logger.debug(`Setting subcategory to: ${subcategory}`);
         setField(FormField.SUBCATEGORY, subcategory);
       }
@@ -156,7 +165,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.COLOR)) {
       const color = this.colorExtractor.extractColor(tags);
       
-      if (color && (overwriteExisting || this.shouldUpdateField(FormField.COLOR, setField))) {
+      if (color && (overwriteExisting || this.shouldUpdateField(FormField.COLOR, options))) {
         this.logger.debug(`Setting color to: ${color}`);
         setField(FormField.COLOR, color);
       }
@@ -166,7 +175,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.PATTERN)) {
       const pattern = this.patternExtractor.extractPattern(tags);
       
-      if (pattern && (overwriteExisting || this.shouldUpdateField(FormField.PATTERN, setField))) {
+      if (pattern && (overwriteExisting || this.shouldUpdateField(FormField.PATTERN, options))) {
         this.logger.debug(`Setting pattern to: ${pattern}`);
         setField(FormField.PATTERN, pattern);
       }
@@ -176,7 +185,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.MATERIAL)) {
       const material = this.materialExtractor.extractMaterial(tags);
       
-      if (material && (overwriteExisting || this.shouldUpdateField(FormField.MATERIAL, setField))) {
+      if (material && (overwriteExisting || this.shouldUpdateField(FormField.MATERIAL, options))) {
         this.logger.debug(`Setting material to: ${material}`);
         setField(FormField.MATERIAL, material);
       }
@@ -186,7 +195,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.BRAND)) {
       const brand = this.brandExtractor.extractBrand(tags);
       
-      if (brand && (overwriteExisting || this.shouldUpdateField(FormField.BRAND, setField))) {
+      if (brand && (overwriteExisting || this.shouldUpdateField(FormField.BRAND, options))) {
         this.logger.debug(`Setting brand to: ${brand}`);
         setField(FormField.BRAND, brand);
       }
@@ -196,7 +205,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.SIZE) && category) {
       const size = this.sizeExtractor.extractSize(tags, category);
       
-      if (size && (overwriteExisting || this.shouldUpdateField(FormField.SIZE, setField))) {
+      if (size && (overwriteExisting || this.shouldUpdateField(FormField.SIZE, options))) {
         this.logger.debug(`Setting size to: ${size}`);
         setField(FormField.SIZE, size);
       }
@@ -219,7 +228,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.SEASONS)) {
       const seasons = this.seasonExtractor.extractSeasons(tags);
       
-      if (seasons && seasons.length > 0 && (overwriteExisting || this.shouldUpdateField(FormField.SEASONS, setField))) {
+      if (seasons && seasons.length > 0 && (overwriteExisting || this.shouldUpdateField(FormField.SEASONS, options))) {
         this.logger.debug(`Setting seasons to: ${seasons.join(', ')}`);
         setField(FormField.SEASONS, seasons);
       }
@@ -240,20 +249,29 @@ export class FormAutoPopulationService {
     
     // Style
     if (!skipFields?.includes(FormField.STYLE)) {
+      this.logger.debug('[populateStyleFields] Extracting style...');
       const style = this.styleExtractor.extractStyle(tags);
+      this.logger.debug('[populateStyleFields] Extracted style:', style);
       
-      if (style && (overwriteExisting || this.shouldUpdateField(FormField.STYLE, setField))) {
-        this.logger.debug(`Setting style to: ${style}`);
+      if (style && (overwriteExisting || this.shouldUpdateField(FormField.STYLE, options))) {
+        this.logger.debug(`[populateStyleFields] Setting style to: ${style}`);
         setField(FormField.STYLE, style);
+      } else {
+        this.logger.debug('[populateStyleFields] Style not set - style:', style, 'overwriteExisting:', overwriteExisting);
       }
+    } else {
+      this.logger.debug('[populateStyleFields] Style field in skipFields, skipping');
     }
     
-    // Silhouette
+    // Silhouette - extract subcategory from tags directly for context-specific options
     if (!skipFields?.includes(FormField.SILHOUETTE) && category) {
-      const silhouette = this.styleExtractor.extractSilhouette(tags, category);
+      // Get subcategory from tags directly, not from form state (which might not be set yet)
+      const extractedSubcategory = this.categoryExtractor.extractSubcategory(tags, category);
+      console.log('[DEBUG] Extracted subcategory for silhouette:', extractedSubcategory);
+      const silhouette = this.styleExtractor.extractSilhouette(tags, category, extractedSubcategory || undefined);
       
-      if (silhouette && (overwriteExisting || this.shouldUpdateField(FormField.SILHOUETTE, setField))) {
-        this.logger.debug(`Setting silhouette to: ${silhouette}`);
+      if (silhouette && (overwriteExisting || this.shouldUpdateField(FormField.SILHOUETTE, options))) {
+        this.logger.debug(`Setting silhouette to: ${silhouette}` + (extractedSubcategory ? ` (for ${extractedSubcategory})` : ''));
         setField(FormField.SILHOUETTE, silhouette);
       }
     }
@@ -262,7 +280,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.LENGTH) && category) {
       const length = this.styleExtractor.extractLength(tags, category);
       
-      if (length && (overwriteExisting || this.shouldUpdateField(FormField.LENGTH, setField))) {
+      if (length && (overwriteExisting || this.shouldUpdateField(FormField.LENGTH, options))) {
         this.logger.debug(`Setting length to: ${length}`);
         setField(FormField.LENGTH, length);
       }
@@ -272,7 +290,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.SLEEVES) && category) {
       const sleeves = this.styleExtractor.extractSleeves(tags, category);
       
-      if (sleeves && (overwriteExisting || this.shouldUpdateField(FormField.SLEEVES, setField))) {
+      if (sleeves && (overwriteExisting || this.shouldUpdateField(FormField.SLEEVES, options))) {
         this.logger.debug(`Setting sleeves to: ${sleeves}`);
         setField(FormField.SLEEVES, sleeves);
       }
@@ -280,12 +298,18 @@ export class FormAutoPopulationService {
     
     // Rise (for bottoms)
     if (!skipFields?.includes(FormField.RISE) && category) {
+      this.logger.debug('[populateStyleFields] Extracting rise for category:', category);
       const rise = this.styleExtractor.extractRise(tags, category);
+      this.logger.debug('[populateStyleFields] Extracted rise:', rise);
       
-      if (rise && (overwriteExisting || this.shouldUpdateField(FormField.RISE, setField))) {
-        this.logger.debug(`Setting rise to: ${rise}`);
+      if (rise && (overwriteExisting || this.shouldUpdateField(FormField.RISE, options))) {
+        this.logger.debug(`[populateStyleFields] Setting rise to: ${rise}`);
         setField(FormField.RISE, rise);
+      } else {
+        this.logger.debug('[populateStyleFields] Rise not set - rise:', rise, 'category:', category);
       }
+    } else {
+      this.logger.debug('[populateStyleFields] Rise field skipped - inSkipFields:', skipFields?.includes(FormField.RISE), 'category:', category);
     }
   }
 
@@ -307,7 +331,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.HEEL_HEIGHT)) {
       const heelHeight = this.footwearExtractor.extractHeelHeight(tags, category);
       
-      if (heelHeight && (overwriteExisting || this.shouldUpdateField(FormField.HEEL_HEIGHT, setField))) {
+      if (heelHeight && (overwriteExisting || this.shouldUpdateField(FormField.HEEL_HEIGHT, options))) {
         this.logger.debug(`Setting heel height to: ${heelHeight}`);
         setField(FormField.HEEL_HEIGHT, heelHeight);
       }
@@ -317,7 +341,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.BOOT_HEIGHT) && subcategory && subcategory.toLowerCase().includes('boot')) {
       const bootHeight = this.footwearExtractor.extractBootHeight(tags, category, subcategory);
       
-      if (bootHeight && (overwriteExisting || this.shouldUpdateField(FormField.BOOT_HEIGHT, setField))) {
+      if (bootHeight && (overwriteExisting || this.shouldUpdateField(FormField.BOOT_HEIGHT, options))) {
         this.logger.debug(`Setting boot height to: ${bootHeight}`);
         setField(FormField.BOOT_HEIGHT, bootHeight);
       }
@@ -327,7 +351,32 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.TYPE)) {
       const type = this.footwearExtractor.extractType(tags, category, subcategory);
       
-      if (type && (overwriteExisting || this.shouldUpdateField(FormField.TYPE, setField))) {
+      if (type && (overwriteExisting || this.shouldUpdateField(FormField.TYPE, options))) {
+        this.logger.debug(`Setting type to: ${type}`);
+        setField(FormField.TYPE, type);
+      }
+    }
+  }
+
+  /**
+   * Populates outerwear-specific fields: type
+   */
+  private populateOuterwearFields(
+    tags: DetectedTags, 
+    setField: FormFieldSetter, 
+    options: AutoPopulationOptions,
+    category: ItemCategory,
+    subcategory: string
+  ): void {
+    if (category !== ItemCategory.OUTERWEAR) return;
+    
+    const { overwriteExisting, skipFields } = options;
+    
+    // Type
+    if (!skipFields?.includes(FormField.TYPE)) {
+      const type = this.outerwearExtractor.extractType(tags, category, subcategory);
+      
+      if (type && (overwriteExisting || this.shouldUpdateField(FormField.TYPE, options))) {
         this.logger.debug(`Setting type to: ${type}`);
         setField(FormField.TYPE, type);
       }
@@ -349,7 +398,7 @@ export class FormAutoPopulationService {
     if (!skipFields?.includes(FormField.NAME)) {
       const name = this.nameGenerator.generateName(tags, category, subcategory);
       
-      if (name && (overwriteExisting || this.shouldUpdateField(FormField.NAME, setField))) {
+      if (name && (overwriteExisting || this.shouldUpdateField(FormField.NAME, options))) {
         this.logger.debug(`Setting name to: ${name}`);
         setField(FormField.NAME, name);
       }
@@ -357,9 +406,104 @@ export class FormAutoPopulationService {
   }
 
   /**
-   * Checks if a field should be updated based on its current value
+   * Checks if a field should be updated based on auto-population settings
+   * Since we don't have access to current form values, we default to allowing updates
+   * unless the field is explicitly skipped
    */
-  private shouldUpdateField(field: FormField, setField: FormFieldSetter): boolean {
-    return ExtractionHelpers.shouldUpdateField(field, setField);
+  private shouldUpdateField(field: FormField, options: AutoPopulationOptions): boolean {
+    const { skipFields } = options;
+    
+    if (skipFields?.includes(field)) {
+      this.logger.debug(`Skipping ${field} as it's in skipFields`);
+      return false;
+    }
+    
+    // For auto-population, we should populate empty fields by default
+    return true;
+  }
+
+  /**
+   * Static method for backward compatibility with existing form integration
+   */
+  static async autoPopulateFromTags(
+    tags: DetectedTags, 
+    setters: FormFieldSetters, 
+    options: AutoPopulationOptions = {}
+  ): Promise<void> {
+    const service = new FormAutoPopulationService(true);
+    
+    // Create a setField function that maps to the provided setters
+    const setField: FormFieldSetter = (field: FormField, value: any) => {
+      console.log('[FormAutoPopulationService] setField called with:', field, value);
+      switch (field) {
+        case FormField.CATEGORY:
+          console.log('[FormAutoPopulationService] Calling setCategory with:', value);
+          setters.setCategory?.(value);
+          break;
+        case FormField.SUBCATEGORY:
+          setters.setSubcategory?.(value);
+          break;
+        case FormField.TYPE:
+          setters.setType?.(value);
+          break;
+        case FormField.COLOR:
+          setters.setColor?.(value);
+          break;
+        case FormField.PATTERN:
+          setters.setPattern?.(value);
+          break;
+        case FormField.MATERIAL:
+          setters.setMaterial?.(value);
+          break;
+        case FormField.BRAND:
+          setters.setBrand?.(value);
+          break;
+        case FormField.SIZE:
+          setters.setSize?.(value);
+          break;
+        case FormField.SEASONS:
+          // Handle seasons by toggling each one individually
+          if (Array.isArray(value)) {
+            value.forEach((season) => setters.toggleSeason?.(season));
+          }
+          break;
+        case FormField.STYLE:
+          console.log('[FormAutoPopulationService] Calling setStyle with:', value);
+          console.log('[FormAutoPopulationService] setStyle function exists:', !!setters.setStyle);
+          if (setters.setStyle) {
+            setters.setStyle(value);
+            console.log('[FormAutoPopulationService] setStyle called successfully');
+          } else {
+            console.log('[FormAutoPopulationService] ERROR: setStyle function is undefined!');
+          }
+          break;
+        case FormField.SILHOUETTE:
+          setters.setSilhouette?.(value);
+          break;
+        case FormField.LENGTH:
+          setters.setLength?.(value);
+          break;
+        case FormField.SLEEVES:
+          setters.setSleeves?.(value);
+          break;
+        case FormField.RISE:
+          setters.setRise?.(value);
+          break;
+        case FormField.HEEL_HEIGHT:
+          setters.setHeelHeight?.(value);
+          break;
+        case FormField.BOOT_HEIGHT:
+          setters.setBootHeight?.(value);
+          break;
+        case FormField.NAME:
+          setters.setName?.(value);
+          break;
+        default:
+          service.logger.debug(`Unknown field: ${field}`);
+      }
+    };
+
+    // Use the main auto-population method
+    service.autoPopulateFields(tags, setField, options);
   }
 }

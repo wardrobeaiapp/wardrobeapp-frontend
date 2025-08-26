@@ -58,6 +58,14 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   };
   const [sleeves, setSleeves] = useState(initialItem?.sleeves || '');
   const [style, setStyle] = useState(initialItem?.style || '');
+  
+  // Debug wrapper for setStyle
+  const setStyleWithDebug = (value: string) => {
+    console.log('[DEBUG] setStyle called with:', value);
+    console.log('[DEBUG] Current style before update:', style);
+    setStyle(value);
+    console.log('[DEBUG] Style setter executed');
+  };
   const [rise, setRise] = useState(initialItem?.rise || '');
   const [neckline, setNeckline] = useState(initialItem?.neckline || '');
   const [heelHeight, setHeelHeight] = useState(initialItem?.heelHeight || '');
@@ -262,7 +270,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     sleeves,
     setSleeves,
     style,
-    setStyle,
+    setStyle: setStyleWithDebug,
     rise,
     setRise,
     neckline,
