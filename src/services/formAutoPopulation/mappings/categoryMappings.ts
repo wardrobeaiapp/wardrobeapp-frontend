@@ -5,6 +5,7 @@ import { ItemCategory } from '../../../types';
  */
 export const categoryMappings: Record<string, ItemCategory> = {
   // TOP category mappings
+  'upper': ItemCategory.TOP,
   'shirt': ItemCategory.TOP,
   'shirts': ItemCategory.TOP,
   'top': ItemCategory.TOP,

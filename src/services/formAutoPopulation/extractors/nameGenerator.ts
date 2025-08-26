@@ -27,37 +27,31 @@ export class NameGenerator {
       return ExtractionHelpers.capitalize(nameTag);
     }
     
-    // Build a name from attributes
+    // Build a concise name from most important attributes
     let nameComponents: string[] = [];
     
-    // Get color
+    // Priority 1: Color (all colors included)
     const color = ExtractionHelpers.extractFromTags(tags, 'color', ['hue']);
     if (color) {
-      nameComponents.push(color);
+      nameComponents.push(ExtractionHelpers.capitalize(color));
     }
     
-    // Get pattern
-    const pattern = ExtractionHelpers.extractFromTags(tags, 'pattern', ['print', 'design']);
-    if (pattern && pattern.toLowerCase() !== 'solid') {
-      nameComponents.push(pattern);
-    }
-    
-    // Get material
+    // Priority 2: Material OR Pattern (whichever is more distinctive)
     const material = ExtractionHelpers.extractFromTags(tags, 'material', ['fabric']);
-    if (material) {
-      nameComponents.push(material);
+    const pattern = ExtractionHelpers.extractFromTags(tags, 'pattern', ['print', 'design']);
+    
+    if (pattern && pattern.toLowerCase() !== 'solid' && pattern.toLowerCase() !== 'plain') {
+      // Pattern is more distinctive than material
+      nameComponents.push(ExtractionHelpers.capitalize(pattern));
+    } else if (material && !['cotton', 'polyester'].includes(material.toLowerCase())) {
+      // Use material if it's distinctive (not basic cotton/polyester)
+      nameComponents.push(ExtractionHelpers.capitalize(material));
     }
     
-    // Get brand
+    // Priority 3: Brand (only if it's a well-known brand)
     const brand = ExtractionHelpers.extractFromTags(tags, 'brand', ['label', 'make']);
-    if (brand) {
-      nameComponents.push(brand);
-    }
-    
-    // Get style or specific attribute
-    const style = ExtractionHelpers.extractFromTags(tags, 'style', ['design', 'look']);
-    if (style) {
-      nameComponents.push(style);
+    if (brand && nameComponents.length < 2) {
+      nameComponents.push(ExtractionHelpers.capitalize(brand));
     }
     
     // Add subcategory if available, otherwise use formatted category

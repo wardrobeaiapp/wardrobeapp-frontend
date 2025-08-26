@@ -1,4 +1,4 @@
-import { ItemCategory, Season } from '../../../types';
+import { Season } from '../../../types';
 
 /**
  * Maps keywords to their appropriate seasons

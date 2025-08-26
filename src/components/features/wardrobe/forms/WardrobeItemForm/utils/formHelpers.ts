@@ -75,11 +75,23 @@ export const getSleeveOptions = (): string[] => {
 
 // Get style options
 export const getStyleOptions = (): string[] => {
-  return ['casual', 'elegant', 'special', 'sport'];
+  return ['Casual', 'Elegant', 'Special', 'Sport'];
 };
 
 // Get type options based on category and subcategory
 export const getTypeOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
+
+  if (category === ItemCategory.OUTERWEAR && subcategory) {
+    switch (subcategory.toLowerCase()) {
+      case 'jacket':
+        return ['Baseball', 'Biker', 'Bomber', 'Puffer', 'Casual', 'Harrington', 'Knitted Poncho', 'Pilot', 'Racer', 'Poncho', 'Winter'];
+      case 'coat':
+        return ['Duffle', 'Kimono', 'Peacoat', 'Raincoat', 'Winter', 'Wool'];
+      default:
+        return [];
+    }
+  }
+
   if (category === ItemCategory.FOOTWEAR && subcategory) {
     switch (subcategory.toLowerCase()) {
       case 'boots':
@@ -181,11 +193,12 @@ export function getBootHeightOptions(): string[] {
 // Get silhouette options based on category or subcategory
 export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
   // Handle based on category
+  console.log(category, subcategory)
   switch (category) {
     case ItemCategory.TOP:
       return ['Fitted', 'Loose', 'Regular'];
     case ItemCategory.BOTTOM:
-      if (subcategory?.toLowerCase() === 'skirt') {
+      if (subcategory?.toLowerCase() === 'skirt' || subcategory?.toLowerCase() === 'skirts') {
         return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
       }
       if (subcategory?.toLowerCase() === 'shorts' || subcategory?.toLowerCase() === 'sweatpants') {
@@ -201,14 +214,6 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
       }
       return ['Slim Fit', 'Regular Fit', 'Relaxed Fit'];
     case ItemCategory.OUTERWEAR:
-      if (subcategory?.toLowerCase() === 'jacket') {
-        // These options match the mapping keywords in mapJacketSubcategoryToSilhouette
-        return ['Baseball', 'Biker', 'Bomber', 'Puffer', 'Casual', 'Harrington', 'Knitted Poncho', 'Pilot', 'Racer', 'Poncho', 'Winter'];
-      }
-      if (subcategory?.toLowerCase() === 'coat') {
-        // These options match the mapping keywords in mapCoatSubcategoryToSilhouette
-        return ['Duffle', 'Kimono', 'Peacoat', 'Raincoat', 'Winter', 'Wool'];
-      }
       return ['Fitted', 'Loose', 'Regular'];
     case ItemCategory.FOOTWEAR:
     case ItemCategory.ACCESSORY:
