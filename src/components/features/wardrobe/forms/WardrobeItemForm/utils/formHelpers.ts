@@ -193,7 +193,6 @@ export function getBootHeightOptions(): string[] {
 // Get silhouette options based on category or subcategory
 export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: string): string[] => {
   // Handle based on category
-  console.log(category, subcategory)
   switch (category) {
     case ItemCategory.TOP:
       return ['Fitted', 'Loose', 'Regular'];

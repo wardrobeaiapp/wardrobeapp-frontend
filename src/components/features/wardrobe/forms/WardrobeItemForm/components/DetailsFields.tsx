@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useMemo } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
 import { ItemCategory, Season } from '../../../../../../types';
 import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, getPatternOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
@@ -104,13 +104,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   const shouldShowStyle = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
   
-  // Debug style field visibility
-  console.log('[DetailsFields] Style field debug:', {
-    category,
-    shouldShowStyle,
-    currentStyleValue: style,
-    styleOptions: getStyleOptions().slice(0, 3) // Show first 3 options
-  });
 
   // Show neckline field for specific subcategories
   const shouldShowNeckline = subcategory && 
@@ -137,37 +130,23 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
     (category === ItemCategory.OUTERWEAR && subcategory && 
     ['jacket', 'coat'].includes(subcategory.toLowerCase()));
 
-  const silhouetteOptions = category ? getSilhouetteOptions(category, subcategory) : [];
-  const lengthOptions = getLengthOptions(subcategory);
-  const sleeveOptions = getSleeveOptions();
-  const styleOptions = getStyleOptions();
-  const riseOptions = getRiseOptions();
-  const necklineOptions = getNecklineOptions();
-  const heelHeightOptions = getHeelHeightOptions();
-  const bootHeightOptions = getBootHeightOptions();
-  const typeOptions = getTypeOptions(category, subcategory);
-  const patternOptions = getPatternOptions();
+  // Memoize expensive option calculations
+  const silhouetteOptions = useMemo(() => 
+    category ? getSilhouetteOptions(category, subcategory) : [], 
+    [category, subcategory]
+  );
   
-  // Debug field visibility
-  console.log('[DetailsFields] Field visibility debug:', {
-    category,
-    shouldShowSleeves,
-    shouldShowStyle,
-    shouldShowSilhouette,
-    shouldShowLength,
-    shouldShowRise,
-    sleeves,
-    style,
-    rise,
-    length: length // Add length to debug output
-  });
+  const lengthOptions = useMemo(() => getLengthOptions(subcategory), [subcategory]);
+  const sleeveOptions = useMemo(() => getSleeveOptions(), []);
+  const styleOptions = useMemo(() => getStyleOptions(), []);
+  const riseOptions = useMemo(() => getRiseOptions(), []);
+  const necklineOptions = useMemo(() => getNecklineOptions(), []);
+  const heelHeightOptions = useMemo(() => getHeelHeightOptions(), []);
+  const bootHeightOptions = useMemo(() => getBootHeightOptions(), []);
+  const typeOptions = useMemo(() => getTypeOptions(category, subcategory), [category, subcategory]);
+  const patternOptions = useMemo(() => getPatternOptions(), []);
   
-  // Specific debug for length field
-  console.log('[DEBUG] Length field state:', {
-    length,
-    shouldShowLength,
-    lengthOptions: lengthOptions.length
-  });
+  
   
   return (
     <>
