@@ -480,53 +480,54 @@ export class StyleExtractor {
     }
     
     this.logger.debug('Extracting sleeves for category:', category);
+    this.logger.debug('Available tags for sleeve extraction:', tags);
     
     // Sleeve mappings
     const sleeveMappings: Record<string, string> = {
-      'sleeveless': 'Sleeveless',
-      'no sleeve': 'Sleeveless',
-      'without sleeve': 'Sleeveless',
-      'strapless': 'Sleeveless',
-      'spaghetti': 'Spaghetti Straps',
-      'spaghetti strap': 'Spaghetti Straps',
-      'thin strap': 'Spaghetti Straps',
-      'halter': 'Halter',
-      'cold shoulder': 'Cold Shoulder',
-      'off shoulder': 'Off-Shoulder',
-      'off-shoulder': 'Off-Shoulder',
-      'one shoulder': 'One-Shoulder',
-      'one-shoulder': 'One-Shoulder',
-      'cap': 'Cap Sleeve',
-      'cap sleeve': 'Cap Sleeve',
-      'short': 'Short Sleeve',
-      'short sleeve': 'Short Sleeve',
-      'elbow': 'Elbow Length',
-      'elbow length': 'Elbow Length',
-      '3/4': 'Three-Quarter Length',
-      'three quarter': 'Three-Quarter Length',
-      'three-quarter': 'Three-Quarter Length',
-      'long': 'Long Sleeve',
-      'long sleeve': 'Long Sleeve',
-      'full': 'Long Sleeve',
-      'full sleeve': 'Long Sleeve',
-      'wrist': 'Long Sleeve',
-      'wrist length': 'Long Sleeve',
-      'bell': 'Bell Sleeve',
-      'bell sleeve': 'Bell Sleeve',
-      'flutter': 'Flutter Sleeve',
-      'flutter sleeve': 'Flutter Sleeve',
-      'puff': 'Puff Sleeve',
-      'puff sleeve': 'Puff Sleeve',
-      'bishop': 'Bishop Sleeve',
-      'bishop sleeve': 'Bishop Sleeve',
-      'raglan': 'Raglan Sleeve',
-      'raglan sleeve': 'Raglan Sleeve',
-      'dolman': 'Dolman Sleeve',
-      'dolman sleeve': 'Dolman Sleeve',
-      'batwing': 'Batwing Sleeve',
-      'batwing sleeve': 'Batwing Sleeve',
-      'kimono': 'Kimono Sleeve',
-      'kimono sleeve': 'Kimono Sleeve',
+      'sleeveless': 'sleeveless',
+      'no sleeve': 'sleeveless',
+      'without sleeve': 'sleeveless',
+      'strapless': 'sleeveless',
+      'spaghetti': 'sleeveless', // Spaghetti straps are essentially sleeveless
+      'spaghetti strap': 'sleeveless',
+      'thin strap': 'sleeveless',
+      'halter': 'sleeveless', // Halter is also sleeveless
+      'cold shoulder': 'short sleeves',
+      'off shoulder': 'short sleeves',
+      'off-shoulder': 'short sleeves', 
+      'one shoulder': 'one sleeve',
+      'one-shoulder': 'one sleeve',
+      'cap': 'short sleeves',
+      'cap sleeve': 'short sleeves',
+      'short': 'short sleeves',
+      'short sleeve': 'short sleeves',
+      'elbow': '3/4 sleeves',
+      'elbow length': '3/4 sleeves',
+      '3/4': '3/4 sleeves',
+      'three quarter': '3/4 sleeves',
+      'three-quarter': '3/4 sleeves',
+      'long': 'long sleeves',
+      'long sleeve': 'long sleeves',
+      'full': 'long sleeves',
+      'full sleeve': 'long sleeves',
+      'wrist': 'long sleeves',
+      'wrist length': 'long sleeves',
+      'bell': 'long sleeves', // Bell sleeves are typically long
+      'bell sleeve': 'long sleeves',
+      'flutter': 'short sleeves', // Flutter sleeves are typically short
+      'flutter sleeve': 'short sleeves',
+      'puff': 'short sleeves', // Puff sleeves are typically short
+      'puff sleeve': 'short sleeves',
+      'bishop': 'long sleeves', // Bishop sleeves are typically long
+      'bishop sleeve': 'long sleeves',
+      'raglan': 'long sleeves', // Raglan sleeves are typically long
+      'raglan sleeve': 'long sleeves',
+      'dolman': 'long sleeves', // Dolman sleeves are typically long
+      'dolman sleeve': 'long sleeves',
+      'batwing': 'long sleeves', // Batwing sleeves are typically long
+      'batwing sleeve': 'long sleeves',
+      'kimono': 'long sleeves', // Kimono sleeves are typically long
+      'kimono sleeve': 'long sleeves',
     };
     
     // First check for direct sleeve tag
@@ -572,6 +573,142 @@ export class StyleExtractor {
     
     // Couldn't determine sleeve type
     this.logger.debug('Could not determine sleeve type');
+    return null;
+  };
+
+  /**
+   * Extracts neckline information from detected tags, including cut variations
+   */
+  extractNeckline: FieldExtractorFn<string> = (tags: DetectedTags, category?: ItemCategory) => {
+    if (!category || ![ItemCategory.TOP, ItemCategory.ONE_PIECE].includes(category)) {
+      this.logger.debug(`Category ${category} doesn't typically have necklines`);
+      return null;
+    }
+    
+    this.logger.debug('Extracting neckline for category:', category);
+    this.logger.debug('Available tags for neckline extraction:', tags);
+    
+    // Neckline mappings - includes both "neckline" and "cut" variations
+    const necklineMappings: Record<string, string> = {
+      // Direct neckline terms
+      'scoop': 'scoop',
+      'scoop neck': 'scoop neck',
+      'scoop neckline': 'scoop neck',
+      'v-neck': 'v-neck',
+      'v neck': 'v-neck',
+      'vneck': 'v-neck',
+      'crew': 'crew',
+      'crew neck': 'crew',
+      'boat': 'boat',
+      'boat neck': 'boat',
+      'boatneck': 'boat',
+      'square': 'square',
+      'square neck': 'square',
+      'sweetheart': 'sweetheart',
+      'sweetheart neckline': 'sweetheart',
+      'halter': 'halter',
+      'halter neck': 'halter',
+      'halter top': 'halter',
+      'spaghetti': 'spaghetti straps',
+      'spaghetti strap': 'spaghetti straps',
+      'spaghetti straps': 'spaghetti straps',
+      'thin strap': 'spaghetti straps',
+      'thin straps': 'spaghetti straps',
+      'shoulder straps': 'shoulder straps',
+      'wide straps': 'shoulder straps',
+      'thick straps': 'shoulder straps',
+      'strap': 'shoulder straps',
+      'straps': 'shoulder straps',
+      'one shoulder': 'one shoulder',
+      'off shoulder': 'off shoulder',
+      'off-shoulder': 'off shoulder',
+      'turtleneck': 'turtleneck',
+      'turtle neck': 'turtleneck',
+      'mock': 'mock',
+      'mock neck': 'mock',
+      'asymmetric': 'asymmetric',
+      'high neck': 'high neck',
+      'deep v': 'deep v',
+      'jewel': 'jewel',
+      'jewel neck': 'jewel',
+      'plunge': 'plunge',
+      'plunging': 'plunge',
+      'surplice': 'surplice',
+      'illusion': 'illusion',
+      'keyhole': 'keyhole',
+      'portrait': 'portrait',
+      'queen anne': 'queen anne',
+      'sabrina': 'sabrina',
+      'slash': 'slash',
+      'straight': 'straight',
+      'wrap': 'wrap',
+      
+      // Cut variations that refer to necklines
+      'v cut': 'v-neck',
+      'v-cut': 'v-neck',
+      'scoop cut': 'scoop',
+      'deep cut': 'deep v',
+      'low cut': 'plunge',
+      'high cut': 'high neck',
+      'square cut': 'square',
+      'straight cut': 'straight',
+      'asymmetrical cut': 'asymmetric',
+    };
+    
+    // First check for direct neckline tags
+    const necklineTag = ExtractionHelpers.extractFromTags(tags, 'neckline', ['neck', 'collar']);
+    
+    if (necklineTag) {
+      const mappedNeckline = ExtractionHelpers.mapToStandardOption(necklineTag, necklineMappings);
+      if (mappedNeckline) {
+        this.logger.debug('Found neckline from neckline tag:', mappedNeckline);
+        return mappedNeckline;
+      }
+    }
+    
+    // Check for cut tags that might refer to neckline
+    const cutTag = ExtractionHelpers.extractFromTags(tags, 'cut', ['cutting', 'style']);
+    
+    if (cutTag) {
+      const mappedNeckline = ExtractionHelpers.mapToStandardOption(cutTag, necklineMappings);
+      if (mappedNeckline) {
+        this.logger.debug('Found neckline from cut tag:', mappedNeckline);
+        return mappedNeckline;
+      }
+    }
+    
+    // Look for neckline keywords in all tags
+    for (const [key, value] of Object.entries(tags)) {
+      if (typeof value !== 'string') continue;
+      
+      // Skip fields unlikely to contain neckline information
+      const keyLower = key.toLowerCase();
+      if (['category', 'subcategory', 'color', 'pattern', 'brand', 'size', 'season'].includes(keyLower)) {
+        continue;
+      }
+      
+      // Check for neckline keywords in tag values
+      for (const [necklineKeyword, mappedNeckline] of Object.entries(necklineMappings)) {
+        if (value.toLowerCase().includes(necklineKeyword.toLowerCase())) {
+          this.logger.debug(`Found neckline "${mappedNeckline}" from keyword "${necklineKeyword}" in tag "${key}": ${value}`);
+          return mappedNeckline;
+        }
+      }
+    }
+    
+    // Check description for neckline terms
+    const description = ExtractionHelpers.extractFromTags(tags, 'description', ['title', 'name', 'item']);
+    if (description) {
+      for (const [necklineKeyword, mappedNeckline] of Object.entries(necklineMappings)) {
+        if (description.toLowerCase().includes(necklineKeyword.toLowerCase())) {
+          this.logger.debug(`Found neckline "${mappedNeckline}" in description: ${description}`);
+          return mappedNeckline;
+        }
+      }
+    }
+    
+    // Couldn't determine neckline
+    this.logger.debug('Could not determine neckline');
     return null;
   };
 
