@@ -13,7 +13,6 @@ export interface WardrobeItemFormData {
   pattern?: string;
   material: string;
   brand: string;
-  size: string;
   price: string;
   silhouette: string;
   length?: string;
@@ -44,7 +43,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [pattern, setPattern] = useState(initialItem?.pattern || '');
   const [material, setMaterial] = useState(initialItem?.material || '');
   const [brand, setBrand] = useState(initialItem?.brand || '');
-  const [size, setSize] = useState(initialItem?.size || '');
   const [price, setPrice] = useState(initialItem?.price?.toString() || '');
   const [silhouette, setSilhouette] = useState(initialItem?.silhouette || '');
   const [length, setLength] = useState(initialItem?.length || '');
@@ -153,7 +151,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       pattern,
       material,
       brand,
-      size,
       price,
       silhouette,
       sleeves: (category === ItemCategory.ONE_PIECE || 
@@ -219,7 +216,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setPattern('');
     setMaterial('');
     setBrand('');
-    setSize('');
     setPrice('');
     setSilhouette('');
     setLength('');
@@ -259,8 +255,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setMaterial,
     brand,
     setBrand,
-    size,
-    setSize,
     price,
     setPrice,
     silhouette,

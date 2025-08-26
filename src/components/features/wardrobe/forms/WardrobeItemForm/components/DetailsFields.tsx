@@ -8,8 +8,6 @@ interface DetailsFieldsProps {
   onMaterialChange: (material: string) => void;
   brand: string;
   onBrandChange: (brand: string) => void;
-  size: string;
-  onSizeChange: (size: string) => void;
   price: string;
   onPriceChange: (price: string) => void;
   pattern: string;
@@ -46,8 +44,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onMaterialChange,
   brand,
   onBrandChange,
-  size,
-  onSizeChange,
   price,
   onPriceChange,
   pattern,
@@ -177,17 +173,6 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             ))}
           </FormSelect>
         </FormField>
-        
-        {/* <FormField label="Brand" error={errors.brand}>
-          <FormInput
-            type="text"
-            value={brand}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => onBrandChange(e.target.value)}
-            placeholder="Enter brand"
-            variant="outline"
-            isFullWidth
-          />
-        </FormField> */}
 
         {shouldShowSilhouette && (
             <FormField label="Silhouette" error={errors.silhouette}>
@@ -334,19 +319,18 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               </FormSelect>
             </FormField>
           )}
-      </FormRow>
 
-      <FormRow style={{ marginTop: '1.5rem' }}>
-        {/* <FormField label="Size" error={errors.size}>
+        <FormField label="Brand" error={errors.brand}>
           <FormInput
             type="text"
-            value={size}
-            onChange={(e: ChangeEvent<HTMLInputElement>) => onSizeChange(e.target.value)}
-            placeholder="e.g., S, M, L, XL, 32, 10"
+            value={brand}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onBrandChange(e.target.value)}
+            placeholder="Enter brand"
             variant="outline"
             isFullWidth
           />
-        </FormField> */}
+        </FormField>
+
         
         <FormField label="Purchase Price" error={errors.price}>
           <FormInput

@@ -82,7 +82,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
               setPattern: formState.setPattern,
               setMaterial: formState.setMaterial,
               setBrand: formState.setBrand,
-              setSize: formState.setSize,
               setSilhouette: formState.setSilhouette,
               setLength: formState.setLength,
               setSleeves: formState.setSleeves,
@@ -202,7 +201,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       if (formData.subcategory) tags.subcategory = formData.subcategory.toLowerCase();
       
       // Add any additional tags from the form that might not be in detectedTags
-      if (formData.size) tags.size = formData.size;
       if (formData.price) tags.price = formData.price;
       
       const item: WardrobeItem = {
@@ -214,7 +212,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         pattern: formData.pattern,
         material: formData.material,
         brand: formData.brand,
-        size: formData.size,
         price: parseFloat(formData.price) || 0,
         season: formData.seasons,
         wishlist: formData.isWishlistItem,
@@ -294,8 +291,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onMaterialChange={formState.setMaterial}
           brand={formState.brand}
           onBrandChange={formState.setBrand}
-          size={formState.size}
-          onSizeChange={formState.setSize}
           price={formState.price}
           onPriceChange={formState.setPrice}
           pattern={formState.pattern}
