@@ -183,25 +183,35 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       // Create tags object with all detected tags plus any form field overrides
       const tags: Record<string, string> = {};
       
-      // First add all detected tags in their original format
+      // Only save tags that weren't used to populate form fields
+      // Create a set of form field names that got populated
+      const populatedFormFields = new Set<string>();
+      if (formData.category) populatedFormFields.add('category');
+      if (formData.color) populatedFormFields.add('color');  
+      if (formData.pattern) populatedFormFields.add('pattern');
+      if (formData.material) populatedFormFields.add('material');
+      if (formData.brand) populatedFormFields.add('brand');
+      if (formData.subcategory) populatedFormFields.add('subcategory');
+      if (formData.silhouette) populatedFormFields.add('silhouette');
+      if (formData.length) populatedFormFields.add('length');
+      if (formData.sleeves) populatedFormFields.add('sleeves');
+      if (formData.style) populatedFormFields.add('style');
+      if (formData.rise) populatedFormFields.add('rise');
+      if (formData.neckline) populatedFormFields.add('neckline');
+      if (formData.heelHeight) populatedFormFields.add('heelheight');
+      if (formData.bootHeight) populatedFormFields.add('bootheight');
+      if (formData.type) populatedFormFields.add('type');
+      
+      // Add only unused detected tags to the tags object
       Object.entries(currentDetectedTags).forEach(([key, value]) => {
         if (value) {
-          // Convert keys to lowercase for consistency
           const normalizedKey = key.toLowerCase();
-          tags[normalizedKey] = value;
+          // Only include if this tag wasn't used to populate a form field
+          if (!populatedFormFields.has(normalizedKey)) {
+            tags[normalizedKey] = value;
+          }
         }
       });
-      
-      // Then override with any explicitly set form fields
-      if (formData.category) tags.category = formData.category.toLowerCase();
-      if (formData.color) tags.color = formData.color.toLowerCase();
-      if (formData.pattern) tags.pattern = formData.pattern.toLowerCase();
-      if (formData.material) tags.material = formData.material.toLowerCase();
-      if (formData.brand) tags.brand = formData.brand;
-      if (formData.subcategory) tags.subcategory = formData.subcategory.toLowerCase();
-      
-      // Add any additional tags from the form that might not be in detectedTags
-      if (formData.price) tags.price = formData.price;
       
       const item: WardrobeItem = {
         ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
