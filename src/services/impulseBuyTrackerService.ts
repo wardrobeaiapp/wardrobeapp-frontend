@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-// Get Supabase client
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL || '',
-  process.env.REACT_APP_SUPABASE_ANON_KEY || ''
-);
 
 /**
  * Impulse Buy Tracker Data Interface
@@ -42,9 +37,9 @@ export async function getImpulseBuyTrackerData(userId: string): Promise<ImpulseB
     }
 
     const trackerData = data[0];
-    const result = {
-      isSet: trackerData.impulse_buy_tracker_set || false,
-      startDate: trackerData.impulse_buy_tracker_start_date || undefined
+    const result: ImpulseBuyTrackerData = {
+      isSet: !!trackerData.impulse_buy_tracker_set,
+      startDate: typeof trackerData.impulse_buy_tracker_start_date === 'string' ? trackerData.impulse_buy_tracker_start_date : undefined
     };
 
     console.log('✅ Successfully fetched impulse buy tracker data:', result);
@@ -81,7 +76,7 @@ export async function activateImpulseBuyTracker(userId: string): Promise<void> {
           impulse_buy_tracker_set: true,
           impulse_buy_tracker_start_date: currentTimestamp
         })
-        .eq('id', existingData[0].id);
+        .eq('id', existingData[0].id as number);
 
       if (error) {
         console.error('❌ Error updating impulse buy tracker:', error);
