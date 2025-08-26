@@ -1,6 +1,5 @@
 import { ItemCategory } from '../../../types/';
-import { DetectedTags, FieldExtractorFn } from '../types';
-import { ExtractionHelpers } from '../utils/extractionHelpers';
+import { FieldExtractorFn } from '../types';
 import { Logger } from '../utils/logger';
 
 /**
@@ -29,7 +28,6 @@ export class OuterwearExtractor {
       'jacket': {
         'baseball': 'Baseball',
         'biker': 'Biker',
-        'biker jacket': 'Biker',
         'bomber': 'Bomber',
         'puffer': 'Puffer',
         'casual': 'Casual',
@@ -100,7 +98,7 @@ export class OuterwearExtractor {
     for (const tag of objectTags) {
       const tagLower = tag.toLowerCase();
       
-      for (const [baseCategory, mappings] of Object.entries(typeMappings)) {
+      for (const mappings of Object.values(typeMappings)) {
         for (const [typeKeyword, mappedType] of Object.entries(mappings)) {
           if (tagLower.includes(typeKeyword.toLowerCase())) {
             this.logger.debug(`Found type "${mappedType}" from keyword "${typeKeyword}" in tag: ${tag}`);
@@ -113,7 +111,7 @@ export class OuterwearExtractor {
     // Also check subcategory as fallback
     if (subcategory) {
       const subcategoryLower = subcategory.toLowerCase();
-      for (const [baseCategory, mappings] of Object.entries(typeMappings)) {
+      for (const mappings of Object.values(typeMappings)) {
         for (const [typeKeyword, mappedType] of Object.entries(mappings)) {
           if (subcategoryLower.includes(typeKeyword.toLowerCase())) {
             this.logger.debug(`Found type "${mappedType}" from keyword "${typeKeyword}" in subcategory: ${subcategory}`);

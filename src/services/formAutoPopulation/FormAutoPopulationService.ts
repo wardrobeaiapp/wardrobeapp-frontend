@@ -80,11 +80,12 @@ export class FormAutoPopulationService {
     const mergedOptions: AutoPopulationOptions = { ...defaultOptions, ...options };
     
     // Extract category and subcategory first as they're needed for context in other extractors
-    this.populateCategoryFields(tags, setField, mergedOptions);
-    
-    // Get the extracted category and subcategory for context (not from form state)
     const extractedCategory = this.categoryExtractor.extractCategory(tags);
     const extractedSubcategory = this.categoryExtractor.extractSubcategory(tags, extractedCategory || undefined);
+    
+    this.populateCategoryFields(tags, setField, mergedOptions, extractedCategory || undefined, extractedSubcategory || undefined);
+    
+    // Category and subcategory already extracted above
     
     // Populate the remaining fields only if we have a category
     if (extractedCategory) {
@@ -105,46 +106,42 @@ export class FormAutoPopulationService {
   /**
    * Populates category and subcategory fields
    */
-  private populateCategoryFields(tags: DetectedTags, setField: FormFieldSetter, options: AutoPopulationOptions): void {
+  private populateCategoryFields(
+    tags: DetectedTags, 
+    setField: FormFieldSetter, 
+    options: AutoPopulationOptions,
+    extractedCategory?: ItemCategory,
+    extractedSubcategory?: string
+  ): void {
     const { overwriteExisting, skipFields } = options;
     
     this.logger.debug('[populateCategoryFields] Starting category field population');
     this.logger.debug('[populateCategoryFields] overwriteExisting:', overwriteExisting);
     this.logger.debug('[populateCategoryFields] skipFields:', skipFields);
     
-    // Skip fields if in skipFields array
-    if (!skipFields?.includes(FormField.CATEGORY)) {
-      this.logger.debug('[populateCategoryFields] Category field not in skipFields, extracting...');
-      const category = this.categoryExtractor.extractCategory(tags);
-      this.logger.debug('[populateCategoryFields] Extracted category:', category);
-      
-      if (category) {
-        const shouldUpdate = this.shouldUpdateField(FormField.CATEGORY, options);
-        this.logger.debug('[populateCategoryFields] shouldUpdateField result:', shouldUpdate);
-        this.logger.debug('[populateCategoryFields] Final condition check:', overwriteExisting || shouldUpdate);
-        
-        if (overwriteExisting || shouldUpdate) {
-          this.logger.debug(`[populateCategoryFields] Setting category to: ${category}`);
-          setField(FormField.CATEGORY, category);
-        } else {
-          this.logger.debug('[populateCategoryFields] Category field update skipped');
-        }
-      } else {
-        this.logger.debug('[populateCategoryFields] No category extracted');
+    // Category
+    if (!skipFields?.includes(FormField.CATEGORY) && extractedCategory) {
+      if (overwriteExisting || this.shouldUpdateField(FormField.CATEGORY, options)) {
+        this.logger.debug(`Setting category to: ${extractedCategory}`);
+        setField(FormField.CATEGORY, extractedCategory);
       }
-    } else {
-      this.logger.debug('[populateCategoryFields] Category field in skipFields, skipping');
     }
     
-    // Get the extracted category for subcategory extraction
-    const currentCategory = this.categoryExtractor.extractCategory(tags);
+    // Subcategory - use cached value
+    if (!skipFields?.includes(FormField.SUBCATEGORY) && extractedSubcategory) {
+      if (overwriteExisting || this.shouldUpdateField(FormField.SUBCATEGORY, options)) {
+        this.logger.debug(`Setting subcategory to: ${extractedSubcategory}`);
+        setField(FormField.SUBCATEGORY, extractedSubcategory);
+      }
+    }
     
-    if (!skipFields?.includes(FormField.SUBCATEGORY) && currentCategory) {
-      const subcategory = this.categoryExtractor.extractSubcategory(tags, currentCategory);
+    // Material
+    if (!skipFields?.includes(FormField.MATERIAL)) {
+      const material = this.materialExtractor.extractMaterial(tags);
       
-      if (subcategory && (overwriteExisting || this.shouldUpdateField(FormField.SUBCATEGORY, options))) {
-        this.logger.debug(`Setting subcategory to: ${subcategory}`);
-        setField(FormField.SUBCATEGORY, subcategory);
+      if (material && (overwriteExisting || this.shouldUpdateField(FormField.MATERIAL, options))) {
+        this.logger.debug(`Setting material to: ${material}`);
+        setField(FormField.MATERIAL, material);
       }
     }
   }
@@ -263,15 +260,13 @@ export class FormAutoPopulationService {
       this.logger.debug('[populateStyleFields] Style field in skipFields, skipping');
     }
     
-    // Silhouette - extract subcategory from tags directly for context-specific options
+    // Silhouette - use already extracted subcategory
     if (!skipFields?.includes(FormField.SILHOUETTE) && category) {
-      // Get subcategory from tags directly, not from form state (which might not be set yet)
-      const extractedSubcategory = this.categoryExtractor.extractSubcategory(tags, category);
-      console.log('[DEBUG] Extracted subcategory for silhouette:', extractedSubcategory);
-      const silhouette = this.styleExtractor.extractSilhouette(tags, category, extractedSubcategory || undefined);
+      console.log('[DEBUG] Using cached subcategory for silhouette:', subcategory);
+      const silhouette = this.styleExtractor.extractSilhouette(tags, category, subcategory || undefined);
       
       if (silhouette && (overwriteExisting || this.shouldUpdateField(FormField.SILHOUETTE, options))) {
-        this.logger.debug(`Setting silhouette to: ${silhouette}` + (extractedSubcategory ? ` (for ${extractedSubcategory})` : ''));
+        this.logger.debug(`Setting silhouette to: ${silhouette}` + (subcategory ? ` (for ${subcategory})` : ''));
         setField(FormField.SILHOUETTE, silhouette);
       }
     }
