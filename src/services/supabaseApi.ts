@@ -1,6 +1,22 @@
 import { supabase } from './supabase';
 import { WardrobeItem, Outfit, Capsule, ItemCategory, Season, WishlistStatus } from '../types';
 
+// Add TypeScript declaration for the window.__loggedQueries property
+declare global {
+  interface Window {
+    __loggedQueries?: string[];
+  }
+}
+
+// Cache for capsules data
+let capsulesCache: { data: Capsule[] | null; timestamp: number } = {
+  data: null,
+  timestamp: 0
+};
+
+// Request lock to prevent duplicate in-flight requests
+let capsulesFetchInProgress: Promise<Capsule[]> | null = null;
+
 // Wardrobe Item API calls
 export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
   try {
@@ -352,20 +368,70 @@ export const deleteOutfit = async (id: string): Promise<void> => {
 };
 
 // Capsule API calls
+
 export const fetchCapsules = async (): Promise<Capsule[]> => {
-  console.log('[supabaseApi] fetchCapsules called');
   
-  // Get the current user
-  const { data: { session } } = await supabase.auth.getSession();
-  const user = session?.user;
-  console.log('[supabaseApi] User session:', { hasUser: !!user, isGuest: !user });
+  // Check if we have cached data that's less than 5 minutes old
+  const now = Date.now();
+  const cacheAge = now - capsulesCache.timestamp;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
   
-  // Check if we're in guest mode
-  const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
-  console.log('[supabaseApi] Guest mode:', isGuestMode);
+  if (capsulesCache.data && cacheAge < CACHE_TTL) {
+    console.log('🔄 [CACHE HIT] Using cached capsules data - No database query made');
+    return capsulesCache.data;
+  }
+  
+  // If there's already a fetch in progress, wait for it instead of starting a new one
+  if (capsulesFetchInProgress) {
+    console.log('⏳ [PENDING] Another fetch already in progress - Waiting for it to complete');
+    return capsulesFetchInProgress;
+  }
+  
+  // Create a new fetch promise and store it in the module-level variable
+  console.log('🔍 [DATABASE] Cache miss - Fetching fresh data from database');
+  capsulesFetchInProgress = fetchCapsulesFromDB();
   
   try {
+    // Wait for the fetch to complete
+    const result = await capsulesFetchInProgress;
+    return result;
+  } finally {
+    // Clear the in-progress flag when done (success or error)
+    capsulesFetchInProgress = null;
+  }
+};
+
+// Separate function to actually fetch capsules from the database
+// Track last database query timestamp to avoid duplicate logs
+let lastQueryLogTime = 0;
+
+// Separate function to actually fetch capsules from the database
+async function fetchCapsulesFromDB(): Promise<Capsule[]> {
+  // Only log if we haven't logged in the last 500ms (handles React StrictMode double renders)
+  const now = Date.now();
+  const shouldLog = now - lastQueryLogTime > 500;
+  
+  if (shouldLog) {
+    console.log('🔍 [DATABASE] Fetching fresh capsules data from database');
+    lastQueryLogTime = now;
+  }
+  
+  try {
+    // Get the current user
+    const { data: { session } } = await supabase.auth.getSession();
+    const user = session?.user;
     
+    if (shouldLog) {
+      console.log('👤 [DATABASE] User authentication:', { authenticated: !!user });
+    }
+    
+    // Check if we're in guest mode
+    const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
+    
+    if (shouldLog) {
+      console.log('🔑 [DATABASE] Guest mode:', isGuestMode);
+    }
+
     // Define the expected database capsule type with null values from the database
     interface DBCapsule {
       id: string;
@@ -383,7 +449,6 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
     }
 
     // First, fetch all capsules for the current user
-    console.log('[supabaseApi] Fetching capsules from database...');
     let query = supabase
       .from('capsules')
       .select('*')
@@ -391,22 +456,33 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
     
     // If in guest mode, explicitly filter for guest user_id
     if (isGuestMode) {
-      console.log('[supabaseApi] Filtering for guest user...');
+      if (shouldLog) {
+        console.log('👤 [DATABASE] Filtering for guest user');
+      }
       query = query.eq('user_id', 'guest');
     }
 
     const { data, error } = await query as { data: DBCapsule[] | null; error: any };
 
-    console.log('[supabaseApi] Database query results:', { data, error });
+    // Log query results if we should be logging
+    if (shouldLog) {
+      console.log('📂 [DATABASE] Query results:', { 
+        resultCount: data?.length || 0, 
+        hasError: !!error 
+      });
+    }
 
     if (error) {
-      console.error('[supabaseApi] Database query error:', error);
+      // Always log errors, even if shouldLog is false
+      console.error('❌ [DATABASE] Query error:', error);
       throw error;
     }
 
     // If no capsules found, return empty array
     if (!data || data.length === 0) {
-      console.log('[supabaseApi] No capsules found in database');
+      if (shouldLog) {
+        console.log('🔍 [DATABASE] No capsules found in database');
+      }
       return [];
     }
 
@@ -432,7 +508,8 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
           capsuleItemsMap[capsuleId].push(itemId);
         });
       } else if (capsuleItemsError) {
-        console.error('[Supabase] Error fetching capsule items:', capsuleItemsError);
+        // Always log errors
+        console.error('❌ [DATABASE] Error fetching capsule items:', capsuleItemsError);
       }
     }
     
@@ -498,11 +575,25 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
       }
     }
     
+    // Update cache with fresh data
+    capsulesCache = { data: dbCapsules, timestamp: Date.now() };
+    
+    if (shouldLog) {
+      console.log('🔄 [CACHE] Updated cache with fresh data, items:', dbCapsules.length);
+    }
+    
     return dbCapsules;
   } catch (error) {
-    console.error('[Supabase] Error fetching capsules:', error);
+    // Always log errors
+    console.error('❌ [DATABASE] Error fetching capsules:', error);
+    
     // Try to get capsules from local storage as fallback in guest mode
-    if (isGuestMode) {
+    const guestModeEnabled = Boolean(localStorage.getItem('guestMode'));
+    if (guestModeEnabled && shouldLog) {
+      console.log('💾 [FALLBACK] Attempting to load capsules from local storage');
+    }
+    
+    if (guestModeEnabled) {
       try {
         const storedCapsules = localStorage.getItem('guestCapsules');
         if (storedCapsules) {
@@ -523,29 +614,55 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
           }
         }
       } catch (parseError) {
-        console.error('Error parsing stored capsules:', parseError);
+        // Always log parse errors
+        console.error('❌ [FALLBACK] Error parsing stored capsules:', parseError);
       }
+    } // Close guestModeEnabled if block
+    
+    // Update cache with empty array
+    capsulesCache = { data: [], timestamp: Date.now() };
+    
+    if (shouldLog) {
+      console.log('💾 [CACHE] Updated cache with empty array due to error');
     }
+    
     return [];
   }
 };
 
+// Last log time for createCapsule to prevent duplicate logs
+let lastCreateCapsuleLogTime = 0;
+
 export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>): Promise<Capsule> => {
-  console.log('[supabaseApi] createCapsule called with data:', capsule);
+  // Only log if we haven't logged in the last 500ms
+  const now = Date.now();
+  const shouldLog = now - lastCreateCapsuleLogTime > 500;
+  
+  if (shouldLog) {
+    console.log('📝 [CREATE] Creating new capsule');
+    lastCreateCapsuleLogTime = now;
+  }
   
   try {
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
-    console.log('[supabaseApi] User session for createCapsule:', { hasUser: !!user, userId: user?.id });
+    
+    if (shouldLog) {
+      console.log('👤 [CREATE] User authentication:', { authenticated: !!user, userId: user?.id });
+    }
     
     // Check if user is authenticated or in guest mode
     const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
-    console.log('[supabaseApi] Guest mode for createCapsule:', isGuestMode);
+    
+    if (shouldLog) {
+      console.log('🔑 [CREATE] Guest mode:', isGuestMode);
+    }
     
     if (!user && !isGuestMode) {
       const error = new Error('User must be authenticated to create a capsule');
-      console.error('[supabaseApi] Authentication error:', error);
+      // Always log authentication errors
+      console.error('❌ [AUTH] Authentication error:', error);
       throw error;
     }
     
@@ -562,10 +679,21 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       date_created: new Date().toISOString()
     };
     
-    console.log('[supabaseApi] Prepared capsule data for insertion:', capsuleData);
+    if (shouldLog) {
+      console.log('💾 [CREATE] Prepared capsule data for insertion');
+    }
+    
+    // Reset the cache to force a refresh on next fetch
+    capsulesCache = { data: null, timestamp: 0 };
+    
+    if (shouldLog) {
+      console.log('🗑 [CACHE] Invalidated after capsule creation');
+    }
     
     // Insert the new capsule into the database
-    console.log('[supabaseApi] Inserting capsule into database...');
+    if (shouldLog) {
+      console.log('🔎 [DATABASE] Inserting capsule into database');
+    }
     const { data, error } = await supabase
       .from('capsules')
       .insert([capsuleData])
@@ -573,14 +701,20 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       .single();
       
     if (error) {
-      console.error('[supabaseApi] Error creating capsule:', error);
+      // Always log database errors
+      console.error('❌ [DATABASE] Error creating capsule:', error);
       throw error;
     }
     
-    console.log('[supabaseApi] Successfully created capsule:', data);
+    if (shouldLog) {
+      console.log('✅ [DATABASE] Capsule created successfully:', { id: data?.id });
+    }
     
     // If there are selected items, add them to the capsule_items join table
     if (Array.isArray(capsule.selectedItems) && capsule.selectedItems.length > 0) {
+      if (shouldLog) {
+        console.log('🔗 [CREATE] Adding items to capsule:', { itemCount: capsule.selectedItems.length });
+      }
       const records = capsule.selectedItems.map(itemId => ({
         capsule_id: data.id,
         item_id: itemId,
@@ -593,7 +727,9 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
         .upsert(records, { onConflict: 'capsule_id,item_id' });
       
       if (joinError) {
-        console.error('Error adding items to capsule:', joinError);
+        console.error('❌ [DATABASE] Error linking items to capsule:', joinError);
+      } else if (shouldLog) {
+        console.log('✅ [DATABASE] Successfully linked items to capsule:', { count: records.length, capsuleId: data.id });
       }
     }
     
@@ -628,6 +764,13 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
     };
     
+    // Update cache to include the new capsule
+    if (capsulesCache.data) {
+      capsulesCache.data = [newCapsule, ...capsulesCache.data];
+    } else {
+      capsulesCache = { data: [newCapsule], timestamp: Date.now() };
+    }
+    
     return newCapsule;
   } catch (error) {
     console.error('[Supabase] Error creating capsule:', error);
@@ -649,17 +792,39 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
   }
 };
 
+// Last log time for updateCapsule to prevent duplicate logs
+let lastUpdateCapsuleLogTime = 0;
+
 export const updateCapsule = async (id: string, updates: Partial<Capsule>): Promise<Capsule | null> => {
+  // Only log if we haven't logged in the last 500ms
+  const now = Date.now();
+  const shouldLog = now - lastUpdateCapsuleLogTime > 500;
+  
+  if (shouldLog) {
+    console.log('🔄 [UPDATE] Updating capsule:', { id });
+    lastUpdateCapsuleLogTime = now;
+  }
+  
   try {
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession();
     const user = session?.user;
     
+    if (shouldLog) {
+      console.log('👤 [UPDATE] User authentication:', { authenticated: !!user });
+    }
+    
     // Check if user is authenticated or in guest mode
     const isGuestMode = !user && Boolean(localStorage.getItem('guestMode'));
     
+    if (shouldLog) {
+      console.log('🔑 [UPDATE] Guest mode:', isGuestMode);
+    }
+    
     if (!user && !isGuestMode) {
-      throw new Error('User must be authenticated to update a capsule');
+      const error = new Error('User must be authenticated to update a capsule');
+      // Always log authentication errors
+      console.error('❌ [AUTH] Authentication error:', error);
     }
     
     // Extract items from the capsule object if present
@@ -684,6 +849,14 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
     // Always update the updated_at timestamp
     updateData.updated_at = new Date().toISOString();
     
+    // Reset the cache to force a refresh on next fetch
+    capsulesCache = { data: null, timestamp: 0 };
+    
+    if (shouldLog) {
+      console.log('🗑 [CACHE] Invalidated for update operation');
+      console.log('🔎 [DATABASE] Updating capsule in database');
+    }
+    
     // Update the capsule in the database
     const { data, error: updateError } = await supabase
       .from('capsules')
@@ -693,21 +866,39 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
       .single();
       
     if (updateError) {
-      console.error('Error updating capsule:', updateError);
+      // Always log database errors
+      console.error('❌ [DATABASE] Error updating capsule:', updateError);
       throw updateError;
+    }
+    
+    if (shouldLog) {
+      console.log('✅ [DATABASE] Capsule updated successfully:', { id });
     }
     
     // If selectedItems was provided, update the capsule_items join table
     if (selectedItems) {
+      if (shouldLog) {
+        console.log('🔗 [UPDATE] Updating capsule items', { itemCount: selectedItems.length });
+      }
+      
       // First, delete all existing items for this capsule
+      if (shouldLog) {
+        console.log('🔎 [DATABASE] Removing existing items from capsule');
+      }
+      
       const { error: deleteError } = await supabase
         .from('capsule_items')
         .delete()
         .eq('capsule_id', id);
         
       if (deleteError) {
-        console.error('Error removing existing items from capsule:', deleteError);
+        // Always log database errors
+        console.error('❌ [DATABASE] Error removing existing items from capsule:', deleteError);
         throw deleteError;
+      }
+      
+      if (shouldLog) {
+        console.log('✅ [DATABASE] Successfully removed existing items');
       }
       
       // Then add the new items if there are any
@@ -718,13 +909,22 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
           user_id: user?.id || 'guest'
         }));
         
+        if (shouldLog) {
+          console.log('🔎 [DATABASE] Adding items to capsule:', { count: records.length });
+        }
+        
         const { error: insertError } = await supabase
           .from('capsule_items')
           .insert(records);
           
         if (insertError) {
-          console.error('Error adding items to capsule:', insertError);
+          // Always log database errors
+          console.error('❌ [DATABASE] Error adding items to capsule:', insertError);
           throw insertError;
+        }
+        
+        if (shouldLog) {
+          console.log('✅ [DATABASE] Successfully added items to capsule');
         }
       }
     }
@@ -760,6 +960,14 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
       dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
     };
     
+    // Update the capsule in the cache
+    if (capsulesCache.data) {
+      capsulesCache.data = capsulesCache.data.map(c => 
+        c.id === id ? updatedCapsule : c
+      );
+      capsulesCache.timestamp = Date.now();
+    }
+    
     return updatedCapsule;
   } catch (error) {
     console.error('[Supabase] Error updating capsule:', error);
@@ -784,23 +992,74 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
   }
 };
 
+// Last log time for deleteCapsule to prevent duplicate logs
+let lastDeleteCapsuleLogTime = 0;
+
 export const deleteCapsule = async (id: string): Promise<void> => {
+  // Only log if we haven't logged in the last 500ms
+  const now = Date.now();
+  const shouldLog = now - lastDeleteCapsuleLogTime > 500;
+  
+  if (shouldLog) {
+    console.log('🗑 [DELETE] Deleting capsule:', { id });
+    lastDeleteCapsuleLogTime = now;
+  }
+  
   try {
+    if (shouldLog) {
+      console.log('🔎 [DATABASE] Deleting capsule from database');
+    }
+    
     const { error } = await supabase
       .from('capsules')
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      // Always log database errors
+      console.error('❌ [DATABASE] Error deleting capsule:', error);
+      throw error;
+    }
+    
+    if (shouldLog) {
+      console.log('✅ [DATABASE] Capsule deleted successfully');
+    }
+    
+    // Remove the deleted capsule from cache
+    if (capsulesCache.data) {
+      if (shouldLog) {
+        console.log('🗑 [CACHE] Updating cache after delete');
+      }
+      
+      capsulesCache.data = capsulesCache.data.filter(c => c.id !== id);
+      capsulesCache.timestamp = Date.now();
+      
+      if (shouldLog) {
+        console.log('✅ [CACHE] Cache updated');
+      }
+    }
   } catch (error) {
-    console.error('[Supabase] Error deleting capsule:', error);
+    // Always log errors
+    console.error('❌ [DELETE] Error deleting capsule:', error);
     
     // Fallback to local storage for guest users
+    if (shouldLog) {
+      console.log('📂 [LOCAL] Attempting local storage fallback for guest mode');
+    }
+    
     const storedCapsules = localStorage.getItem('guestCapsules');
     if (storedCapsules) {
+      if (shouldLog) {
+        console.log('🔎 [LOCAL] Found stored capsules, filtering out deleted capsule');
+      }
+      
       const capsules = JSON.parse(storedCapsules);
       const updatedCapsules = capsules.filter((c: Capsule) => c.id !== id);
       localStorage.setItem('guestCapsules', JSON.stringify(updatedCapsules));
+      
+      if (shouldLog) {
+        console.log('✅ [LOCAL] Successfully updated local storage');
+      }
     }
   }
 };
