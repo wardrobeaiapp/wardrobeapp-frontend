@@ -150,7 +150,7 @@ export const getRiseOptions = (): string[] => {
 // Get neckline options for applicable items
 export const getNecklineOptions = (): string[] => {
   return [
-    'scoop', 'v-neck', 'crew', 'boat', 'square', 'sweetheart', 'halter',
+    'collar','scoop', 'v-neck', 'crew', 'boat', 'square', 'sweetheart', 'halter',
     'one shoulder', 'off shoulder', 'turtleneck', 'mock', 'asymmetric',
     'high neck', 'scoop neck', 'deep v', 'jewel', 'plunge',
     'surplice', 'illusion', 'keyhole', 'portrait',

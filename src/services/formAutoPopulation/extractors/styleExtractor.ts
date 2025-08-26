@@ -642,6 +642,7 @@ export class StyleExtractor {
       'slash': 'slash',
       'straight': 'straight',
       'wrap': 'wrap',
+      'collar': 'collar',
       
       // Cut variations that refer to necklines
       'v cut': 'v-neck',
