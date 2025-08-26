@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
-// Get Supabase client (assuming it exists in context)
-const supabase = createClient(
-  process.env.REACT_APP_SUPABASE_URL || '',
-  process.env.REACT_APP_SUPABASE_ANON_KEY || ''
-);
 
 /**
  * AI Usage Data Interface
@@ -98,7 +93,7 @@ export const saveAIUsageData = async (userId: string, aiUsageData: AIUsageData):
         .update({
           ai_checks_used: aiUsageData.aiChecksUsed
         })
-        .eq('id', existingRecord.id);
+        .eq('id', existingRecord.id as number);
 
       if (updateError) {
         console.error('🤖 AIUsageService - Error updating AI usage data:', updateError);
