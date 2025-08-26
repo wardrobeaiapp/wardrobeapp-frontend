@@ -306,6 +306,22 @@ export class FormAutoPopulationService {
     } else {
       this.logger.debug('[populateStyleFields] Rise field skipped - inSkipFields:', skipFields?.includes(FormField.RISE), 'category:', category);
     }
+    
+    // Neckline (for tops and dresses)
+    if (!skipFields?.includes(FormField.NECKLINE) && [ItemCategory.TOP, ItemCategory.ONE_PIECE].includes(category)) {
+      this.logger.debug('[populateStyleFields] Extracting neckline for category:', category);
+      const neckline = this.styleExtractor.extractNeckline(tags, category);
+      this.logger.debug('[populateStyleFields] Extracted neckline:', neckline);
+      
+      if (neckline && (overwriteExisting || this.shouldUpdateField(FormField.NECKLINE, options))) {
+        this.logger.debug(`[populateStyleFields] Setting neckline to: ${neckline}`);
+        setField(FormField.NECKLINE, neckline);
+      } else {
+        this.logger.debug('[populateStyleFields] Neckline not set - neckline:', neckline, 'category:', category);
+      }
+    } else {
+      this.logger.debug('[populateStyleFields] Neckline field skipped - inSkipFields:', skipFields?.includes(FormField.NECKLINE), 'category:', category);
+    }
   }
 
   /**
@@ -483,6 +499,9 @@ export class FormAutoPopulationService {
           break;
         case FormField.RISE:
           setters.setRise?.(value);
+          break;
+        case FormField.NECKLINE:
+          setters.setNeckline?.(value);
           break;
         case FormField.HEEL_HEIGHT:
           setters.setHeelHeight?.(value);

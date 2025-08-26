@@ -152,10 +152,10 @@ export const getNecklineOptions = (): string[] => {
   return [
     'scoop', 'v-neck', 'crew', 'boat', 'square', 'sweetheart', 'halter',
     'one shoulder', 'off shoulder', 'turtleneck', 'mock', 'asymmetric',
-    'high neck', 'scoop neck', 'deep v', 'jewel', 'plunge', 'scoop neck',
-    'surplice', 'square', 'sweetheart', 'illusion', 'keyhole', 'portrait',
-    'queen anne', 'sabrina', 'scoop neck', 'slash', 'square', 'straight',
-    'sweetheart', 'v-neck', 'wrap'
+    'high neck', 'scoop neck', 'deep v', 'jewel', 'plunge',
+    'surplice', 'illusion', 'keyhole', 'portrait',
+    'queen anne', 'sabrina', 'slash', 'straight', 'wrap',
+    'shoulder straps', 'spaghetti straps'
   ];
 };
 
