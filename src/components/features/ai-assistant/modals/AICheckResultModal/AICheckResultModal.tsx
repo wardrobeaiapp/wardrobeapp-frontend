@@ -14,6 +14,7 @@ interface AICheckResultModalProps {
   analysisResult: string;
   score?: number;
   status?: WishlistStatus;
+  imageUrl?: string;
   onAddToWishlist?: () => void;
   onSkip?: () => void;
   onDecideLater?: () => void;
@@ -25,6 +26,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   analysisResult,
   score,
   status,
+  imageUrl,
   onAddToWishlist,
   onSkip,
   onDecideLater
@@ -74,6 +76,33 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       actions={actions}
       size="md"
     >
+        {imageUrl && (
+          <div style={{ 
+            marginBottom: '16px', 
+            textAlign: 'center',
+            padding: '8px'
+          }}>
+            <img 
+              src={imageUrl} 
+              alt="Analyzed item" 
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '240px', 
+                objectFit: 'contain',
+                borderRadius: '8px',
+                background: `
+                  linear-gradient(45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                  linear-gradient(45deg, transparent 75%, #ccc 75%),
+                  linear-gradient(-45deg, transparent 75%, #ccc 75%)
+                `,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+              }} 
+            />
+          </div>
+        )}
+        
         <AnalysisText>
           {analysisResult}
         </AnalysisText>

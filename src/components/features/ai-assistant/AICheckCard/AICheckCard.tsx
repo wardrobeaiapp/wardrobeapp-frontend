@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaSearch, FaCloudUploadAlt, FaLink } from 'react-icons/fa';
+import { FiScissors } from 'react-icons/fi';
 import {
   AICard,
   CardContent,
@@ -16,7 +17,45 @@ import {
 } from '../../../../pages/AIAssistantPage.styles';
 import Button from '../../../common/Button';
 import { FormField, FormInput } from '../../../common/Form';
+import { useBackgroundRemoval } from '../../../features/wardrobe/forms/WardrobeItemForm/hooks/useBackgroundRemoval';
+import { BackgroundRemovalPreview } from '../../../features/wardrobe/forms/WardrobeItemForm/components/BackgroundRemovalPreview';
+import styled from 'styled-components';
 
+const RemoveBgButton = styled.button`
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: ${props => props.theme.colors.primary};
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  
+  &:hover {
+    background: ${props => props.theme.colors.primaryDark};
+    transform: translateY(-1px);
+  }
+  
+  &:disabled {
+    background: ${props => props.theme.colors.textSecondary};
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
 
 interface AICheckCardProps {
   imageLink: string;
@@ -27,6 +66,9 @@ interface AICheckCardProps {
   isLoading: boolean;
   error: string;
   itemCheckResponse: string | null;
+  isFileUpload?: boolean;
+  uploadedFile?: File | null;
+  onProcessedImageChange?: (processedImageUrl: string, processedImageBlob: Blob) => void;
 }
 
 const AICheckCard: React.FC<AICheckCardProps> = ({
@@ -36,17 +78,91 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
   onCheckItem,
   onOpenWishlistModal,
   isLoading,
+  error,
+  itemCheckResponse,
+  isFileUpload = false,
+  uploadedFile = null,
+  onProcessedImageChange
 }) => {
+  // Use the background removal hook
+  const {
+    isProcessing,
+    processedImage,
+    originalImage,
+    showPreview,
+    isUsingProcessedImage,
+    processImage,
+    useOriginal,
+    useProcessed,
+    closePreview,
+    resetProcessedState
+  } = useBackgroundRemoval({
+    onError: (errorMessage) => {
+      console.error('Background removal error:', errorMessage);
+    },
+    onSuccess: () => {
+      console.log('Background removed successfully');
+    }
+  });
+
+  const handleRemoveBackground = async () => {
+    if (!uploadedFile || !imageLink) return;
+    await processImage(uploadedFile, imageLink);
+  };
+
+  // Handle using processed image
+  const handleUseProcessed = async () => {
+    try {
+      if (processedImage && onProcessedImageChange) {
+        // We need to create setPreviewImage and setImageUrl functions for useProcessed
+        const setPreviewImage = (url: string) => {
+          // This would normally update the form's preview image
+          console.log('Setting preview image:', url);
+        };
+        
+        const setImageUrl = (url: string) => {
+          // This would normally update the form's image URL
+          console.log('Setting image URL:', url);
+        };
+        
+        // Call useProcessed with required functions
+        await useProcessed(setPreviewImage, setImageUrl);
+        
+        // Get the processed image as a blob for the parent component
+        const blob = await fetch(processedImage).then(res => res.blob());
+        if (blob) {
+          onProcessedImageChange(processedImage, blob);
+        }
+      }
+    } catch (error) {
+      console.error('Error using processed image:', error);
+    }
+  };
+
   return (
-    <AICard>
-      <CardContent>
-        <CardHeader>
-          <CardIcon className="check">
-            <FaSearch size={20} />
-          </CardIcon>
-          <div>
-            <CardTitle>AI Check</CardTitle>
-            <CardDescription>
+    <>
+      {/* Background Removal Preview Modal */}
+      {showPreview && processedImage && originalImage && (
+        <BackgroundRemovalPreview
+          isOpen={showPreview}
+          originalImage={originalImage}
+          processedImage={processedImage}
+          onUseOriginal={useOriginal}
+          onUseProcessed={handleUseProcessed}
+          onClose={closePreview}
+          isProcessing={isProcessing}
+        />
+      )}
+      
+      <AICard>
+        <CardContent>
+          <CardHeader>
+            <CardIcon className="check">
+              <FaSearch size={20} />
+            </CardIcon>
+            <div>
+              <CardTitle>AI Check</CardTitle>
+              <CardDescription>
               Get instant feedback on the clothing item you want to buy
             </CardDescription>
           </div>
@@ -59,7 +175,7 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
             {imageLink ? (
               <>
                 <img
-                  src={imageLink}
+                  src={isUsingProcessedImage && processedImage ? processedImage : imageLink}
                   alt="Preview"
                   style={{
                     width: '100%',
@@ -99,6 +215,18 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
                     Change Image
                   </span>
                 </label>
+                
+                {/* Show Remove BG button only for file uploads, not URL images or wishlist items */}
+                {isFileUpload && uploadedFile && !isUsingProcessedImage && (
+                  <RemoveBgButton 
+                    onClick={handleRemoveBackground} 
+                    disabled={isProcessing}
+                    title="Remove background from image"
+                  >
+                    <FiScissors />
+                    {isProcessing ? 'Processing...' : 'Remove BG'}
+                  </RemoveBgButton>
+                )}
               </>
             ) : (
               <>
@@ -145,6 +273,7 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
 
       </CardContent>
     </AICard>
+    </>
   );
 };
 
