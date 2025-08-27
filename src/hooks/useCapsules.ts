@@ -152,21 +152,19 @@ export const useCapsules = () => {
         selectedItems: selectedItemsArray
       };
       
-      // Update local state with the enhanced capsule
+      // Update local state with the enhanced capsule - add to the beginning of the array like outfits
       if (isMounted.current) {
+        // Clear the cached capsules to ensure fresh data
+        lastFetchedCapsules = null;
+        
+        // Update state directly with the new capsule at the beginning of the array
         setCapsules(prevCapsules => {
           // Check if the capsule already exists to avoid duplicates
           const exists = prevCapsules.some(c => c.id === enhancedCapsule.id);
-          return exists ? prevCapsules : [...prevCapsules, enhancedCapsule];
+          return exists ? prevCapsules : [enhancedCapsule, ...prevCapsules];
         });
         
-        // Only dispatch the refresh event after a short delay to ensure
-        // database operations have completed
-        setTimeout(() => {
-          if (isMounted.current) {
-            window.dispatchEvent(new Event('refreshCapsules'));
-          }
-        }, 100);
+        // No need for refresh event - we've already updated the state with complete data
       }
       
       return enhancedCapsule;
@@ -206,21 +204,30 @@ export const useCapsules = () => {
       
       // Update local state
       if (isMounted.current && updatedCapsule) {
+        // Clear the cached capsules to ensure fresh data
+        lastFetchedCapsules = null;
+        
+        // Create enhanced capsule that includes the selectedItems
+        const enhancedCapsule = {
+          ...updatedCapsule,
+          selectedItems: selectedItems || []
+        };
+        
         setCapsules(prevCapsules => {
           const updatedCapsules = prevCapsules.map(capsule => 
             capsule.id === id 
               ? {
                   ...capsule, // Keep existing values as fallback
-                  ...updatedCapsule, // Apply updates
+                  ...enhancedCapsule, // Apply updates with selectedItems included
                   // Ensure required fields are always present
-                  id: updatedCapsule.id || capsule.id,
-                  name: updatedCapsule.name ?? capsule.name,
-                  description: updatedCapsule.description ?? capsule.description,
-                  scenarios: updatedCapsule.scenarios ?? capsule.scenarios ?? [],
-                  seasons: updatedCapsule.seasons ?? capsule.seasons ?? [],
-                  style: updatedCapsule.style ?? capsule.style ?? '',
-                  selectedItems: updatedCapsule.selectedItems ?? capsule.selectedItems ?? [],
-                  dateCreated: updatedCapsule.dateCreated ?? updatedCapsule.date_created ?? capsule.dateCreated
+                  id: enhancedCapsule.id || capsule.id,
+                  name: enhancedCapsule.name ?? capsule.name,
+                  description: enhancedCapsule.description ?? capsule.description,
+                  scenarios: enhancedCapsule.scenarios ?? capsule.scenarios ?? [],
+                  seasons: enhancedCapsule.seasons ?? capsule.seasons ?? [],
+                  style: enhancedCapsule.style ?? capsule.style ?? '',
+                  selectedItems: selectedItems ?? capsule.selectedItems ?? [],
+                  dateCreated: enhancedCapsule.dateCreated ?? enhancedCapsule.date_created ?? capsule.dateCreated
                 }
               : capsule
           );
@@ -230,13 +237,7 @@ export const useCapsules = () => {
           return hasChanges ? updatedCapsules : prevCapsules;
         });
         
-        // Only dispatch the refresh event after a short delay to ensure
-        // database operations have completed
-        setTimeout(() => {
-          if (isMounted.current) {
-            window.dispatchEvent(new Event('refreshCapsules'));
-          }
-        }, 100);
+        // No need for refresh event - we've already updated the state with complete data
       }
       
       return updatedCapsule;
@@ -265,19 +266,16 @@ export const useCapsules = () => {
       
       // Update local state if still mounted
       if (isMounted.current) {
+        // Clear the cached capsules to ensure fresh data
+        lastFetchedCapsules = null;
+        
         setCapsules(prevCapsules => {
           const updatedCapsules = prevCapsules.filter(capsule => capsule.id !== id);
           // Only update if something changed
           return updatedCapsules.length !== prevCapsules.length ? updatedCapsules : prevCapsules;
         });
         
-        // Only dispatch the refresh event after a short delay to ensure
-        // database operations have completed
-        setTimeout(() => {
-          if (isMounted.current) {
-            window.dispatchEvent(new Event('refreshCapsules'));
-          }
-        }, 100);
+        // No need for refresh event - we've already updated the state
       }
     } catch (err) {
       console.error('[useCapsules] Error deleting capsule:', err);
@@ -304,9 +302,8 @@ export const useCapsules = () => {
   }, [loadCapsules]);
   
   const memoizedAddCapsule = useCallback(async (capsuleData: Omit<Capsule, 'id' | 'dateCreated'> & { selectedItems?: string[] }) => {
-    const result = await addCapsule(capsuleData);
-    lastFetchedCapsules = null;
-    return result;
+    // lastFetchedCapsules is already cleared in addCapsule
+    return addCapsule(capsuleData);
   }, [addCapsule]);
   
   const memoizedUpdateCapsuleById = useCallback(async (id: string, updates: Partial<Capsule> & { selectedItems?: string[] }) => {
