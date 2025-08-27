@@ -53,24 +53,30 @@ export const useCapsuleValidation = ({
 
     // Handle selected scenarios
     if (selectedScenarios.length > 0) {
-      // Convert scenario IDs to names for consistent storage
-      scenariosArray = selectedScenarios
-        .map(id => {
-          const scenario = scenarios.find(s => s.id === id);
-          return scenario?.name || id; // Use name if available, otherwise fallback to ID
-        });
+      // Use scenario IDs directly for proper join table insertion
+      // The IDs will be used to link to scenarios in the capsule_scenarios join table
+      scenariosArray = [...selectedScenarios];
     }
 
     // Handle custom scenario if provided
     const trimmedCustomScenario = customScenario.trim();
     if (trimmedCustomScenario) {
-      // Check if the custom scenario is already in the selected scenarios
-      const isCustomScenarioInSelected = scenariosArray.some(
-        name => name.toLowerCase() === trimmedCustomScenario.toLowerCase()
+      // First check if this scenario already exists in the scenarios list (by name)
+      const existingScenario = scenarios.find(
+        s => s.name.toLowerCase() === trimmedCustomScenario.toLowerCase()
       );
       
-      if (!isCustomScenarioInSelected) {
-        scenariosArray.push(trimmedCustomScenario);
+      // Check if the scenario ID is already in our selected scenarios
+      const isScenarioAlreadySelected = existingScenario && 
+        scenariosArray.includes(existingScenario.id);
+      
+      if (existingScenario && !isScenarioAlreadySelected) {
+        // If it exists but isn't selected yet, add its ID
+        scenariosArray.push(existingScenario.id);
+      } else if (!existingScenario) {
+        // If it's a completely new scenario, we would need to create it first
+        // For now we'll just log this as it would require API changes
+        console.warn('Custom scenario handling requires creating a new scenario first:', trimmedCustomScenario);
       }
     }
 
@@ -79,9 +85,17 @@ export const useCapsuleValidation = ({
     if (!capsuleName) {
       // Auto-generate based on seasons and scenarios
       const seasonNames = seasons.join(', ');
-      const scenarioText = scenariosArray.length > 0 
-        ? scenariosArray.join(', ')
+      
+      // Map scenario IDs to names for display purposes
+      const scenarioNames = scenariosArray.map(scenarioId => {
+        const scenario = scenarios.find(s => s.id === scenarioId);
+        return scenario ? scenario.name : 'Unknown';
+      });
+      
+      const scenarioText = scenarioNames.length > 0 
+        ? scenarioNames.join(', ')
         : 'General';
+        
       capsuleName = `${seasonNames} ${scenarioText} Capsule`;
     }
 

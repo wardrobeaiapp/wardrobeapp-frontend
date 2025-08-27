@@ -2,8 +2,14 @@ import { createClient } from '@supabase/supabase-js';
 import { WardrobeItem, Outfit, Capsule } from '../types';
 
 // Supabase configuration
-const supabaseUrl = 'https://gujpqecwdftbwkcnwiup.supabase.co';
-const supabaseKey = process.env.REACT_APP_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+
+// For debugging auth issues
+console.log('🔑 Supabase configuration:', { 
+  urlDefined: !!process.env.REACT_APP_SUPABASE_URL,
+  keyDefined: !!process.env.REACT_APP_SUPABASE_ANON_KEY
+});
 
 // Create Supabase client as a singleton to prevent multiple GoTrueClient instances
 let supabaseInstance: ReturnType<typeof createClient> | null = null;

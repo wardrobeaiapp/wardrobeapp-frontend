@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
@@ -6,6 +6,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { OutfitInfo } from './OutfitDetailModal.styles';
 import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, SmallItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
 import { ItemsSection } from './CapsuleDetailModal.styles';
+import { fetchScenarios } from '../../../../services/api';
 
 
 interface OutfitDetailModalProps {
@@ -29,6 +30,34 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   const outfitItems = items.filter(item => outfit.items.includes(item.id));
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [scenarioNames, setScenarioNames] = useState<string>('');
+  
+  // Fetch scenarios to map IDs to names
+  useEffect(() => {
+    const loadScenarioNames = async () => {
+      if (outfit.scenarios && outfit.scenarios.length > 0) {
+        try {
+          const allScenarios = await fetchScenarios();
+          
+          // Map scenario IDs to names
+          const names = outfit.scenarios.map(scenarioId => {
+            const scenario = allScenarios.find(s => s.id === scenarioId);
+            return scenario ? scenario.name : scenarioId;
+          }).filter(Boolean);
+          
+          setScenarioNames(names.join(', '));
+        } catch (error) {
+          console.error('Error fetching scenario names:', error);
+          // Fallback to showing IDs if fetching fails
+          setScenarioNames(outfit.scenarios.join(', '));
+        }
+      } else {
+        setScenarioNames('No scenarios provided');
+      }
+    };
+    
+    loadScenarioNames();
+  }, [outfit.scenarios]);
 
   const actions: ModalAction[] = [
     {
@@ -61,7 +90,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
           
           <DetailRow>
             <DetailLabel>Scenarios</DetailLabel>
-            <DetailValue>{outfit.scenarios?.join(', ') || 'No scenarios provided'}</DetailValue>
+            <DetailValue>{scenarioNames}</DetailValue>
           </DetailRow>
         </OutfitInfo>
         

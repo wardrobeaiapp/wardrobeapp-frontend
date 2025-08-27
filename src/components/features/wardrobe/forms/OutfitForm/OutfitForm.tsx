@@ -27,8 +27,8 @@ interface OutfitFormProps {
   initialOutfit?: Outfit;
 }
 
-const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onCancel, availableItems, initialOutfit }) => {
-  // Filter out wishlist items from available items
+// Use standard function component pattern instead of React.FC
+function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: OutfitFormProps) {  // Filter out wishlist items from available items
   const nonWishlistItems = useMemo(() => 
     availableItems.filter(item => !item.wishlist), 
     [availableItems]
@@ -47,7 +47,6 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
   const [colorFilter, setColorFilter] = useState<string>('');
   const [seasonFilter, setSeasonFilter] = useState<Season | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [filteredItems, setFilteredItems] = useState<WardrobeItem[]>(nonWishlistItems);
   
   const handleSeasonChange = (season: Season) => {
     setSelectedSeasons(prev => 
@@ -150,8 +149,8 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
     );
   };
   
-  // Apply filters to available items
-  useEffect(() => {
+  // Compute filtered items when needed for the modal
+  const getFilteredItems = () => {
     let filtered = [...nonWishlistItems];
     
     // Apply category filter
@@ -178,11 +177,12 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
       filtered = filtered.filter(item => 
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.brand && item.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (item.material && item.material.toLowerCase().includes(searchQuery.toLowerCase()))      );
+        (item.material && item.material.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
     }
     
-    setFilteredItems(filtered);
-  }, [nonWishlistItems, categoryFilter, colorFilter, seasonFilter, searchQuery]);
+    return filtered;
+  };
   
   // Reset filters when modal opens
   const openItemsModal = () => {
@@ -235,43 +235,7 @@ const OutfitForm: React.FC<OutfitFormProps> = ({ onSubmit, onGenerateWithAI, onC
     onSubmit(newOutfit);
   };
   
-  // Filter items for the modal
-  useEffect(() => {
-    let filtered = [...nonWishlistItems];
-    
-    // Apply category filter
-  if (categoryFilter !== 'all') {
-    filtered = filtered.filter(item => item.category === categoryFilter);
-  }
-  
-  // Apply color filter
-  if (colorFilter) {
-    filtered = filtered.filter(item => 
-      item.color.toLowerCase().includes(colorFilter.toLowerCase())
-    );
-  }
-  
-  // Apply season filter
-  if (seasonFilter !== 'all') {
-    filtered = filtered.filter(item => 
-      item.season.includes(seasonFilter)
-    );
-  }
-  
-  // Apply search query
-  if (searchQuery) {
-    filtered = filtered.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.brand && item.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (item.material && item.material.toLowerCase().includes(searchQuery.toLowerCase()))  
-    );
-  }
-  
-  setFilteredItems(filtered);
-}, [nonWishlistItems, categoryFilter, colorFilter, seasonFilter, searchQuery]);
-
-
-// handleSubmit is already defined above
+  // handleSubmit is already defined above
 
 return (
   <form onSubmit={handleSubmit}>
@@ -316,7 +280,7 @@ return (
           <OutfitItemsSelectionModal
             isOpen={isItemsModalOpen}
             onClose={() => setIsItemsModalOpen(false)}
-            availableItems={nonWishlistItems}
+            availableItems={getFilteredItems()}
             selectedItems={selectedItems}
             searchQuery={searchQuery}
             categoryFilter={categoryFilter}

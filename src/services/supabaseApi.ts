@@ -486,15 +486,25 @@ async function fetchCapsulesFromDB(): Promise<Capsule[]> {
       return [];
     }
 
-    // Get all capsule IDs to fetch their items in a single query
+    // Get all capsule IDs to fetch their items and scenarios in a single query
     const capsuleIds = data.map(capsule => capsule.id);
     
     // Fetch all capsule items in a single query
     const capsuleItemsMap: Record<string, string[]> = {};
+    // Create a map to store scenarios for each capsule
+    const capsuleScenariosMap: Record<string, string[]> = {};
+    
     if (capsuleIds.length > 0) {
+      // Fetch all capsule items
       const { data: capsuleItems, error: capsuleItemsError } = await supabase
         .from('capsule_items')
         .select('capsule_id, item_id')
+        .in('capsule_id', capsuleIds);
+        
+      // Fetch all capsule scenarios from the join table
+      const { data: capsuleScenarios, error: capsuleScenariosError } = await supabase
+        .from('capsule_scenarios')
+        .select('capsule_id, scenario_id')
         .in('capsule_id', capsuleIds);
 
       if (capsuleItems) {
@@ -510,6 +520,29 @@ async function fetchCapsulesFromDB(): Promise<Capsule[]> {
       } else if (capsuleItemsError) {
         // Always log errors
         console.error('❌ [DATABASE] Error fetching capsule items:', capsuleItemsError);
+      }
+      
+      // Process scenarios from join table
+      if (capsuleScenarios) {
+        // Create a map of capsule_id to array of scenario_ids
+        capsuleScenarios.forEach((scenarioItem) => {
+          const capsuleId = String(scenarioItem.capsule_id);
+          const scenarioId = String(scenarioItem.scenario_id);
+          if (!capsuleScenariosMap[capsuleId]) {
+            capsuleScenariosMap[capsuleId] = [];
+          }
+          capsuleScenariosMap[capsuleId].push(scenarioId);
+        });
+        
+        if (shouldLog) {
+          console.log('🔎 [DATABASE] Fetched scenarios from join table:', { 
+            scenariosCount: capsuleScenarios.length,
+            capsulesWithScenarios: Object.keys(capsuleScenariosMap).length
+          });
+        }
+      } else if (capsuleScenariosError) {
+        // Always log errors
+        console.error('❌ [DATABASE] Error fetching capsule scenarios:', capsuleScenariosError);
       }
     }
     
@@ -532,7 +565,8 @@ async function fetchCapsulesFromDB(): Promise<Capsule[]> {
         description: getString(capsule.description),
         style: getString(capsule.style),
         seasons: getArray<Season>(capsule.seasons),
-        scenarios: getArray<string>(capsule.scenarios),
+        // Use scenarios from the join table map, falling back to the old array column during migration period
+        scenarios: getArray<string>(capsuleScenariosMap[capsule.id] || capsule.scenarios),
         selectedItems: getArray<string>(capsuleItemsMap[capsule.id] || capsule.selected_items),
         mainItemId: getString(capsule.main_item_id) || undefined,
         dateCreated: getString(capsule.date_created || capsule.created_at, new Date().toISOString())
@@ -672,12 +706,15 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       description: typeof capsule.description === 'string' ? capsule.description : '',
       style: typeof capsule.style === 'string' ? capsule.style : '',
       seasons: Array.isArray(capsule.seasons) ? capsule.seasons : [],
-      scenarios: Array.isArray(capsule.scenarios) ? capsule.scenarios : [],
+      // scenarios field removed as we'll use the join table
       main_item_id: capsule.mainItemId || null,
       selected_items: Array.isArray(capsule.selectedItems) ? capsule.selectedItems : [],
       user_id: user?.id || 'guest',
       date_created: new Date().toISOString()
     };
+    
+    // Extract scenarios from capsule for later use in join table
+    const scenarios = Array.isArray(capsule.scenarios) ? capsule.scenarios : [];
     
     if (shouldLog) {
       console.log('💾 [CREATE] Prepared capsule data for insertion');
@@ -708,6 +745,30 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
     
     if (shouldLog) {
       console.log('✅ [DATABASE] Capsule created successfully:', { id: data?.id });
+    }
+    
+    // If there are scenarios, add them to the capsule_scenarios join table
+    if (scenarios.length > 0) {
+      if (shouldLog) {
+        console.log('🔗 [CREATE] Adding scenarios to capsule:', { scenarioCount: scenarios.length });
+      }
+      
+      const scenarioRecords = scenarios.map(scenarioId => ({
+        capsule_id: data.id,
+        scenario_id: scenarioId,
+        user_id: user?.id || 'guest'
+      }));
+      
+      // Insert into the join table
+      const { error: scenarioJoinError } = await supabase
+        .from('capsule_scenarios')
+        .upsert(scenarioRecords, { onConflict: 'capsule_id,scenario_id' });
+      
+      if (scenarioJoinError) {
+        console.error('❌ [DATABASE] Error linking scenarios to capsule:', scenarioJoinError);
+      } else if (shouldLog) {
+        console.log('✅ [DATABASE] Successfully linked scenarios to capsule:', { count: scenarioRecords.length, capsuleId: data.id });
+      }
     }
     
     // If there are selected items, add them to the capsule_items join table
@@ -758,7 +819,7 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       description: typeof dbResponse.description === 'string' ? dbResponse.description : '',
       style: typeof dbResponse.style === 'string' ? dbResponse.style : '',
       seasons: Array.isArray(dbResponse.seasons) ? dbResponse.seasons : [],
-      scenarios: Array.isArray(dbResponse.scenarios) ? dbResponse.scenarios : [],
+      scenarios: scenarios, // Use the scenarios from input instead of from the database
       selectedItems: Array.isArray(dbResponse.selected_items) ? dbResponse.selected_items : [],
       mainItemId: dbResponse.main_item_id || undefined,
       dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
@@ -827,8 +888,8 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
       console.error('❌ [AUTH] Authentication error:', error);
     }
     
-    // Extract items from the capsule object if present
-    const { selectedItems, ...capsuleWithoutItems } = updates;
+    // Extract items and scenarios from the capsule object if present
+    const { selectedItems, scenarios, ...capsuleWithoutItems } = updates;
     
     // Prepare the update data with proper null handling
     const updateData: Record<string, any> = {};
@@ -843,7 +904,7 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
     if ('description' in capsuleWithoutItems) updateData.description = getStringOrUndefined(capsuleWithoutItems.description) || '';
     if ('style' in capsuleWithoutItems) updateData.style = getStringOrUndefined(capsuleWithoutItems.style) || '';
     if ('seasons' in capsuleWithoutItems) updateData.seasons = Array.isArray(capsuleWithoutItems.seasons) ? capsuleWithoutItems.seasons : [];
-    if ('scenarios' in capsuleWithoutItems) updateData.scenarios = Array.isArray(capsuleWithoutItems.scenarios) ? capsuleWithoutItems.scenarios : [];
+    // Removed scenarios field as we'll use the join table instead
     if ('mainItemId' in capsuleWithoutItems) updateData.main_item_id = getStringOrUndefined(capsuleWithoutItems.mainItemId) || null;
     
     // Always update the updated_at timestamp
@@ -873,6 +934,60 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
     
     if (shouldLog) {
       console.log('✅ [DATABASE] Capsule updated successfully:', { id });
+    }
+    
+    // If scenarios were provided, update the capsule_scenarios join table
+    if (scenarios) {
+      if (shouldLog) {
+        console.log('🔗 [UPDATE] Updating capsule scenarios', { scenarioCount: scenarios.length });
+      }
+      
+      // First, delete all existing scenarios for this capsule
+      if (shouldLog) {
+        console.log('🔎 [DATABASE] Removing existing scenarios from capsule');
+      }
+      
+      const { error: deleteScenarioError } = await supabase
+        .from('capsule_scenarios')
+        .delete()
+        .eq('capsule_id', id);
+        
+      if (deleteScenarioError) {
+        // Always log database errors
+        console.error('❌ [DATABASE] Error removing existing scenarios from capsule:', deleteScenarioError);
+        throw deleteScenarioError;
+      }
+      
+      if (shouldLog) {
+        console.log('✅ [DATABASE] Successfully removed existing scenarios');
+      }
+      
+      // Then add the new scenarios if there are any
+      if (scenarios.length > 0) {
+        const scenarioRecords = scenarios.map(scenarioId => ({
+          capsule_id: id,
+          scenario_id: scenarioId,
+          user_id: user?.id || 'guest'
+        }));
+        
+        if (shouldLog) {
+          console.log('🔎 [DATABASE] Adding scenarios to capsule:', { count: scenarioRecords.length });
+        }
+        
+        const { error: insertScenarioError } = await supabase
+          .from('capsule_scenarios')
+          .insert(scenarioRecords);
+          
+        if (insertScenarioError) {
+          // Always log database errors
+          console.error('❌ [DATABASE] Error adding scenarios to capsule:', insertScenarioError);
+          throw insertScenarioError;
+        }
+        
+        if (shouldLog) {
+          console.log('✅ [DATABASE] Successfully added scenarios to capsule');
+        }
+      }
     }
     
     // If selectedItems was provided, update the capsule_items join table
@@ -954,7 +1069,8 @@ export const updateCapsule = async (id: string, updates: Partial<Capsule>): Prom
       description: typeof dbResponse.description === 'string' ? dbResponse.description : '',
       style: typeof dbResponse.style === 'string' ? dbResponse.style : '',
       seasons: Array.isArray(dbResponse.seasons) ? dbResponse.seasons : [],
-      scenarios: Array.isArray(dbResponse.scenarios) ? dbResponse.scenarios : [],
+      // If scenarios were provided in the update, use those; otherwise keep existing ones
+      scenarios: scenarios || (Array.isArray(dbResponse.scenarios) ? dbResponse.scenarios : []),
       selectedItems: Array.isArray(dbResponse.selected_items) ? dbResponse.selected_items : [],
       mainItemId: dbResponse.main_item_id || undefined,
       dateCreated: dbResponse.date_created || dbResponse.created_at || new Date().toISOString()
