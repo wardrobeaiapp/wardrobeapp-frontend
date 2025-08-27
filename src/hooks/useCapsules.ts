@@ -145,19 +145,31 @@ export const useCapsules = () => {
         if (!isMounted.current) return null;
       }
       
-      // Update local state with the new capsule
+      // Create an enhanced capsule object that includes selectedItems
+      const enhancedCapsule = {
+        ...newCapsule,
+        // Add the selectedItems to the capsule object so it shows up immediately in the UI
+        selectedItems: selectedItemsArray
+      };
+      
+      // Update local state with the enhanced capsule
       if (isMounted.current) {
         setCapsules(prevCapsules => {
           // Check if the capsule already exists to avoid duplicates
-          const exists = prevCapsules.some(c => c.id === newCapsule.id);
-          return exists ? prevCapsules : [...prevCapsules, newCapsule];
+          const exists = prevCapsules.some(c => c.id === enhancedCapsule.id);
+          return exists ? prevCapsules : [...prevCapsules, enhancedCapsule];
         });
         
-        // Dispatch event to refresh capsules in other components
-        window.dispatchEvent(new Event('refreshCapsules'));
+        // Only dispatch the refresh event after a short delay to ensure
+        // database operations have completed
+        setTimeout(() => {
+          if (isMounted.current) {
+            window.dispatchEvent(new Event('refreshCapsules'));
+          }
+        }, 100);
       }
       
-      return newCapsule;
+      return enhancedCapsule;
     } catch (err) {
       console.error('[useCapsules] Error adding capsule:', err);
       if (isMounted.current) {
@@ -218,8 +230,13 @@ export const useCapsules = () => {
           return hasChanges ? updatedCapsules : prevCapsules;
         });
         
-        // Dispatch event to refresh capsules in other components
-        window.dispatchEvent(new Event('refreshCapsules'));
+        // Only dispatch the refresh event after a short delay to ensure
+        // database operations have completed
+        setTimeout(() => {
+          if (isMounted.current) {
+            window.dispatchEvent(new Event('refreshCapsules'));
+          }
+        }, 100);
       }
       
       return updatedCapsule;
@@ -254,8 +271,13 @@ export const useCapsules = () => {
           return updatedCapsules.length !== prevCapsules.length ? updatedCapsules : prevCapsules;
         });
         
-        // Dispatch event to refresh capsules in other components
-        window.dispatchEvent(new Event('refreshCapsules'));
+        // Only dispatch the refresh event after a short delay to ensure
+        // database operations have completed
+        setTimeout(() => {
+          if (isMounted.current) {
+            window.dispatchEvent(new Event('refreshCapsules'));
+          }
+        }, 100);
       }
     } catch (err) {
       console.error('[useCapsules] Error deleting capsule:', err);

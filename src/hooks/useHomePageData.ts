@@ -226,7 +226,9 @@ export const useHomePageData = () => {
   
   const handleDeleteOutfit = useCallback((id: string) => {
     deleteOutfit(id);
-  }, [deleteOutfit]);
+    setIsViewOutfitModalOpen(false);
+    setSelectedOutfit(null);
+  }, [deleteOutfit, setIsViewOutfitModalOpen, setSelectedOutfit]);
   
   const handleViewCapsule = useCallback((capsule: Capsule) => {
     setSelectedCapsule(capsule);
@@ -318,7 +320,11 @@ export const useHomePageData = () => {
       };
       
       // Add the capsule and wait for it to complete
-      const newCapsule = await addCapsule(capsuleData);
+      const newCapsule = await addCapsule({
+        ...capsuleData,
+        // Make sure the selectedItems are correctly passed through the entire flow
+        selectedItems: data.selectedItems || []
+      });
       
       if (!newCapsule) {
         throw new Error('Failed to create capsule');
@@ -327,9 +333,10 @@ export const useHomePageData = () => {
       // Close the modal
       setIsAddCapsuleModalOpen(false);
       
-      // Force a refresh of the capsules list
-      // This ensures the UI is in sync with the database
-      window.dispatchEvent(new CustomEvent('refreshCapsules'));
+      // No need to dispatch refreshCapsules event here
+      // The addCapsule function already dispatches this event
+      // Dispatching it twice can cause a race condition where the second fetch
+      // happens before the capsule-items relationships are fully established
       
       return newCapsule;
     } catch (error) {
