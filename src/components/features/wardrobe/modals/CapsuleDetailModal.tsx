@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { fetchScenarios } from '../../../../services/api';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {
@@ -73,6 +74,42 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
   
   // Get scenarios array, defaulting to an empty array if not present
   const scenarios = capsule.scenarios || [];
+
+  // State for storing scenario names
+  const [scenarioNames, setScenarioNames] = useState<string>('Not specified');
+  
+  // Fetch scenarios to map IDs to names
+  useEffect(() => {
+    // Store scenarios in a local variable to use inside the effect
+    // This prevents dependency on the scenarios variable that might change on every render
+    const currentScenarios = [...scenarios];
+    
+    const loadScenarioNames = async () => {
+      if (currentScenarios && currentScenarios.length > 0) {
+        try {
+          const allScenarios = await fetchScenarios();
+          
+          // Map scenario IDs to names
+          const names = currentScenarios.map(scenarioId => {
+            const scenario = allScenarios.find(s => s.id === scenarioId);
+            return scenario ? scenario.name : scenarioId;
+          }).filter(Boolean);
+          
+          if (names.length > 0) {
+            setScenarioNames(names.join(', '));
+          }
+        } catch (error) {
+          console.error('Error fetching scenario names:', error);
+          // Fallback to showing IDs if fetching fails
+          setScenarioNames(currentScenarios.join(', '));
+        }
+      }
+    };
+    
+    loadScenarioNames();
+    // Empty dependency array prevents re-running on every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   // Find the main item
   const mainItemId = capsule.mainItemId || capsule.main_item_id;
@@ -109,11 +146,7 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
         <CapsuleInfo>
           <DetailRow>
             <DetailLabel>Scenarios:</DetailLabel>
-            <DetailValue>
-              {scenarios.length > 0 
-                ? scenarios.join(', ')
-                : 'Not specified'}
-            </DetailValue>
+            <DetailValue>{scenarioNames}</DetailValue>
           </DetailRow>
           
           <DetailRow>

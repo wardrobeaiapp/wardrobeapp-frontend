@@ -19,6 +19,13 @@ export const CollectionName = styled.h3`
   font-size: 1.1rem;
   font-weight: ${theme.typography.fontWeight.semiBold};
   color: ${theme.colors.text};
+  height: 2.7rem; /* Fixed height to accommodate up to 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Limit to 2 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
 `;
 
 export const CollectionDetail = styled.p`
