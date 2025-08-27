@@ -22,6 +22,8 @@ const AIAssistantPage: React.FC = () => {
   // State for AI Check
   const [imageLink, setImageLink] = useState('');
   const [itemCheckResponse, setItemCheckResponse] = useState<string | null>(null);
+  const [isFileUpload, setIsFileUpload] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   // State for Wishlist Selection Modal
   const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
@@ -364,12 +366,27 @@ const AIAssistantPage: React.FC = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Handle file upload - placeholder for now
       console.log('File uploaded:', file.name);
-      // TODO: Implement actual file upload to server/cloud storage
-      // For now, we could create a local URL for preview
+      // Create a local URL for preview
       const url = URL.createObjectURL(file);
       setImageLink(url);
+      setIsFileUpload(true);
+      setUploadedFile(file);
+    }
+  };
+
+  // Handle processed image from background removal
+  const handleProcessedImageChange = (processedImageUrl: string, processedImageBlob: Blob) => {
+    console.log('Processed image received from background removal');
+    // Update the image link to the processed image URL
+    setImageLink(processedImageUrl);
+    
+    // Create a new File object from the blob for potential API uploads
+    if (uploadedFile) {
+      const processedFile = new File([processedImageBlob], uploadedFile.name, {
+        type: processedImageBlob.type || uploadedFile.type
+      });
+      setUploadedFile(processedFile);
     }
   };
 
@@ -606,6 +623,9 @@ const AIAssistantPage: React.FC = () => {
                 isLoading={isCheckLoading}
                 error={error}
                 itemCheckResponse={itemCheckResponse}
+                isFileUpload={isFileUpload}
+                uploadedFile={uploadedFile}
+                onProcessedImageChange={handleProcessedImageChange}
               />
               
               <AIRecommendationCard
@@ -647,6 +667,7 @@ const AIAssistantPage: React.FC = () => {
           analysisResult={itemCheckResponse || ''}
           score={itemCheckScore}
           status={itemCheckStatus}
+          imageUrl={imageLink}
           onAddToWishlist={handleAddToWishlist}
           onSkip={handleSkipItem}
           onDecideLater={handleDecideLater}
