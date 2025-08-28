@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { WishlistStatus, WardrobeItem, UserActionStatus } from '../types';
+import { WardrobeItem, WishlistStatus, UserActionStatus } from '../types';
+import { DetectedTags } from '../services/formAutoPopulation/types';
+import { detectImageTags } from '../services/ximilarService';
 import { useWardrobe } from '../context/WardrobeContext';
 import { getScenarioNamesForFilters } from '../utils/scenarioUtils';
 import PageHeader from '../components/layout/Header/Header';
@@ -46,6 +48,9 @@ const AIAssistantPage: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [isCheckLoading, setIsCheckLoading] = useState<boolean>(false);
   const [isRecommendationLoading, setIsRecommendationLoading] = useState<boolean>(false);
+  
+  // State for extracted tags
+  const [extractedTags, setExtractedTags] = useState<DetectedTags | null>(null);
   
   // Season and Scenario state for AI Recommendation
   const [selectedSeason, setSelectedSeason] = useState<string>('all');
@@ -299,33 +304,186 @@ const AIAssistantPage: React.FC = () => {
     setItemCheckResponse(null);
     setItemCheckScore(undefined);
     setItemCheckStatus(undefined);
+    setExtractedTags(null);
 
     try {
-      // This would be a real API call to Claude
-      // const result = await claudeService.checkItem(imageLink);
-      // Mock response for now
-      setTimeout(() => {
-        const analysisResult = `This item appears to be a versatile piece that would work well in your wardrobe. It can be paired with several items you already own and would be suitable for both casual and semi-formal occasions. The quality seems good based on the image, and it should last for multiple seasons with proper care.`;
-        
-        // Generate realistic score (6-10 range for positive items)
-        const mockScore = Math.floor(Math.random() * 5) + 6; // 6-10
-        
-        // Generate realistic status based on score
-        let mockStatus: WishlistStatus;
-        if (mockScore >= 8) {
-          mockStatus = WishlistStatus.APPROVED;
-        } else if (mockScore >= 7) {
-          mockStatus = Math.random() > 0.5 ? WishlistStatus.APPROVED : WishlistStatus.POTENTIAL_ISSUE;
-        } else {
-          mockStatus = WishlistStatus.POTENTIAL_ISSUE;
+      setIsCheckLoading(true);
+      setError('');
+      
+      // Define an async function to perform the check
+      const performCheck = async () => {
+        try {
+          // Generate a mock analysis result
+          const analysisResult = `This item appears to be a ${Math.random() > 0.5 ? 'casual' : 'formal'} piece that would fit well in your wardrobe. The color and style are versatile and can be paired with multiple items you already own.`;
+          
+          // Generate a mock score between 6.0 and 10.0
+          const mockScore = Math.floor(Math.random() * 41 + 60) / 10; // 6.0 to 10.0
+          
+          // Set a mock status based on the score
+          let mockStatus: WishlistStatus = WishlistStatus.APPROVED;
+          if (mockScore >= 9) {
+            mockStatus = WishlistStatus.APPROVED;
+          } else if (mockScore < 7) {
+            mockStatus = WishlistStatus.POTENTIAL_ISSUE;
+          }
+          
+          // Extract real tags using the ximilarService
+          try {
+            // First fetch and convert the image to base64 to avoid URL access errors
+            const fetchImageAsBase64 = async (url: string): Promise<string> => {
+              try {
+                // First try with direct fetch
+                try {
+                  const response = await fetch(url, { mode: 'cors' });
+                  if (response.ok) {
+                    // Convert to blob
+                    const blob = await response.blob();
+                    return new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => resolve(reader.result as string);
+                      reader.onerror = reject;
+                      reader.readAsDataURL(blob);
+                    });
+                  }
+                } catch (error) {
+                  console.log('[AIAssistantPage] Direct fetch failed, trying proxy:', error);
+                }
+                
+                // If direct fetch fails, try using the imageProxyService
+                console.log('[AIAssistantPage] Using imageProxyService as fallback');
+                const { fetchImageSafely } = await import('../services/imageProxyService');
+                const { blob } = await fetchImageSafely(url);
+                
+                // Convert to blob
+                
+                // Convert blob to base64
+                return new Promise((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(blob);
+                });
+              } catch (error) {
+                console.error('Error fetching image as base64:', error);
+                throw error;
+              }
+            };
+            
+            // Convert image URL to base64 first
+            console.log('[AIAssistantPage] Converting image to base64 before sending to Ximilar');
+            const base64Image = await fetchImageAsBase64(imageLink);
+            console.log('[AIAssistantPage] Image converted to base64 successfully');
+            
+            // Now use the base64 image for tag detection instead of the URL
+            console.log('[AIAssistantPage] Sending base64 image to Ximilar API');
+            
+            // Use extractTopTags approach from useImageHandling for consistent tag extraction
+            try {
+              // Get the tag response
+              const tagResponse = await detectImageTags(base64Image);
+              console.log('[AIAssistantPage] Raw ximilar tag response:', tagResponse);
+              
+              // Use the extractTopTags helper function for consistent tag extraction
+              const { extractTopTags } = await import('../services/ximilarService');
+              const topTags = extractTopTags(tagResponse);
+              console.log('[AIAssistantPage] Extracted top tags:', topTags);
+              
+              // Convert to DetectedTags format
+              const detectedTags: DetectedTags = {};
+              
+              // Map extracted tags to our DetectedTags format (consistent with WardrobeItemForm)
+              Object.entries(topTags).forEach(([key, value]) => {
+                // Map known keys to our format
+                switch(key) {
+                  case 'category':
+                    detectedTags.category = value;
+                    break;
+                  case 'subcategory':
+                    detectedTags.subcategory = value;
+                    break;
+                  case 'color':
+                    detectedTags.color = value;
+                    break;
+                  case 'pattern':
+                    detectedTags.pattern = value;
+                    break;
+                  case 'material':
+                    detectedTags.material = value;
+                    break;
+                  case 'brand':
+                    detectedTags.brand = value;
+                    break;
+                  case 'style':
+                    detectedTags.style = value;
+                    break;
+                  case 'sleeve_length':
+                    detectedTags.sleeve = value;
+                    break;
+                  case 'neckline':
+                    detectedTags.neckline = value;
+                    break;
+                  default:
+                    // For any other tags, add them as-is
+                    detectedTags[key] = value;
+                    break;
+                }
+              });
+              
+              // Add a description based on the collected tags
+              const descriptionParts = [];
+              if (detectedTags.color) descriptionParts.push(detectedTags.color);
+              if (detectedTags.material) descriptionParts.push(detectedTags.material);
+              if (detectedTags.sleeve) descriptionParts.push(detectedTags.sleeve);
+              if (detectedTags.neckline) descriptionParts.push(detectedTags.neckline);
+              if (detectedTags.subcategory) descriptionParts.push(detectedTags.subcategory);
+              
+              if (descriptionParts.length > 0) {
+                detectedTags.description = descriptionParts.join(' ');
+              }
+              
+              // Log the extracted tags
+              console.log('[AIAssistantPage] Final processed tags:', detectedTags);
+              
+              // Store the extracted tags for potential use in the form
+              setExtractedTags(detectedTags);
+            } catch (error) {
+              console.error('[AIAssistantPage] Error detecting or processing tags:', error);
+              // Create a minimal tag object with fallback values instead of empty object
+              const fallbackTags: DetectedTags = {
+                category: 'Unknown',
+                description: 'Item details could not be detected'
+              };
+              console.log('[AIAssistantPage] Using fallback tags:', fallbackTags);
+              setExtractedTags(fallbackTags);
+            }
+          } catch (tagError) {
+            console.error('[AIAssistantPage] Error in tag extraction process:', tagError);
+            // Use consistent fallback tags here too
+            const fallbackTags: DetectedTags = {
+              category: 'Unknown',
+              description: 'Item details could not be detected'
+            };
+            console.log('[AIAssistantPage] Using fallback tags after error:', fallbackTags);
+            setExtractedTags(fallbackTags);
+          }
+          
+          setItemCheckResponse(analysisResult);
+          setItemCheckScore(mockScore);
+          setItemCheckStatus(mockStatus);
+          setIsCheckResultModalOpen(true);
+        } catch (checkError) {
+          console.error('Error in check process:', checkError);
+          setError('An error occurred while processing this item. Please try again.');
+        } finally {
+          setIsCheckLoading(false);
         }
-        
-        setItemCheckResponse(analysisResult);
-        setItemCheckScore(mockScore);
-        setItemCheckStatus(mockStatus);
-        setIsCheckLoading(false);
-        setIsCheckResultModalOpen(true);
+      };
+      
+      // Simulate a delay and then perform the check
+      setTimeout(() => {
+        performCheck();
       }, 1500);
+      
     } catch (err) {
       setError('An error occurred while checking this item. Please try again.');
       console.error('Error checking item:', err);
@@ -668,6 +826,7 @@ const AIAssistantPage: React.FC = () => {
           score={itemCheckScore}
           status={itemCheckStatus}
           imageUrl={imageLink}
+          extractedTags={extractedTags}
           onAddToWishlist={handleAddToWishlist}
           onSkip={handleSkipItem}
           onDecideLater={handleDecideLater}

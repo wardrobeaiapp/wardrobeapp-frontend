@@ -48,7 +48,7 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
     setIsUsingProcessedImage(false);
   };
 
-  const useProcessed = async (
+  const applyProcessedImage = async (
     setPreviewImage: (url: string) => void, 
     setImageUrl: (url: string) => void, 
     setSelectedFile?: (file: File | null) => void
@@ -121,7 +121,7 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
     isUsingProcessedImage,
     processImage,
     useOriginal,
-    useProcessed,
+    applyProcessedImage,
     closePreview,
     resetProcessedState
   };

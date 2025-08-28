@@ -115,7 +115,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   };
 
   const handleUseProcessed = async () => {
-    await backgroundRemoval.useProcessed(
+    await backgroundRemoval.applyProcessedImage(
       setPreviewImage,
       formState.setImageUrl,
       setSelectedFile

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FaSearch, FaCloudUploadAlt, FaLink } from 'react-icons/fa';
 import { FiScissors } from 'react-icons/fi';
+import { fetchImageSafely } from '../../../../services/imageProxyService';
 import {
   AICard,
   CardContent,
@@ -93,9 +94,8 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
     isUsingProcessedImage,
     processImage,
     useOriginal,
-    useProcessed,
+    applyProcessedImage,
     closePreview,
-    resetProcessedState
   } = useBackgroundRemoval({
     onError: (errorMessage) => {
       console.error('Background removal error:', errorMessage);
@@ -125,13 +125,34 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
           console.log('Setting image URL:', url);
         };
         
-        // Call useProcessed with required functions
-        await useProcessed(setPreviewImage, setImageUrl);
+        // Call applyProcessedImage with required functions
+        await applyProcessedImage(setPreviewImage, setImageUrl);
         
-        // Get the processed image as a blob for the parent component
-        const blob = await fetch(processedImage).then(res => res.blob());
-        if (blob) {
-          onProcessedImageChange(processedImage, blob);
+        // Get the processed image using the proxy service to avoid CORS issues
+        try {
+          console.log('Fetching processed image via proxy service...');
+          const { blob } = await fetchImageSafely(processedImage);
+          
+          // Create a local blob URL for the image
+          const blobUrl = URL.createObjectURL(blob);
+          console.log('Created local blob URL:', blobUrl);
+          
+          // Pass the processed image to the parent component
+          onProcessedImageChange(blobUrl, blob);
+          
+        } catch (proxyError) {
+          console.error('Failed to fetch image via proxy, falling back to direct URL:', proxyError);
+          // Fallback: try to use the processed image URL directly (may cause CORS issues)
+          const blob = await fetch(processedImage).then(res => res.blob()).catch(err => {
+            console.error('Direct fetch also failed:', err);
+            return null;
+          });
+          
+          if (blob) {
+            onProcessedImageChange(processedImage, blob);
+          } else {
+            throw new Error('Could not fetch processed image');
+          }
         }
       }
     } catch (error) {
