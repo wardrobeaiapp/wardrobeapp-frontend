@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
 import { Modal, ModalAction } from '../../../../common/Modal';
@@ -7,6 +7,7 @@ import {
 } from '../../../wardrobe/modals/ItemViewModal.styles';
 import { AnalysisText } from './AICheckResultModal.styles';
 import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
+import { DetectedTags } from '../../../../../services/formAutoPopulation';
 
 interface AICheckResultModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface AICheckResultModalProps {
   score?: number;
   status?: WishlistStatus;
   imageUrl?: string;
+  extractedTags?: DetectedTags | null;
   onAddToWishlist?: () => void;
   onSkip?: () => void;
   onDecideLater?: () => void;
@@ -27,10 +29,18 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   score,
   status,
   imageUrl,
+  extractedTags,
   onAddToWishlist,
   onSkip,
   onDecideLater
 }) => {
+  // Log all detected tags to console whenever they change
+  useEffect(() => {
+    if (extractedTags) {
+      console.log('[AICheckResultModal] All detected tags:', extractedTags);
+    }
+  }, [extractedTags]);
+
   const handleAddToWishlist = () => {
     onAddToWishlist?.();
     onClose();
@@ -90,12 +100,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                 maxHeight: '240px', 
                 objectFit: 'contain',
                 borderRadius: '8px',
-                background: `
-                  linear-gradient(45deg, #ccc 25%, transparent 25%),
-                  linear-gradient(-45deg, #ccc 25%, transparent 25%),
-                  linear-gradient(45deg, transparent 75%, #ccc 75%),
-                  linear-gradient(-45deg, transparent 75%, #ccc 75%)
-                `,
+                background: '#f3f4f6',
                 backgroundSize: '20px 20px',
                 backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
               }} 
@@ -125,6 +130,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
               </DetailValue>
             </DetailRow>
           )}
+          
         </ItemDetails>
     </Modal>
   );
