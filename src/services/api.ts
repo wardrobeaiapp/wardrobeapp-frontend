@@ -8,8 +8,8 @@ import {
   checkOutfitsTableExists
 } from './outfitService';
 
-// API base URL - using absolute URL with port 5000 where the server is running
-const API_URL = 'http://localhost:5000/api';
+// API base URL - using relative path to leverage proxy configuration
+const API_URL = '/api';
 
 // Get auth headers for fetch requests
 const getAuthHeaders = (): HeadersInit => {

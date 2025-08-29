@@ -69,7 +69,9 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
     // Handle relative URLs from the server
     if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
       const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-      const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      // Use relative path for API URLs to leverage proxy in development
+      // and absolute paths in production
+      const apiBaseUrl = process.env.REACT_APP_API_URL || '';
       const baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
       return `${baseUrl}${normalizedUrl}`;
     }

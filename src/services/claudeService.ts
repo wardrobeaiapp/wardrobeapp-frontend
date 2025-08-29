@@ -57,8 +57,8 @@ const generateMockAnalysis = (detectedTags?: DetectedTags) => {
   };
 };
 
-// Backend API URL
-const API_URL = 'http://localhost:3000/api';
+// Backend API URL - use relative path to leverage proxy configuration
+const API_URL = '/api';
 // Anthropic API URL
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
