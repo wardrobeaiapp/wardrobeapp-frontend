@@ -39,6 +39,24 @@ Instead, it will copy all the configuration files and the transitive dependencie
 
 You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
+## Environment Variables
+
+This project uses environment variables for configuration. To set these up:
+
+1. Copy `.env.example` to `.env` in the root directory
+2. Copy `server/.env.example` to `server/.env` for server configuration
+3. Replace placeholder values with your actual API keys and configuration
+
+**Important:** Never commit `.env` files containing real API keys to the repository. These files are excluded in `.gitignore`.
+
+### Required Environment Variables
+
+#### Frontend (.env)
+- `REACT_APP_ANTHROPIC_API_KEY`: API key for Anthropic services
+
+#### Server (server/.env)
+- `ANTHROPIC_API_KEY`: API key for server-side Anthropic services
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
