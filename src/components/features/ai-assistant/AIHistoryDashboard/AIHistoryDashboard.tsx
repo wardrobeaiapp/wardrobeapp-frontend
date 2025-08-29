@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaSearch, FaMagic, FaTshirt } from 'react-icons/fa';
-import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../types';
+import { UserActionStatus } from '../../../../types';
+import { AIHistoryItem } from '../../../../types/ai';
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
 import { PageHeader } from '../../../../components/common/Typography/PageHeader';
 import { FormField, FormSelect } from '../../../common/Form';
+import { ActivityType, CheckStatus } from '../../../../hooks/useAIHistory';
 import {
   DashboardContainer,
   DashboardTopBar,
@@ -20,10 +22,10 @@ import {
 } from '../../../../pages/AIAssistantPage.styles';
 
 interface AIHistoryDashboardProps {
-  activityFilter: string;
-  onFilterChange: (value: string) => void;
-  checkStatusFilter: string;
-  onCheckStatusFilterChange: (value: string) => void;
+  activityFilter: ActivityType;
+  onFilterChange: (value: ActivityType) => void;
+  checkStatusFilter: CheckStatus;
+  onCheckStatusFilterChange: (value: CheckStatus) => void;
   userActionFilter: string;
   onUserActionFilterChange: (value: string) => void;
   filteredHistoryItems: AIHistoryItem[];
@@ -76,12 +78,12 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
             <FormSelect
               id="activity-filter"
               value={activityFilter}
-              onChange={(e) => onFilterChange(e.target.value)}
-              size="medium"
+              onChange={(e) => onFilterChange(e.target.value as ActivityType)}
+              aria-label="Filter by activity type"
             >
-              <option value="all">Show All</option>
+              <option value="all">All Activities</option>
               <option value="check">AI Checks</option>
-              <option value="recommendation">AI Recommendations</option>
+              <option value="recommendation">Recommendations</option>
             </FormSelect>
           </FormField>
           
@@ -89,13 +91,13 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
             <FormSelect
               id="status-filter"
               value={checkStatusFilter}
-              onChange={(e) => onCheckStatusFilterChange(e.target.value)}
-              size="medium"
+              onChange={(e) => onCheckStatusFilterChange(e.target.value as CheckStatus)}
+              aria-label="Filter by check status"
             >
-              <option value="all">All Status</option>
-              <option value={WishlistStatus.APPROVED}>Approved</option>
-              <option value={WishlistStatus.POTENTIAL_ISSUE}>Potential Issue</option>
-              <option value={WishlistStatus.NOT_REVIEWED}>Not Reviewed</option>
+              <option value="all">All Statuses</option>
+              <option value="approved">Approved</option>
+              <option value="potential_issue">Potential Issues</option>
+              <option value="not_reviewed">Not Reviewed</option>
             </FormSelect>
           </FormField>
           

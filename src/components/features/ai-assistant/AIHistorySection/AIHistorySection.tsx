@@ -1,5 +1,5 @@
 import React from 'react';
-import { AIHistoryItem as AIHistoryItemType } from '../../../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../../../types/ai';
 import AIHistoryItem from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
 import { MdArrowForward } from 'react-icons/md';

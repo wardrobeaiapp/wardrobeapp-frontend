@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaSearch, FaMagic, FaClipboardList, FaStar } from 'react-icons/fa';
-import { AIHistoryItem as AIHistoryItemType } from '../../../../types';
+import { AIHistoryItem as AIHistoryItemType } from '../../../../types/ai';
 import {
   CardIcon,
   HistoryContent,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaStar } from 'react-icons/fa';
-import { AIHistoryItem, WishlistStatus, UserActionStatus } from '../../../../../types';
+import { WishlistStatus, UserActionStatus } from '../../../../../types';
+import { AIHistoryItem } from '../../../../../types/ai';
 import { Modal, ModalAction } from '../../../../common/Modal';
 import { ItemDetails } from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
@@ -132,7 +133,7 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
               </DetailRow>
             )}
 
-            {item.status && (
+            {item.type === 'check' && item.status && (
               <DetailRow>
                 <DetailLabel>Analysis Status</DetailLabel>
                 <DetailValue>{getStatusDisplay(item.status)}</DetailValue>
