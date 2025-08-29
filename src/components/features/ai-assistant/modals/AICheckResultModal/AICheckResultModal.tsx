@@ -20,6 +20,8 @@ interface AICheckResultModalProps {
   onAddToWishlist?: () => void;
   onSkip?: () => void;
   onDecideLater?: () => void;
+  error?: string; // Error type from Claude API
+  errorDetails?: string; // Detailed error message
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -32,7 +34,9 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   extractedTags,
   onAddToWishlist,
   onSkip,
-  onDecideLater
+  onDecideLater,
+  error,
+  errorDetails
 }) => {
   // Log all detected tags to console whenever they change
   useEffect(() => {
@@ -113,6 +117,26 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
         </AnalysisText>
         
         <ItemDetails>
+          {/* Show error information if present */}
+          {error && (
+            <DetailRow>
+              <DetailLabel style={{ color: '#e11d48' }}>Error:</DetailLabel>
+              <DetailValue style={{ color: '#e11d48' }}>
+                {error.replace(/_/g, ' ')}
+              </DetailValue>
+            </DetailRow>
+          )}
+          
+          {/* Show error details if present */}
+          {errorDetails && (
+            <DetailRow>
+              <DetailLabel style={{ color: '#e11d48' }}>Details:</DetailLabel>
+              <DetailValue style={{ color: '#e11d48', fontSize: '0.9rem' }}>
+                {errorDetails}
+              </DetailValue>
+            </DetailRow>
+          )}
+          
           {score !== undefined && (
             <DetailRow>
               <DetailLabel>Score:</DetailLabel>
@@ -122,6 +146,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
               </DetailValue>
             </DetailRow>
           )}
+          
           {status && (
             <DetailRow>
               <DetailLabel>Status:</DetailLabel>

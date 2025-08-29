@@ -44,45 +44,6 @@ const PreviewImage = styled.img`
   background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 `;
 
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-top: 20px;
-  
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
-`;
-
-const ActionButton = styled.button<{ $variant: 'primary' | 'secondary' }>`
-  padding: 10px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 120px;
-  
-  ${(props: any) => props.variant === 'primary' ? `
-    background: ${props.theme.colors.primary};
-    color: white;
-    border: none;
-    
-    &:hover {
-      background: ${props.theme.colors.primaryDark};
-    }
-  ` : `
-    background: transparent;
-    color: ${props.theme.colors.textPrimary};
-    border: 1px solid ${props.theme.colors.border};
-    
-    &:hover {
-      background: ${props.theme.colors.backgroundSecondary};
-    }
-  `}
-`;
-
 const InfoText = styled.p`
   text-align: center;
   color: ${props => props.theme.colors.textSecondary};

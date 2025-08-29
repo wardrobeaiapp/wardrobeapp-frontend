@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WardrobeItem, WishlistStatus, UserActionStatus } from '../types';
 import { DetectedTags } from '../services/formAutoPopulation/types';
 import { detectImageTags } from '../services/ximilarService';
+import { claudeService } from '../services/claudeService';
 import { useWardrobe } from '../context/WardrobeContext';
 import { getScenarioNamesForFilters } from '../utils/scenarioUtils';
 import PageHeader from '../components/layout/Header/Header';
@@ -35,6 +36,10 @@ const AIAssistantPage: React.FC = () => {
   const [itemCheckScore, setItemCheckScore] = useState<number | undefined>(undefined);
   const [itemCheckStatus, setItemCheckStatus] = useState<WishlistStatus | undefined>(undefined);
   
+  // States for error information from Claude API
+  const [errorType, setErrorType] = useState<string>('');
+  const [errorDetails, setErrorDetails] = useState<string>('');
+
   // State for Recommendation Modal
   const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
   const [recommendationText, setRecommendationText] = useState('');
@@ -313,66 +318,162 @@ const AIAssistantPage: React.FC = () => {
       // Define an async function to perform the check
       const performCheck = async () => {
         try {
-          // Generate a mock analysis result
-          const analysisResult = `This item appears to be a ${Math.random() > 0.5 ? 'casual' : 'formal'} piece that would fit well in your wardrobe. The color and style are versatile and can be paired with multiple items you already own.`;
+          // Will store our analysis result from Claude
+          let analysisResult = '';
+          let score = 0;
+          let status: WishlistStatus = WishlistStatus.NOT_REVIEWED;
+          let base64Image = ''; // Store the base64 image data for use throughout the function
           
-          // Generate a mock score between 6.0 and 10.0
-          const mockScore = Math.floor(Math.random() * 41 + 60) / 10; // 6.0 to 10.0
-          
-          // Set a mock status based on the score
-          let mockStatus: WishlistStatus = WishlistStatus.APPROVED;
-          if (mockScore >= 9) {
-            mockStatus = WishlistStatus.APPROVED;
-          } else if (mockScore < 7) {
-            mockStatus = WishlistStatus.POTENTIAL_ISSUE;
-          }
+          // First we'll extract tags from the image using Ximilar API
+          let detectedTags: DetectedTags | null = null;
           
           // Extract real tags using the ximilarService
           try {
             // First fetch and convert the image to base64 to avoid URL access errors
-            const fetchImageAsBase64 = async (url: string): Promise<string> => {
+            const fetchImageAsBase64 = async (url: string) => {
               try {
-                // First try with direct fetch
-                try {
-                  const response = await fetch(url, { mode: 'cors' });
-                  if (response.ok) {
-                    // Convert to blob
-                    const blob = await response.blob();
+                // Validate URL before attempting to fetch
+                if (!url || !url.match(/^(http|https|data|blob):/i)) {
+                  throw new Error(`Invalid image URL format: ${url}`);
+                }
+
+                // Special handling for data URLs (already base64)
+                if (url.startsWith('data:')) {
+                  console.log('[AIAssistantPage] URL is already a data URL, returning as-is');
+                  return url;
+                }
+
+                // Special handling for blob URLs - fetch them directly without proxy
+                if (url.startsWith('blob:')) {
+                  console.log('[AIAssistantPage] Processing blob URL:', url);
+                  console.log('[AIAssistantPage] Blob URL details - origin:', new URL(url).origin, 'pathname:', new URL(url).pathname);
+                  try {
+                    console.log('[AIAssistantPage] Attempting to fetch blob URL directly');
+                    const response = await fetch(url);
+                    
+                    // Log response details for debugging
+                    console.log('[AIAssistantPage] Blob fetch response status:', response.status);
+                    console.log('[AIAssistantPage] Blob fetch response headers:', JSON.stringify(Array.from(response.headers.entries())));
+                    
+                    if (!response.ok) {
+                      throw new Error(`Blob URL fetch failed with status: ${response.status}`);
+                    }
+                    
+                    const blobData = await response.blob();
+                    console.log('[AIAssistantPage] Blob URL fetch successful, size:', blobData.size);
+                    
+                    if (blobData.size === 0) {
+                      throw new Error('Fetched blob has zero size');
+                    }
+                    
+                    // Convert blob to base64
                     return new Promise((resolve, reject) => {
                       const reader = new FileReader();
-                      reader.onload = () => resolve(reader.result as string);
-                      reader.onerror = reject;
-                      reader.readAsDataURL(blob);
+                      reader.onload = () => {
+                        const result = reader.result as string;
+                        console.log('[AIAssistantPage] Blob to base64 conversion successful, length:', result.length);
+                        resolve(result);
+                      };
+                      reader.onerror = (e) => {
+                        console.error('[AIAssistantPage] FileReader error for blob URL:', e);
+                        reject(new Error('Failed to convert blob URL to base64'));
+                      };
+                      reader.readAsDataURL(blobData);
                     });
+                  } catch (error: any) {
+                    console.error('[AIAssistantPage] Error processing blob URL:', error);
+                    throw new Error(`Failed to process blob URL: ${error?.message || 'Unknown error'}`);
+                  }
+                }
+
+                let blob: Blob;
+                
+                // First try with direct fetch
+                try {
+                  console.log('[AIAssistantPage] Attempting direct fetch of image');
+                  const response = await fetch(url, { 
+                    mode: 'cors',
+                    headers: {
+                      'Accept': 'image/*'
+                    }
+                  });
+                  
+                  if (!response.ok) {
+                    throw new Error(`Direct fetch failed with status: ${response.status}`);
+                  }
+                  
+                  // Get content type to verify it's an image
+                  const contentType = response.headers.get('Content-Type');
+                  if (!contentType || !contentType.startsWith('image/')) {
+                    throw new Error(`URL did not return an image: ${contentType}`);
+                  }
+                  
+                  blob = await response.blob();
+                  console.log('[AIAssistantPage] Direct fetch successful, blob size:', blob.size);
+                  
+                  // Verify blob has content
+                  if (blob.size === 0) {
+                    throw new Error('Fetched image has zero size');
                   }
                 } catch (error) {
                   console.log('[AIAssistantPage] Direct fetch failed, trying proxy:', error);
+                  
+                  // If direct fetch fails, try using the imageProxyService
+                  console.log('[AIAssistantPage] Using imageProxyService as fallback');
+                  const { fetchImageSafely } = await import('../services/imageProxyService');
+                  const result = await fetchImageSafely(url);
+                  
+                  if (!result || !result.blob) {
+                    throw new Error('Image proxy service returned no data');
+                  }
+                  
+                  blob = result.blob;
+                  console.log('[AIAssistantPage] Proxy fetch successful, blob size:', blob.size);
+                  
+                  // Verify blob has content
+                  if (blob.size === 0) {
+                    throw new Error('Proxied image has zero size');
+                  }
                 }
-                
-                // If direct fetch fails, try using the imageProxyService
-                console.log('[AIAssistantPage] Using imageProxyService as fallback');
-                const { fetchImageSafely } = await import('../services/imageProxyService');
-                const { blob } = await fetchImageSafely(url);
-                
-                // Convert to blob
                 
                 // Convert blob to base64
                 return new Promise((resolve, reject) => {
                   const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
+                  reader.onload = () => {
+                    const result = reader.result as string;
+                    console.log('[AIAssistantPage] Base64 conversion successful, length:', result.length);
+                    resolve(result);
+                  };
+                  reader.onerror = (e) => {
+                    console.error('[AIAssistantPage] FileReader error:', e);
+                    reject(new Error('Failed to convert image to base64'));
+                  };
                   reader.readAsDataURL(blob);
                 });
               } catch (error) {
-                console.error('Error fetching image as base64:', error);
+                console.error('[AIAssistantPage] Error fetching image as base64:', error);
                 throw error;
               }
             };
             
+            // Validate imageLink before attempting to fetch
+            if (!imageLink || typeof imageLink !== 'string' || !imageLink.trim()) {
+              console.error('[AIAssistantPage] Invalid image URL:', imageLink);
+              throw new Error('Invalid image URL. Please check the image source.');
+            }
+            
             // Convert image URL to base64 first
-            console.log('[AIAssistantPage] Converting image to base64 before sending to Ximilar');
-            const base64Image = await fetchImageAsBase64(imageLink);
-            console.log('[AIAssistantPage] Image converted to base64 successfully');
+            console.log('[AIAssistantPage] Converting image to base64 before sending to Ximilar:', imageLink);
+            base64Image = await fetchImageAsBase64(imageLink) as string;
+            
+            // Check if base64Image has adequate data
+            if (!base64Image || typeof base64Image !== 'string' || base64Image.length < 100) {
+              console.error('[AIAssistantPage] Converted base64 image is too small or invalid:', 
+                typeof base64Image === 'string' ? `Length: ${base64Image.length}` : 'not a string');
+              throw new Error('Image conversion failed or produced invalid data.');
+            }
+            
+            console.log('[AIAssistantPage] Image converted to base64 successfully. Length:', base64Image.length);
             
             // Now use the base64 image for tag detection instead of the URL
             console.log('[AIAssistantPage] Sending base64 image to Ximilar API');
@@ -455,6 +556,7 @@ const AIAssistantPage: React.FC = () => {
               };
               console.log('[AIAssistantPage] Using fallback tags:', fallbackTags);
               setExtractedTags(fallbackTags);
+              detectedTags = fallbackTags;
             }
           } catch (tagError) {
             console.error('[AIAssistantPage] Error in tag extraction process:', tagError);
@@ -465,11 +567,56 @@ const AIAssistantPage: React.FC = () => {
             };
             console.log('[AIAssistantPage] Using fallback tags after error:', fallbackTags);
             setExtractedTags(fallbackTags);
+            detectedTags = fallbackTags;
           }
-          
+            
+          // Reset error information state
+          setErrorType('');
+          setErrorDetails('');
+            
+          try {
+            console.log('[AIAssistantPage] Calling Claude API for wardrobe item analysis');
+              
+            // Call Claude API to analyze the image with the base64 data, not the URL
+            const claudeResult = await claudeService.analyzeWardrobeItem(base64Image, detectedTags || undefined);
+              
+            // Check if there's an error from Claude service
+            if (claudeResult.error) {
+              console.warn('[AIAssistantPage] Claude service returned error:', claudeResult.error, claudeResult.details);
+              setErrorType(claudeResult.error);
+              setErrorDetails(claudeResult.details || 'No additional details provided');
+              analysisResult = 'We encountered an issue analyzing this item. See details below.';
+              score = 5.0;
+              status = WishlistStatus.POTENTIAL_ISSUE;
+            } else {
+              // Extract analysis, score and determine status
+              analysisResult = claudeResult.analysis + '\n\n' + claudeResult.feedback;
+              score = claudeResult.score;
+                
+              // Set status based on score - binary outcome (either APPROVED or POTENTIAL_ISSUE)
+              if (score >= 7) {
+                status = WishlistStatus.APPROVED;
+              } else {
+                status = WishlistStatus.POTENTIAL_ISSUE;
+              }
+                
+              console.log('[AIAssistantPage] Claude analysis complete:', { analysisResult, score, status });
+            }
+          } catch (claudeError: any) {
+            console.error('[AIAssistantPage] Error calling Claude API:', claudeError);
+            analysisResult = 'We were unable to analyze this item properly. Please try again or try with a different image.';
+            score = 5.0;
+            status = WishlistStatus.POTENTIAL_ISSUE;
+              
+            // Extract error information if available
+            setErrorType(claudeError.error || 'unknown_error');
+            setErrorDetails(claudeError.details || claudeError.message || 'An unexpected error occurred');
+          }
+            
+          // Update state with Claude's response and any error information
           setItemCheckResponse(analysisResult);
-          setItemCheckScore(mockScore);
-          setItemCheckStatus(mockStatus);
+          setItemCheckScore(score);
+          setItemCheckStatus(status);
           setIsCheckResultModalOpen(true);
         } catch (checkError) {
           console.error('Error in check process:', checkError);
@@ -828,6 +975,8 @@ const AIAssistantPage: React.FC = () => {
           imageUrl={imageLink}
           extractedTags={extractedTags}
           onAddToWishlist={handleAddToWishlist}
+          error={errorType}
+          errorDetails={errorDetails}
           onSkip={handleSkipItem}
           onDecideLater={handleDecideLater}
         />

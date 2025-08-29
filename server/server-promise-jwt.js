@@ -86,6 +86,10 @@ global.bcrypt = {
 // Initialize Anthropic client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
+  defaultHeaders: {
+    'anthropic-version': '2023-06-01',
+    'Content-Type': 'application/json'
+  }
 });
 
 // Custom auth middleware for in-memory user store
@@ -393,6 +397,118 @@ app.delete('/api/wardrobe-items/:id', auth, async (req, res) => {
   }
 });
 
+// Analyze wardrobe item with Claude
+app.post('/api/analyze-wardrobe-item', async (req, res) => {
+  try {
+    const { imageBase64, detectedTags } = req.body;
+
+    if (!imageBase64) {
+      return res.status(400).json({ error: 'Image data is required' });
+    }
+
+    // Extract base64 data without prefix if present and ensure it's properly formatted
+    let base64Data = imageBase64;
+    
+    // Handle data URI format (e.g., data:image/jpeg;base64,/9j/4AAQ...)
+    if (base64Data.startsWith('data:')) {
+      const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        base64Data = matches[2];
+      } else {
+        return res.status(400).json({ 
+          error: 'Invalid image data format', 
+          details: 'The provided image data is not in a valid base64 format',
+          analysis: 'Error analyzing image. Please try again later.',
+          score: 5.0,
+          feedback: 'Could not process the image analysis.'
+        });
+      }
+    }
+    
+    // Ensure we have enough data to process (at least 100 chars for a tiny image)
+    if (base64Data.length < 100) {
+      return res.status(400).json({ 
+        error: 'Insufficient image data', 
+        details: 'The provided image data is too small to be a valid image',
+        analysis: 'Error analyzing image. The image data appears to be incomplete.',
+        score: 5.0,
+        feedback: 'Please provide a complete image.'
+      });
+    }
+
+    // Build a prompt for Claude
+    let systemPrompt = "You are a fashion expert and personal stylist analyzing wardrobe items. ";
+    systemPrompt += "Provide a comprehensive analysis of this clothing item or outfit including: ";
+    systemPrompt += "(1) What type of item it is, (2) Its style characteristics, ";
+    systemPrompt += "(3) Color analysis and how versatile it is, (4) Quality assessment based on visible details, ";
+    systemPrompt += "(5) Styling recommendations and what it pairs well with, ";
+    systemPrompt += "(6) Appropriate occasions or seasons to wear it.";
+    
+    if (detectedTags) {
+      systemPrompt += "\n\nHere are tags that were automatically detected in the image: " + JSON.stringify(detectedTags);
+    }
+    
+    systemPrompt += "\n\nProvide a score from 1-10 on how versatile and valuable this item is for a wardrobe. ";
+    systemPrompt += "Format your response with three sections: ANALYSIS, SCORE, and FEEDBACK. ";
+    systemPrompt += "Keep your total response under 300 words.";
+
+    // Call Claude API
+    const response = await anthropic.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 1024,
+      temperature: 0.7,
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: base64Data
+              }
+            },
+            {
+              type: "text",
+              text: "Please analyze this wardrobe item."
+            }
+          ]
+        }
+      ]
+    });
+
+    const content = response.content[0].text;
+    
+    // Parse the response to extract analysis, score, and feedback
+    const analysisMatch = content.match(/ANALYSIS:\s*([\s\S]*?)(?=SCORE:|$)/i);
+    const scoreMatch = content.match(/SCORE:\s*([\d.]+)/i);
+    const feedbackMatch = content.match(/FEEDBACK:\s*([\s\S]*?)(?=$)/i);
+
+    const analysis = analysisMatch ? analysisMatch[1].trim() : content;
+    const scoreText = scoreMatch ? scoreMatch[1] : "7.5";
+    const score = parseFloat(scoreText);
+    const feedback = feedbackMatch ? feedbackMatch[1].trim() : "";
+
+    // Return structured response
+    res.json({
+      analysis,
+      score: isNaN(score) ? 7.5 : score,
+      feedback
+    });
+  } catch (err) {
+    console.error("Error analyzing wardrobe item:", err);
+    res.status(500).json({ 
+      error: "Error analyzing wardrobe item", 
+      details: err.message,
+      analysis: 'Error analyzing image. Please try again later.',
+      score: 5.0,
+      feedback: 'Could not process the image analysis.'
+    });
+  }
+});
+
 // Outfit Suggestions
 app.post('/api/outfit-suggestions', auth, async (req, res) => {
   try {
@@ -451,8 +567,8 @@ app.post('/api/outfit-suggestions', auth, async (req, res) => {
   }
 });
 
-// Catch-all route for debugging
-app.use('*', (req, res) => {
-  console.log('Catch-all route hit:', req.originalUrl);
+// Simple 404 handler for undefined routes
+app.use((req, res) => {
+  console.log('Route not found:', req.originalUrl);
   res.status(404).json({ message: 'Route not found' });
 });
