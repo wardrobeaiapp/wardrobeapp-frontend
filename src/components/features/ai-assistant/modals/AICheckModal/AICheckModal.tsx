@@ -1,10 +1,21 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import styled from 'styled-components';
-import { Season, ItemCategory } from '../../../../../types';
-import { DetectedTags } from '../../../../../services/formAutoPopulation';
-import { Modal } from '../../../../common/Modal';
-import { FormField, FormSelect, CheckboxGroup } from '../../../../common/Form';
-import { getSubcategoryOptions, formatCategoryName } from '../../../../features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import styled from "styled-components";
+import { Season, ItemCategory } from "../../../../../types";
+import {
+  DetectedTags,
+  FormAutoPopulationService,
+} from "../../../../../services/formAutoPopulation";
+import { FormField } from "../../../../../services/formAutoPopulation/types";
+import { Modal } from "../../../../common/Modal";
+import {
+  FormField as FormFieldComponent,
+  FormSelect,
+  CheckboxGroup,
+} from "../../../../common/Form";
+import {
+  getSubcategoryOptions,
+  formatCategoryName,
+} from "../../../../features/wardrobe/forms/WardrobeItemForm/utils/formHelpers";
 
 // Styled components
 const AICheckModalContainer = styled.div`
@@ -38,44 +49,54 @@ const AICheckModalContainer = styled.div`
   }
 `;
 
-
 interface AICheckModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onApply: (data: { category: string; subcategory: string; seasons: string[] }) => void;
+  onApply: (data: {
+    category: string;
+    subcategory: string;
+    seasons: string[];
+  }) => void;
   imageUrl: string;
   onFetchTags?: (imageUrl: string) => Promise<DetectedTags | null>;
 }
 
 // Get all category options from ItemCategory enum
-const categories = Object.values(ItemCategory).map(category => ({
+const categories = Object.values(ItemCategory).map((category) => ({
   value: category,
-  label: formatCategoryName(category)
+  label: formatCategoryName(category),
 }));
 
 // Get subcategory options based on selected category
-const getSubcategorySelectOptions = (category: ItemCategory | '') => {
+const getSubcategorySelectOptions = (category: ItemCategory | "") => {
   if (!category) return [];
   const subcategories = getSubcategoryOptions(category);
-  return subcategories.map(subcategory => ({
-    value: subcategory.toUpperCase().replace(/\s+/g, '_'),
-    label: subcategory
+  return subcategories.map((subcategory) => ({
+    value: subcategory.toUpperCase().replace(/\s+/g, "_"),
+    label: subcategory,
   }));
 };
 
-const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, imageUrl, onFetchTags }) => {
+const AICheckModal: React.FC<AICheckModalProps> = ({
+  isOpen,
+  onClose,
+  onApply,
+  imageUrl,
+  onFetchTags,
+}) => {
   // We'll use the tags directly without storing them in state
-  const [category, setCategory] = useState('');
-  const [subcategory, setSubcategory] = useState('');
+  const [category, setCategory] = useState("");
+  const [subcategory, setSubcategory] = useState("");
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
   const hasFetchedRef = useRef(false);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCategory(e.target.value);
-    setSubcategory(''); // Reset subcategory when category changes
+    setSubcategory(""); // Reset subcategory when category changes
   };
 
   const handleSubcategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    console.log('[AICheckModal] Setting subcategory manually to:', e.target.value);
     setSubcategory(e.target.value);
   };
 
@@ -90,29 +111,7 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
     onClose();
   };
 
-  // Process category from tags and set it if valid
-  const processCategory = useCallback((tags: DetectedTags) => {
-    if (tags.category && typeof tags.category === 'string' && !category) {
-      const mappedCategory = tags.category.toUpperCase();
-      if (Object.values(ItemCategory).includes(mappedCategory as ItemCategory)) {
-        setCategory(mappedCategory);
-      }
-    }
-  }, [category]);
-
-  // Process seasons from tags and set them if valid
-  const processSeasons = useCallback((tags: DetectedTags) => {
-    if (tags.seasons && Array.isArray(tags.seasons) && tags.seasons.length > 0 && selectedSeasons.length === 0) {
-      const mappedSeasons = tags.seasons
-        .filter((s): s is string => typeof s === 'string')
-        .map(s => s.toUpperCase());
-      const validSeasons = mappedSeasons.filter(s => 
-        Object.values(Season).includes(s as Season));
-      if (validSeasons.length > 0) {
-        setSelectedSeasons(validSeasons);
-      }
-    }
-  }, [selectedSeasons]);
+  // We're using FormAutoPopulationService.autoPopulateFromTags instead of manual processing
 
   // Fetch tags from image when modal opens
   useEffect(() => {
@@ -121,23 +120,71 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
       // Only fetch if modal is open, we have an image URL, onFetchTags exists, and we haven't already fetched
       if (isOpen && imageUrl && onFetchTags && !hasFetchedRef.current) {
         try {
-          console.log('[AICheckModal] Fetching tags for image...');
+          console.log("[AICheckModal] Fetching tags for image...");
           hasFetchedRef.current = true; // Mark as fetched to prevent repeated calls
-          
+
           const tags = await onFetchTags(imageUrl);
           if (tags) {
-            console.log('[AICheckModal] Extracted tags:', tags);
-            
-            // Process tags to auto-select category and seasons
-            processCategory(tags);
-            processSeasons(tags);
+            console.log("[AICheckModal] Extracted tags:", tags);
+            console.log("[AICheckModal] Checking for category/subcategory tags:", 
+              Object.entries(tags).filter(([k]) => k.toLowerCase().includes('category') || k.toLowerCase().includes('type')));
+
+            // Use the static method exactly as in WardrobeItemForm
+            await FormAutoPopulationService.autoPopulateFromTags(
+              tags,
+              {
+                // Only provide the setters we need in AICheckModal
+                setCategory: setCategory,
+                // Convert subcategory value to uppercase with underscores to match the select options format
+                setSubcategory: (value) => {
+                  if (!value) return;
+                  console.log('[AICheckModal] Received subcategory from service:', value);
+                  const formattedValue = value.toUpperCase().replace(/\s+/g, '_');
+                  console.log('[AICheckModal] Formatted subcategory for select:', formattedValue);
+                  setSubcategory(formattedValue);
+                },
+                // For seasons we need a toggleSeason function that works with CheckboxGroup
+                toggleSeason: (season) => {
+                  setSelectedSeasons(prev => {
+                    if (prev.includes(season)) {
+                      return prev.filter(s => s !== season);
+                    } else {
+                      return [...prev, season];
+                    }
+                  });
+                }
+              },
+              {
+                overwriteExisting: false,
+                debug: true,
+                // Skip fields that don't exist in AICheckModal to avoid log spam
+                skipFields: [
+                  FormField.NAME,
+                  FormField.COLOR,
+                  FormField.PATTERN,
+                  FormField.MATERIAL,
+                  FormField.BRAND,
+                  FormField.SIZE,
+                  FormField.STYLE,
+                  FormField.SILHOUETTE,
+                  FormField.LENGTH,
+                  FormField.SLEEVES,
+                  FormField.RISE,
+                  FormField.NECKLINE,
+                  FormField.HEEL_HEIGHT,
+                  FormField.BOOT_HEIGHT,
+                  FormField.TYPE
+                  // Note: We're NOT skipping SUBCATEGORY, so it can be auto-populated
+                ]
+              }
+            );
           }
         } catch (error) {
-          console.error('[AICheckModal] Error fetching tags:', error);
+          console.error("[AICheckModal] Error fetching tags:", error);
         }
       }
     };
-    
+
     // Run fetch logic when modal opens
     if (isOpen) {
       fetchAndProcessTags();
@@ -148,9 +195,11 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
 
     // Including all dependencies to satisfy ESLint
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, imageUrl, onFetchTags, processCategory, processSeasons]);
+  }, [isOpen, imageUrl, onFetchTags]);
 
-  const filteredSubcategories = getSubcategorySelectOptions(category as ItemCategory);
+  const filteredSubcategories = getSubcategorySelectOptions(
+    category as ItemCategory,
+  );
 
   return (
     <Modal
@@ -159,8 +208,18 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
       title="AI Check Settings"
       size="md"
       actions={[
-        { label: 'Cancel', onClick: onClose, variant: 'secondary', fullWidth: true },
-        { label: 'Apply', onClick: handleApply, variant: 'primary', fullWidth: true },
+        {
+          label: "Cancel",
+          onClick: onClose,
+          variant: "secondary",
+          fullWidth: true,
+        },
+        {
+          label: "Apply",
+          onClick: handleApply,
+          variant: "primary",
+          fullWidth: true,
+        },
       ]}
     >
       <AICheckModalContainer>
@@ -172,12 +231,18 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
           )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <FormField label="Category">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "1rem",
+          }}
+        >
+          <FormFieldComponent label="Category">
             <FormSelect
               value={category}
               onChange={handleCategoryChange}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             >
               <option value="">Select category</option>
               {categories.map((cat) => {
@@ -190,17 +255,17 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
                 );
               })}
             </FormSelect>
-          </FormField>
+          </FormFieldComponent>
 
-          <FormField label="Subcategory">
+          <FormFieldComponent label="Subcategory">
             <FormSelect
               value={subcategory}
               onChange={handleSubcategoryChange}
               disabled={!category}
-              style={{ width: '100%' }}
+              style={{ width: "100%" }}
             >
               <option value="">
-                {category ? 'Select subcategory' : 'Select category'}
+                {category ? "Select subcategory" : "Select category"}
               </option>
               {filteredSubcategories.map((sub) => (
                 <option key={sub.value} value={sub.value}>
@@ -208,22 +273,26 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
                 </option>
               ))}
             </FormSelect>
-          </FormField>
+          </FormFieldComponent>
         </div>
 
-        <FormField label="Seasons">
+        <FormFieldComponent label="Seasons">
           <CheckboxGroup
             options={(Object.values(Season) as string[])
-              .filter(season => season !== 'ALL_SEASON')
-              .map(season => ({
+              .filter((season) => season !== "ALL_SEASON")
+              .map((season) => ({
                 value: season,
-                label: season === 'FALL' ? 'Fall' : season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()
+                label:
+                  season === "FALL"
+                    ? "Fall"
+                    : season.charAt(0).toUpperCase() +
+                      season.slice(1).toLowerCase(),
               }))}
             value={selectedSeasons}
             onChange={setSelectedSeasons}
             direction="row"
           />
-        </FormField>
+        </FormFieldComponent>
       </AICheckModalContainer>
     </Modal>
   );

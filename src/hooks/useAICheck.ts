@@ -3,6 +3,7 @@ import { claudeService } from '../services/claudeService';
 import { DetectedTags } from '../services/formAutoPopulation/types';
 import { WishlistStatus } from '../types';
 import axios from 'axios';
+import { detectImageTags, extractTopTags } from '../services/ximilarService';
 
 export const useAICheck = () => {
   const [imageLink, setImageLink] = useState('');
@@ -126,58 +127,69 @@ export const useAICheck = () => {
     setErrorDetails('');
   };
 
-  // Function to fetch tags from Ximilar API for an image
+  // Function to fetch tags from Ximilar API for an image - uses the same service as WardrobeItemForm
   const fetchTags = async (imageUrl: string): Promise<DetectedTags | null> => {
     try {
       console.log('[useAICheck] Fetching tags for image from Ximilar API');
       setIsLoading(true); // Show loading state while fetching tags
       setError(''); // Clear any previous errors
       
-      let base64Image = '';
+      let processedImageUrl = imageUrl;
 
-      // Process the image URL to get base64 data
-      if (imageUrl.startsWith('data:image')) {
-        // Already a data URL, extract base64 part
-        base64Image = imageUrl.split(',')[1] || imageUrl;
-      } else if (imageUrl.startsWith('blob:')) {
+      // Process the image URL to get appropriate format for the API
+      console.log('[useAICheck] Processing image URL type:', imageUrl.startsWith('data:') ? 'already base64' : imageUrl.startsWith('blob:') ? 'blob URL' : 'regular URL');
+      
+      if (imageUrl.startsWith('blob:')) {
         // Convert blob URL to base64
         try {
+          console.log('[useAICheck] Converting blob URL to base64');
           const response = await fetch(imageUrl);
           const blob = await response.blob();
-          base64Image = await new Promise<string>((resolve) => {
+          processedImageUrl = await new Promise<string>((resolve) => {
             const reader = new FileReader();
             reader.onloadend = () => {
-              const base64String = reader.result as string;
-              resolve(base64String.split(',')[1] || base64String);
+              resolve(reader.result as string);
             };
             reader.readAsDataURL(blob);
           });
+          console.log('[useAICheck] Successfully converted blob to base64');
         } catch (blobError) {
           console.error('[useAICheck] Error converting blob URL to base64:', blobError);
           throw new Error('Failed to process image data');
         }
-      } else {
-        // For URLs, we'll let the server handle fetching the image
-        // Just pass the URL as is
-        base64Image = imageUrl;
+      } else if (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
+        // If it's not a base64, blob, or http URL, it might be a relative path
+        // Try to convert to a full URL
+        console.log('[useAICheck] Converting relative path to full URL');
+        processedImageUrl = window.location.origin + imageUrl;
+        console.log('[useAICheck] Converted to full URL:', processedImageUrl);
       }
 
-      // Call API to get fashion tags
-      console.log('[useAICheck] Calling /api/extract-fashion-tags endpoint');
-      const response = await axios.post('/api/extract-fashion-tags', { imageBase64: base64Image });
+      // Call Ximilar API directly using the same service as WardrobeItemForm
+      console.log('[useAICheck] Calling Ximilar API for tag detection with:', processedImageUrl.substring(0, 50) + '...');
+      const response = await detectImageTags(processedImageUrl);
       
-      if (response.data && response.data.tags) {
-        const tags = response.data.tags as DetectedTags;
-        setExtractedTags(tags); // Store in state for later use
-        console.log('[useAICheck] Successfully fetched tags:', tags);
-        setIsLoading(false); // Hide loading state
-        return tags;
-      } else {
-        console.warn('[useAICheck] API response missing tags property:', response.data);
-        setError('Failed to extract tags from image');
-        setIsLoading(false);
-        return null;
+      // Extract tags using the same method as WardrobeItemForm
+      const tags = extractTopTags(response);
+      
+      // Log detailed information for debugging the format inconsistency
+      console.log('[useAICheck] Raw Ximilar API response status:', response.status);
+      console.log('[useAICheck] Records count:', response.records?.length);
+      if (response.records?.[0]) {
+        console.log('[useAICheck] Record has _tags_map?', !!response.records[0]._tags_map);
+        console.log('[useAICheck] Record has _tags?', !!response.records[0]._tags);
+        
+        // Check for category-related tags specifically
+        const categoryTags = Object.entries(tags)
+          .filter(([key]) => key.toLowerCase().includes('category') || key.toLowerCase().includes('type'))
+          .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
+        console.log('[useAICheck] Category-related tags:', categoryTags);
       }
+      console.log('[useAICheck] All extracted tags:', tags);
+      
+      setExtractedTags(tags); // Store in state for later use
+      setIsLoading(false); // Hide loading state
+      return tags;
     } catch (error) {
       console.error('[useAICheck] Error fetching tags:', error);
       setError('Error fetching image tags: ' + (error instanceof Error ? error.message : 'Unknown error'));

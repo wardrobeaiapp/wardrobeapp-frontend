@@ -83,6 +83,30 @@ export class CategoryExtractor {
       }
     }
     
+    // Check for slash-separated category tags (e.g., 'Clothing/Dresses')
+    // This handles the case where the subcategory is included in the category tag
+    for (const [key, value] of Object.entries(tags)) {
+      const keyLower = key.toLowerCase();
+      if ((keyLower.includes('category') || keyLower.includes('type')) && typeof value === 'string') {
+        const valueLower = value.toLowerCase();
+        if (valueLower.includes('/')) {
+          console.log('[CategoryExtractor] Found slash-separated category tag:', key, '=', value);
+          const parts = valueLower.split('/');
+          if (parts.length > 1) {
+            // The part after the slash is likely our subcategory
+            const potentialSubcategory = parts[parts.length - 1].trim();
+            console.log('[CategoryExtractor] Extracted potential subcategory from slash part:', potentialSubcategory);
+            
+            const mapped = this.mapToValidSubcategory(potentialSubcategory, validSubcategories);
+            if (mapped) {
+              console.log('[CategoryExtractor] Mapped subcategory from slash part:', potentialSubcategory, '=>', mapped);
+              return mapped;
+            }
+          }
+        }
+      }
+    }
+    
     // Then try to infer from object tags
     const objectTags = this.extractObjectTags(tags);
     
