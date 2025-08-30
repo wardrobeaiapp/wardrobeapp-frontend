@@ -19,7 +19,10 @@ export const useAICheck = () => {
   const handleFileUpload = (file: File) => {
     setUploadedFile(file);
     setIsFileUpload(true);
-    setImageLink('');
+    
+    // Create object URL for preview
+    const objectUrl = URL.createObjectURL(file);
+    setImageLink(objectUrl);
   };
 
   const handleProcessedImageChange = (base64Image: string) => {
@@ -46,12 +49,38 @@ export const useAICheck = () => {
       let detectedTags: DetectedTags | null = null;
 
       // Handle image processing and analysis
-      if (isFileUpload) {
-        // Handle file upload logic
-        // ... (extracted from original component)
+      if (isFileUpload && uploadedFile) {
+        // Convert file to base64 for API
+        base64Image = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            // Remove the data URL prefix if present
+            const base64String = reader.result as string;
+            resolve(base64String.split(',')[1] || base64String);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(uploadedFile);
+        });
       } else {
-        // Handle URL processing
-        base64Image = imageLink;
+        // Handle URL processing - ensure it's a data URL or convert it
+        if (imageLink.startsWith('data:image')) {
+          base64Image = imageLink.split(',')[1] || imageLink;
+        } else if (imageLink.startsWith('blob:')) {
+          // If it's a blob URL, we need to fetch and convert it
+          const response = await fetch(imageLink);
+          const blob = await response.blob();
+          base64Image = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64String = reader.result as string;
+              resolve(base64String.split(',')[1] || base64String);
+            };
+            reader.readAsDataURL(blob);
+          });
+        } else {
+          // Regular URL
+          base64Image = imageLink;
+        }
       }
 
       // Call Claude API for analysis

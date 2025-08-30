@@ -1,4 +1,4 @@
-import React, { ChangeEvent } from 'react';
+import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
 import { useAICheck } from '../hooks/useAICheck';
 import { useAIRecommendation } from '../hooks/useAIRecommendation';
@@ -12,6 +12,7 @@ import AIRecommendationCard from '../components/features/ai-assistant/AIRecommen
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
 import WishlistSelectionModal from '../components/features/ai-assistant/modals/WishlistSelectionModal/WishlistSelectionModal';
 import AICheckResultModal from '../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
+import AICheckModal from '../components/features/ai-assistant/modals/AICheckModal/AICheckModal';
 import RecommendationModal from '../components/features/ai-assistant/modals/RecommendationModal/RecommendationModal';
 import HistoryDetailModal from '../components/features/ai-assistant/modals/HistoryDetailModal/HistoryDetailModal';
 import { PageContainer } from '../components/layout/PageContainer';
@@ -19,6 +20,7 @@ import { CardsContainer } from './AIAssistantPage.styles';
 
 const AIAssistantPage: React.FC = () => {
   const { items, addItem } = useWardrobe();
+  const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
 
   // Custom hooks for different features
   const {
@@ -39,9 +41,23 @@ const AIAssistantPage: React.FC = () => {
     setImageLink,
     handleFileUpload: handleFileUploadRaw,
     handleProcessedImageChange,
-    checkItem: handleCheckItem,
+    checkItem: handleCheckItemRaw,
     resetCheck: handleResetCheck,
   } = useAICheck();
+
+  const handleCheckItem = () => {
+    if (imageLink || uploadedFile) {
+      setIsAICheckModalOpen(true);
+    } else {
+      handleCheckItemRaw();
+    }
+  };
+
+  const handleApplyAICheck = (data: { category: string; subcategory: string; seasons: string[] }) => {
+    setIsAICheckModalOpen(false);
+    // TODO: Pass the selected options to the AI check when the API is ready
+    handleCheckItemRaw();
+  };
 
   // Wrap file upload handler to handle ChangeEvent
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
@@ -148,6 +164,12 @@ const AIAssistantPage: React.FC = () => {
                 isFileUpload={isFileUpload}
                 uploadedFile={uploadedFile}
                 onProcessedImageChange={handleProcessedImageChange}
+              />
+              <AICheckModal
+                isOpen={isAICheckModalOpen}
+                onClose={() => setIsAICheckModalOpen(false)}
+                onApply={handleApplyAICheck}
+                imageUrl={imageLink}
               />
 
               <AIRecommendationCard
