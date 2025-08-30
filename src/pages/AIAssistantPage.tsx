@@ -19,7 +19,7 @@ import { PageContainer } from '../components/layout/PageContainer';
 import { CardsContainer } from './AIAssistantPage.styles';
 
 const AIAssistantPage: React.FC = () => {
-  const { items, addItem } = useWardrobe();
+  const { items } = useWardrobe();
   const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
 
   // Custom hooks for different features
@@ -43,6 +43,7 @@ const AIAssistantPage: React.FC = () => {
     handleProcessedImageChange,
     checkItem: handleCheckItemRaw,
     resetCheck: handleResetCheck,
+    fetchTags,
   } = useAICheck();
 
   const handleCheckItem = () => {
@@ -79,7 +80,7 @@ const AIAssistantPage: React.FC = () => {
     setSelectedSeason,
     setSelectedScenario,
     getRecommendation: handleGetRecommendation,
-    resetRecommendation: handleResetRecommendation,
+    // resetRecommendation is currently unused but may be needed in the future
   } = useAIRecommendation();
 
   const {
@@ -120,9 +121,6 @@ const AIAssistantPage: React.FC = () => {
     handleSaveRecommendation,
     handleSkipRecommendation,
   } = useAIModals();
-
-  // Combined error state
-  const error = checkError || recommendationError;
 
   // History view state is now managed by useAIHistory hook
 
@@ -170,6 +168,7 @@ const AIAssistantPage: React.FC = () => {
                 onClose={() => setIsAICheckModalOpen(false)}
                 onApply={handleApplyAICheck}
                 imageUrl={imageLink}
+                onFetchTags={fetchTags}
               />
 
               <AIRecommendationCard

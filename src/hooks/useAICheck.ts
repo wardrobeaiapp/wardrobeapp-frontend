@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { claudeService } from '../services/claudeService';
 import { DetectedTags } from '../services/formAutoPopulation/types';
 import { WishlistStatus } from '../types';
+import axios from 'axios';
 
 export const useAICheck = () => {
   const [imageLink, setImageLink] = useState('');
@@ -125,6 +126,67 @@ export const useAICheck = () => {
     setErrorDetails('');
   };
 
+  // Function to fetch tags from Ximilar API for an image
+  const fetchTags = async (imageUrl: string): Promise<DetectedTags | null> => {
+    try {
+      console.log('[useAICheck] Fetching tags for image from Ximilar API');
+      setIsLoading(true); // Show loading state while fetching tags
+      setError(''); // Clear any previous errors
+      
+      let base64Image = '';
+
+      // Process the image URL to get base64 data
+      if (imageUrl.startsWith('data:image')) {
+        // Already a data URL, extract base64 part
+        base64Image = imageUrl.split(',')[1] || imageUrl;
+      } else if (imageUrl.startsWith('blob:')) {
+        // Convert blob URL to base64
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          base64Image = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64String = reader.result as string;
+              resolve(base64String.split(',')[1] || base64String);
+            };
+            reader.readAsDataURL(blob);
+          });
+        } catch (blobError) {
+          console.error('[useAICheck] Error converting blob URL to base64:', blobError);
+          throw new Error('Failed to process image data');
+        }
+      } else {
+        // For URLs, we'll let the server handle fetching the image
+        // Just pass the URL as is
+        base64Image = imageUrl;
+      }
+
+      // Call API to get fashion tags
+      console.log('[useAICheck] Calling /api/extract-fashion-tags endpoint');
+      const response = await axios.post('/api/extract-fashion-tags', { imageBase64: base64Image });
+      
+      if (response.data && response.data.tags) {
+        const tags = response.data.tags as DetectedTags;
+        setExtractedTags(tags); // Store in state for later use
+        console.log('[useAICheck] Successfully fetched tags:', tags);
+        setIsLoading(false); // Hide loading state
+        return tags;
+      } else {
+        console.warn('[useAICheck] API response missing tags property:', response.data);
+        setError('Failed to extract tags from image');
+        setIsLoading(false);
+        return null;
+      }
+    } catch (error) {
+      console.error('[useAICheck] Error fetching tags:', error);
+      setError('Error fetching image tags: ' + (error instanceof Error ? error.message : 'Unknown error'));
+      setErrorType('FETCH_TAGS_ERROR');
+      setIsLoading(false);
+      return null;
+    }
+  };
+
   return {
     // State
     imageLink,
@@ -145,5 +207,6 @@ export const useAICheck = () => {
     handleProcessedImageChange,
     checkItem,
     resetCheck,
+    fetchTags,
   };
 };

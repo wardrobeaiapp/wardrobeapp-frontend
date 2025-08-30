@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
 import { Modal, ModalAction } from '../../../../common/Modal';
@@ -38,12 +38,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   error,
   errorDetails
 }) => {
-  // Log all detected tags to console whenever they change
-  useEffect(() => {
-    if (extractedTags) {
-      console.log('[AICheckResultModal] All detected tags:', extractedTags);
-    }
-  }, [extractedTags]);
+  // Tags are now logged in AICheckModal
+  // We still display them here if passed from parent component
 
   const handleAddToWishlist = () => {
     onAddToWishlist?.();

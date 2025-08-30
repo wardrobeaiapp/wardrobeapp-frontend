@@ -59,8 +59,8 @@ const generateMockAnalysis = (detectedTags?: DetectedTags) => {
 
 // Backend API URL - use relative path to leverage proxy configuration
 const API_URL = '/api';
-// Anthropic API URL
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+// Anthropic API URL - no longer used as we're using backend proxy instead
+// const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
 
 export const claudeService = {
   /**

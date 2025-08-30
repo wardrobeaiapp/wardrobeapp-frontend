@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { Season, ItemCategory } from '../../../../../types';
+import { DetectedTags } from '../../../../../services/formAutoPopulation';
 import { Modal } from '../../../../common/Modal';
 import { FormField, FormSelect, CheckboxGroup } from '../../../../common/Form';
 import { getSubcategoryOptions, formatCategoryName } from '../../../../features/wardrobe/forms/WardrobeItemForm/utils/formHelpers';
@@ -43,6 +44,7 @@ interface AICheckModalProps {
   onClose: () => void;
   onApply: (data: { category: string; subcategory: string; seasons: string[] }) => void;
   imageUrl: string;
+  onFetchTags?: (imageUrl: string) => Promise<DetectedTags | null>;
 }
 
 // Get all category options from ItemCategory enum
@@ -61,10 +63,12 @@ const getSubcategorySelectOptions = (category: ItemCategory | '') => {
   }));
 };
 
-const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, imageUrl }) => {
+const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, imageUrl, onFetchTags }) => {
+  // We'll use the tags directly without storing them in state
   const [category, setCategory] = useState('');
   const [subcategory, setSubcategory] = useState('');
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
+  const hasFetchedRef = useRef(false);
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCategory(e.target.value);
@@ -75,13 +79,7 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
     setSubcategory(e.target.value);
   };
 
-  const handleSeasonToggle = (season: string) => {
-    setSelectedSeasons(prev =>
-      prev.includes(season)
-        ? prev.filter(s => s !== season)
-        : [...prev, season]
-    );
-  };
+  // Using setSelectedSeasons directly with CheckboxGroup instead of a toggle function
 
   const handleApply = () => {
     onApply({
@@ -91,6 +89,66 @@ const AICheckModal: React.FC<AICheckModalProps> = ({ isOpen, onClose, onApply, i
     });
     onClose();
   };
+
+  // Process category from tags and set it if valid
+  const processCategory = useCallback((tags: DetectedTags) => {
+    if (tags.category && typeof tags.category === 'string' && !category) {
+      const mappedCategory = tags.category.toUpperCase();
+      if (Object.values(ItemCategory).includes(mappedCategory as ItemCategory)) {
+        setCategory(mappedCategory);
+      }
+    }
+  }, [category]);
+
+  // Process seasons from tags and set them if valid
+  const processSeasons = useCallback((tags: DetectedTags) => {
+    if (tags.seasons && Array.isArray(tags.seasons) && tags.seasons.length > 0 && selectedSeasons.length === 0) {
+      const mappedSeasons = tags.seasons
+        .filter((s): s is string => typeof s === 'string')
+        .map(s => s.toUpperCase());
+      const validSeasons = mappedSeasons.filter(s => 
+        Object.values(Season).includes(s as Season));
+      if (validSeasons.length > 0) {
+        setSelectedSeasons(validSeasons);
+      }
+    }
+  }, [selectedSeasons]);
+
+  // Fetch tags from image when modal opens
+  useEffect(() => {
+    // Define an async function to fetch and process tags
+    const fetchAndProcessTags = async () => {
+      // Only fetch if modal is open, we have an image URL, onFetchTags exists, and we haven't already fetched
+      if (isOpen && imageUrl && onFetchTags && !hasFetchedRef.current) {
+        try {
+          console.log('[AICheckModal] Fetching tags for image...');
+          hasFetchedRef.current = true; // Mark as fetched to prevent repeated calls
+          
+          const tags = await onFetchTags(imageUrl);
+          if (tags) {
+            console.log('[AICheckModal] Extracted tags:', tags);
+            
+            // Process tags to auto-select category and seasons
+            processCategory(tags);
+            processSeasons(tags);
+          }
+        } catch (error) {
+          console.error('[AICheckModal] Error fetching tags:', error);
+        }
+      }
+    };
+    
+    // Run fetch logic when modal opens
+    if (isOpen) {
+      fetchAndProcessTags();
+    } else {
+      // Reset ref when modal closes for next time it opens
+      hasFetchedRef.current = false;
+    }
+
+    // Including all dependencies to satisfy ESLint
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, imageUrl, onFetchTags, processCategory, processSeasons]);
 
   const filteredSubcategories = getSubcategorySelectOptions(category as ItemCategory);
 
