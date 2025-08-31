@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styled from "styled-components";
 import { Season, ItemCategory } from "../../../../../types";
 import {
@@ -22,7 +22,6 @@ const AICheckModalContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1rem;
 
   .image-preview {
     width: 100%;
