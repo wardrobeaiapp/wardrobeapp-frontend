@@ -5,7 +5,7 @@ import {
 } from '../../../pages/ProfilePage.styles';
 import { getShoppingLimitData, getClothingBudgetData, ClothingBudgetData } from '../../../services/userBudgetsService';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
-import { getUserProfileByUserId } from '../../../services/supabaseAuthService';
+import { getUserProfileByUserId } from '../../../services/auth/supabaseAuthService';
 import { getAIUsageData, AIUsageData } from '../../../services/ai/aiUsageService';
 import { getImpulseBuyTrackerData, calculateDaysSinceStart, ImpulseBuyTrackerData } from '../../../services/impulseBuyTrackerService';
 import {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabaseAuthService } from '../services/supabaseAuthService';
+import supabaseAuthService from '../services/auth/supabaseAuthService';
 
 // User type definition
 interface User {

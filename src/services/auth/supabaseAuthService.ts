@@ -1,6 +1,6 @@
 // Import from the consolidated client to prevent multiple instances
-import { supabase } from './supabaseClientMigration';
-import { saveClothingBudgetData, saveShoppingLimitData } from './userBudgetsService';
+import { supabase } from '../supabaseClientMigration';
+import { saveClothingBudgetData, saveShoppingLimitData } from '../userBudgetsService';
 
 // Types
 interface RegisterData {
@@ -231,7 +231,7 @@ export const getUserProfileByUserId = async (userId: string) => {
     debugLog('Getting user profile for user ID:', userId);
     
     // Import the workaround helper
-    const { getUserProfileByUuid, getUserProfileById } = await import('./userProfilesWorkaround');
+    const { getUserProfileByUuid, getUserProfileById } = await import('../userProfilesWorkaround');
     
     // Try with user_uuid field first (newer approach)
     const { data: uuidData, error: uuidError } = await getUserProfileByUuid(userId);
@@ -702,7 +702,7 @@ const supabaseAuthServiceImpl: AuthService = {
         console.log('DEBUG - completeOnboarding - data structure:', JSON.stringify(data, null, 2));
         
         // Dynamically import to avoid circular dependencies
-        const { saveUserPreferences } = await import('./profile/userPreferencesService');
+        const { saveUserPreferences } = await import('../profile/userPreferencesService');
         
         // Start with all existing preferences
         const { outdoorFrequency, socialFrequency, formalEventsFrequency, ...otherPrefs } = data.preferences || {};
@@ -734,84 +734,9 @@ const supabaseAuthServiceImpl: AuthService = {
           clothingBudgetCurrency: data.clothingBudgetCurrency || data.clothingBudget?.currency || null,
           clothingBudgetFrequency: data.clothingBudgetFrequency || data.clothingBudget?.frequency || null,
           
-          // Debug logging for clothing budget in supabaseAuthService
-          ...(function() {
-            console.log('DEBUG - supabaseAuthService - Input clothing budget data:', {
-              fromFlattened: {
-                amount: data.clothingBudgetAmount,
-                currency: data.clothingBudgetCurrency,
-                frequency: data.clothingBudgetFrequency
-              },
-              fromNested: data.clothingBudget,
-              finalValues: {
-                amount: data.clothingBudgetAmount || data.clothingBudget?.amount || null,
-                currency: data.clothingBudgetCurrency || data.clothingBudget?.currency || null,
-                frequency: data.clothingBudgetFrequency || data.clothingBudget?.frequency || null
-              }
-            });
-            return {};
-          })(),
-          
-          // Explicitly include specific fields that might be missing - preserve actual selected values
-          // Check both direct properties and nested workStyle object
-          // Use our carefully extracted and validated officeDressCode value
-          officeDressCode: officeDressCodeValue,
-          // Access work-related preferences with proper type safety
-          remoteWorkPriority: data.workStyle?.remoteWorkPriority || 
-            // For backward compatibility, check direct properties on preferences
-            (typeof data.preferences === 'object' ? 
-              // Use type assertion for accessing non-standard properties
-              (data.preferences as Record<string, any>).remoteWorkPriority || 
-              // Check for nested preferences structure
-              ((data.preferences as Record<string, any>)['preferences']?.remoteWorkPriority) : 
-              undefined),
-          
-          creativeMobility: data.workStyle?.creativeMobility || 
-            // For backward compatibility, check direct properties on preferences
-            (typeof data.preferences === 'object' ? 
-              // Use type assertion for accessing non-standard properties
-              (data.preferences as Record<string, any>).creativeMobility || 
-              // Check for nested preferences structure
-              ((data.preferences as Record<string, any>)['preferences']?.creativeMobility) : 
-              undefined),
-              
-          // Handle uniform preference for physical work
-          uniformPreference: (typeof data.preferences === 'object' ? 
-              // Use type assertion for accessing non-standard properties
-              (data.preferences as Record<string, any>).uniformPreference || 
-              // Check for nested preferences structure
-              ((data.preferences as Record<string, any>)['preferences']?.uniformPreference) : 
-              undefined),
-              
-          // Handle student dress code
-          studentDressCode: (typeof data.preferences === 'object' ? 
-              // Use type assertion for accessing non-standard properties
-              (data.preferences as Record<string, any>).studentDressCode || 
-              // Check for nested preferences structure
-              ((data.preferences as Record<string, any>)['preferences']?.studentDressCode) : 
-              undefined),
-          // Handle complex object types correctly
-          outdoorFrequency: typeof outdoorFrequency === 'string' ? 
-            { frequency: 0, period: outdoorFrequency || '' } : outdoorFrequency,
-          
-          socialFrequency: typeof socialFrequency === 'string' ? 
-            { frequency: 0, period: socialFrequency || '' } : socialFrequency,
-            
-          formalEventsFrequency: typeof formalEventsFrequency === 'string' ? 
-            { frequency: 0, period: formalEventsFrequency || '' } : formalEventsFrequency,
-            
-          // Add shoppingLimit with the correct structure to match ProfileData interface
-          shoppingLimit: data.preferences?.shoppingLimit ? {
-            frequency: data.preferences.shoppingLimit.limitFrequency || '',
-            amount: data.preferences.shoppingLimit.limitAmount || 0
-          } : (typeof data.preferences === 'object' && (data.preferences as Record<string, any>)['preferences']?.shoppingLimit) ? {
-            frequency: (data.preferences as Record<string, any>)['preferences'].shoppingLimit.frequency || '',
-            amount: (data.preferences as Record<string, any>)['preferences'].shoppingLimit.amount || 0
-          } : undefined
+          // Add shopping limit data from preferences
+          shoppingLimit: data.preferences?.shoppingLimit || null
         };
-
-        // 🚀 HYBRID SAVE STRATEGY: Save budget data to user_progress table
-        console.log('DEBUG - completeOnboarding - Implementing hybrid save strategy for budget data');
         
         // Remove budget data from profileData before saving to user_preferences
         const { shoppingLimit, clothingBudgetAmount, clothingBudgetCurrency, clothingBudgetFrequency, ...preferencesOnlyData } = profileData;
@@ -819,9 +744,9 @@ const supabaseAuthServiceImpl: AuthService = {
         try {
           // Extract clothing budget data
           const clothingBudgetData = {
-            amount: data.clothingBudgetAmount || 0,
-            currency: data.clothingBudgetCurrency || 'USD', 
-            frequency: data.clothingBudgetFrequency || 'monthly',
+            amount: data.clothingBudgetAmount || data.clothingBudget?.amount || 0,
+            currency: data.clothingBudgetCurrency || data.clothingBudget?.currency || 'USD', 
+            frequency: data.clothingBudgetFrequency || data.clothingBudget?.frequency || 'monthly',
             currentSpent: 0,
             periodStartDate: undefined,
             periodEndDate: undefined
@@ -829,8 +754,9 @@ const supabaseAuthServiceImpl: AuthService = {
 
           // Extract shopping limit data
           const shoppingLimitData = profileData.shoppingLimit ? {
-            shoppingLimitAmount: profileData.shoppingLimit.amount,
-            shoppingLimitFrequency: profileData.shoppingLimit.frequency,
+            shoppingLimitAmount: profileData.shoppingLimit.limitAmount || 0,
+            // Cast frequency to the correct type to satisfy TypeScript
+            shoppingLimitFrequency: (profileData.shoppingLimit.limitFrequency || 'monthly') as 'monthly' | 'quarterly' | 'yearly',
             shoppingLimitUsed: 0, // Initialize as 0 for new users
             periodStartDate: undefined,
             periodEndDate: undefined
@@ -858,7 +784,7 @@ const supabaseAuthServiceImpl: AuthService = {
           // Activate impulse buy tracker after onboarding completion
           console.log('DEBUG - completeOnboarding - Activating impulse buy tracker');
           try {
-            const { activateImpulseBuyTracker } = await import('../services/impulseBuyTrackerService');
+            const { activateImpulseBuyTracker } = await import('../impulseBuyTrackerService');
             await activateImpulseBuyTracker(authData.user.id);
             console.log('DEBUG - completeOnboarding - Impulse buy tracker activated successfully');
           } catch (trackerError) {
@@ -946,7 +872,7 @@ const supabaseAuthServiceImpl: AuthService = {
         });
         
         // Dynamically import to avoid circular dependencies
-        const { saveUserPreferences } = await import('./profile/userPreferencesService');
+        const { saveUserPreferences } = await import('../profile/userPreferencesService');
         const result = await saveUserPreferences(styleProfile.styleProfile, authData.user.id);
         console.log('Successfully saved profile data to user_preferences table');
         return result;
@@ -1005,51 +931,8 @@ const supabaseAuthServiceImpl: AuthService = {
       console.error('Error checking authentication:', error);
       return false;
     }
-  },
-};
-
-// Test function to check if onboarding data was saved correctly
-export const testOnboardingDataSaved = async () => {
-  try {
-    // Get current user
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !authData.user) {
-      console.error('User not authenticated');
-      return { success: false, error: 'User not authenticated' };
-    }
-    
-    // Get user profile data
-    const { data, error } = await supabase
-      .from('user_profiles')
-      .select('*')
-      .eq('user_uuid', authData.user.id)
-      .single();
-    
-    if (error) {
-      console.error('Error fetching user profile:', error);
-      return { success: false, error: error.message };
-    }
-    
-    if (!data) {
-      console.error('No user profile found');
-      return { success: false, error: 'No user profile found' };
-    }
-    
-    console.log('User profile data:', data);
-    console.log('Onboarding completed:', data.onboarding_completed);
-    console.log('Preferences data:', data.preferences);
-    
-    return { 
-      success: true, 
-      onboardingCompleted: data.onboarding_completed, 
-      preferences: data.preferences 
-    };
-  } catch (error: any) {
-    console.error('Error testing onboarding data:', error);
-    return { success: false, error: error.message };
   }
-};
+}
 
-// Export the authService
-export const supabaseAuthService = supabaseAuthServiceImpl;
+// Export the Supabase auth service implementation
+export default supabaseAuthServiceImpl;
