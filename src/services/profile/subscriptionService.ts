@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from '../core';
 import { ProfileData } from '../../types';
 import { SaveResult } from '../../components/features/profile/types/StyleProfileTypes';
 

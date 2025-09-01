@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './core';
 import { WardrobeItem, ItemCategory } from '../types';
 import { camelToSnakeCase, snakeToCamelCase } from '../utils/caseConversionExport';
 import * as outfitItemsService from './outfitItemsService';

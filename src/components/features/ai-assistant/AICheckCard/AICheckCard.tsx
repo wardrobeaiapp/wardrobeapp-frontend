@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaSearch, FaCloudUploadAlt, FaLink } from 'react-icons/fa';
 import { FiScissors } from 'react-icons/fi';
-import { fetchImageSafely } from '../../../../services/imageProxyService';
+import { fetchImageSafely } from '../../../../services/core';
 import {
   AICard,
   CardContent,

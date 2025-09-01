@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './core';
 import { WardrobeItem, Outfit, Capsule, ItemCategory, Season, WishlistStatus } from '../types';
 
 // Add TypeScript declaration for the window.__loggedQueries property

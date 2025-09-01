@@ -322,7 +322,7 @@ export const fetchScenarios = async (): Promise<Scenario[]> => {
 
   try {
     // Import supabase client
-    const { supabase } = await import('./supabase');
+    const { supabase } = await import('./core');
     
     // Get current user
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -400,7 +400,7 @@ export const updateScenarios = async (scenarios: Scenario[]): Promise<Scenario[]
   
   try {
     // Import Supabase client
-    const { supabase } = await import('./supabase');
+    const { supabase } = await import('./core');
     
     // Get current user
     const { data: authData, error: authError } = await supabase.auth.getUser();

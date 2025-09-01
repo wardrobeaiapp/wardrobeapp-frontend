@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './core';
 
 /**
  * Service for managing outfit-item relationships using the join table

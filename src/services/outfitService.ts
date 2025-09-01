@@ -1,5 +1,5 @@
 import { Outfit } from '../types';
-import { supabase } from './supabaseClient';
+import { supabase } from './core';
 
 // Table names for Supabase
 const OUTFITS_TABLE = 'outfits';

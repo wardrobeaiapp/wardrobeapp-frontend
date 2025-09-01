@@ -2,7 +2,7 @@ import { ProfileData } from '../../types';
 import { SaveResult } from '../../components/features/profile/types/StyleProfileTypes';
 import { ProfileSection, saveUserPreferences } from './userPreferencesService';
 import { saveSubscriptionToUserProfile } from './subscriptionService';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../core';
 import { StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../../components/features/profile/sections/types';
 
 /**

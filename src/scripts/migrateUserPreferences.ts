@@ -1,4 +1,4 @@
-import { supabase } from '../services/supabase';
+import { supabase } from '../services/core';
 import { User } from '../types';
 
 /**

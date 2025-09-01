@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
 import * as supabaseApi from '../services/supabaseApi';
-import { supabase } from '../services/supabase';
+import { supabase } from '../services/core';
 
 export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);

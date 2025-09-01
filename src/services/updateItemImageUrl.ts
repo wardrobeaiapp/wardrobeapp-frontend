@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './core';
 
 // Update existing item's image URL and expiry after refresh
 export const updateItemImageUrl = async (itemId: string, newImageUrl: string, newExpiry: Date): Promise<void> => {

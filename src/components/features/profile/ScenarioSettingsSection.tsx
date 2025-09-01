@@ -7,7 +7,7 @@ import {
   ContentHeader
 } from '../../../pages/ProfilePage.styles';
 import { getScenariosForUser, createScenario, updateScenario, deleteScenario } from '../../../services/scenariosService';
-import { supabase } from '../../../services/supabase';
+import { supabase } from '../../../services/core';
 import { FaPlus } from 'react-icons/fa';
 import { theme } from '../../../styles/theme';
 import {

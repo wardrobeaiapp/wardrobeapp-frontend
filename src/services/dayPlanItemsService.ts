@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './core';
 
 // Table name for day plan items
 const TABLE_NAME = 'day_plan_items';

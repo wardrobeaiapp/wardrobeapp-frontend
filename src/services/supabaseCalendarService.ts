@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from './core';
 import { DayPlan } from '../types';
 import * as dayPlanItemsService from './dayPlanItemsService';
 import * as dayPlanOutfitsService from './dayPlanOutfitsService';

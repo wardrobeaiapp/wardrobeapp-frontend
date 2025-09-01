@@ -128,7 +128,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     
     try {
       // Import the image proxy service
-      const { fetchImageViaProxy } = await import('../../../../../services/imageProxyService');
+      const { fetchImageViaProxy } = await import('../../../../../services/core');
       
       // Fetch the image via proxy to get a blob and extension
       // Note: Tag detection will happen automatically in handleFileSelect

@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase } from './core';
 
 // Define Scenario type directly since it's not exported from types
 interface Scenario {

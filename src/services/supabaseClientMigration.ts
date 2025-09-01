@@ -12,7 +12,7 @@
  * 2. Once all imports are migrated, we can remove the duplicate client file
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from './core';
 
 // Re-export the singleton client
 export { supabase };
