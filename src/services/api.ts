@@ -6,7 +6,7 @@ import {
   deleteOutfit as deleteOutfitInSupabase,
   migrateOutfitsToSupabase,
   checkOutfitsTableExists
-} from './outfitService';
+} from './wardrobe/outfitService';
 
 // API base URL - using relative path to leverage proxy configuration
 const API_URL = '/api';
