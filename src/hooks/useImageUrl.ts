@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { generateSignedUrl, updateItemImageUrl } from '../services/wardrobe';
+import { generateSignedUrl } from '../services/wardrobe/items';
+import { updateItemImageUrl } from '../services/wardrobe/items/updateItemImageUrl';
 import { WardrobeItem } from '../types';
 
 interface UseImageUrlResult {
@@ -59,7 +60,7 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       
       // Update database with fresh URL and new 7-day expiry
       const newExpiry = new Date(Date.now() + (604800 * 1000)); // 7 days from now
-      await updateItemImageUrl.updateItemImageUrl(item.id, freshUrl, newExpiry);
+      await updateItemImageUrl(item.id, freshUrl, newExpiry);
       console.log('[useImageUrl] Generated and cached fresh URL for expired image');
       
     } catch (err) {

@@ -1,5 +1,5 @@
-import { Outfit } from '../../types';
-import { supabase } from '../core';
+import { Outfit } from '../../../types';
+import { supabase } from '../../../services/core';
 
 // Table names for Supabase
 const OUTFITS_TABLE = 'outfits';

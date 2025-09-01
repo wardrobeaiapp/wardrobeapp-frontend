@@ -1,7 +1,7 @@
-import { supabase } from '../core';
-import { WardrobeItem, ItemCategory } from '../../types';
-import { camelToSnakeCase, snakeToCamelCase } from '../../utils/caseConversionExport';
-import { outfitItemsService } from './';
+import { supabase } from '../../../services/core';
+import { WardrobeItem, ItemCategory } from '../../../types';
+import { camelToSnakeCase, snakeToCamelCase } from '../../../utils/caseConversionExport';
+import { outfitItemsService } from '../outfits';
 
 // Generate a signed URL for an image
 export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600): Promise<string> => {

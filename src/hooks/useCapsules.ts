@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capsule, Season } from '../types';
 import { fetchCapsules, createCapsule, updateCapsule, deleteCapsule } from '../services/api';
-import { capsuleItemsService } from '../services/wardrobe';
+import { capsuleItemsService } from '../services/wardrobe/capsules';
 
 // Store the last fetched capsules to prevent unnecessary state updates
 let lastFetchedCapsules: Capsule[] | null = null;

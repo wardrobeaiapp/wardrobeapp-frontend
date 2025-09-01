@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import { wardrobeItemsService } from '../services/wardrobe';
+import { wardrobeItemsService } from '../services/wardrobe/items';
 import { supabase } from '../services/core';
 
 interface UseWardrobeItemsDBReturn {

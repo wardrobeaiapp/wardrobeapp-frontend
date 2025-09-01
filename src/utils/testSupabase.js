@@ -1,6 +1,6 @@
 // Test utility to check Supabase outfits table
 import { supabase } from '../services/core';
-import { outfitService } from '../services/wardrobe';
+import { outfitService } from '../services/wardrobe/outfits';
 
 const OUTFITS_TABLE = 'outfits';
 

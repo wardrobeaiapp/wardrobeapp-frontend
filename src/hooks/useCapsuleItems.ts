@@ -1,7 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { 
-  capsuleItemsService
-} from '../services/wardrobe';
+import { capsuleItemsService } from '../services/wardrobe/capsules';
 
 /**
  * Custom hook to manage capsule items

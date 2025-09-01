@@ -1,7 +1,12 @@
-import { supabase } from '../core';
-import { Outfit } from '../../types';
-import { camelToSnakeCase, snakeToCamelCase } from '../../utils/caseConversionExport';
-import { outfitItemsService } from './';
+import { supabase } from '../../core';
+import { Outfit } from '../../../types';
+import { camelToSnakeCase, snakeToCamelCase } from '../../../utils/caseConversionExport';
+import { 
+  getOutfitItems, 
+  addItemsToOutfit, 
+  removeAllItemsFromOutfit, 
+  removeItemFromAllOutfits 
+} from './outfitItemService';
 
 // Get all outfits for the current user
 export const getOutfits = async (): Promise<Outfit[]> => {
@@ -47,7 +52,7 @@ export const getOutfits = async (): Promise<Outfit[]> => {
     const outfitsWithItems = await Promise.all(
       outfits.map(async (outfit) => {
         // Get item IDs for this outfit from the join table
-        const itemIds = await outfitItemsService.getOutfitItems(outfit.id);
+        const itemIds = await getOutfitItems(outfit.id);
         return {
           ...outfit,
           items: itemIds
@@ -96,7 +101,7 @@ export const addOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Pro
 
     // Now add the items to the join table
     if (items && items.length > 0) {
-      await outfitItemsService.addItemsToOutfit(newOutfit.id, items);
+      await addItemsToOutfit(newOutfit.id, items);
     }
 
     // Return the complete outfit with items
@@ -142,11 +147,11 @@ export const updateOutfit = async (outfit: Outfit): Promise<Outfit | null> => {
 
     // Update the items in the join table
     // First remove all existing items for this outfit
-    await outfitItemsService.removeAllItemsFromOutfit(outfit.id);
+    await removeAllItemsFromOutfit(outfit.id);
     
     // Then add the new items
     if (items && items.length > 0) {
-      await outfitItemsService.addItemsToOutfit(outfit.id, items);
+      await addItemsToOutfit(outfit.id, items);
     }
 
     // Convert snake_case back to camelCase for frontend use
@@ -174,7 +179,7 @@ export const deleteOutfit = async (outfitId: string): Promise<boolean> => {
     // With CASCADE delete in the database, deleting the outfit will automatically
     // delete all related outfit_items entries. However, we'll explicitly clean up
     // the join table first just to be safe.
-    await outfitItemsService.removeAllItemsFromOutfit(outfitId);
+    await removeItemFromAllOutfits(outfitId);
 
     // Now delete the outfit
     const { error } = await supabase
