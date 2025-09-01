@@ -7,7 +7,7 @@ import { getShoppingLimitData, getClothingBudgetData, ClothingBudgetData } from 
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 import { getUserProfileByUserId } from '../../../services/auth/supabaseAuthService';
 import { getAIUsageData, AIUsageData } from '../../../services/ai/aiUsageService';
-import { getImpulseBuyTrackerData, calculateDaysSinceStart, ImpulseBuyTrackerData } from '../../../services/impulseBuyTrackerService';
+import { getImpulseBuyTrackerData, calculateDaysSinceStart, ImpulseBuyTrackerData } from '../../../services/profile/impulseBuyTrackerService';
 import {
   ProgressCard,
   CardTitle,

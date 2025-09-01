@@ -784,7 +784,7 @@ const supabaseAuthServiceImpl: AuthService = {
           // Activate impulse buy tracker after onboarding completion
           console.log('DEBUG - completeOnboarding - Activating impulse buy tracker');
           try {
-            const { activateImpulseBuyTracker } = await import('../impulseBuyTrackerService');
+            const { activateImpulseBuyTracker } = await import('../profile/impulseBuyTrackerService');
             await activateImpulseBuyTracker(authData.user.id);
             console.log('DEBUG - completeOnboarding - Impulse buy tracker activated successfully');
           } catch (trackerError) {
