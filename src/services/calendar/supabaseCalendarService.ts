@@ -1,8 +1,23 @@
-import { supabase } from './core';
-import { DayPlan } from '../types';
-import * as dayPlanItemsService from './dayPlanItemsService';
-import * as dayPlanOutfitsService from './dayPlanOutfitsService';
-import { formatDateToYYYYMMDD } from '../utils/calendarUtils';
+import { supabase } from '../core';
+import { DayPlan } from '../../types';
+import { formatDateToYYYYMMDD } from '../../utils/calendarUtils';
+
+// Import service functions directly - using relative paths without extensions
+import { getItemsForDayPlan, updateDayPlanItems, deleteAllItemsForDayPlan } from './dayPlanItemsService';
+import { getOutfitIdsForDayPlan, updateOutfitsForDayPlan, removeOutfitsFromDayPlan } from './dayPlanOutfitsService';
+
+// Create namespace objects for backward compatibility
+const dayPlanItemsService = {
+  getItemsForDayPlan,
+  updateDayPlanItems,
+  deleteAllItemsForDayPlan
+};
+
+const dayPlanOutfitsService = {
+  getOutfitIdsForDayPlan,
+  updateOutfitsForDayPlan,
+  removeOutfitsFromDayPlan
+};
 
 // Helper function to map snake_case DB fields to camelCase TypeScript fields
 const mapToCamelCase = (data: any, itemIds: string[] = [], outfitIds: string[] = []): DayPlan => {

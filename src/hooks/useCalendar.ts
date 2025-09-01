@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import * as calendarService from '../services/supabaseCalendarService';
+import * as calendarService from '../services/calendar/supabaseCalendarService';
 import { formatDateToYYYYMMDD } from '../utils/calendarUtils';
 
 // Local interface for state management
