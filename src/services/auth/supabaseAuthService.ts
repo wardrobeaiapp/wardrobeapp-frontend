@@ -231,7 +231,7 @@ export const getUserProfileByUserId = async (userId: string) => {
     debugLog('Getting user profile for user ID:', userId);
     
     // Import the workaround helper
-    const { getUserProfileByUuid, getUserProfileById } = await import('../userProfilesWorkaround');
+    const { getUserProfileByUuid, getUserProfileById } = await import('../profile/userProfilesWorkaround');
     
     // Try with user_uuid field first (newer approach)
     const { data: uuidData, error: uuidError } = await getUserProfileByUuid(userId);
