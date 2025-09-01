@@ -1,7 +1,7 @@
 import { ProfileData } from '../../../../types';
 import { ProfileSection, StylePreferencesData, WardrobeGoalsData } from '../sections/types';
 import { SaveResult } from '../types/StyleProfileTypes';
-import { saveSectionPreferences } from '../../../../services/sectionPreferencesService';
+import { saveSectionPreferences } from '../../../../services/profile/sectionPreferencesService';
 
 export class StyleProfileSaveService {
   

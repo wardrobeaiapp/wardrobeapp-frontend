@@ -702,7 +702,7 @@ const supabaseAuthServiceImpl: AuthService = {
         console.log('DEBUG - completeOnboarding - data structure:', JSON.stringify(data, null, 2));
         
         // Dynamically import to avoid circular dependencies
-        const { saveUserPreferences } = await import('./userPreferencesService');
+        const { saveUserPreferences } = await import('./profile/userPreferencesService');
         
         // Start with all existing preferences
         const { outdoorFrequency, socialFrequency, formalEventsFrequency, ...otherPrefs } = data.preferences || {};
@@ -946,7 +946,7 @@ const supabaseAuthServiceImpl: AuthService = {
         });
         
         // Dynamically import to avoid circular dependencies
-        const { saveUserPreferences } = await import('./userPreferencesService');
+        const { saveUserPreferences } = await import('./profile/userPreferencesService');
         const result = await saveUserPreferences(styleProfile.styleProfile, authData.user.id);
         console.log('Successfully saved profile data to user_preferences table');
         return result;

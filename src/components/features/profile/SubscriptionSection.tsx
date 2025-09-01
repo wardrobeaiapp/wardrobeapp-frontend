@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 import { getUserProfileByUserId } from '../../../services/supabaseAuthService';
-import { saveSubscriptionToUserProfile } from '../../../services/userPreferencesService';
+import { saveSubscriptionToUserProfile } from '../../../services/profile/subscriptionService';
 import Button from '../../common/Button';
 import {
   ContentHeader,
