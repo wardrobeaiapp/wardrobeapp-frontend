@@ -4,8 +4,14 @@
  * in the same browser context
  */
 
+// Import supabase instance
+import { supabase, getSupabase } from './supabase';
+
 // Re-export everything from the main supabase.ts file
 export * from './supabase';
+
+// Explicitly export the supabase instance
+export { supabase, getSupabase };
 
 // This ensures all imports from either supabase.ts or supabaseClient.ts
 // will use the same singleton instance
