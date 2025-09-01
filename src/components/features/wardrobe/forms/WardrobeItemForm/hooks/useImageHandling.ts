@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { detectImageTags, extractTopTags } from '../../../../../../services/ximilarService';
+import { detectImageTags, extractTopTags } from '../../../../../../services/ai/ximilarService';
 
 interface UseImageHandlingProps {
   initialImageUrl?: string;

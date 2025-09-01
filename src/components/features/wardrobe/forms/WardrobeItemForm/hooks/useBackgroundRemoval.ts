@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { removeBackground, fileToBase64 } from '../../../../../../services/backgroundRemovalService';
+import { removeBackground, fileToBase64 } from '../../../../../../services/ai/backgroundRemovalService';
 import { fetchImageSafely } from '../../../../../../services/core';
 
 interface UseBackgroundRemovalProps {
