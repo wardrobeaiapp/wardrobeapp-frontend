@@ -14,7 +14,6 @@ import RegisterPage from './pages/RegisterPage';
 import OnboardingPage from './pages/OnboardingPage';
 import WelcomePage from './pages/WelcomePage';
 import TestImageUpload from './pages/TestImageUpload';
-import StylePreferencesServiceTest from './components/tests/StylePreferencesServiceTest';
 import Footer from './components/layout/Footer';
 
 const GlobalStyle = createGlobalStyle`
@@ -184,7 +183,6 @@ function App() {
                 
                 {/* Test routes for debugging */}
                 <Route path="/test-image" element={<TestImageUpload />} />
-                <Route path="/test-style-preferences" element={<StylePreferencesServiceTest />} />
                 
                 {/* Redirect any unknown routes */}
                 <Route path="*" element={<RedirectRoute />} />
