@@ -1,5 +1,5 @@
-import { supabase } from './core';
-import { Scenario } from '../types';
+import { supabase } from '../core';
+import { Scenario, CreateScenarioData, UpdateScenarioData } from './types';
 
 /**
  * Get all scenarios for a user
@@ -21,7 +21,7 @@ export const getScenariosForUser = async (userId: string): Promise<Scenario[]> =
  * @param scenario The scenario to create (without id, created_at, updated_at)
  * @returns Promise resolving to the created scenario
  */
-export const createScenario = async (scenario: Omit<Scenario, 'id' | 'created_at' | 'updated_at'>): Promise<Scenario> => {
+export const createScenario = async (scenario: CreateScenarioData): Promise<Scenario> => {
   const { data, error } = await supabase
     .from('scenarios')
     .insert(scenario)
@@ -38,7 +38,7 @@ export const createScenario = async (scenario: Omit<Scenario, 'id' | 'created_at
  * @param updates The fields to update
  * @returns Promise resolving to the updated scenario
  */
-export const updateScenario = async (id: string, updates: Partial<Scenario>): Promise<Scenario> => {
+export const updateScenario = async (id: string, updates: UpdateScenarioData): Promise<Scenario> => {
   const { data, error } = await supabase
     .from('scenarios')
     .update({
