@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 import { ProfileData, WardrobeGoalsData } from '../../../../types';
 import WardrobeGoalsSection from '../sections/WardrobeGoalsSection';
-import { getWardrobeGoalsData, saveWardrobeGoalsData } from '../../../../services/wardrobeGoalsService';
+import { getWardrobeGoalsData, saveWardrobeGoalsData } from '../../../../services/profile/wardrobeGoalsService';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo }
 import { ProfileData } from '../../../../types';
 import StylePreferencesSection from '../sections/StylePreferencesSection';
 import { StylePreferencesData, ArrayFieldsOfProfileData } from '../sections/types';
-import { getStylePreferences, saveStylePreferences } from '../../../../services/stylePreferencesService';
+import { getStylePreferencesData, saveStylePreferencesData } from '../../../../services/profile/stylePreferencesService';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
@@ -51,7 +51,7 @@ const StylePreferencesSectionWrapper = React.forwardRef<
 
       try {
         console.log('StylePreferencesSectionWrapper - Fetching style preferences for user:', user.id);
-        const stylePrefsData = await getStylePreferences(user.id);
+        const stylePrefsData = await getStylePreferencesData(user.id);
         
         if (stylePrefsData) {
           console.log('StylePreferencesSectionWrapper - Fetched data:', stylePrefsData);
@@ -114,18 +114,15 @@ const StylePreferencesSectionWrapper = React.forwardRef<
     }
 
     try {
-      const result = await saveStylePreferences(localData, userId);
-      console.log('StylePreferencesSectionWrapper - Save result:', result);
-
-      if (result.success) {
-        setIsModalOpen(true);
-        onSave();
-      } else {
-        setSaveError(result.error ? String(result.error) : 'Unknown error occurred while saving');
-      }
+      await saveStylePreferencesData(userId, localData);
+      console.log('StylePreferencesSectionWrapper - Save successful');
+      
+      // Show success modal and call parent onSave
+      setIsModalOpen(true);
+      onSave();
 
       setIsSaving(false);
-      return result;
+      return { success: true };
     } catch (error) {
       console.error('StylePreferencesSectionWrapper - Error saving directly:', error);
       setSaveError(error instanceof Error ? error.message : 'Unknown error occurred while saving');
