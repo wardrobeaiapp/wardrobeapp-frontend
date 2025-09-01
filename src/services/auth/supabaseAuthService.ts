@@ -1,5 +1,5 @@
-// Import from the consolidated client to prevent multiple instances
-import { supabase } from '../supabaseClientMigration';
+// Import from the core supabase client
+import { supabase } from '../core/supabase';
 import { saveClothingBudgetData, saveShoppingLimitData } from '../profile/userBudgetsService';
 
 // Types
