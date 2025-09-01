@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
 import { ProfileData, ShoppingLimit } from '../../../../types';
 
-import { getShoppingLimitData, saveShoppingLimitData, ShoppingLimitData } from '../../../../services/userBudgetsService';
+import { getShoppingLimitData, saveShoppingLimitData, ShoppingLimitData } from '../../../../services/profile/userBudgetsService';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 import ShoppingLimitSection from '../sections/ShoppingLimitSection';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';

@@ -3,7 +3,7 @@ import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import supabaseAuthService from '../services/auth/supabaseAuthService';
 import { fetchUserPreferences, updateUserPreferences } from '../services/profile/supabasePreferencesService';
 import { getUserProfileByUserId } from '../services/auth/supabaseAuthService';
-import { getClothingBudgetData, getShoppingLimitData } from '../services/userBudgetsService';
+import { getClothingBudgetData, getShoppingLimitData } from '../services/profile/userBudgetsService';
 import { 
   UserPreferences, 
   defaultPreferences, 

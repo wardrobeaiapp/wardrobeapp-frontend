@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useImperativeHandle } from 'react';
 import { ProfileData, ClothingBudget } from '../../../../types';
 import BudgetSection from '../sections/BudgetSection';
-import { getClothingBudgetData, saveClothingBudgetData, ClothingBudgetData } from '../../../../services/userBudgetsService';
+import { getClothingBudgetData, saveClothingBudgetData, ClothingBudgetData } from '../../../../services/profile/userBudgetsService';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
