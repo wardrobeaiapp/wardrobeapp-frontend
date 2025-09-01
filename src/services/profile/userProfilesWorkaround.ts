@@ -1,5 +1,5 @@
 // Import from the consolidated client to prevent multiple instances
-import { supabase } from './supabaseClientMigration';
+import { supabase } from '../supabaseClientMigration';
 
 /**
  * Workaround functions for user_profiles table to avoid 406 errors
