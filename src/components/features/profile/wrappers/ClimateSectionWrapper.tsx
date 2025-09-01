@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState, useImperativeHandle, useMemo } from 'react';
 import { ProfileData, ClimateData } from '../../../../types';
 import ClimateSection from '../sections/ClimateSection';
-import { getClimateData, saveClimateData } from '../../../../services/climateService';
+import { getClimateData, saveClimateData } from '../../../../services/profile/climateService';
 import SaveConfirmationModal from '../modals/SaveConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
