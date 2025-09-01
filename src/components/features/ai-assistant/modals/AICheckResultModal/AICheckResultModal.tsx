@@ -7,7 +7,7 @@ import {
 } from '../../../wardrobe/modals/ItemViewModal.styles';
 import { AnalysisText } from './AICheckResultModal.styles';
 import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
-import { DetectedTags } from '../../../../../services/formAutoPopulation';
+import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 
 interface AICheckResultModalProps {
   isOpen: boolean;

@@ -70,7 +70,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       if (tags) {
         try {
           console.log('[WardrobeItemForm] Starting auto-population with tags:', tags);
-          const { FormAutoPopulationService } = await import('../../../../../services/formAutoPopulation');
+          const { FormAutoPopulationService } = await import('../../../../../services/ai/formAutoPopulation');
           console.log('[WardrobeItemForm] FormAutoPopulationService imported successfully');
           
           await FormAutoPopulationService.autoPopulateFromTags(

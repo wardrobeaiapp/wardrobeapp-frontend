@@ -40,7 +40,6 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "test:auto-population": "ts-node --transpile-only --skip-project src/services/formAutoPopulation/test/testFormAutoPopulation.ts",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

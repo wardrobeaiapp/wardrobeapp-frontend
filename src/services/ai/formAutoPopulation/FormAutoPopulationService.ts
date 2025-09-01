@@ -1,4 +1,4 @@
-import { ItemCategory } from '../../types';
+import { ItemCategory } from '../../../types';
 import { FormField } from './types';
 import { DetectedTags, AutoPopulationOptions, FormFieldSetter, FormFieldSetters } from './types';
 import { Logger } from './utils/logger';

@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { claudeService } from '../services/claudeService';
-import { DetectedTags } from '../services/formAutoPopulation/types';
+import { claudeService } from '../services/ai/claudeService';
+import { DetectedTags } from '../services/ai/formAutoPopulation/types';
 import { WishlistStatus } from '../types';
-import axios from 'axios';
-import { detectImageTags, extractTopTags } from '../services/ximilarService';
+import { detectImageTags, extractTopTags } from '../services/ai/ximilarService';
 
 export const useAICheck = () => {
   const [imageLink, setImageLink] = useState('');
@@ -127,6 +126,46 @@ export const useAICheck = () => {
     setErrorDetails('');
   };
 
+  /**
+   * Converts Ximilar tags format to the DetectedTags format expected by FormAutoPopulationService
+   */
+  const convertToDetectedTagsFormat = (tags: Record<string, string>): DetectedTags => {
+    // Extract all available tags
+    const allTags = Object.values(tags);
+    
+    // Categorize tags
+    const result = {
+      general_tags: allTags,
+      fashion_tags: [] as string[],
+      color_tags: [] as string[],
+      dominant_colors: [] as string[],
+      pattern_tags: [] as string[],
+      raw_tag_confidences: {} as Record<string, number>
+    };
+
+    // Fashion tags - copy from general for now
+    result.fashion_tags = [...allTags];
+    
+    // Extract color tags
+    if (tags.color) {
+      result.color_tags.push(tags.color);
+      result.dominant_colors.push(tags.color);
+    }
+    
+    // Extract pattern tags
+    if (tags.pattern) {
+      result.pattern_tags.push(tags.pattern);
+    }
+    
+    // Add dummy confidences for all tags
+    allTags.forEach(tag => {
+      result.raw_tag_confidences[tag] = 0.9; // Assume high confidence
+    });
+    
+    console.log('[useAICheck] Converted to DetectedTags format:', result);
+    return result;
+  };
+  
   // Function to fetch tags from Ximilar API for an image - uses the same service as WardrobeItemForm
   const fetchTags = async (imageUrl: string): Promise<DetectedTags | null> => {
     try {
@@ -170,9 +209,12 @@ export const useAICheck = () => {
       const response = await detectImageTags(processedImageUrl);
       
       // Extract tags using the same method as WardrobeItemForm
-      const tags = extractTopTags(response);
+      const rawTags = extractTopTags(response);
       
-      // Log detailed information for debugging the format inconsistency
+      // Convert to the format expected by FormAutoPopulationService
+      const formattedTags = convertToDetectedTagsFormat(rawTags);
+      
+      // Log detailed information for debugging
       console.log('[useAICheck] Raw Ximilar API response status:', response.status);
       console.log('[useAICheck] Records count:', response.records?.length);
       if (response.records?.[0]) {
@@ -180,16 +222,18 @@ export const useAICheck = () => {
         console.log('[useAICheck] Record has _tags?', !!response.records[0]._tags);
         
         // Check for category-related tags specifically
-        const categoryTags = Object.entries(tags)
+        const categoryTags = Object.entries(rawTags)
           .filter(([key]) => key.toLowerCase().includes('category') || key.toLowerCase().includes('type'))
           .reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {});
         console.log('[useAICheck] Category-related tags:', categoryTags);
       }
-      console.log('[useAICheck] All extracted tags:', tags);
       
-      setExtractedTags(tags); // Store in state for later use
+      console.log('[useAICheck] All extracted raw tags:', rawTags);
+      console.log('[useAICheck] Formatted DetectedTags:', formattedTags);
+      
+      setExtractedTags(formattedTags); // Store in state for later use
       setIsLoading(false); // Hide loading state
-      return tags;
+      return formattedTags;
     } catch (error) {
       console.error('[useAICheck] Error fetching tags:', error);
       setError('Error fetching image tags: ' + (error instanceof Error ? error.message : 'Unknown error'));

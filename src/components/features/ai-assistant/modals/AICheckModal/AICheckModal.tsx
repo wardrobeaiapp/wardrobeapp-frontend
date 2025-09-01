@@ -3,9 +3,9 @@ import styled from "styled-components";
 import { Season, ItemCategory } from "../../../../../types";
 import {
   DetectedTags,
-  FormAutoPopulationService,
-} from "../../../../../services/formAutoPopulation";
-import { FormField } from "../../../../../services/formAutoPopulation/types";
+  FormAutoPopulationService
+} from "../../../../../services/ai/formAutoPopulation";
+import { FormField } from "../../../../../services/ai/formAutoPopulation/types";
 import { Modal } from "../../../../common/Modal";
 import {
   FormField as FormFieldComponent,
@@ -135,7 +135,7 @@ const AICheckModal: React.FC<AICheckModalProps> = ({
                 // Only provide the setters we need in AICheckModal
                 setCategory: setCategory,
                 // Convert subcategory value to uppercase with underscores to match the select options format
-                setSubcategory: (value) => {
+                setSubcategory: (value: string) => {
                   if (!value) return;
                   console.log('[AICheckModal] Received subcategory from service:', value);
                   const formattedValue = value.toUpperCase().replace(/\s+/g, '_');
@@ -143,7 +143,7 @@ const AICheckModal: React.FC<AICheckModalProps> = ({
                   setSubcategory(formattedValue);
                 },
                 // For seasons we need a toggleSeason function that works with CheckboxGroup
-                toggleSeason: (season) => {
+                toggleSeason: (season: string) => {
                   setSelectedSeasons(prev => {
                     if (prev.includes(season)) {
                       return prev.filter(s => s !== season);
@@ -155,7 +155,6 @@ const AICheckModal: React.FC<AICheckModalProps> = ({
               },
               {
                 overwriteExisting: false,
-                debug: true,
                 // Skip fields that don't exist in AICheckModal to avoid log spam
                 skipFields: [
                   FormField.NAME,

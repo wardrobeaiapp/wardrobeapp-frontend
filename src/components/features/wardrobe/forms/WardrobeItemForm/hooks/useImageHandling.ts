@@ -6,7 +6,7 @@ interface UseImageHandlingProps {
   onImageError: (error: string) => void;
   onImageSuccess: () => void;
   onNewImageSelected?: () => void;
-  onTagsDetected?: (tags: Record<string, string>) => void;
+  onTagsDetected?: (tags: any) => void;
 }
 
 export const useImageHandling = ({ 
@@ -69,6 +69,46 @@ export const useImageHandling = ({
     });
   };
 
+  /**
+   * Converts Ximilar tags format to the DetectedTags format expected by FormAutoPopulationService
+   */
+  const convertToDetectedTagsFormat = (tags: Record<string, string>): any => {
+    // Extract all available tags
+    const allTags = Object.values(tags);
+    
+    // Categorize tags
+    const result = {
+      general_tags: allTags,
+      fashion_tags: [] as string[],
+      color_tags: [] as string[],
+      dominant_colors: [] as string[],
+      pattern_tags: [] as string[],
+      raw_tag_confidences: {} as Record<string, number>
+    };
+
+    // Fashion tags - copy from general for now
+    result.fashion_tags = [...allTags];
+    
+    // Extract color tags
+    if (tags.color) {
+      result.color_tags.push(tags.color);
+      result.dominant_colors.push(tags.color);
+    }
+    
+    // Extract pattern tags
+    if (tags.pattern) {
+      result.pattern_tags.push(tags.pattern);
+    }
+    
+    // Add dummy confidences for all tags
+    allTags.forEach(tag => {
+      result.raw_tag_confidences[tag] = 0.9; // Assume high confidence
+    });
+    
+    console.log('[useImageHandling] Converted to DetectedTags format:', result);
+    return result;
+  };
+  
   const detectAndLogTags = useCallback(async (imageSource: string | File) => {
     try {
       console.log('[Ximilar] Detecting tags for image...');
@@ -78,9 +118,12 @@ export const useImageHandling = ({
       const topTags = extractTopTags(response);
       console.log('[Ximilar] Detected tags:', topTags);
       
+      // Convert to the format expected by FormAutoPopulationService
+      const detectedTagsFormat = convertToDetectedTagsFormat(topTags);
+      
       // Update local state and notify parent component
       setDetectedTags(topTags);
-      onTagsDetected?.(topTags);
+      onTagsDetected?.(detectedTagsFormat);
       
       return topTags;
     } catch (error) {
