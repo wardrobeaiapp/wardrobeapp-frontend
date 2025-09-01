@@ -1,6 +1,6 @@
 // Test utility to check Supabase outfits table
 import { supabase } from '../services/core';
-import { checkOutfitsTableExists } from '../services/outfitService';
+import { outfitService } from '../services/wardrobe';
 
 const OUTFITS_TABLE = 'outfits';
 
@@ -64,7 +64,7 @@ export const verifyOutfitsTable = async () => {
     console.log('Table query successful:', tableData);
     
     // Also check using our service function
-    const exists = await checkOutfitsTableExists();
+    const exists = await outfitService.checkOutfitsTableExists();
     
     if (exists) {
       console.log('Outfits table exists and is accessible!');

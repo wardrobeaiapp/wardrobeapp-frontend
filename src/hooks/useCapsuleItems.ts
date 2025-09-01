@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
-  fetchCapsuleItems, 
-  addItemsToCapsule, 
-  removeItemsFromCapsule, 
-  replaceAllCapsuleItems 
-} from '../services/capsuleItemsService';
+  capsuleItemsService
+} from '../services/wardrobe';
 
 /**
  * Custom hook to manage capsule items
@@ -25,7 +22,7 @@ export const useCapsuleItems = (capsuleId: string | null) => {
     setError(null);
 
     try {
-      const items = await fetchCapsuleItems(capsuleId);
+      const items = await capsuleItemsService.fetchCapsuleItems(capsuleId);
       setItemIds(items);
     } catch (err) {
       console.error('Error fetching capsule items:', err);
@@ -43,7 +40,7 @@ export const useCapsuleItems = (capsuleId: string | null) => {
     setError(null);
 
     try {
-      const success = await addItemsToCapsule(capsuleId, newItemIds);
+      const success = await capsuleItemsService.addItemsToCapsule(capsuleId, newItemIds);
       if (success) {
         // Update local state
         setItemIds(prev => {
@@ -77,7 +74,7 @@ export const useCapsuleItems = (capsuleId: string | null) => {
     setError(null);
 
     try {
-      const success = await removeItemsFromCapsule(capsuleId, itemIdsToRemove);
+      const success = await capsuleItemsService.removeItemsFromCapsule(capsuleId, itemIdsToRemove);
       if (success) {
         // Update local state
         setItemIds(prev => prev.filter(id => !itemIdsToRemove.includes(id)));
@@ -107,7 +104,7 @@ export const useCapsuleItems = (capsuleId: string | null) => {
     setError(null);
 
     try {
-      const success = await replaceAllCapsuleItems(capsuleId, newItemIds);
+      const success = await capsuleItemsService.replaceAllCapsuleItems(capsuleId, newItemIds);
       if (success) {
         // Update local state
         setItemIds(newItemIds);

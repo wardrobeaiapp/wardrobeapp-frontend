@@ -1,12 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import { 
-  getWardrobeItems, 
-  addWardrobeItem, 
-  updateWardrobeItem, 
-  deleteWardrobeItem,
-  migrateLocalStorageItemsToSupabase
-} from '../services/wardrobeItemsService';
+import { wardrobeItemsService } from '../services/wardrobe';
+import { supabase } from '../services/core';
 
 interface UseWardrobeItemsDBReturn {
   items: WardrobeItem[];
@@ -35,8 +30,18 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setError(null);
     
     try {
-      // Always attempt to load from the database first
-      const dbItems = await getWardrobeItems();
+      // Get the current authenticated user
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError || !authData.user) {
+        console.error('Error getting authenticated user:', authError);
+        setError('Authentication required to load items');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Always attempt to load from the database first with the actual user ID
+      const dbItems = await wardrobeItemsService.getWardrobeItems(authData.user.id, false);
       
       if (!isMountedRef.current) return;
       
@@ -49,13 +54,15 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       const localStorageItems = JSON.parse(localStorage.getItem('wardrobe-items-guest') || '[]');
       
       if (localStorageItems.length > 0) {
+        // Import function directly from the barrel file
+        const migrateLocalStorageItemsToSupabase = require('../services/wardrobe').migrateLocalStorageItemsToSupabase;
         const migrationSuccess = await migrateLocalStorageItemsToSupabase();
         
         if (!isMountedRef.current) return;
         
         if (migrationSuccess) {
-          // If migration was successful, fetch the items again
-          const migratedItems = await getWardrobeItems();
+          // If migration was successful, fetch the items again with the actual user ID
+          const migratedItems = await wardrobeItemsService.getWardrobeItems(authData.user.id, false);
           if (isMountedRef.current) {
             setItems(migratedItems);
             // Clear localStorage after successful migration
@@ -120,7 +127,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => [...prevItems, optimisticItem]);
     
     try {
-      const newItem = await addWardrobeItem(item, file);
+      const newItem = await wardrobeItemsService.addWardrobeItem(item);
       
       if (isMountedRef.current) {
         if (newItem) {
@@ -167,7 +174,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     );
     
     try {
-      const updatedItem = await updateWardrobeItem(optimisticUpdate);
+      const updatedItem = await wardrobeItemsService.updateWardrobeItem(id, updates);
       
       if (isMountedRef.current) {
         if (updatedItem) {
@@ -215,7 +222,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => prevItems.filter(item => item.id !== id));
     
     try {
-      await deleteWardrobeItem(id);
+      await wardrobeItemsService.deleteWardrobeItem(id);
       return true;
     } catch (error) {
       console.error('Error deleting item:', error);

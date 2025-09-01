@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Capsule, Season } from '../types';
 import { fetchCapsules, createCapsule, updateCapsule, deleteCapsule } from '../services/api';
-import { replaceAllCapsuleItems } from '../services/capsuleItemsService';
+import { capsuleItemsService } from '../services/wardrobe';
 
 // Store the last fetched capsules to prevent unnecessary state updates
 let lastFetchedCapsules: Capsule[] | null = null;
@@ -141,7 +141,7 @@ export const useCapsules = () => {
 
       // If there are selected items, create the capsule-item relationships
       if (selectedItemsArray.length > 0 && isMounted.current) {
-        await replaceAllCapsuleItems(newCapsule.id, selectedItemsArray);
+        await capsuleItemsService.replaceAllCapsuleItems(newCapsule.id, selectedItemsArray);
         if (!isMounted.current) return null;
       }
       
@@ -198,7 +198,7 @@ export const useCapsules = () => {
       
       // If selectedItems is provided, update the capsule-item relationships
       if (selectedItems && isMounted.current) {
-        await replaceAllCapsuleItems(id, selectedItems);
+        await capsuleItemsService.replaceAllCapsuleItems(id, selectedItems);
         if (!isMounted.current) return null;
       }
       

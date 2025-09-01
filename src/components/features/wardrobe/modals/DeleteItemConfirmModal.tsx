@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { WardrobeItem, Outfit, Capsule } from '../../../../types';
 import { Modal, ModalAction } from '../../../common/Modal';
 import styled from 'styled-components';
-import * as outfitItemsService from '../../../../services/outfitItemsService';
-import * as outfitsService from '../../../../services/outfitsService';
-import * as capsuleItemsService from '../../../../services/capsuleItemsService';
+import { outfitItemsService, outfitsService, capsuleItemsService } from '../../../../services/wardrobe';
 import { fetchCapsules } from '../../../../services/api';
 
 interface DeleteItemConfirmModalProps {
