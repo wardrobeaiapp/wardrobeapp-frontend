@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { UserPreferences, defaultPreferences } from '../types/userPreferences';
-import { supabasePreferencesService } from '../services/supabasePreferencesService';
+import { fetchUserPreferences, updateUserPreferences } from '../services/profile/supabasePreferencesService';
 
 /**
  * Hook for managing user preferences data using the new user_preferences table
@@ -24,10 +24,10 @@ export const usePreferencesData = () => {
     setError(null);
 
     try {
-      const userPreferences = await supabasePreferencesService.getUserPreferences(user.id);
+      const { data: userPreferences } = await fetchUserPreferences(user.id);
       
       if (userPreferences) {
-        setPreferences(userPreferences);
+        setPreferences(userPreferences as unknown as UserPreferences);
       } else {
         // If no preferences found, use default with the user ID
         setPreferences({
@@ -65,13 +65,13 @@ export const usePreferencesData = () => {
     setError(null);
 
     try {
-      const savedPreferences = await supabasePreferencesService.updateUserPreferences(
+      const { data: savedPreferences } = await updateUserPreferences(
         user.id,
         updatedPreferences
       );
 
       if (savedPreferences) {
-        setPreferences(savedPreferences);
+        setPreferences(savedPreferences as unknown as UserPreferences);
         return true;
       } else {
         setError('Failed to save preferences');

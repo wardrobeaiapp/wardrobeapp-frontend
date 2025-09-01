@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { supabaseAuthService } from '../services/supabaseAuthService';
-import { supabasePreferencesService } from '../services/supabasePreferencesService';
+import { fetchUserPreferences, updateUserPreferences } from '../services/profile/supabasePreferencesService';
 import { getUserProfileByUserId } from '../services/supabaseAuthService';
 import { getClothingBudgetData, getShoppingLimitData } from '../services/userBudgetsService';
 import { 
@@ -22,10 +22,10 @@ export const useProfileData = () => {
   
   // Fetch user preferences from user_preferences table
   useEffect(() => {
-    const fetchUserPreferences = async () => {
+    const fetchUserPrefsData = async () => {
       if (user?.id) {
         try {
-          const preferencesData = await supabasePreferencesService.getUserPreferences(user.id);
+          const { data: preferencesData } = await fetchUserPreferences(user.id);
           // Debug logging
           console.log('Fetched user preferences:', preferencesData);
           // Use type assertion to access database-specific fields
@@ -43,7 +43,7 @@ export const useProfileData = () => {
       }
     };
     
-    fetchUserPreferences();
+    fetchUserPrefsData();
   }, [user?.id]);
 
   // Fetch budget data from user_progress table (unified budget service)
@@ -377,11 +377,11 @@ export const useProfileData = () => {
       };
       
       // Save to database
-      supabasePreferencesService.updateUserPreferences(user.id, subscriptionUpdate)
+      updateUserPreferences(user.id, subscriptionUpdate)
         .then(() => {
           console.log('Subscription updated successfully');
         })
-        .catch(error => {
+        .catch((error: Error) => {
           console.error('Error updating subscription:', error);
         });
     }

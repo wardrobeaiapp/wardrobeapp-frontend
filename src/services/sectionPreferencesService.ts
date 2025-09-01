@@ -1,3 +1,8 @@
+/**
+ * @deprecated This file has been moved to services/profile/sectionPreferencesService.ts
+ * Please import from there instead. This file will be removed in a future release.
+ */
+
 import { supabase } from './supabaseClient';
 import { SaveResult } from '../components/features/profile/types/StyleProfileTypes';
 import { ProfileSection, ClothingBudget, ShoppingLimit, StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../components/features/profile/sections/types';

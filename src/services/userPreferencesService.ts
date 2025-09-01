@@ -1,3 +1,8 @@
+/**
+ * @deprecated This file has been moved to services/profile/userPreferencesService.ts
+ * Please import from there instead. This file will be removed in a future release.
+ */
+
 import { supabase } from './supabaseClient';
 import { ProfileData } from '../types';
 import { SaveResult } from '../components/features/profile/types/StyleProfileTypes';

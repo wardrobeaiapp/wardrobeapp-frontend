@@ -1,4 +1,9 @@
 import { supabase } from './supabase';
+/**
+ * @deprecated This file has been moved to services/profile/supabasePreferencesService.ts
+ * Please import from there instead. This file will be removed in a future release.
+ */
+
 import { UserPreferences } from '../types/userPreferences';
 
 /**
