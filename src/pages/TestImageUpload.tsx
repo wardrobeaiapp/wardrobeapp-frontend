@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { PageHeader } from '../components/common/Typography/PageHeader';
-import { saveImageFromUrl, isValidImageUrl } from '../services/imageService';
+import { saveImageFromUrl, isValidImageUrl } from '../services/core/imageService';
 
 const Container = styled.div`
   max-width: 800px;
