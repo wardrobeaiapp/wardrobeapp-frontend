@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import * as supabaseApi from '../services/supabaseApi';
+import { fetchWardrobeItems, createWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
 import { supabase } from '../services/core';
 
 export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
@@ -14,7 +14,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
     setError(null);
     
     try {
-      const loadedItems = await supabaseApi.fetchWardrobeItems();
+      const loadedItems = await fetchWardrobeItems();
       setItems(loadedItems);
     } catch (error: any) {
       console.error('[useSupabaseWardrobeItems] Error loading items:', error);
@@ -43,7 +43,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
       };
       
       // Add to Supabase
-      const newItem = await supabaseApi.createWardrobeItem(itemWithStatus);
+      const newItem = await createWardrobeItem(itemWithStatus);
       
       // Update local state
       setItems(prevItems => [newItem, ...prevItems]);
@@ -59,7 +59,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const updateItem = async (id: string, item: Partial<WardrobeItem>) => {
     try {
       // Update in Supabase
-      await supabaseApi.updateWardrobeItem(id, item);
+      await updateWardrobeItem(id, item);
       
       // Update local state
       setItems(prevItems => prevItems.map(existingItem => 
@@ -76,7 +76,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const deleteItem = async (id: string) => {
     try {
       // Delete from Supabase
-      await supabaseApi.deleteWardrobeItem(id);
+      await deleteWardrobeItem(id);
       
       // Remove from local state
       setItems(prevItems => prevItems.filter(item => item.id !== id));
