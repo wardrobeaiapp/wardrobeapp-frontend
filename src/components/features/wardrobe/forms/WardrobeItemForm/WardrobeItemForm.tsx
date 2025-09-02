@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../../../../../services/core/supabase';
 import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
@@ -25,6 +26,23 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 }) => {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  
+  // Get the current authenticated user ID on component mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error getting authenticated user:', error);
+        return;
+      }
+      if (data?.user) {
+        setUserId(data.user.id);
+      }
+    };
+    
+    getUserId();
+  }, []);
   
   const formState = useWardrobeItemForm({
     initialItem,
@@ -122,6 +140,26 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     );
   };
 
+  /**
+   * Handles retail site images that can't be directly loaded due to CORS restrictions
+   * @param imageUrl URL of the retail site image
+   */
+  const handleRetailSiteImage = (imageUrl: string) => {
+    // Clear any previous errors
+    formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+    
+    setIsLoadingUrl(false);
+    
+    // Set a user-friendly error message with guidance
+    formState.setErrors(prev => ({ 
+      ...prev, 
+      imageUrl: 'This retailer restricts direct image access. Please save the image to your device first, then upload it directly.'
+    }));
+    
+    // Optionally open the image in a new tab to help the user download it
+    window.open(imageUrl, '_blank');
+  };
+
   const handleUrlLoad = async (url: string) => {
     setIsLoadingUrl(true);
     formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
@@ -154,9 +192,31 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       }, 100);
     } catch (error) {
       console.error('Failed to load image from URL:', error);
+      
+      // Check for special retail site errors
+      if (error instanceof Error && error.message.includes('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED')) {
+        const imageUrl = error.message.split('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED:')[1];
+        handleRetailSiteImage(imageUrl);
+        return;
+      }
+      
+      // Handle other errors
+      let errorMessage = 'Failed to load image from URL. Please check the URL and try again.';
+      
+      // More descriptive error for specific cases
+      if (error instanceof Error) {
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          errorMessage = 'This retailer blocks image access. Try downloading the image and uploading it directly.';
+        } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+          errorMessage = 'Too many requests to our image service. Please try again in a few minutes.';
+        } else if (error.message.includes('Proxy fetch failed')) {
+          errorMessage = 'Image proxy service is currently unavailable. Try downloading and uploading the image.';
+        }
+      }
+      
       formState.setErrors(prev => ({ 
         ...prev, 
-        imageUrl: 'Failed to load image from URL. Please check the URL and try again.' 
+        imageUrl: errorMessage 
       }));
       setIsImageFromUrl(false);
     } finally {
@@ -228,6 +288,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         imageUrl: finalImageUrl,
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
         timesWorn: initialItem?.timesWorn || 0,
+        // Add user ID for row-level security policy
+        userId: userId || undefined,
         // Add new detail fields
         sleeves: formData.sleeves,
         style: formData.style,
@@ -249,7 +311,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         hasFile: !!fileToSubmit,
         hasImageUrl: !!finalImageUrl,
         isSupabaseUrl,
-        imageUrl: finalImageUrl
+        imageUrl: finalImageUrl,
+        userId: userId
       });
       
       onSubmit(item, fileToSubmit);

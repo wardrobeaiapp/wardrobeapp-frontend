@@ -1,6 +1,7 @@
 // Legacy imports for backward compatibility
 import * as updateItemImageUrlImports from './items/updateItemImageUrl';
-import * as outfitServiceImports from './outfits/outfitService';
+// Import from new modular service structure
+import * as outfitModuleImports from './outfits';
 import * as outfitsServiceImports from './outfits/outfitsService';
 import * as outfitItemServiceImports from './outfits/outfitItemService';
 import * as capsuleItemServiceImports from './capsules/capsuleItemService';
@@ -35,7 +36,7 @@ export const wardrobeItemsService = {
 /** @deprecated Use import from 'wardrobe/items' */
 export const updateItemImageUrl = updateItemImageUrlImports;
 /** @deprecated Use import from 'wardrobe/outfits' */
-export const outfitService = outfitServiceImports;
+export const outfitService = outfitModuleImports.outfitService;
 /** @deprecated Use import from 'wardrobe/outfits' */
 export const outfitsService = outfitsServiceImports;
 /** @deprecated Use import from 'wardrobe/outfits' */

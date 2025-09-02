@@ -1,3 +1,15 @@
+/**
+ * @deprecated This file is deprecated and will be removed in a future version.
+ * Please use the modular outfit service files instead:
+ * - outfitBaseService.ts - Common utilities and constants
+ * - outfitCrudService.ts - Core CRUD operations
+ * - outfitQueryService.ts - Specialized queries
+ * - outfitMigrationService.ts - Migration utilities
+ * - outfitRelationsService.ts - Join table operations
+ * 
+ * Import from services/wardrobe/outfits barrel file to access all functionality.
+ */
+
 import { Outfit } from '../../../types';
 import { supabase } from '../../../services/core';
 
@@ -44,8 +56,10 @@ const OUTFIT_SCENARIOS_TABLE = 'outfit_scenarios';
 
 /**
  * Fetch all outfits for the current user
+ * @deprecated Use fetchOutfitsFromSupabase from outfitCrudService.ts instead
  */
 export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
+  console.warn('[DEPRECATED] fetchOutfitsFromSupabase was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Removed excessive logging for performance
     
@@ -144,8 +158,10 @@ export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
 
 /**
  * Create a new outfit
+ * @deprecated Use createOutfitInSupabase from outfitCrudService.ts instead
  */
 export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
+  console.warn('[DEPRECATED] createOutfitInSupabase was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Removed excessive logging for performance
     
@@ -301,8 +317,10 @@ export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCr
 
 /**
  * Update an existing outfit
+ * @deprecated Use updateOutfitInSupabase from outfitCrudService.ts instead
  */
 export const updateOutfitInSupabase = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
+  console.warn('[DEPRECATED] updateOutfitInSupabase was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Removed excessive logging for performance
     
@@ -449,8 +467,10 @@ export const updateOutfitInSupabase = async (id: string, outfit: Partial<Outfit>
 
 /**
  * Delete an outfit
+ * @deprecated Use deleteOutfitInSupabase from outfitCrudService.ts instead
  */
 export const deleteOutfitInSupabase = async (id: string): Promise<void> => {
+  console.warn('[DEPRECATED] deleteOutfitInSupabase was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Removed excessive logging for performance
     
@@ -484,10 +504,11 @@ export const deleteOutfitInSupabase = async (id: string): Promise<void> => {
 };
 
 /**
- * Check if the outfits table exists
+ * Fetch outfits with fallback to API
+ * @deprecated Use fetchOutfits from outfitCrudService.ts instead
  */
-// Fetch outfits - now using Supabase with fallback to API
 export const fetchOutfits = async (): Promise<Outfit[]> => {
+  console.warn('[DEPRECATED] fetchOutfits was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Try to fetch from Supabase first
     const outfits = await fetchOutfitsFromSupabase();
@@ -535,8 +556,12 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
   }
 };
 
-// Create outfit - now using Supabase with fallback to API
+/**
+ * Create outfit with fallback to API
+ * @deprecated Use createOutfit from outfitCrudService.ts instead
+ */
 export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
+  console.warn('[DEPRECATED] createOutfit was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Ensure scenarioNames is properly set
     const outfitWithScenarios = {
@@ -563,8 +588,12 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
   }
 };
 
-// Update outfit - now using Supabase with fallback to API
+/**
+ * Update outfit with fallback to API
+ * @deprecated Use updateOutfit from outfitCrudService.ts instead
+ */
 export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
+  console.warn('[DEPRECATED] updateOutfit was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Ensure scenarioNames is properly set if it exists in the update
     const updateData = {
@@ -590,8 +619,12 @@ export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise
   }
 };
 
-// Delete outfit - now using Supabase with fallback to API
+/**
+ * Delete outfit with fallback to API
+ * @deprecated Use deleteOutfit from outfitCrudService.ts instead
+ */
 export const deleteOutfit = async (id: string): Promise<void> => {
+  console.warn('[DEPRECATED] deleteOutfit was called. Please use the function from outfitCrudService.ts instead.');
   try {
     // Try to delete from Supabase first
     await deleteOutfitInSupabase(id);
@@ -607,7 +640,12 @@ export const deleteOutfit = async (id: string): Promise<void> => {
   }
 };
 
+/**
+ * Check if outfits table exists
+ * @deprecated Use checkOutfitTablesExist from outfitQueryService.ts instead
+ */
 export const checkOutfitsTableExists = async (): Promise<boolean> => {
+  console.warn('[DEPRECATED] checkOutfitsTableExists was called. Please use checkOutfitTablesExist from outfitQueryService.ts instead.');
   try {
     // Removed excessive logging for performance
     
@@ -642,8 +680,10 @@ export const checkOutfitsTableExists = async (): Promise<boolean> => {
 /**
  * Migrate outfits from API to Supabase
  * This should be called once to migrate existing outfits
+ * @deprecated Use migrateOutfitsToSupabase from outfitMigrationService.ts instead
  */
 export const migrateOutfitsToSupabase = async (outfits: Outfit[]): Promise<void> => {
+  console.warn('[DEPRECATED] migrateOutfitsToSupabase was called. Please use the function from outfitMigrationService.ts instead');
   try {
     // Removed excessive logging for performance
     

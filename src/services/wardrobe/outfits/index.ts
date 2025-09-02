@@ -1,8 +1,12 @@
-// Import from outfitItemService
+/**
+ * Outfit services barrel file
+ * Re-exports all outfit-related functionality from modular service files
+ */
+
+// Import from outfitItemService for backward compatibility objects
 import {
   addItemToOutfit,
   removeItemFromOutfit,
-  getOutfitItems,
   getItemOutfits,
   addItemsToOutfit,
   removeAllItemsFromOutfit,
@@ -10,35 +14,107 @@ import {
   getItemIdsForOutfit
 } from './outfitItemService';
 
-// Import from outfitService (needed for outfitService object creation)
+// Import from outfitsService for backward compatibility
+import {
+  getOutfits,
+  addOutfit,
+  updateOutfit as updateOutfitFromService,
+  deleteOutfit as deleteOutfitFromService,
+  migrateLocalStorageOutfitsToSupabase
+} from './outfitsService';
+
+// Import from new modular services for object creation
 import {
   fetchOutfits,
   createOutfit,
   updateOutfit,
-  deleteOutfit,
-  checkOutfitsTableExists,
-  migrateOutfitsToSupabase
-} from './outfitService';
+  deleteOutfit
+} from './outfitCrudService';
 
-// Export from outfitService
-export { 
+import {
+  checkOutfitTablesExist,
+  findOutfitsBySeason,
+  findOutfitsByScenario,
+  findOutfitsByItem,
+  findFavoriteOutfits
+} from './outfitQueryService';
+
+import {
+  migrateOutfitsToSupabase,
+  checkMigrationStatus
+} from './outfitMigrationService';
+
+import {
+  getOutfitItems,
+  getOutfitScenarios,
+  addItemsToOutfit as addItemsToOutfitNew,
+  removeItemsFromOutfit,
+  addScenariosToOutfit,
+  removeScenariosFromOutfit,
+  replaceOutfitItems,
+  replaceOutfitScenarios
+} from './outfitRelationsService';
+
+// Base service exports
+export * from './outfitBaseService';
+
+// CRUD service exports
+export {
   fetchOutfits,
   createOutfit,
   updateOutfit,
   deleteOutfit,
-  // Also export helpers and migrations
-  checkOutfitsTableExists,
-  migrateOutfitsToSupabase
-} from './outfitService';
+  fetchOutfitsFromSupabase,
+  createOutfitInSupabase,
+  updateOutfitInSupabase,
+  deleteOutfitInSupabase
+} from './outfitCrudService';
 
-// Export from outfitsService for backward compatibility
+// Query service exports
+export {
+  checkOutfitTablesExist,
+  findOutfitsBySeason,
+  findOutfitsByScenario,
+  findOutfitsByItem,
+  findFavoriteOutfits
+} from './outfitQueryService';
+
+// Migration service exports
+export {
+  migrateOutfitsToSupabase,
+  checkMigrationStatus
+} from './outfitMigrationService';
+
+// Relations service exports
+export {
+  getOutfitItems,
+  getOutfitScenarios,
+  addItemsToOutfit as addOutfitItemsNew,
+  removeItemsFromOutfit,
+  addScenariosToOutfit,
+  removeScenariosFromOutfit,
+  replaceOutfitItems,
+  replaceOutfitScenarios
+} from './outfitRelationsService';
+
+// Legacy exports for backward compatibility
 export { 
   getOutfits, 
   addOutfit, 
-  updateOutfit as updateOutfitFromService, 
-  deleteOutfit as deleteOutfitFromService, 
+  updateOutfit as updateOutfitLegacy, 
+  deleteOutfit as deleteOutfitLegacy, 
   migrateLocalStorageOutfitsToSupabase 
 } from './outfitsService';
+
+// Legacy exports from outfitItemService
+export { 
+  addItemToOutfit, 
+  removeItemFromOutfit, 
+  getItemOutfits, 
+  removeAllItemsFromOutfit, 
+  removeItemFromAllOutfits, 
+  getItemIdsForOutfit 
+} from './outfitItemService';
 
 // Create outfit service object for backward compatibility
 export const outfitService = {
@@ -46,20 +122,8 @@ export const outfitService = {
   createOutfit,
   updateOutfit,
   deleteOutfit,
-  checkOutfitsTableExists,
+  checkOutfitsTableExists: checkOutfitTablesExist, // map to new function
   migrateOutfitsToSupabase
-};
-
-// Export from outfitItemService
-export { 
-  addItemToOutfit, 
-  removeItemFromOutfit, 
-  getOutfitItems, 
-  getItemOutfits, 
-  addItemsToOutfit, 
-  removeAllItemsFromOutfit, 
-  removeItemFromAllOutfits, 
-  getItemIdsForOutfit 
 };
 
 // For backward compatibility
@@ -74,7 +138,5 @@ export const outfitItemsService = {
   getItemIdsForOutfit
 };
 
-// Export types from outfit-related services
-export * from './outfitService';
-export * from './outfitItemService';
-export * from './outfitsService';
+// Deprecation aliases for backward compatibility
+export const checkOutfitsTableExists = checkOutfitTablesExist;
