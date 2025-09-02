@@ -1,7 +1,7 @@
 import { supabase } from '../../../services/core';
 import { WardrobeItem, ItemCategory, Season, WishlistStatus } from '../../../types';
 import { camelToSnakeCase, snakeToCamelCase } from '../../../utils/caseConversionExport';
-import { outfitItemsService } from '../outfits';
+import { removeItemFromAllOutfits } from '../outfits';
 
 // Generate a signed URL for an image
 export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600): Promise<string> => {
@@ -42,29 +42,6 @@ export const getWardrobeItems = async (userId: string, activeOnly: boolean = fal
     throw error;
   }
 
-  const camelCaseData = data.map(item => snakeToCamelCase(item) as WardrobeItem);
-  return camelCaseData;
-};
-
-export const getOutfitItems = async (outfitId: string): Promise<WardrobeItem[]> => {
-  // First get the item IDs from the outfits_items table
-  const itemIds = await outfitItemsService.getItemIdsForOutfit(outfitId);
-  
-  if (!itemIds.length) {
-    return [];
-  }
-  
-  // Then fetch all those items
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select('*')
-    .in('id', itemIds);
-  
-  if (error) {
-    console.error('[wardrobeItemsService] Error fetching outfit items:', error);
-    throw error;
-  }
-  
   const camelCaseData = data.map(item => snakeToCamelCase(item) as WardrobeItem);
   return camelCaseData;
 };
@@ -122,7 +99,7 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
 
 export const deleteWardrobeItem = async (id: string): Promise<void> => {
   // First, remove this item from all outfits
-  await outfitItemsService.removeItemFromAllOutfits(id);
+  await removeItemFromAllOutfits(id);
   
   const { error } = await supabase
     .from(TABLE_NAME)
