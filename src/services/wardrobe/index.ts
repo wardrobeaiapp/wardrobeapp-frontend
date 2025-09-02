@@ -1,10 +1,13 @@
 // Legacy imports for backward compatibility
-import * as itemServiceImports from './items/itemService';
 import * as updateItemImageUrlImports from './items/updateItemImageUrl';
 import * as outfitServiceImports from './outfits/outfitService';
 import * as outfitsServiceImports from './outfits/outfitsService';
 import * as outfitItemServiceImports from './outfits/outfitItemService';
 import * as capsuleItemServiceImports from './capsules/capsuleItemService';
+
+// Import directly from modular service files
+import { generateSignedUrl } from './items/itemImageService';
+import { migrateLocalStorageItemsToSupabase } from './items/itemMigrationService';
 
 /**
  * Services/wardrobe exports index
@@ -18,9 +21,17 @@ export * from './items';
 export * from './outfits';
 export * from './capsules';
 
+// Re-export these directly (already imported above)
+export { generateSignedUrl, migrateLocalStorageItemsToSupabase };
+
 // Legacy namespace exports (deprecated)
 /** @deprecated Use import from 'wardrobe/items' */
-export const wardrobeItemsService = itemServiceImports;
+export const wardrobeItemsService = {
+  // Re-export from modular services to maintain compatibility
+  // while avoiding direct dependency on itemService.ts
+  ...require('./items').wardrobeItemsService
+};
+
 /** @deprecated Use import from 'wardrobe/items' */
 export const updateItemImageUrl = updateItemImageUrlImports;
 /** @deprecated Use import from 'wardrobe/outfits' */
@@ -31,7 +42,3 @@ export const outfitsService = outfitsServiceImports;
 export const outfitItemsService = outfitItemServiceImports;
 /** @deprecated Use import from 'wardrobe/capsules' */
 export const capsuleItemsService = capsuleItemServiceImports;
-
-// Re-export commonly used functions directly
-export const generateSignedUrl = itemServiceImports.generateSignedUrl;
-export const migrateLocalStorageItemsToSupabase = itemServiceImports.migrateLocalStorageItemsToSupabase;

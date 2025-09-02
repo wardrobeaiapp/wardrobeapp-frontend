@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import * as itemService from '../services/wardrobe/items/itemService';
+import { addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
 
 export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);
@@ -41,10 +41,12 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
         return newItem;
       };
       
-      // Always use the new itemService which handles both authenticated and unauthenticated states
+      // Use the imported service functions which handle both authenticated and unauthenticated states
       try {
-        const newItem = await itemService.addWardrobeItem(item);
-        setItems(prevItems => [newItem, ...prevItems]);
+        const newItem = await addWardrobeItem(item);
+        if (newItem) {
+          setItems(prevItems => [newItem, ...prevItems]);
+        }
         return newItem;
       } catch (error) {
         console.error('[useWardrobeItems] Error in addItem, falling back to guest mode:', error);
@@ -62,12 +64,14 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const updateItem = async (id: string, updates: Partial<WardrobeItem>) => {
     try {
       // Use the item service which handles both authenticated and unauthenticated states
-      const updatedItem = await itemService.updateWardrobeItem(id, updates);
+      const updatedItem = await updateWardrobeItem(id, updates);
       
       // Update local state
-      setItems(prevItems => prevItems.map(existingItem => 
-        existingItem.id === id ? { ...existingItem, ...updatedItem } : existingItem
-      ));
+      if (updatedItem) {
+        setItems(prevItems => prevItems.map(existingItem => 
+          existingItem.id === id ? { ...existingItem, ...updatedItem } : existingItem
+        ));
+      }
       
       return updatedItem;
     } catch (error: any) {
@@ -81,7 +85,7 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const deleteItem = async (id: string) => {
     try {
       // Use the item service which handles both authenticated and unauthenticated states
-      await itemService.deleteWardrobeItem(id);
+      await deleteWardrobeItem(id);
       
       // Remove from local state
       setItems(prevItems => prevItems.filter(item => item.id !== id));

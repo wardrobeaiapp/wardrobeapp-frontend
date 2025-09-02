@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import { wardrobeItemsService } from '../services/wardrobe/items';
+import { getWardrobeItems, migrateLocalStorageItemsToSupabase, addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
 import { supabase } from '../services/core';
 
 interface UseWardrobeItemsDBReturn {
@@ -41,7 +41,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       }
       
       // Always attempt to load from the database first with the actual user ID
-      const dbItems = await wardrobeItemsService.getWardrobeItems(authData.user.id, false);
+      const dbItems = await getWardrobeItems(authData.user.id, false);
       
       if (!isMountedRef.current) return;
       
@@ -55,13 +55,13 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       
       if (localStorageItems.length > 0) {
         // Use the migration service from our proper imports
-        const migrationSuccess = await wardrobeItemsService.migrateLocalStorageItemsToSupabase();
+        const migrationSuccess = await migrateLocalStorageItemsToSupabase();
         
         if (!isMountedRef.current) return;
         
         if (migrationSuccess) {
           // If migration was successful, fetch the items again with the actual user ID
-          const migratedItems = await wardrobeItemsService.getWardrobeItems(authData.user.id, false);
+          const migratedItems = await getWardrobeItems(authData.user.id, false);
           if (isMountedRef.current) {
             setItems(migratedItems);
             // Clear localStorage after successful migration
@@ -126,7 +126,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => [...prevItems, optimisticItem]);
     
     try {
-      const newItem = await wardrobeItemsService.addWardrobeItem(item);
+      const newItem = await addWardrobeItem(item);
       
       if (isMountedRef.current) {
         if (newItem) {
@@ -173,7 +173,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     );
     
     try {
-      const updatedItem = await wardrobeItemsService.updateWardrobeItem(id, updates);
+      const updatedItem = await updateWardrobeItem(id, updates);
       
       if (isMountedRef.current) {
         if (updatedItem) {
@@ -221,7 +221,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => prevItems.filter(item => item.id !== id));
     
     try {
-      await wardrobeItemsService.deleteWardrobeItem(id);
+      await deleteWardrobeItem(id);
       return true;
     } catch (error) {
       console.error('Error deleting item:', error);
