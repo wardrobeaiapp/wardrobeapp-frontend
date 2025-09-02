@@ -48,8 +48,8 @@ export const capsuleService = {
   deleteCapsule
 };
 
-// Default export for backward compatibility
-export default {
+// Named object for default export (to satisfy ESLint)
+const capsuleOperations = {
   // Capsule item functions
   fetchCapsuleItems,
   addItemsToCapsule,
@@ -67,3 +67,6 @@ export default {
   capsuleItemsService,
   capsuleService
 };
+
+// Default export for backward compatibility
+export default capsuleOperations;

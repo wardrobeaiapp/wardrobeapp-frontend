@@ -54,9 +54,8 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       const localStorageItems = JSON.parse(localStorage.getItem('wardrobe-items-guest') || '[]');
       
       if (localStorageItems.length > 0) {
-        // Import function directly from the barrel file
-        const migrateLocalStorageItemsToSupabase = require('../services/wardrobe').migrateLocalStorageItemsToSupabase;
-        const migrationSuccess = await migrateLocalStorageItemsToSupabase();
+        // Use the migration service from our proper imports
+        const migrationSuccess = await wardrobeItemsService.migrateLocalStorageItemsToSupabase();
         
         if (!isMountedRef.current) return;
         

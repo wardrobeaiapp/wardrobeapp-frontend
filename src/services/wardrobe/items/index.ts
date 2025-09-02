@@ -1,58 +1,90 @@
-// Import all functions from itemService
+// Import from modular services
+// Base utilities
 import {
-  generateSignedUrl,
+  camelToSnakeCase,
+  snakeToCamelCase,
+  convertToWardrobeItems,
+  convertToWardrobeItem,
+  TABLE_NAME
+} from './itemBaseService';
+
+// CRUD operations
+import {
   getWardrobeItems,
   getWardrobeItem,
   addWardrobeItem,
-  updateWardrobeItem,
-  deleteWardrobeItem,
   setWardrobeItemActive,
-  getItemsByCategory,
-  getItemsWithExpiredImageUrls,
-  getItemsWithoutHashtags,
-  getItemsByIds,
-  migrateLocalStorageItemsToSupabase,
   // API-compatible functions
   fetchWardrobeItems,
   createWardrobeItem,
   updateWardrobeItem as updateWardrobeItemApi,
   deleteWardrobeItem as deleteWardrobeItemApi
-} from './itemService';
+} from './itemCrudService';
+
+// Specialized queries
+import {
+  getItemsByCategory,
+  getItemsWithExpiredImageUrls,
+  getItemsWithoutHashtags,
+  getItemsByIds
+} from './itemQueryService';
+
+// Image handling
+import { generateSignedUrl } from './itemImageService';
+
+// Migration utilities
+import { migrateLocalStorageItemsToSupabase } from './itemMigrationService';
 
 // Re-export all functions
 export {
+  // Base utilities
+  camelToSnakeCase,
+  snakeToCamelCase,
+  convertToWardrobeItems,
+  convertToWardrobeItem,
+  TABLE_NAME,
+
   // Core functions
   generateSignedUrl,
   getWardrobeItems,
+  getWardrobeItem,
+  addWardrobeItem,
+  setWardrobeItemActive,
+  
+  // Specialized queries
+  getItemsByCategory,
+  getItemsWithExpiredImageUrls,
+  getItemsWithoutHashtags,
+  getItemsByIds,
+  
+  // Migration utilities
+  migrateLocalStorageItemsToSupabase,
+  
   // API-compatible functions (deprecated but maintained for backward compatibility)
   fetchWardrobeItems,
   createWardrobeItem,
   updateWardrobeItemApi as updateWardrobeItem,
-  deleteWardrobeItemApi as deleteWardrobeItem,
-  // Core functions with their original names
-  getWardrobeItem,
-  addWardrobeItem,
-  setWardrobeItemActive,
-  getItemsByCategory,
-  getItemsWithExpiredImageUrls,
-  getItemsWithoutHashtags,
-  getItemsByIds,
-  migrateLocalStorageItemsToSupabase
+  deleteWardrobeItemApi as deleteWardrobeItem
 };
 
 // For backward compatibility with old imports
 export const wardrobeItemsService = {
+  // Core functions
   generateSignedUrl,
   getWardrobeItems,
   getWardrobeItem,
   addWardrobeItem,
-  updateWardrobeItem,
-  deleteWardrobeItem,
+  updateWardrobeItem: updateWardrobeItemApi,
+  deleteWardrobeItem: deleteWardrobeItemApi,
   setWardrobeItemActive,
+  
+  // Specialized queries
   getItemsByCategory,
   getItemsWithExpiredImageUrls,
   getItemsWithoutHashtags,
   getItemsByIds,
+  
+  // Migration utilities
   migrateLocalStorageItemsToSupabase
 };
 
