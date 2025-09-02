@@ -14,12 +14,6 @@ import {
   updateScenario,
   deleteScenario
 } from './scenarios/scenariosService';
-import { 
-  updateWardrobeItem as updateItem,
-  deleteWardrobeItem as deleteItem,
-  getWardrobeItems as fetchItems,
-  addWardrobeItem as createItem
-} from './wardrobe/items/itemService';
 
 export { fetchScenarios, updateScenarios, createScenario, updateScenario, deleteScenario };
 
@@ -59,28 +53,6 @@ const apiRequest = async <T>(url: string, options: RequestInit = {}): Promise<T>
     throw error;
   }
 };
-
-// Wardrobe Item API calls - DEPRECATED: Use itemService functions directly
-
-/**
- * @deprecated Use itemService.getWardrobeItems() instead
- */
-export const fetchWardrobeItems = fetchItems;
-
-/**
- * @deprecated Use itemService.addWardrobeItem() instead
- */
-export const createWardrobeItem = createItem;
-
-/**
- * @deprecated Use itemService.updateWardrobeItem() instead
- */
-export const updateWardrobeItem = updateItem;
-
-/**
- * @deprecated Use itemService.deleteWardrobeItem() instead
- */
-export const deleteWardrobeItem = deleteItem;
 
 // Outfit API calls - now using Supabase
 
