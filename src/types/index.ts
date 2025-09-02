@@ -68,6 +68,7 @@ export interface Outfit {
   items: string[]; // Array of WardrobeItem ids
   occasion?: string; // Deprecated: Use scenarios instead
   scenarios?: string[]; // Array of scenario IDs
+  scenarioNames?: string[]; // Array of scenario names (for backward compatibility)
   season: Season[];
   favorite: boolean;
   dateCreated: string;

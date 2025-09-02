@@ -5,6 +5,7 @@ import { useWardrobe } from '../context/WardrobeContext';
 import { useOutfits } from '../hooks/useOutfits';
 import useCapsules from '../hooks/useCapsules';
 import { CapsuleFormData } from '../components/features/wardrobe/forms/CapsuleForm';
+import { fetchScenarios } from '../services/api';
 
 export enum TabType {
   ITEMS = 'items',
@@ -345,8 +346,31 @@ export const useHomePageData = () => {
         weather: [],
         tags: [],
         dateCreated: new Date().toISOString(),
-        scenarios: outfitData.scenarios || []
+        scenarios: outfitData.scenarios || [],
+        // Initialize scenarioNames as empty array if not provided
+        scenarioNames: []
       };
+      
+      // If we have scenario IDs but no names, try to fetch them
+      if (newOutfit.scenarios.length > 0) {
+        try {
+          const allScenarios = await fetchScenarios();
+          newOutfit.scenarioNames = newOutfit.scenarios
+            .map(scenarioId => {
+              const scenario = allScenarios.find(s => s.id === scenarioId);
+              return scenario?.name || '';
+            })
+            .filter(Boolean);
+        } catch (error) {
+          console.error('Failed to fetch scenarios for name mapping:', error);
+          // Continue without scenario names if we can't fetch them
+        }
+      }
+      
+      // Ensure the occasion field is set for backward compatibility
+      if (!newOutfit.occasion && newOutfit.scenarioNames?.[0]) {
+        newOutfit.occasion = newOutfit.scenarioNames[0];
+      }
       
       await addOutfit(newOutfit);
       setIsAddOutfitModalOpen(false);
@@ -364,15 +388,39 @@ export const useHomePageData = () => {
     
     try {
       // Create a safe updates object with only the fields we want to update
-      const { id, dateCreated, ...updates } = outfitData;
+      const { id, dateCreated, scenarioNames, ...updates } = outfitData;
       
       // Ensure required fields are not accidentally removed
       const safeUpdates: Partial<Outfit> = {
         ...updates,
         items: updates.items || [],
         season: updates.season || [],
-        scenarios: updates.scenarios || []
+        scenarios: updates.scenarios || [],
+        // Preserve scenarioNames if provided, or use empty array
+        scenarioNames: scenarioNames || []
       };
+      
+      // If we have scenarios but no names, try to fetch them
+      if (safeUpdates.scenarios && safeUpdates.scenarios.length > 0 && 
+          (!safeUpdates.scenarioNames || safeUpdates.scenarioNames.length === 0)) {
+        try {
+          const allScenarios = await fetchScenarios();
+          safeUpdates.scenarioNames = safeUpdates.scenarios
+            .map((scenarioId: string) => {
+              const scenario = allScenarios.find((s: { id: string }) => s.id === scenarioId);
+              return scenario?.name || '';
+            })
+            .filter(Boolean) as string[];
+        } catch (error) {
+          console.error('Failed to fetch scenarios for name mapping:', error);
+          // Continue without scenario names if we can't fetch them
+        }
+      }
+      
+      // Ensure the occasion field is set for backward compatibility
+      if (!safeUpdates.occasion && safeUpdates.scenarioNames?.[0]) {
+        safeUpdates.occasion = safeUpdates.scenarioNames[0];
+      }
       
       await updateOutfit(currentOutfitId, safeUpdates);
       setIsEditOutfitModalOpen(false);

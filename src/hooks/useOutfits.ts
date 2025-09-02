@@ -71,6 +71,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       dateCreated: data.dateCreated || new Date().toISOString(),
       userId: data.userId || defaultUserId,
       scenarios: Array.isArray(data.scenarios) ? data.scenarios : [],
+      scenarioNames: Array.isArray(data.scenarioNames) ? data.scenarioNames : [],
       // Optional fields
       lastWorn: data.lastWorn,
       occasion: data.occasion,

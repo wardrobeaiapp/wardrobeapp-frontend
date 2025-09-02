@@ -35,7 +35,11 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
   );
   
   // Initialize state from initialOutfit if provided
-  const [selectedScenarios, setSelectedScenarios] = useState<string[]>(initialOutfit?.scenarios || []);
+  const [selectedScenarios, setSelectedScenarios] = useState<string[]>(
+    initialOutfit?.scenarios || initialOutfit?.scenarioNames?.map(name => 
+      scenarios.find(s => s.name === name)?.id || ''
+    ).filter(Boolean) || []
+  );
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [selectedItems, setSelectedItems] = useState<string[]>(initialOutfit?.items || []);
   const [selectedSeasons, setSelectedSeasons] = useState<Season[]>(initialOutfit?.season || []);
@@ -206,16 +210,39 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
         ? selectedItemsDetails.map(item => item.name).join(' + ')
         : 'New Outfit'
     );
-      
-    return {
+    
+    // Get the first selected scenario for backward compatibility with the occasion field
+    const firstScenario = selectedScenarios.length > 0 
+      ? scenarios.find(s => s.id === selectedScenarios[0])
+      : null;
+    
+    // Get scenario names for the selected scenario IDs
+    const selectedScenarioNames = selectedScenarios
+      .map(id => scenarios.find(s => s.id === id)?.name)
+      .filter((name): name is string => !!name);
+    
+    // Create the base outfit data
+    const outfitData: Omit<Outfit, 'id' | 'dateCreated'> = {
       name: generatedName,
       items: selectedItems,
       season: selectedSeasons,
-      occasion: selectedScenarios.length > 0 ? scenarios.find(s => s.id === selectedScenarios[0])?.name : undefined,  // For backward compatibility
+      // For backward compatibility, set the occasion to the first scenario's name if available
+      occasion: firstScenario?.name || undefined,
+      // Store scenario IDs in the scenarios array
       scenarios: selectedScenarios,
+      // Also include scenario names for backward compatibility
+      scenarioNames: selectedScenarioNames,
       favorite: initialOutfit?.favorite || false,
       lastWorn: initialOutfit?.lastWorn
     };
+
+    // If we're editing an existing outfit, include the ID
+    if (initialOutfit?.id) {
+      // @ts-ignore - We know ID exists on Outfit but not on the return type
+      outfitData.id = initialOutfit.id;
+    }
+    
+    return outfitData;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -226,27 +253,49 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
       return;
     }
     
-    if (selectedSeasons.length === 0) {
-      alert('Please select at least one season');
-      return;
+    try {
+      const formData = prepareFormData();
+      
+      // Ensure scenarios array is always defined
+      if (!formData.scenarios) {
+        formData.scenarios = [];
+      }
+      
+      // Ensure scenarioNames is always defined and in sync with scenarios
+      if (!formData.scenarioNames) {
+        formData.scenarioNames = [];
+      }
+      
+      // If we have scenario IDs but no names, try to map them
+      if (formData.scenarios.length > 0 && formData.scenarioNames.length === 0) {
+        formData.scenarioNames = formData.scenarios
+          .map(id => scenarios.find(s => s.id === id)?.name)
+          .filter((name): name is string => !!name);
+      }
+      
+      // Ensure the occasion field is set for backward compatibility
+      if (!formData.occasion && formData.scenarioNames.length > 0) {
+        formData.occasion = formData.scenarioNames[0];
+      }
+      
+      onSubmit(formData);
+    } catch (error) {
+      console.error('Error preparing outfit data:', error);
+      // Handle the error appropriately, e.g., show a user-friendly message
+      alert('An error occurred while saving the outfit. Please try again.');
     }
-    
-    const newOutfit = prepareFormData();
-    onSubmit(newOutfit);
   };
-  
-  // handleSubmit is already defined above
 
-return (
-  <form onSubmit={handleSubmit}>
-    <FormContainer>
-      {/* Scenario selector */}
-      <ScenarioSelector
-        scenarios={scenarios}
-        selectedScenarios={selectedScenarios}
-        onScenarioChange={handleScenarioChange}
-        isLoading={scenariosLoading}
-      />
+  return (
+    <form onSubmit={handleSubmit}>
+      <FormContainer>
+        {/* Scenario selector */}
+        <ScenarioSelector
+          scenarios={scenarios}
+          selectedScenarios={selectedScenarios}
+          onScenarioChange={handleScenarioChange}
+          isLoading={scenariosLoading}
+        />
 
       <SeasonSelector
         selectedSeasons={selectedSeasons}

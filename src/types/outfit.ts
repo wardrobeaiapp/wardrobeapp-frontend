@@ -22,6 +22,7 @@ export interface OutfitInput {
   tags?: string[];
   imageUrl?: string;
   scenarios?: string[];
+  scenarioNames?: string[];
 }
 
 export interface OutfitExtended extends Omit<OutfitInput, 'items'> {
@@ -30,6 +31,7 @@ export interface OutfitExtended extends Omit<OutfitInput, 'items'> {
   dateCreated: string;
   userId: string;
   scenarios: string[];
+  scenarioNames?: string[];
   lastWorn?: string;
   occasion?: string;
   weather?: string[];

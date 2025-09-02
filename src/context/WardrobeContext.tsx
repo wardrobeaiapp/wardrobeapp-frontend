@@ -22,6 +22,7 @@ interface OutfitBase {
   tags?: string[];
   imageUrl?: string;
   scenarios: string[];
+  scenarioNames?: string[];
 }
 
 // Alias for backward compatibility
@@ -35,6 +36,7 @@ type OutfitInput = {
   season: Season[];
   favorite: boolean;
   scenarios: string[];
+  scenarioNames?: string[];
   lastWorn?: string;
   occasion?: string;
   weather?: string[];
