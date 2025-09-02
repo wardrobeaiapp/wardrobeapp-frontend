@@ -1,4 +1,4 @@
-import { WardrobeItem, Outfit, Capsule } from '../types';
+import { Outfit, Capsule } from '../types';
 import {
   fetchOutfits as fetchOutfitsFromSupabase,
   createOutfit as createOutfitInSupabase,
@@ -7,8 +7,6 @@ import {
   migrateOutfitsToSupabase,
   checkOutfitsTableExists
 } from './wardrobe/outfits/outfitService';
-
-// Import scenario-related functions from scenarios service
 import {
   getScenariosForUser as fetchScenarios,
   updateScenarios,
@@ -16,6 +14,12 @@ import {
   updateScenario,
   deleteScenario
 } from './scenarios/scenariosService';
+import { 
+  updateWardrobeItem as updateItem,
+  deleteWardrobeItem as deleteItem,
+  getWardrobeItems as fetchItems,
+  addWardrobeItem as createItem
+} from './wardrobe/items/itemService';
 
 export { fetchScenarios, updateScenarios, createScenario, updateScenario, deleteScenario };
 
@@ -56,63 +60,27 @@ const apiRequest = async <T>(url: string, options: RequestInit = {}): Promise<T>
   }
 };
 
-// Wardrobe Item API calls
-export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
-  const headers = getAuthHeaders();
-  return apiRequest<WardrobeItem[]>(`${API_URL}/wardrobe-items`, { headers });
-};
+// Wardrobe Item API calls - DEPRECATED: Use itemService functions directly
 
-export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>): Promise<WardrobeItem> => {
-  // Add debugging logs for wishlist property
-  console.log('[API] createWardrobeItem - item with wishlist:', item);
-  console.log('[API] createWardrobeItem - wishlist property:', item.wishlist);
-  
-  const headers = getAuthHeaders();
-  const options = {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(item)
-  };
-  
-  const newItem = await apiRequest<WardrobeItem>(`${API_URL}/wardrobe-items`, options);
-  console.log('[API] createWardrobeItem - response from server:', newItem);
-  console.log('[API] createWardrobeItem - wishlist in response:', newItem.wishlist);
-  
-  // If the server didn't return an imageUrl but we sent one, preserve it
-  if (!newItem.imageUrl && item.imageUrl) {
-    console.log('[API] Server did not return imageUrl, preserving original');
-    newItem.imageUrl = item.imageUrl;
-  }
-  
-  // If the server didn't return a wishlist property but we sent one, preserve it
-  if (newItem.wishlist === undefined && item.wishlist !== undefined) {
-    console.log('[API] Server did not return wishlist property, preserving original');
-    newItem.wishlist = item.wishlist;
-  }
-  
-  return newItem;
-};
+/**
+ * @deprecated Use itemService.getWardrobeItems() instead
+ */
+export const fetchWardrobeItems = fetchItems;
 
-export const updateWardrobeItem = async (id: string, item: Partial<WardrobeItem>): Promise<void> => {
-  const headers = getAuthHeaders();
-  const options = {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify(item)
-  };
-  
-  await apiRequest(`${API_URL}/wardrobe-items/${id}`, options);
-};
+/**
+ * @deprecated Use itemService.addWardrobeItem() instead
+ */
+export const createWardrobeItem = createItem;
 
-export const deleteWardrobeItem = async (id: string): Promise<void> => {
-  const headers = getAuthHeaders();
-  const options = {
-    method: 'DELETE',
-    headers
-  };
-  
-  await apiRequest(`${API_URL}/wardrobe-items/${id}`, options);
-};
+/**
+ * @deprecated Use itemService.updateWardrobeItem() instead
+ */
+export const updateWardrobeItem = updateItem;
+
+/**
+ * @deprecated Use itemService.deleteWardrobeItem() instead
+ */
+export const deleteWardrobeItem = deleteItem;
 
 // Outfit API calls - now using Supabase
 

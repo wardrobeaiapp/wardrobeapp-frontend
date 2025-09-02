@@ -11,17 +11,27 @@ import {
   getItemsWithExpiredImageUrls,
   getItemsWithoutHashtags,
   getItemsByIds,
-  migrateLocalStorageItemsToSupabase
+  migrateLocalStorageItemsToSupabase,
+  // API-compatible functions
+  fetchWardrobeItems,
+  createWardrobeItem,
+  updateWardrobeItem as updateWardrobeItemApi,
+  deleteWardrobeItem as deleteWardrobeItemApi
 } from './itemService';
 
 // Re-export all functions
 export {
+  // Core functions
   generateSignedUrl,
   getWardrobeItems,
+  // API-compatible functions (deprecated but maintained for backward compatibility)
+  fetchWardrobeItems,
+  createWardrobeItem,
+  updateWardrobeItemApi as updateWardrobeItem,
+  deleteWardrobeItemApi as deleteWardrobeItem,
+  // Core functions with their original names
   getWardrobeItem,
   addWardrobeItem,
-  updateWardrobeItem,
-  deleteWardrobeItem,
   setWardrobeItemActive,
   getItemsByCategory,
   getItemsWithExpiredImageUrls,

@@ -2,6 +2,7 @@ import { supabase } from '../../../services/core';
 import { WardrobeItem, ItemCategory } from '../../../types';
 import { camelToSnakeCase, snakeToCamelCase } from '../../../utils/caseConversionExport';
 import { outfitItemsService } from '../outfits';
+import { v4 as uuidv4 } from 'uuid';
 
 // Generate a signed URL for an image
 export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600): Promise<string> => {
@@ -204,22 +205,66 @@ export const getItemsWithoutHashtags = async (userId: string): Promise<WardrobeI
 };
 
 export const getItemsByIds = async (itemIds: string[]): Promise<WardrobeItem[]> => {
-  if (!itemIds.length) {
-    return [];
-  }
+  if (!itemIds || itemIds.length === 0) return [];
   
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .select('*')
     .in('id', itemIds);
-  
+    
   if (error) {
-    console.error('[wardrobeItemsService] Error fetching items by IDs:', error);
+    console.error('Error fetching items by IDs:', error);
     throw error;
   }
   
-  const camelCaseData = data.map(item => snakeToCamelCase(item) as WardrobeItem);
-  return camelCaseData;
+  return data.map(item => snakeToCamelCase(item) as WardrobeItem);
+};
+
+/**
+ * Fetches all wardrobe items for the current user
+ * @deprecated Use getWardrobeItems instead
+ */
+export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+  
+  return getWardrobeItems(user.id);
+};
+
+/**
+ * Creates a new wardrobe item
+ * @deprecated Use addWardrobeItem instead
+ */
+export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>): Promise<WardrobeItem> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+  
+  const newItem = {
+    ...item,
+    id: uuidv4(),
+    userId: user.id,
+    dateAdded: new Date().toISOString(),
+    timesWorn: 0,
+    isActive: true
+  };
+  
+  return addWardrobeItem(newItem);
+};
+
+/**
+ * Updates an existing wardrobe item
+ * @deprecated Use updateWardrobeItem instead
+ */
+export const updateWardrobeItemApi = async (id: string, updates: Partial<WardrobeItem>): Promise<void> => {
+  await updateWardrobeItem(id, updates);
+};
+
+/**
+ * Deletes a wardrobe item
+ * @deprecated Use deleteWardrobeItem instead
+ */
+export const deleteWardrobeItemApi = async (id: string): Promise<void> => {
+  await deleteWardrobeItem(id);
 };
 
 // Migrate items from localStorage to Supabase
