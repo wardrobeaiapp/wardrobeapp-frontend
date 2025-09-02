@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Outfit, WardrobeItem, Scenario, Season, ItemCategory } from '../../../../../types';
-import { fetchScenarios } from '../../../../../services/api';
+import { getScenariosForUser as fetchScenarios } from '../../../../../services/scenarios/scenariosService';
 import { FALLBACK_SCENARIOS } from '../../../../../constants';
 import { useSupabaseAuth } from '../../../../../context/SupabaseAuthContext';
 import { ButtonContainer, FormContainer } from '../../shared/styles/form.styles';

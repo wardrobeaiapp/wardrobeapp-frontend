@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchScenarios } from '../../../../../../services/api';
+import { getScenariosForUser as fetchScenarios } from '../../../../../../services/scenarios/scenariosService';
 import { Capsule, Scenario } from '../../../../../../types';
 import { useSupabaseAuth } from '../../../../../../context/SupabaseAuthContext';
 

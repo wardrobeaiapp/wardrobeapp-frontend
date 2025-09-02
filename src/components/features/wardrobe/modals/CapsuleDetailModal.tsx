@@ -4,7 +4,7 @@ import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
-import { fetchScenarios } from '../../../../services/api';
+import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
 import {

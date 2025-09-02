@@ -314,7 +314,7 @@ export const getScenarioNamesForFilters = async (userId?: string): Promise<strin
     }
     
     // Import dynamically to avoid circular dependencies
-    const { fetchScenarios } = await import('../services/api');
+    const { getScenariosForUser: fetchScenarios } = await import('../services/scenarios/scenariosService');
     const scenarios = await fetchScenarios(userId);
     
     if (scenarios && scenarios.length > 0) {

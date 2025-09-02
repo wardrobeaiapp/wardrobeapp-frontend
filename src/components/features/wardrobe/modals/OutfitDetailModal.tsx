@@ -6,7 +6,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { OutfitInfo } from './OutfitDetailModal.styles';
 import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, SmallItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
 import { ItemsSection } from './CapsuleDetailModal.styles';
-import { fetchScenarios } from '../../../../services/api';
+import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
 

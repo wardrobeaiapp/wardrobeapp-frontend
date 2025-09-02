@@ -3,7 +3,7 @@ import { WardrobeItem, Outfit, Capsule } from '../../../../types';
 import { Modal, ModalAction } from '../../../common/Modal';
 import styled from 'styled-components';
 import { outfitItemsService, outfitsService, capsuleItemsService } from '../../../../services/wardrobe';
-import { fetchCapsules } from '../../../../services/api';
+import { fetchCapsules } from '../../../../services/wardrobe/capsules/capsuleService';
 
 interface DeleteItemConfirmModalProps {
   isOpen: boolean;
@@ -73,7 +73,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
           
           // Get the full capsule objects for these IDs
           const capsules = await fetchCapsules();
-          const associatedCapsules = capsules.filter(capsule => capsuleIds.includes(capsule.id));
+          const associatedCapsules = capsules.filter((capsule: Capsule) => capsuleIds.includes(capsule.id));
           
           // Check if the item is in the wishlist
           const isInWishlist = item.wishlist || false;

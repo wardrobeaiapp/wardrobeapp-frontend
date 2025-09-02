@@ -6,7 +6,7 @@ import { useOutfits } from './useOutfits';
 import useCapsules from './useCapsules';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../components/features/wardrobe/forms/CapsuleForm';
-import { fetchScenarios } from '../services/api';
+import { getScenariosForUser as fetchScenarios } from '../services/scenarios/scenariosService';
 
 export enum TabType {
   ITEMS = 'items',

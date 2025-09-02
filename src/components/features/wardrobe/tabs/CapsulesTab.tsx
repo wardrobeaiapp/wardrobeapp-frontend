@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { Season, Capsule, WardrobeItem } from '../../../../types';
-import { fetchScenarios } from '../../../../services/api';
+import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 import CollectionCard from '../cards/CollectionCard';
 import { SearchFilter } from '../shared/Filters/SearchFilter';
