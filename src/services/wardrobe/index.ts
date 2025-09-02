@@ -2,7 +2,7 @@
 import * as updateItemImageUrlImports from './items/updateItemImageUrl';
 // Import from new modular service structure
 import * as outfitModuleImports from './outfits';
-import * as outfitsServiceImports from './outfits/outfitsService';
+// Removed import of deprecated outfitsService
 import * as outfitItemServiceImports from './outfits/outfitItemService';
 import * as capsuleItemServiceImports from './capsules/capsuleItemService';
 
@@ -38,7 +38,7 @@ export const updateItemImageUrl = updateItemImageUrlImports;
 /** @deprecated Use import from 'wardrobe/outfits' */
 export const outfitService = outfitModuleImports.outfitService;
 /** @deprecated Use import from 'wardrobe/outfits' */
-export const outfitsService = outfitsServiceImports;
+export const outfitsService = {}; // Empty object as deprecated placeholder
 /** @deprecated Use import from 'wardrobe/outfits' */
 export const outfitItemsService = outfitItemServiceImports;
 /** @deprecated Use import from 'wardrobe/capsules' */

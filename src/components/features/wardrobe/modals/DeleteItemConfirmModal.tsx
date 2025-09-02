@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { WardrobeItem, Outfit, Capsule } from '../../../../types';
 import { Modal, ModalAction } from '../../../common/Modal';
 import styled from 'styled-components';
-import { outfitItemsService, outfitsService } from '../../../../services/wardrobe';
+import { getItemOutfits } from '../../../../services/wardrobe/outfits/outfitItemService';
+import { fetchOutfits } from '../../../../services/wardrobe/outfits/outfitCrudService';
 import { fetchCapsules, capsuleItemsService } from '../../../../services/wardrobe/capsules';
 
 interface DeleteItemConfirmModalProps {
@@ -62,10 +63,10 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
         setIsLoading(true);
         try {
           // Get outfit IDs that contain this item
-          const outfitIds = await outfitItemsService.getItemOutfits(item.id);
+          const outfitIds = await getItemOutfits(item.id);
           
           // Get the full outfit objects for these IDs
-          const outfits = await outfitsService.getOutfits();
+          const outfits = await fetchOutfits();
           const associatedOutfits = outfits.filter(outfit => outfitIds.includes(outfit.id));
           
           // Get capsule IDs that contain this item
