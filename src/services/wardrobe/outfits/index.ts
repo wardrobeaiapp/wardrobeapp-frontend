@@ -10,11 +10,45 @@ import {
   getItemIdsForOutfit
 } from './outfitItemService';
 
-// Export from outfitService
-export { createOutfit } from './outfitService';
+// Import from outfitService (needed for outfitService object creation)
+import {
+  fetchOutfits,
+  createOutfit,
+  updateOutfit,
+  deleteOutfit,
+  checkOutfitsTableExists,
+  migrateOutfitsToSupabase
+} from './outfitService';
 
-// Export from outfitsService
-export { getOutfits, addOutfit, updateOutfit, deleteOutfit, migrateLocalStorageOutfitsToSupabase } from './outfitsService';
+// Export from outfitService
+export { 
+  fetchOutfits,
+  createOutfit,
+  updateOutfit,
+  deleteOutfit,
+  // Also export helpers and migrations
+  checkOutfitsTableExists,
+  migrateOutfitsToSupabase
+} from './outfitService';
+
+// Export from outfitsService for backward compatibility
+export { 
+  getOutfits, 
+  addOutfit, 
+  updateOutfit as updateOutfitFromService, 
+  deleteOutfit as deleteOutfitFromService, 
+  migrateLocalStorageOutfitsToSupabase 
+} from './outfitsService';
+
+// Create outfit service object for backward compatibility
+export const outfitService = {
+  fetchOutfits,
+  createOutfit,
+  updateOutfit,
+  deleteOutfit,
+  checkOutfitsTableExists,
+  migrateOutfitsToSupabase
+};
 
 // Export from outfitItemService
 export { 
@@ -39,3 +73,8 @@ export const outfitItemsService = {
   removeItemFromAllOutfits,
   getItemIdsForOutfit
 };
+
+// Export types from outfit-related services
+export * from './outfitService';
+export * from './outfitItemService';
+export * from './outfitsService';

@@ -7,7 +7,7 @@ import {
   updateOutfit as updateOutfitInService,
   deleteOutfit as deleteOutfitInService,
   fetchOutfits as fetchOutfitsFromService
-} from '../services/wardrobe/outfits/outfitService';
+} from '../services/wardrobe/outfits';
 
 // Re-export Season type for consistency
 export type { Season };
