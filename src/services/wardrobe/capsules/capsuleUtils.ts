@@ -8,7 +8,10 @@ import {
   CAPSULE_SCENARIOS_TABLE,
   cacheState,
   getCurrentUser,
-  isGuestModeEnabled
+  isGuestModeEnabled,
+  getAuthHeaders,
+  apiRequest,
+  API_URL
 } from './capsuleBaseService';
 
 /**
@@ -245,4 +248,33 @@ export const manageCapsuleScenarios = async (
   }
   
   return !hasErrors;
+};
+
+/**
+ * Try to use the legacy API as a fallback for database operations
+ * @param method The HTTP method to use (POST, PUT, DELETE)
+ * @param endpoint The API endpoint to call (will be appended to API_URL)
+ * @param data Optional data to send in the request body
+ * @returns The API response data if successful, null if failed
+ */
+export const tryLegacyApiFallback = async (
+  method: 'POST'|'PUT'|'DELETE', 
+  endpoint: string, 
+  data?: any
+): Promise<any> => {
+  try {
+    const headers = getAuthHeaders();
+    const options: any = { method, headers };
+    
+    if (data) {
+      options.body = JSON.stringify(data);
+    }
+    
+    const result = await apiRequest(`${API_URL}${endpoint}`, options);
+    console.log(`✅ [LEGACY] Successfully ${method === 'POST' ? 'created' : method === 'PUT' ? 'updated' : 'deleted'} via legacy API`);
+    return result;
+  } catch (legacyError) {
+    console.error(`❌ [LEGACY] Error in legacy API fallback for ${method}:`, legacyError);
+    return null;
+  }
 };

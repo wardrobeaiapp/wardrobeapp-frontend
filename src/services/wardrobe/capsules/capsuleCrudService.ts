@@ -24,12 +24,21 @@ import {
   getGuestModeCapsules,
   manageCapsuleScenarios,
   removeCapsuleFromCache,
-  removeGuestModeCapsule
+  removeGuestModeCapsule,
+  tryLegacyApiFallback
 } from './capsuleUtils';
 import { updateCapsuleItems } from './capsuleItemUtils';
 
 /**
- * Fetch all capsules for the current user
+ * Fetches all capsules for the current user with smart caching
+ * 
+ * @remarks
+ * This function uses a caching mechanism to reduce database queries:
+ * - Returns cached data if it's less than 5 minutes old
+ * - Prevents duplicate fetches if a request is already in progress
+ * - Updates the cache with fresh data when needed
+ * 
+ * @returns Promise resolving to an array of Capsule objects
  */
 export const fetchCapsules = async (): Promise<Capsule[]> => {
   // Check if we have cached data that's less than 5 minutes old
@@ -38,18 +47,18 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
   const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
   
   if (cacheState.capsulesCache.data && cacheAge < CACHE_TTL) {
-    console.log('\ud83d\udd04 [CACHE HIT] Using cached capsules data - No database query made');
+    console.log('🔄 [CACHE] Using cached capsules data - No database query needed');
     return cacheState.capsulesCache.data as Capsule[];
   }
   
   // If there's already a fetch in progress, wait for it instead of starting a new one
   if (cacheState.capsulesFetchInProgress) {
-    console.log('\u23f3 [PENDING] Another fetch already in progress - Waiting for it to complete');
+    console.log('⏳ [PENDING] Another fetch already in progress - Waiting for completion');
     return cacheState.capsulesFetchInProgress as Promise<Capsule[]>;
   }
   
   // Create a new fetch promise and store it in the module-level variable
-  console.log('\ud83d\udd0d [DATABASE] Cache miss - Fetching fresh data from database');
+  console.log('🔍 [DATABASE] Cache miss - Fetching fresh data from database');
   cacheState.capsulesFetchInProgress = fetchCapsulesFromDB();
   
   try {
@@ -63,13 +72,24 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
 };
 
 /**
- * Create a new capsule
+ * Creates a new capsule in the database with fallback mechanisms
+ * 
+ * @remarks
+ * This function handles multiple paths for capsule creation:
+ * - Primary path: Creates capsule in Supabase database with proper relationships
+ * - Guest mode: Stores capsule in local storage if user is not authenticated
+ * - Cache update: Updates the application cache for quick access
+ * - Legacy fallback: Attempts creation via legacy API if database fails
+ * - Client-only fallback: Creates a local-only capsule as last resort
+ * 
+ * @param capsule - The capsule data without ID or creation date
+ * @returns Promise resolving to the created Capsule with generated ID
  */
 export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>): Promise<Capsule> => {
   const shouldLog = shouldLogDetails();
   
   if (shouldLog) {
-    console.log('📝 [DATABASE] Creating new capsule:', { name: capsule.name });
+    console.log('📝 [INFO] Creating new capsule:', { name: capsule.name });
   }
   
   try {
@@ -117,12 +137,12 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
         .select();
       
       if (error) {
-        console.error('❌ [DATABASE] Error creating capsule:', error);
+        console.error('❌ [ERROR] Database error creating capsule:', error);
         throw error;
       }
       
       if (shouldLog) {
-        console.log('✅ [DATABASE] Capsule created successfully');
+        console.log('✅ [SUCCESS] Capsule created successfully in database');
       }
       
       // Handle join tables for scenarios
@@ -146,41 +166,46 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
     
     return newCapsule;
   } catch (error) {
-    console.error('❌ [CREATE] Error creating capsule:', error);
+    console.error('❌ [ERROR] Creating capsule failed:', error);
     
     // Try legacy API as fallback
-    try {
-      const headers = getAuthHeaders();
-      const options = {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(capsule)
-      };
-      
-      return apiRequest<Capsule>(`${API_URL}/capsules`, options);
-    } catch (legacyError) {
-      // If all else fails, create a client-side-only capsule
-      console.error('❌ [LEGACY] Error in legacy API fallback:', legacyError);
-      
-      const clientCapsule: Capsule = {
-        ...capsule,
-        id: `local-capsule-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
-        dateCreated: new Date().toISOString()
-      };
-      
-      return clientCapsule;
+    const legacyResult = await tryLegacyApiFallback('POST', '/capsules', capsule);
+    
+    if (legacyResult) {
+      return legacyResult;
     }
+    
+    // If all else fails, create a client-side-only capsule
+    const clientCapsule: Capsule = {
+      ...capsule,
+      id: `local-capsule-${Date.now()}-${Math.floor(Math.random() * 10000)}`,
+      dateCreated: new Date().toISOString()
+    };
+    
+    return clientCapsule;
   }
 };
 
 /**
- * Update an existing capsule
+ * Updates an existing capsule with comprehensive fallback strategies
+ * 
+ * @remarks
+ * This function handles capsule updates with multiple fallback mechanisms:
+ * - Primary path: Updates capsule in Supabase database and related join tables
+ * - Guest mode: Updates capsule in local storage if user is not authenticated
+ * - Cache update: Keeps application cache in sync with latest changes
+ * - Selective updates: Only updates fields provided in the capsule parameter
+ * - Legacy fallback: Attempts update via legacy API if database operation fails
+ * 
+ * @param id - The unique identifier of the capsule to update
+ * @param capsule - Partial capsule data containing only fields to update
+ * @returns Promise resolving to the updated Capsule or null if update fails
  */
 export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Promise<Capsule | null> => {
   const shouldLog = shouldLogDetails();
   
   if (shouldLog) {
-    console.log('📝 [DATABASE] Updating capsule:', { id, name: capsule.name });
+    console.log('📝 [INFO] Updating capsule:', { id, name: capsule.name });
   }
   
   try {
@@ -222,12 +247,12 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
         .select();
       
       if (error) {
-        console.error('❌ [DATABASE] Error updating capsule:', error);
+        console.error('❌ [ERROR] Database error updating capsule:', error);
         throw error;
       }
       
       if (shouldLog) {
-        console.log('✅ [DATABASE] Capsule updated successfully');
+        console.log('✅ [SUCCESS] Capsule updated successfully in database');
       }
     }
       
@@ -270,7 +295,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
           updatedCapsule = mergedCapsule;
         }
       } else {
-        console.warn('⚠️ [LOCAL] Capsule not found in local storage:', id);
+        console.warn('⚠️ [WARNING] Capsule not found in local storage:', id);
       }
     }
     
@@ -281,36 +306,45 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
     
     return updatedCapsule;
   } catch (error) {
-    console.error('❌ [UPDATE] Error updating capsule:', error);
+    console.error('❌ [ERROR] Updating capsule failed:', error);
     
     // Try legacy API as fallback
+    // First try to update
+    await tryLegacyApiFallback('PUT', `/capsules/${id}`, capsule);
+    
+    // Then try to fetch the updated capsule
     try {
       const headers = getAuthHeaders();
-      const options = {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(capsule)
-      };
-      
-      await apiRequest(`${API_URL}/capsules/${id}`, options);
-      // Fetch the updated capsule to return it
       const updatedCapsule = await apiRequest<Capsule>(`${API_URL}/capsules/${id}`, { headers });
       return updatedCapsule;
-    } catch (legacyError) {
-      console.error('❌ [LEGACY] Error in legacy API fallback for update:', legacyError);
+    } catch (fetchError) {
+      console.error('❌ [ERROR] Legacy API fetch failed for updated capsule:', fetchError);
       return null;
     }
   }
 };
 
 /**
- * Delete a capsule
+ * Deletes a capsule and its related data with multiple fallback strategies
+ * 
+ * @remarks
+ * This function performs a multi-stage deletion process with fallbacks:
+ * - Deletes related join table records (capsule_scenarios and capsule_items)
+ * - Deletes the main capsule record from the database
+ * - Updates the application cache to remove the deleted capsule
+ * - Handles guest mode by removing from local storage if needed
+ * - Provides legacy API fallback if the database operation fails
+ * - Non-blocking approach for join table deletions to improve reliability
+ * 
+ * @param id - The unique identifier of the capsule to delete
+ * @returns Promise that resolves when deletion is complete
+ * @throws Will throw an error if all deletion attempts fail
  */
 export const deleteCapsule = async (id: string): Promise<void> => {
   const shouldLog = shouldLogDetails();
   
   if (shouldLog) {
-    console.log('📝 [DATABASE] Deleting capsule:', { id });
+    console.log('📝 [INFO] Deleting capsule:', { id });
   }
   
   try {
@@ -336,10 +370,10 @@ export const deleteCapsule = async (id: string): Promise<void> => {
       .eq('capsule_id', id);
       
     if (scenariosError) {
-      console.warn('⚠️ [DATABASE] Warning: Could not delete from capsule_scenarios:', scenariosError);
+      console.warn('⚠️ [WARNING] Could not delete capsule scenarios relationships:', scenariosError);
       // Non-blocking error, continue execution
     } else if (shouldLog) {
-      console.log('✅ [DATABASE] Removed scenarios relationships');
+      console.log('✅ [SUCCESS] Removed capsule scenarios relationships');
     }
     
     // 2. Delete from capsule_items join table
@@ -349,10 +383,10 @@ export const deleteCapsule = async (id: string): Promise<void> => {
       .eq('capsule_id', id);
     
     if (itemsError) {
-      console.warn('⚠️ [DATABASE] Warning: Could not delete items:', itemsError);
+      console.warn('⚠️ [WARNING] Could not delete capsule items relationships:', itemsError);
       // Non-blocking error, continue execution
     } else if (shouldLog) {
-      console.log('✅ [DATABASE] Removed item relationships');
+      console.log('✅ [SUCCESS] Removed capsule item relationships');
     }
     
     // Finally, delete the capsule itself
@@ -363,12 +397,12 @@ export const deleteCapsule = async (id: string): Promise<void> => {
     
     if (error) {
       // Always log database errors
-      console.error('❌ [DATABASE] Error deleting capsule:', error);
+      console.error('❌ [ERROR] Database error deleting capsule:', error);
       throw error;
     }
     
     if (shouldLog) {
-      console.log('✅ [DATABASE] Capsule deleted successfully');
+      console.log('✅ [SUCCESS] Capsule deleted successfully from database');
     }
     
     // Remove the deleted capsule from cache
@@ -380,28 +414,29 @@ export const deleteCapsule = async (id: string): Promise<void> => {
     }
   } catch (error) {
     // Always log errors
-    console.error('❌ [DELETE] Error deleting capsule:', error);
+    console.error('❌ [ERROR] Deleting capsule failed:', error);
     
-    // Try guest mode fallback
-    if (shouldLog) {
-      console.log('📂 [LOCAL] Attempting local storage fallback for guest mode');
+    // Try local storage fallback for guest mode
+    if (isGuestModeEnabled()) {
+      if (shouldLog) {
+        console.log('📂 [INFO] Attempting local storage fallback for guest mode');
+      }
+      
+      // Remove from local storage
+      removeGuestModeCapsule(id);
     }
-    
-    // Try to remove from guest mode storage
-    removeGuestModeCapsule(id);
     
     // Try legacy API as fallback
     try {
-      const headers = getAuthHeaders();
-      const options = {
-        method: 'DELETE',
-        headers
-      };
+      await tryLegacyApiFallback('DELETE', `/capsules/${id}`);
       
-      await apiRequest(`${API_URL}/capsules/${id}`, options);
-      console.log('✅ [LEGACY] Successfully deleted via legacy API');
+      if (shouldLog) {
+        console.log('✅ [SUCCESS] Capsule deleted via legacy API fallback');
+      }
     } catch (legacyError) {
-      console.error('❌ [LEGACY] Error in legacy API fallback for delete:', legacyError);
+      console.error('❌ [ERROR] Legacy API delete fallback failed:', legacyError);
+      throw error; // Re-throw the original error if legacy API also fails
     }
   }
+
 };
