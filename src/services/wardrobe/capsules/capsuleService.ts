@@ -1,3 +1,15 @@
+/**
+ * @deprecated This file is deprecated and will be removed in a future release.
+ * Please import the functions from the modular files instead:
+ * - Import CRUD operations from './capsuleCrudService'
+ * - Import utility functions from './capsuleBaseService'
+ * - Import query functions from './capsuleQueryService'
+ * - Import migration functions from './capsuleMigrationService'
+ * - Import relation functions from './capsuleRelationsService'
+ * 
+ * Or use the barrel imports from './index.ts'
+ */
+
 import { Capsule, Season } from '../../../types';
 import { supabase } from '../../core';
 
@@ -49,6 +61,7 @@ const getAuthHeaders = (): HeadersInit => {
 
 /**
  * Fetch all capsules for the current user
+ * @deprecated Use fetchCapsules from './capsuleCrudService' instead
  */
 export const fetchCapsules = async (): Promise<Capsule[]> => {
   // Check if we have cached data that's less than 5 minutes old
@@ -85,6 +98,9 @@ export const fetchCapsules = async (): Promise<Capsule[]> => {
 let lastQueryLogTime = 0;
 
 // Separate function to actually fetch capsules from the database
+/**
+ * @deprecated Use fetchCapsulesFromDB from './capsuleQueryService' instead
+ */
 async function fetchCapsulesFromDB(): Promise<Capsule[]> {
   // Only log if we haven't logged in the last 500ms (handles React StrictMode double renders)
   const now = Date.now();
@@ -256,8 +272,8 @@ async function fetchCapsulesFromDB(): Promise<Capsule[]> {
         description: getString(capsule.description),
         style: getString(capsule.style),
         seasons: getArray<Season>(capsule.seasons),
-        // Use scenarios from the join table map, falling back to the old array column during migration period
-        scenarios: getArray<string>(capsuleScenariosMap[capsule.id] || capsule.scenarios),
+        // Only use scenarios from the join table map as the scenarios column has been removed
+        scenarios: getArray<string>(capsuleScenariosMap[capsule.id] || []),
         selectedItems: getArray<string>(capsuleItemsMap[capsule.id] || capsule.selected_items),
         mainItemId: getString(capsule.main_item_id) || undefined,
         dateCreated: getString(capsule.date_created || capsule.created_at, new Date().toISOString())
@@ -369,6 +385,7 @@ async function fetchCapsulesFromDB(): Promise<Capsule[]> {
 
 /**
  * Create a new capsule
+ * @deprecated Use createCapsule from './capsuleCrudService' instead
  */
 export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>): Promise<Capsule> => {
   // Track if we should be logging details (prevents log spam during rapid operations)
@@ -410,8 +427,7 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       description: newCapsule.description || null,
       style: newCapsule.style || null,
       seasons: Array.isArray(newCapsule.seasons) ? newCapsule.seasons : null,
-      // For backward compatibility during migration period, also store arrays in columns
-      scenarios: Array.isArray(newCapsule.scenarios) ? newCapsule.scenarios : null,
+      // Note: scenarios column has been removed, now using capsule_scenarios table only
       selected_items: Array.isArray(newCapsule.selectedItems) ? newCapsule.selectedItems : null,
       main_item_id: newCapsule.mainItemId || null,
       date_created: newCapsule.dateCreated,
@@ -556,6 +572,7 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
 
 /**
  * Update an existing capsule
+ * @deprecated Use updateCapsule from './capsuleCrudService' instead
  */
 export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Promise<Capsule | null> => {
   // Track if we should be logging details (prevents log spam during rapid operations)
@@ -592,8 +609,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
     if (capsule.seasons !== undefined) dbCapsule.seasons = Array.isArray(capsule.seasons) ? capsule.seasons : null;
     if (capsule.mainItemId !== undefined) dbCapsule.main_item_id = capsule.mainItemId || null;
     
-    // For backward compatibility during migration period, also update arrays in columns
-    if (capsule.scenarios !== undefined) dbCapsule.scenarios = Array.isArray(capsule.scenarios) ? capsule.scenarios : null;
+    // Note: scenarios column has been removed, now using capsule_scenarios table only
     if (capsule.selectedItems !== undefined) dbCapsule.selected_items = Array.isArray(capsule.selectedItems) ? capsule.selectedItems : null;
     
     let updatedCapsule: Capsule | null = null;
@@ -720,7 +736,8 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
               ...capsule,
               // Ensure arrays are properly handled
               seasons: capsule.seasons || oldCapsule.seasons,
-              scenarios: capsule.scenarios || oldCapsule.scenarios,
+              // Scenarios are handled via join table, not in the main capsule record
+              scenarios: capsule.scenarios || [],
               selectedItems: capsule.selectedItems || oldCapsule.selectedItems
             };
             
@@ -798,6 +815,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
 
 /**
  * Delete a capsule
+ * @deprecated Use deleteCapsule from './capsuleCrudService' instead
  */
 export const deleteCapsule = async (id: string): Promise<void> => {
   // Track if we should be logging details (prevents log spam during rapid operations)

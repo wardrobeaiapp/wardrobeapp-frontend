@@ -7,13 +7,11 @@ import {
   getItemCapsules
 } from './capsuleItemService';
 
-// Import all functions from capsuleService
-import {
-  fetchCapsules,
-  createCapsule,
-  updateCapsule,
-  deleteCapsule
-} from './capsuleService';
+// Import capsule service functions from modular files
+import { fetchCapsules, createCapsule, updateCapsule, deleteCapsule } from './capsuleCrudService';
+
+// Import additional modular services
+import { checkCapsuleTablesExist } from './capsuleQueryService';
 
 // Re-export all functions
 export {
@@ -28,7 +26,10 @@ export {
   fetchCapsules,
   createCapsule,
   updateCapsule,
-  deleteCapsule
+  deleteCapsule,
+  
+  // Utility functions
+  checkCapsuleTablesExist
 };
 
 // For backward compatibility with old imports
@@ -45,7 +46,8 @@ export const capsuleService = {
   fetchCapsules,
   createCapsule,
   updateCapsule,
-  deleteCapsule
+  deleteCapsule,
+  checkCapsuleTablesExist
 };
 
 // Named object for default export (to satisfy ESLint)
@@ -62,6 +64,7 @@ const capsuleOperations = {
   createCapsule,
   updateCapsule,
   deleteCapsule,
+  checkCapsuleTablesExist,
   
   // Legacy exports
   capsuleItemsService,
