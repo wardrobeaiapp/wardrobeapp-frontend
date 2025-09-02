@@ -2,8 +2,9 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types';
 import { OutfitExtended } from '../context/WardrobeContext';
 import { useWardrobe } from '../context/WardrobeContext';
-import { useOutfits } from '../hooks/useOutfits';
-import useCapsules from '../hooks/useCapsules';
+import { useOutfits } from './useOutfits';
+import useCapsules from './useCapsules';
+import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../components/features/wardrobe/forms/CapsuleForm';
 import { fetchScenarios } from '../services/api';
 
@@ -27,6 +28,8 @@ export const useHomePageData = () => {
     isLoading: itemsLoading, 
     error: itemsError 
   } = useWardrobe();
+  
+  const { user } = useSupabaseAuth();
   
   const { isLoading: outfitsLoading, error: outfitsError } = useOutfits([]);
   
@@ -352,9 +355,9 @@ export const useHomePageData = () => {
       };
       
       // If we have scenario IDs but no names, try to fetch them
-      if (newOutfit.scenarios.length > 0) {
+      if (newOutfit.scenarios.length > 0 && user) {
         try {
-          const allScenarios = await fetchScenarios();
+          const allScenarios = await fetchScenarios(user.id);
           newOutfit.scenarioNames = newOutfit.scenarios
             .map(scenarioId => {
               const scenario = allScenarios.find(s => s.id === scenarioId);
@@ -402,9 +405,10 @@ export const useHomePageData = () => {
       
       // If we have scenarios but no names, try to fetch them
       if (safeUpdates.scenarios && safeUpdates.scenarios.length > 0 && 
-          (!safeUpdates.scenarioNames || safeUpdates.scenarioNames.length === 0)) {
+          (!safeUpdates.scenarioNames || safeUpdates.scenarioNames.length === 0) &&
+          user) {
         try {
-          const allScenarios = await fetchScenarios();
+          const allScenarios = await fetchScenarios(user.id);
           safeUpdates.scenarioNames = safeUpdates.scenarios
             .map((scenarioId: string) => {
               const scenario = allScenarios.find((s: { id: string }) => s.id === scenarioId);

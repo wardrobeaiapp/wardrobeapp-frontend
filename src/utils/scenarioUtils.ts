@@ -275,14 +275,47 @@ export const generateScenariosFromLifestyle = (
 };
 
 /**
+ * Returns an array of default scenario names
+ * Used as fallback when user-specific scenarios aren't available
+ */
+const getDefaultScenarioNames = (): string[] => {
+  return [
+    'Casual Everyday',
+    'Office Work',
+    'Remote Work',
+    'Remote Work (Presentable)',
+    'Staying at Home',
+    'Staying at Home (Casual)',
+    'Creative Work',
+    'School/University',
+    'Housekeeping at Home',
+    'School Drop-off & Pickup',
+    'Playground Activities with Kids',
+    'Outdoor Home Projects',
+    'School Events & Meetings',
+    'Physical Work',
+    'Light Outdoor Activities',
+    'Social Outings',
+    'Travel',
+    'Formal Events'
+  ];
+};
+
+/**
  * Get scenario names for filter options
  * This ensures consistent scenario options across the app
+ * @param userId The ID of the user to fetch scenarios for
  */
-export const getScenarioNamesForFilters = async (): Promise<string[]> => {
+export const getScenarioNamesForFilters = async (userId?: string): Promise<string[]> => {
   try {
+    // Return default scenarios if no user ID provided
+    if (!userId) {
+      return getDefaultScenarioNames();
+    }
+    
     // Import dynamically to avoid circular dependencies
     const { fetchScenarios } = await import('../services/api');
-    const scenarios = await fetchScenarios();
+    const scenarios = await fetchScenarios(userId);
     
     if (scenarios && scenarios.length > 0) {
       // Return just the names for filter options
@@ -290,35 +323,10 @@ export const getScenarioNamesForFilters = async (): Promise<string[]> => {
     }
     
     // Return default scenario names if no scenarios found
-    return [
-      'Casual Everyday',
-      'Office Work',
-      'Remote Work',
-      'Remote Work (Presentable)',
-      'Staying at Home',
-      'Staying at Home (Casual)',
-      'Creative Work',
-      'School/University',
-      'Housekeeping at Home',
-      'School Drop-off & Pickup',
-      'Playground Activities with Kids',
-      'Outdoor Home Projects',
-      'School Events & Meetings',
-      'Physical Work',
-      'Light Outdoor Activities',
-      'Social Outings',
-      'Travel',
-      'Formal Events'
-    ];
+    return getDefaultScenarioNames();
   } catch (error) {
     console.error('Error fetching scenarios for filters:', error);
     // Return default scenario names if error occurs
-    return [
-      'Casual Everyday',
-      'Office Work',
-      'Remote Work',
-      'Staying at Home',
-      'Social Outings'
-    ];
+    return getDefaultScenarioNames().slice(0, 5); // Return first 5 default scenarios on error
   }
 };

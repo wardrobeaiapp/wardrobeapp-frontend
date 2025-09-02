@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Outfit, WardrobeItem, Scenario, Season, ItemCategory } from '../../../../../types';
 import { fetchScenarios } from '../../../../../services/api';
 import { FALLBACK_SCENARIOS } from '../../../../../constants';
+import { useSupabaseAuth } from '../../../../../context/SupabaseAuthContext';
 import { ButtonContainer, FormContainer } from '../../shared/styles/form.styles';
 import FormField from '../../../../common/Form/FormField';
 import Button from '../../../../../components/common/Button';
@@ -74,13 +75,17 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
   
   // Scenario fixing is now handled by the ScenarioFixer component
   
-  // Fetch scenarios when component mounts
+  const { user } = useSupabaseAuth();
+  
+  // Fetch scenarios when component mounts or user changes
   useEffect(() => {
+    if (!user) return;
+    
     const loadScenarios = async () => {
       try {
         setScenariosLoading(true);
         console.log('[OutfitForm] Fetching scenarios...');
-        const data = await fetchScenarios();
+        const data = await fetchScenarios(user.id);
         console.log('[OutfitForm] Scenarios from API:', data);
         
         // Check if data is valid - must be an array

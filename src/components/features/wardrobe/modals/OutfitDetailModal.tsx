@@ -7,6 +7,7 @@ import { OutfitInfo } from './OutfitDetailModal.styles';
 import { DetailLabel, DetailRow, DetailValue, ItemCard, ItemContent, ItemDetail, ItemImage, SmallItemImageContainer, ItemName, ItemsGrid, PlaceholderImage, SeasonText, SectionTitle } from './modalCommon.styles';
 import { ItemsSection } from './CapsuleDetailModal.styles';
 import { fetchScenarios } from '../../../../services/api';
+import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
 
 interface OutfitDetailModalProps {
@@ -32,12 +33,14 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [scenarioNames, setScenarioNames] = useState<string>('');
   
+  const { user } = useSupabaseAuth();
+  
   // Fetch scenarios to map IDs to names
   useEffect(() => {
     const loadScenarioNames = async () => {
-      if (outfit.scenarios && outfit.scenarios.length > 0) {
+      if (outfit.scenarios && outfit.scenarios.length > 0 && user) {
         try {
-          const allScenarios = await fetchScenarios();
+          const allScenarios = await fetchScenarios(user.id);
           
           // Map scenario IDs to names
           const names = outfit.scenarios.map(scenarioId => {

@@ -193,6 +193,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         dateCreated: new Date().toISOString(),
         lastWorn: outfitData.lastWorn ?? undefined,
         scenarios: outfitData.scenarios || [],
+        scenarioNames: outfitData.scenarioNames || [],
         items: outfitData.items || [],
         season: outfitData.season || [],
         tags: outfitData.tags || [],
@@ -251,6 +252,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         // Ensure required fields are always set
         items: updates.items || existingOutfit.items,
         scenarios: updates.scenarios || existingOutfit.scenarios || [],
+        scenarioNames: updates.scenarioNames || existingOutfit.scenarioNames || [],
         season: updates.season || existingOutfit.season || [],
         favorite: updates.favorite ?? existingOutfit.favorite,
         dateCreated: existingOutfit.dateCreated || new Date().toISOString()

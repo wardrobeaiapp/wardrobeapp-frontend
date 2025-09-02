@@ -206,7 +206,8 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
       name: item.name,
       items: item.items || [],
       occasion: item.occasion,
-      scenarios: item.scenarios,
+      scenarios: item.scenarios || [],
+      scenarioNames: item.scenarioNames || [],
       season: item.season,
       favorite: item.favorite || false,
       dateCreated: item.dateCreated || item.date_created,
@@ -230,9 +231,10 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
     // Extract items from the outfit object
     const { items, ...outfitWithoutItems } = outfit;
     
-    // Create outfit without items
+    // Create outfit with scenarioNames and other fields
     const newOutfit = {
       ...outfitWithoutItems,
+      scenarioNames: outfitWithoutItems.scenarioNames || [],
       dateCreated: new Date().toISOString()
     };
     
@@ -295,10 +297,17 @@ export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise
     // Extract items from the outfit object
     const { items, ...outfitWithoutItems } = outfit;
     
-    // Update the outfit without items
+    // Prepare update data with scenarioNames
+    const updateData = {
+      ...outfitWithoutItems,
+      // Ensure scenarioNames is always an array, even if undefined
+      scenarioNames: outfitWithoutItems.scenarioNames || []
+    };
+    
+    // Update the outfit
     const { error } = await supabase
       .from('outfits')
-      .update(outfitWithoutItems)
+      .update(updateData)
       .eq('id', id);
     
     if (error) throw error;
@@ -348,6 +357,13 @@ export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise
 
 export const deleteOutfit = async (id: string): Promise<void> => {
   try {
+    // First, delete related records in the join tables
+    await supabase
+      .from('outfit_items')
+      .delete()
+      .eq('outfit_id', id);
+    
+    // Then delete the outfit itself
     const { error } = await supabase
       .from('outfits')
       .delete()

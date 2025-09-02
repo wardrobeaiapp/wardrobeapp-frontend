@@ -156,6 +156,139 @@ export const updateUserScenarios = async (
  * @param id The ID of the scenario to fetch
  * @returns Promise resolving to the scenario or null if not found
  */
+/**
+ * Update scenarios for the current user
+ * This function handles both creating new scenarios and updating existing ones
+ * It will first delete all existing scenarios for the user and then insert the new ones
+ */
+export const updateScenarios = async (scenarios: Scenario[]): Promise<Scenario[]> => {
+  // Validate scenarios
+  if (!Array.isArray(scenarios)) {
+    throw new Error('Invalid scenarios format: expected an array');
+  }
+  
+  // Validate each scenario has required fields
+  const validScenarios = scenarios.filter((s): s is Scenario => {
+    return (
+      s && 
+      typeof s === 'object' && 
+      'name' in s && 
+      typeof s.name === 'string' &&
+      (!('frequency' in s) || typeof s.frequency === 'string')
+    );
+  });
+  
+  // If all scenarios are invalid, throw an error
+  if (validScenarios.length === 0 && scenarios.length > 0) {
+    throw new Error('All scenarios are invalid - each scenario must have at least a name');
+  }
+  
+  // Check if an update is already in progress
+  if (scenarioUpdateInProgress) {
+    // Wait for the current update to complete
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return updateScenarios(scenarios); // Try again
+  }
+  
+  // Set the flag to indicate an update is in progress
+  scenarioUpdateInProgress = true;
+  
+  try {
+    // Get current user
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !authData.user) {
+      throw new Error('User not authenticated');
+    }
+    
+    const userId = authData.user.id;
+    
+    // Prepare scenarios for insertion
+    const scenariosToInsert = validScenarios.map(scenario => {
+      const now = new Date().toISOString();
+      return {
+        user_id: userId,
+        name: scenario.name,
+        type: scenario.type || 'custom',
+        description: scenario.description || '',
+        frequency: scenario.frequency || 'weekly',
+        created_at: scenario.created_at || now,
+        updated_at: now
+      };
+    });
+    
+    // Delete existing scenarios for this user first
+    const { error: deleteError } = await supabase
+      .from('scenarios')
+      .delete()
+      .eq('user_id', userId);
+      
+    if (deleteError) {
+      console.error('Error deleting existing scenarios:', deleteError);
+      // Continue with insertion even if delete fails
+    }
+    
+    // Insert the new scenarios
+    const { data: insertedScenarios, error: insertError } = await supabase
+      .from('scenarios')
+      .insert(scenariosToInsert)
+      .select();
+      
+    if (insertError) {
+      throw new Error(`Failed to insert scenarios: ${insertError.message}`);
+    }
+    
+    // Also update scenarios in localStorage as a backup
+    try {
+      // Get existing user data from localStorage
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // Update or create preferences object
+      if (!userData.preferences) {
+        userData.preferences = {};
+      }
+      
+      // Transform scenarios to match the expected format in localStorage
+      const scenariosForStorage = validScenarios.map(scenario => ({
+        id: scenario.id,
+        user_id: scenario.user_id,
+        name: scenario.name,
+        type: scenario.type || 'custom',
+        description: scenario.description || '',
+        frequency: scenario.frequency || 'weekly',
+        created_at: scenario.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+      
+      // Update scenarios in user data
+      userData.preferences.scenarios = scenariosForStorage;
+      
+      // Save back to localStorage
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (storageError) {
+      console.error('Error updating scenarios in localStorage:', storageError);
+      // Continue even if localStorage update fails
+    }
+    
+    // Update cache with the new scenarios
+    scenariosCache = { 
+      data: insertedScenarios as unknown as Scenario[], 
+      timestamp: Date.now() 
+    };
+    
+    return insertedScenarios as unknown as Scenario[];
+  } catch (error) {
+    console.error('Error updating scenarios:', error);
+    throw error; // Re-throw to allow error handling by the caller
+  } finally {
+    // Always reset the flag when done
+    scenarioUpdateInProgress = false;
+  }
+};
+
+/**
+ * Get a scenario by ID
+ */
 export const getScenarioById = async (id: string): Promise<Scenario | null> => {
   const { data, error } = await supabase
     .from('scenarios')

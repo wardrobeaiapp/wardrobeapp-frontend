@@ -41,6 +41,7 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
       name: String(item.name),
       items: [] as string[], // Initialize with empty array, will be populated from join table
       scenarios: [] as string[], // Initialize with empty array, will be populated from join table
+      scenarioNames: Array.isArray(item.scenario_names) ? item.scenario_names : [],
       season: Array.isArray(item.season) ? item.season : [],
       favorite: Boolean(item.favorite),
       dateCreated: String(item.date_created),
@@ -134,6 +135,7 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
       favorite: outfit.favorite,
       date_created: dateCreated,
       last_worn: outfit.lastWorn,
+      scenario_names: outfit.scenarioNames || [],
       user_uuid: userId
     };
     
@@ -287,6 +289,7 @@ export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise
     if (outfitWithoutItems.season !== undefined) outfitData.season = outfitWithoutItems.season;
     if (outfitWithoutItems.favorite !== undefined) outfitData.favorite = outfitWithoutItems.favorite;
     if (outfitWithoutItems.lastWorn !== undefined) outfitData.last_worn = outfitWithoutItems.lastWorn;
+    if (outfitWithoutItems.scenarioNames !== undefined) outfitData.scenario_names = outfitWithoutItems.scenarioNames;
     
     // Update outfit in Supabase
     const { error } = await supabase
@@ -504,6 +507,7 @@ export const migrateOutfitsToSupabase = async (outfits: Outfit[]): Promise<void>
       favorite: outfit.favorite,
       date_created: outfit.dateCreated,
       last_worn: outfit.lastWorn,
+      scenario_names: outfit.scenarioNames || [],
       user_uuid: userId
     }));
     

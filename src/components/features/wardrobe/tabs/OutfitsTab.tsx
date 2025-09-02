@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
-import { getScenarioNamesForFilters } from '../../../../utils/scenarioUtils';
+import { fetchScenarios } from '../../../../services/api';
+import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 import CollectionCard from '../cards/CollectionCard';
 import { Season } from '../../../../types';
 import { SearchFilter } from '../shared/Filters/SearchFilter';
@@ -49,23 +50,36 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
 }) => {
   const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
-  
-  // Load scenario options from the premade list when component mounts
+  const { user } = useSupabaseAuth();
+
+  // Load user's scenarios when component mounts or user changes
   useEffect(() => {
-    const loadScenarioOptions = async () => {
+    let isMounted = true;
+    
+    const loadUserScenarios = async () => {
+      if (!user) return;
+      
       setLoadingScenarios(true);
       try {
-        const options = await getScenarioNamesForFilters();
-        setScenarioOptions(options);
+        const userScenarios = await fetchScenarios(user.id);
+        if (isMounted && userScenarios) {
+          setScenarioOptions(userScenarios.map((scenario: { name: string }) => scenario.name));
+        }
       } catch (err) {
-        console.error('Error loading scenario options:', err);
+        console.error('Error loading user scenarios:', err);
       } finally {
-        setLoadingScenarios(false);
+        if (isMounted) {
+          setLoadingScenarios(false);
+        }
       }
     };
+
+    loadUserScenarios();
     
-    loadScenarioOptions();
-  }, []);
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   // Handle scenario filter change
   const handleScenarioChange = useCallback((value: string) => {

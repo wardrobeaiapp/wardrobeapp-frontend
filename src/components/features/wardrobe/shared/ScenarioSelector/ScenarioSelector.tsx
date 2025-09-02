@@ -1,5 +1,5 @@
 import React from 'react';
-import { Scenario } from '../../../../../services/api';
+import { Scenario } from '../../../../../types';
 import { Checkbox, FormField, FormInput } from '../../../../../components/common/Form';
 import styled from 'styled-components';
 

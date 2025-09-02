@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { fetchScenarios, Scenario } from '../../../../../../services/api';
-import { Capsule } from '../../../../../../types';
+import { fetchScenarios } from '../../../../../../services/api';
+import { Capsule, Scenario } from '../../../../../../types';
+import { useSupabaseAuth } from '../../../../../../context/SupabaseAuthContext';
 
 export interface UseScenarioHandlingProps {
   editCapsule?: Capsule;
@@ -19,12 +20,16 @@ export const useScenarioHandling = ({
   const [scenarios, setScenarios] = useState<Scenario[]>([]);
   const [scenariosLoading, setScenariosLoading] = useState(false);
 
-  // Fetch scenarios when component mounts
+  const { user } = useSupabaseAuth();
+  
+  // Fetch scenarios when component mounts or user changes
   useEffect(() => {
+    if (!user) return;
+    
     const loadScenarios = async () => {
       try {
         setScenariosLoading(true);
-        const data = await fetchScenarios();
+        const data = await fetchScenarios(user.id);
         setScenarios(data);
         
         // If editing a capsule with scenarios, find matching scenario IDs

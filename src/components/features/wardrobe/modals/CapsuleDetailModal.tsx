@@ -3,6 +3,7 @@ import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 import { fetchScenarios } from '../../../../services/api';
 
 import useCapsuleItems from '../../../../hooks/useCapsuleItems';
@@ -78,6 +79,8 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
   // State for storing scenario names
   const [scenarioNames, setScenarioNames] = useState<string>('Not specified');
   
+  const { user } = useSupabaseAuth();
+  
   // Fetch scenarios to map IDs to names
   useEffect(() => {
     // Store scenarios in a local variable to use inside the effect
@@ -85,9 +88,9 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
     const currentScenarios = [...scenarios];
     
     const loadScenarioNames = async () => {
-      if (currentScenarios && currentScenarios.length > 0) {
+      if (currentScenarios && currentScenarios.length > 0 && user) {
         try {
-          const allScenarios = await fetchScenarios();
+          const allScenarios = await fetchScenarios(user.id);
           
           // Map scenario IDs to names
           const names = currentScenarios.map(scenarioId => {

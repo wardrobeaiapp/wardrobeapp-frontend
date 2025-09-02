@@ -8,6 +8,17 @@ import {
   checkOutfitsTableExists
 } from './wardrobe/outfits/outfitService';
 
+// Import scenario-related functions from scenarios service
+import {
+  getScenariosForUser as fetchScenarios,
+  updateScenarios,
+  createScenario,
+  updateScenario,
+  deleteScenario
+} from './scenarios/scenariosService';
+
+export { fetchScenarios, updateScenarios, createScenario, updateScenario, deleteScenario };
+
 // API base URL - using relative path to leverage proxy configuration
 const API_URL = '/api';
 
@@ -139,8 +150,14 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
     console.error('[api] Error fetching outfits:', error);
     // Fallback to legacy API if Supabase fails
     try {
-        const authHeaders = getAuthHeaders();
-      return await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
+      const authHeaders = getAuthHeaders();
+      const legacyOutfits = await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
+      
+      // Ensure scenarioNames is properly set for legacy outfits
+      return legacyOutfits.map(outfit => ({
+        ...outfit,
+        scenarioNames: outfit.scenarioNames || []
+      }));
     } catch (apiError) {
       console.error('[api] Legacy API also failed:', apiError);
       return [];
@@ -151,9 +168,15 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
 // Create outfit - now using Supabase with fallback to API
 export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
   try {
-    // Try to create outfit in Supabase first
-    const createdOutfit = await createOutfitInSupabase(outfit);
-    return createdOutfit;
+    // Ensure scenarioNames is properly set
+    const outfitWithScenarios = {
+      ...outfit,
+      scenarioNames: outfit.scenarioNames || []
+    };
+    
+    // Try to create in Supabase first
+    const newOutfit = await createOutfitInSupabase(outfitWithScenarios);
+    return newOutfit;
   } catch (error) {
     console.error('[api] Error creating outfit in Supabase:', error);
     // Fallback to API
@@ -173,8 +196,14 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
 // Update outfit - now using Supabase with fallback to API
 export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
   try {
+    // Ensure scenarioNames is properly set if it exists in the update
+    const updateData = {
+      ...outfit,
+      ...(outfit.scenarioNames !== undefined && { scenarioNames: outfit.scenarioNames || [] })
+    };
+    
     // Try to update in Supabase first
-    await updateOutfitInSupabase(id, outfit);
+    await updateOutfitInSupabase(id, updateData);
   } catch (error) {
     console.error('[api] Error updating outfit in Supabase:', error);
     // Fallback to legacy API
@@ -288,216 +317,9 @@ export const deleteCapsule = async (id: string): Promise<void> => {
       headers
     };
     
-    await apiRequest(`${API_URL}/capsules/${id}`, options);
-  }
-};
-
-// Scenario API calls
-export interface Scenario {
-  id: string;
-  user_id: string;
-  name: string;
-  type: string;
-  description?: string;
-  frequency?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-// Cache for scenarios data
-let scenariosCache: { data: Scenario[] | null; timestamp: number } = {
-  data: null,
-  timestamp: 0
-};
-
-export const fetchScenarios = async (): Promise<Scenario[]> => {
-  // Check if we have cached data that's less than 5 minutes old
-  const now = Date.now();
-  const cacheAge = now - scenariosCache.timestamp;
-  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
-  
-  if (scenariosCache.data && cacheAge < CACHE_TTL) {
-    return scenariosCache.data;
-  }
-
-  try {
-    // Import supabase client
-    const { supabase } = await import('./core');
-    
-    // Get current user
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !authData.user) {
-      throw new Error('User not authenticated');
+    const response = await fetch(`${API_URL}/capsules/${id}`, options);
+    if (!response.ok) {
+      throw new Error(`Failed to delete capsule: ${response.statusText}`);
     }
-    
-    // Fetch scenarios directly from the scenarios table
-    const { data: scenariosData, error: scenariosError } = await supabase
-      .from('scenarios')
-      .select('*')
-      .eq('user_id', authData.user.id);
-    
-    // Handle query error
-    if (scenariosError) {
-      console.error('Error fetching scenarios:', scenariosError);
-      // Update cache with empty array
-      scenariosCache = { data: [], timestamp: now };
-      return [];
-    }
-    
-    // Transform database scenarios to the Scenario interface format
-    const scenarios: Scenario[] = scenariosData.map(dbScenario => ({
-      id: String(dbScenario.id),
-      user_id: String(dbScenario.user_id),
-      name: String(dbScenario.name),
-      type: dbScenario.type ? String(dbScenario.type) : 'unknown',
-      description: dbScenario.description ? String(dbScenario.description) : '',
-      frequency: dbScenario.frequency ? String(dbScenario.frequency) : 'weekly',
-      created_at: dbScenario.created_at ? String(dbScenario.created_at) : undefined,
-      updated_at: dbScenario.updated_at ? String(dbScenario.updated_at) : undefined
-    }));
-    
-    // Update cache with fresh data
-    scenariosCache = { data: scenarios, timestamp: now };
-    
-    return scenarios;
-  } catch (error) {
-    // For any errors, log and return empty array to prevent UI from hanging
-    console.error('Error fetching scenarios:', error);
-    return [];
-  }
-};
-
-// Cache for tracking in-progress scenario updates to prevent duplicate calls
-let scenarioUpdateInProgress = false;
-
-export const updateScenarios = async (scenarios: Scenario[]): Promise<Scenario[]> => {
-  // Validate scenarios
-  if (!Array.isArray(scenarios)) {
-    throw new Error('Invalid scenarios format');
-  }
-  
-  // Validate each scenario has required fields
-  const validScenarios = scenarios.filter(s => {
-    const isValid = s && typeof s === 'object' && s.name; // ID can be generated by Supabase
-    return isValid;
-  });
-  
-  // If all scenarios are invalid, throw an error
-  if (validScenarios.length === 0 && scenarios.length > 0) {
-    throw new Error('All scenarios are invalid');
-  }
-  
-  // Check if an update is already in progress
-  if (scenarioUpdateInProgress) {
-    // Wait for the current update to complete
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return updateScenarios(scenarios); // Try again
-  }
-  
-  // Set the flag to indicate an update is in progress
-  scenarioUpdateInProgress = true;
-  
-  try {
-    // Import Supabase client
-    const { supabase } = await import('./core');
-    
-    // Get current user
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !authData.user) {
-      throw new Error('User not authenticated');
-    }
-    
-    const userId = authData.user.id;
-    
-    // First, delete any existing scenarios for this user
-    // This ensures we don't have duplicates when re-saving scenarios
-    const { error: deleteError } = await supabase
-      .from('scenarios')
-      .delete()
-      .eq('user_id', userId);
-      
-    if (deleteError) {
-      console.error('Error deleting existing scenarios:', deleteError);
-      // Continue anyway - we'll try to insert new scenarios
-    }
-    
-    // Prepare scenarios for insertion
-    const scenariosToInsert = validScenarios.map(scenario => ({
-      user_id: userId,
-      name: scenario.name,
-      type: scenario.type || 'unknown',
-      description: scenario.description || '',
-      frequency: scenario.frequency || 'weekly'
-      // Other fields will be handled by Supabase defaults
-    }));
-    
-    // Insert scenarios into the scenarios table
-    const { data: insertedScenarios, error: insertError } = await supabase
-      .from('scenarios')
-      .insert(scenariosToInsert)
-      .select();
-      
-    if (insertError) {
-      throw new Error(`Failed to insert scenarios: ${insertError.message}`);
-    }
-    
-    // Also update scenarios in localStorage as a backup
-    try {
-      // Get existing user data from localStorage
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Update or create preferences object
-      if (!userData.preferences) {
-        userData.preferences = {};
-      }
-      
-      // Set scenarios in preferences
-      userData.preferences.scenarios = validScenarios;
-      
-      // Save back to localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-    } catch (localStorageError) {
-      // This is just a backup, so log but don't throw
-      console.error('Error updating localStorage:', localStorageError);
-    }
-    
-    // Convert the returned data to the proper Scenario type
-    const typedScenarios = insertedScenarios ? (insertedScenarios as unknown as Scenario[]) : [];
-    
-    // Update cache
-    scenariosCache = { data: typedScenarios, timestamp: Date.now() };
-    
-    return typedScenarios;
-  } catch (error) {
-    console.error('[updateScenarios] Error updating scenarios:', error);
-    
-    // Try localStorage as fallback if all else fails
-    try {
-      // Get existing user data from localStorage
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      
-      // Update or create preferences object
-      if (!userData.preferences) {
-        userData.preferences = {};
-      }
-      
-      // Set scenarios in preferences
-      userData.preferences.scenarios = validScenarios;
-      
-      // Save back to localStorage
-      localStorage.setItem('user', JSON.stringify(userData));
-      
-      // Also update scenarios cache
-      scenariosCache = { data: validScenarios, timestamp: Date.now() };
-      
-      return validScenarios;
-    } catch (localStorageError) {
-      throw error; // Throw the original error
-    }
-  } finally {
-    // Always reset the in-progress flag, even if there's an error
-    scenarioUpdateInProgress = false;
   }
 };
