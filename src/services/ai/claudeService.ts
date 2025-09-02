@@ -1,11 +1,19 @@
 import axios from 'axios';
 import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
-import { Outfit } from '../../types/outfit';
+import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
 
-interface ClaudeResponse {
-  message: string;
-  outfits?: any[];
+// Extend the base ClaudeResponse to include outfits
+interface ClaudeResponse extends BaseClaudeResponse {
+  outfits?: Outfit[];
+  error?: string;
+  details?: string;
+}
+
+interface StyleAdviceResponse {
+  styleAdvice: string;
+  error?: string;
+  details?: string;
 }
 
 /**
@@ -73,20 +81,56 @@ export const claudeService = {
     preferences?: string
   ): Promise<ClaudeResponse> {
     try {
-      // Call our backend API
-      const response = await axios.post(`${API_URL}/outfit-suggestions`, {
-        wardrobeItems,
-        occasion,
-        season,
-        preferences
-      });
+      // Validate input
+      if (!Array.isArray(wardrobeItems)) {
+        console.error('Invalid wardrobeItems array');
+        return {
+          message: 'Invalid wardrobe items provided. Please check your input and try again.',
+          error: 'invalid_input',
+          details: 'wardrobeItems must be an array'
+        };
+      }
 
-      return response.data as ClaudeResponse;
-    } catch (error) {
+      // Call our backend API with proper typing and timeout
+      const response = await axios.post<ClaudeResponse>(
+        `${API_URL}/outfit-suggestions`,
+        {
+          wardrobeItems,
+          occasion,
+          season,
+          preferences
+        },
+        { timeout: 45000 } // 45 second timeout for outfit suggestions
+      );
+
+      // Validate response structure
+      if (!response.data || typeof response.data.message !== 'string') {
+        console.error('Invalid response format from outfit suggestions API:', response.data);
+        return {
+          message: 'Received an invalid response from the outfit suggestions service.',
+          error: 'invalid_response',
+          details: 'Response format is invalid'
+        };
+      }
+
+      return response.data;
+    } catch (error: any) {
       console.error('Error calling outfit suggestions API:', error);
-      return {
-        message: 'Error connecting to outfit suggestions API. Please try again later.',
+      
+      const errorResponse: ClaudeResponse = {
+        message: 'Error connecting to outfit suggestions service. Please try again later.',
+        error: 'api_error',
+        details: error.message
       };
+      
+      if (error.code === 'ECONNABORTED') {
+        errorResponse.message = 'The outfit suggestions request timed out. Please try again with fewer items or different criteria.';
+        errorResponse.error = 'timeout';
+      } else if (error.response?.data) {
+        errorResponse.details = error.response.data.message || JSON.stringify(error.response.data);
+      }
+      
+      return errorResponse;
     }
   },
 
@@ -95,16 +139,36 @@ export const claudeService = {
    */
   async getStyleAdvice(outfit: Outfit, wardrobeItems: WardrobeItem[]): Promise<string> {
     try {
-      // Call our backend API
-      const response = await axios.post(`${API_URL}/style-advice`, {
-        outfit,
-        wardrobeItems
-      });
+      // Validate input
+      if (!outfit || !wardrobeItems || !Array.isArray(wardrobeItems)) {
+        console.error('Invalid input for style advice request');
+        return 'Invalid input for style advice. Please check your request and try again.';
+      }
+
+      // Call our backend API with proper typing
+      const response = await axios.post<StyleAdviceResponse>(
+        `${API_URL}/style-advice`,
+        { outfit, wardrobeItems },
+        { timeout: 30000 } // 30 second timeout
+      );
+
+      // Handle potential missing or malformed response
+      if (!response.data || typeof response.data.styleAdvice !== 'string') {
+        console.error('Invalid response format from style advice API:', response.data);
+        return 'Received an invalid response from the style advice service. Please try again.';
+      }
 
       return response.data.styleAdvice;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error calling style advice API:', error);
-      return 'Error connecting to style advice API. Please try again later.';
+      
+      if (error.code === 'ECONNABORTED') {
+        return 'The style advice request timed out. Please try again with a smaller selection of items.';
+      }
+      
+      return error.response?.data?.message || 
+             error.message || 
+             'Error connecting to style advice service. Please try again later.';
     }
   },
 

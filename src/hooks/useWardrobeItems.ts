@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { WardrobeItem, WishlistStatus } from '../types';
-import * as api from '../services/api';
+import * as itemService from '../services/wardrobe/items/itemService';
 
 export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);
@@ -41,20 +41,11 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
         return newItem;
       };
       
-      // Try to add to backend if authenticated, otherwise add locally
+      // Always use the new itemService which handles both authenticated and unauthenticated states
       try {
-        // Check if we're in an authenticated context by checking for token
-        const token = localStorage.getItem('token');
-        
-        if (token) {
-          // Add to backend API
-          const newItem = await api.createWardrobeItem(item);
-          setItems(prevItems => [newItem, ...prevItems]);
-          return newItem;
-        } else {
-          // Add to local storage for guest users
-          return addItemAsGuest(item);
-        }
+        const newItem = await itemService.addWardrobeItem(item);
+        setItems(prevItems => [newItem, ...prevItems]);
+        return newItem;
       } catch (error) {
         console.error('[useWardrobeItems] Error in addItem, falling back to guest mode:', error);
         // Final fallback - try to add as guest
@@ -68,20 +59,17 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   };
 
   // Update an existing wardrobe item
-  const updateItem = async (id: string, item: Partial<WardrobeItem>) => {
+  const updateItem = async (id: string, updates: Partial<WardrobeItem>) => {
     try {
-      // Check if we're in an authenticated context
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        // Update in backend API
-        await api.updateWardrobeItem(id, item);
-      }
+      // Use the item service which handles both authenticated and unauthenticated states
+      const updatedItem = await itemService.updateWardrobeItem(id, updates);
       
       // Update local state
       setItems(prevItems => prevItems.map(existingItem => 
-        existingItem.id === id ? { ...existingItem, ...item } : existingItem
+        existingItem.id === id ? { ...existingItem, ...updatedItem } : existingItem
       ));
+      
+      return updatedItem;
     } catch (error: any) {
       console.error('[useWardrobeItems] Error updating item:', error);
       setError(error.message || 'Failed to update item');
@@ -92,13 +80,8 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   // Delete a wardrobe item
   const deleteItem = async (id: string) => {
     try {
-      // Check if we're in an authenticated context
-      const token = localStorage.getItem('token');
-      
-      if (token) {
-        // Delete from backend API
-        await api.deleteWardrobeItem(id);
-      }
+      // Use the item service which handles both authenticated and unauthenticated states
+      await itemService.deleteWardrobeItem(id);
       
       // Remove from local state
       setItems(prevItems => prevItems.filter(item => item.id !== id));

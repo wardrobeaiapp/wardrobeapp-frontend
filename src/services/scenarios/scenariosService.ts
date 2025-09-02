@@ -1,19 +1,43 @@
 import { supabase } from '../core';
 import { Scenario, CreateScenarioData, UpdateScenarioData } from './types';
 
+// Cache for scenarios data
+let scenariosCache: { data: Scenario[] | null; timestamp: number } = {
+  data: null,
+  timestamp: 0
+};
+
+// Flag to track in-progress scenario updates
+let scenarioUpdateInProgress = false;
+
 /**
  * Get all scenarios for a user
  * @param userId The user ID to get scenarios for
  * @returns Promise resolving to an array of scenarios
  */
-export const getScenariosForUser = async (userId: string): Promise<Scenario[]> => {
+export const getScenariosForUser = async (userId: string, useCache = true): Promise<Scenario[]> => {
+  // Check cache if enabled and valid (less than 5 minutes old)
+  const now = Date.now();
+  const cacheAge = now - scenariosCache.timestamp;
+  const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+  
+  if (useCache && scenariosCache.data && cacheAge < CACHE_TTL) {
+    return scenariosCache.data;
+  }
+
   const { data, error } = await supabase
     .from('scenarios')
     .select('*')
     .eq('user_id', userId);
     
   if (error) throw error;
-  return (data as unknown as Scenario[]) || [];
+  
+  const scenarios = (data as unknown as Scenario[]) || [];
+  
+  // Update cache
+  scenariosCache = { data: scenarios, timestamp: now };
+  
+  return scenarios;
 };
 
 /**
@@ -65,4 +89,86 @@ export const deleteScenario = async (id: string): Promise<void> => {
     .eq('id', id);
     
   if (error) throw error;
+  
+  // Invalidate cache
+  scenariosCache = { data: null, timestamp: 0 };
+};
+
+/**
+ * Update multiple scenarios in a batch
+ * @param userId The ID of the user
+ * @param scenarios Array of scenarios to update
+ * @param options Options for the update
+ * @returns Promise resolving to the updated scenarios
+ */
+export const updateUserScenarios = async (
+  userId: string, 
+  scenarios: Scenario[],
+  options: { clearExisting?: boolean } = { clearExisting: true }
+): Promise<Scenario[]> => {
+  // Validate input
+  if (!Array.isArray(scenarios)) {
+    throw new Error('Scenarios must be an array');
+  }
+
+  // Filter out invalid scenarios
+  const validScenarios = scenarios.filter(s => s && typeof s === 'object' && s.name);
+  
+  if (validScenarios.length === 0 && scenarios.length > 0) {
+    throw new Error('All scenarios are invalid');
+  }
+
+  // Prevent concurrent updates
+  if (scenarioUpdateInProgress) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return updateUserScenarios(userId, scenarios, options);
+  }
+
+  scenarioUpdateInProgress = true;
+  
+  try {
+    // Start a transaction
+    const { data: updatedScenarios, error } = await supabase.rpc('update_user_scenarios', {
+      p_user_id: userId,
+      p_scenarios: validScenarios,
+      p_clear_existing: options.clearExisting ?? true
+    });
+
+    if (error) throw error;
+    
+    // Update cache
+    scenariosCache = { 
+      data: updatedScenarios as unknown as Scenario[], 
+      timestamp: Date.now() 
+    };
+    
+    return updatedScenarios as unknown as Scenario[];
+  } catch (error) {
+    console.error('Error updating scenarios:', error);
+    throw error;
+  } finally {
+    scenarioUpdateInProgress = false;
+  }
+};
+
+/**
+ * Get a scenario by ID
+ * @param id The ID of the scenario to fetch
+ * @returns Promise resolving to the scenario or null if not found
+ */
+export const getScenarioById = async (id: string): Promise<Scenario | null> => {
+  const { data, error } = await supabase
+    .from('scenarios')
+    .select('*')
+    .eq('id', id)
+    .single();
+    
+  if (error) {
+    if (error.code === 'PGRST116') { // No rows returned
+      return null;
+    }
+    throw error;
+  }
+  
+  return data as unknown as Scenario;
 };

@@ -1,21 +1,58 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
-import { WardrobeItem, Outfit, Capsule } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/useWardrobeItemsDB';
 import { useOutfits } from '../hooks/useOutfits';
 import * as api from '../services/api';
-// Fix UUID import
-const { v4: uuidv4 } = require('uuid');
+
+// Base outfit interface with all possible fields
+interface OutfitBase {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  items: string[];
+  dateCreated: string;
+  lastWorn?: string;
+  favorite: boolean;
+  season: Season[];
+  occasion?: string;
+  weather?: string[];
+  tags?: string[];
+  imageUrl?: string;
+  scenarios: string[];
+}
+
+// Alias for backward compatibility
+type OutfitType = OutfitBase;
+
+// Input type for creating/updating outfits
+type OutfitInput = {
+  name: string;
+  description: string;
+  items: string[];
+  season: Season[];
+  favorite: boolean;
+  scenarios: string[];
+  lastWorn?: string;
+  occasion?: string;
+  weather?: string[];
+  tags?: string[];
+  imageUrl?: string;
+};
+
+export type OutfitExtended = OutfitBase;
 
 interface WardrobeContextState {
   items: WardrobeItem[];
-  outfits: Outfit[];
+  outfits: OutfitExtended[];
   capsules: Capsule[];
   addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
   updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
-  addOutfit: (outfit: Omit<Outfit, 'id' | 'dateCreated'>) => Promise<Outfit | null>;
-  updateOutfit: (id: string, updates: Partial<Outfit>) => Promise<Outfit | null>;
+  addOutfit: (outfit: Omit<OutfitExtended, 'id' | 'dateCreated'>) => Promise<OutfitExtended | null>;
+  updateOutfit: (id: string, updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>) => Promise<OutfitExtended | null>;
   deleteOutfit: (id: string) => Promise<boolean>;
   addCapsule: (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => Promise<Capsule | null>;
   updateCapsule: (id: string, updates: Partial<Capsule>) => Promise<Capsule | null>;
@@ -38,7 +75,7 @@ interface WardrobeProviderProps {
   children: ReactNode;
 }
 
-export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) => {
+export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }): React.ReactElement => {
   const { user, isAuthenticated } = useSupabaseAuth();
   const userId = user?.id || 'guest';
 
@@ -58,42 +95,67 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) 
     isLoading: itemsLoading
   } = useWardrobeItemsDB([]);  // Always start with empty array, the hook will load from DB or localStorage as needed
 
-  const { 
-    outfits, 
-    setOutfits, 
-    addOutfit, 
-    updateOutfit: updateOutfitInState, 
-    deleteOutfit, 
-    error: outfitsError, 
-    setError: setOutfitsError,
-    isLoading: outfitsLoading
+  // Use the useOutfits hook with proper type annotations and default values
+  const {
+    outfits = [],
+    error: outfitsError,
+    isLoading: isOutfitsLoading = false,
+    addOutfit: addOutfitHook = async () => null,
+    updateOutfit: updateOutfitHook = async () => null,
+    deleteOutfit: deleteOutfitHook = async () => false,
+    setError: setOutfitsError = () => {},
   } = useOutfits([]);
 
-  // Wrap updateOutfit to ensure it returns a Promise<Outfit | null>
-  const updateOutfit = useCallback(async (id: string, updates: Partial<Outfit>): Promise<Outfit | null> => {
+  // Handle outfit updates with proper type safety
+  const updateOutfit = useCallback(async (
+    id: string, 
+    updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>
+  ): Promise<OutfitExtended | null> => {
     try {
-      await updateOutfitInState(id, updates);
-      const updatedOutfit = outfits.find(o => o.id === id);
-      return updatedOutfit || null;
+      const currentOutfit = outfits.find((o: OutfitExtended) => o.id === id);
+      if (!currentOutfit) return null;
+      
+      // Create a properly typed update object with all required fields
+      const updateData: OutfitInput = {
+        name: updates.name ?? currentOutfit.name,
+        description: updates.description ?? currentOutfit.description ?? '',
+        items: updates.items ?? currentOutfit.items ?? [],
+        season: updates.season ?? currentOutfit.season ?? [],
+        favorite: updates.favorite ?? currentOutfit.favorite ?? false,
+        scenarios: updates.scenarios ?? currentOutfit.scenarios ?? [],
+        // Optional fields with proper fallbacks
+        lastWorn: updates.lastWorn ?? currentOutfit.lastWorn,
+        occasion: updates.occasion ?? currentOutfit.occasion,
+        weather: updates.weather ?? currentOutfit.weather,
+        tags: updates.tags ?? currentOutfit.tags,
+        imageUrl: updates.imageUrl ?? currentOutfit.imageUrl
+      };
+      
+      // Call the update function with proper types
+      const updatedOutfit = await updateOutfitHook(id, updateData);
+      return updatedOutfit;
     } catch (error) {
       console.error('Error updating outfit:', error);
       return null;
     }
-  }, [updateOutfitInState, outfits]);
+  }, [updateOutfitHook, outfits]);
 
   // Wrap deleteOutfit to ensure it returns a Promise<boolean>
-  const handleDeleteOutfit = useCallback(async (id: string): Promise<boolean> => {
+  const handleDeleteOutfit = useCallback(async (id: string) => {
     try {
-      await deleteOutfit(id);
-      return true;
+      if (deleteOutfitHook) {
+        const success = await deleteOutfitHook(id);
+        return success;
+      }
+      return false;
     } catch (error) {
       console.error('Error deleting outfit:', error);
       return false;
     }
-  }, [deleteOutfit]);
+  }, [deleteOutfitHook]);
   
   // Combine loading states
-  const isLoading = itemsLoading || outfitsLoading || capsulesLoading;
+  const isLoading = itemsLoading || isOutfitsLoading || capsulesLoading;
   
   // Only show errors if we don't have any items loaded
   // This prevents showing API errors when we've successfully loaded items from localStorage
@@ -216,103 +278,21 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) 
   // Listen for item deletion events to update outfits
   useEffect(() => {
     const handleItemDeleted = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail && customEvent.detail.updatedOutfits) {
-        // Removed excessive logging for performance
-        setOutfits(customEvent.detail.updatedOutfits);
+      const customEvent = event as CustomEvent<{ updatedOutfits: OutfitExtended[] }>;
+      if (customEvent.detail?.updatedOutfits) {
+        console.log('Item deleted, outfits may need refresh');
       }
     };
     
-    // Add event listener
-    window.addEventListener('wardrobeItemDeleted', handleItemDeleted);
+    // Add event listener with proper type assertion
+    window.addEventListener('wardrobeItemDeleted', handleItemDeleted as EventListener);
     
     // Cleanup function
     return () => {
-      window.removeEventListener('wardrobeItemDeleted', handleItemDeleted);
+      window.removeEventListener('wardrobeItemDeleted', handleItemDeleted as EventListener);
     };
-  }, [setOutfits]); // Added missing dependency
+  }, []);
 
-  // Load data when component mounts or when user changes
-  useEffect(() => {
-    // Skip loading if auth state is still being determined
-    // This prevents premature loading with incorrect auth state
-    if (isAuthenticated === undefined) return;
-    
-    const loadData = async () => {
-      setCapsulesLoading(true);
-      setOutfitsError(null);
-      setCapsuleError(null);
-      
-      try {
-        // Try to load from localStorage first (for guest users or initial load)
-        const cachedOutfits = localStorage.getItem(`outfits-${userId}`);
-        const cachedCapsules = localStorage.getItem(`capsules-${userId}`);
-        
-        // If we have cached data, use it initially
-        if (cachedOutfits) {
-          setOutfits(JSON.parse(cachedOutfits));
-        }
-        if (cachedCapsules) {
-          setCapsules(JSON.parse(cachedCapsules));
-        }
-        
-        if (isAuthenticated) {
-          try {
-            // Load capsules from API
-            const loadedCapsules = await api.fetchCapsules();
-            setCapsules(loadedCapsules);
-          } catch (authError) {
-            console.error('Error loading capsules:', authError);
-          }
-        } else {
-          // Guest user: load from localStorage
-          const guestOutfits = localStorage.getItem('outfits-guest');
-          if (guestOutfits) {
-            setOutfits(JSON.parse(guestOutfits));
-          }
-        }
-      } catch (error) {
-        console.error('Error loading data:', error);
-      } finally {
-        setCapsulesLoading(false);
-      }
-    };
-    
-    loadData();
-  }, [isAuthenticated, userId, setOutfits, setOutfitsError]);
-
-  // Save outfits to localStorage when they change
-  useEffect(() => {
-    if (isLoading) return;
-    
-    if (isAuthenticated && userId !== 'guest') {
-      localStorage.setItem(`outfits-${userId}`, JSON.stringify(outfits));
-    } else {
-      localStorage.setItem('outfits-guest', JSON.stringify(outfits));
-    }
-  }, [outfits, isLoading, isAuthenticated, userId]);
-
-  // Handle item deletions from other tabs/windows
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === `wardrobe-items-${userId}` || 
-          (userId === 'guest' && e.key === 'wardrobe-items-guest')) {
-        try {
-          const updatedItems = e.newValue ? JSON.parse(e.newValue) : [];
-          setWardrobeItems(updatedItems);
-        } catch (error) {
-          console.error('Error parsing updated items from storage:', error);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, [userId, setWardrobeItems]);
-
-  // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo<WardrobeContextState>(() => ({
     items,
     outfits,
@@ -320,14 +300,57 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) 
     addItem,
     updateItem,
     deleteItem,
-    addOutfit,
+    addOutfit: async (outfitData) => {
+      try {
+        // Ensure we have the current user ID
+        const currentUser = user;
+        if (!currentUser?.id) {
+          throw new Error('User not authenticated');
+        }
+
+        // Create a properly typed outfit object with all required fields
+        const newOutfitData: OutfitInput = {
+          name: outfitData.name,
+          description: outfitData.description || '',
+          items: Array.isArray(outfitData.items) ? outfitData.items : [],
+          favorite: Boolean(outfitData.favorite),
+          season: Array.isArray(outfitData.season) ? outfitData.season : [],
+          scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
+          occasion: outfitData.occasion || '',
+          weather: Array.isArray(outfitData.weather) ? outfitData.weather : [],
+          tags: Array.isArray(outfitData.tags) ? outfitData.tags : [],
+          imageUrl: outfitData.imageUrl || '',
+          lastWorn: outfitData.lastWorn || ''
+        };
+        
+        const newOutfit = await addOutfitHook(newOutfitData);
+        if (!newOutfit) return null;
+        
+        // Ensure all required fields are present in the returned outfit
+        const completeOutfit: OutfitExtended = {
+          ...newOutfit,
+          id: newOutfit.id || uuidv4(),
+          userId: newOutfit.userId || currentUser.id,
+          dateCreated: newOutfit.dateCreated || new Date().toISOString(),
+          scenarios: newOutfit.scenarios || [],
+          items: newOutfit.items || [],
+          favorite: newOutfit.favorite || false,
+          season: newOutfit.season || []
+        };
+        
+        return completeOutfit;
+      } catch (error) {
+        console.error('Error adding outfit:', error);
+        return null;
+      }
+    },
     updateOutfit,
-    deleteOutfit: handleDeleteOutfit, // Use the wrapped version that returns Promise<boolean>
+    deleteOutfit: handleDeleteOutfit,
     addCapsule,
     updateCapsule,
     deleteCapsule,
     isLoading,
-    error: error || capsuleError
+    error: error || outfitsError || capsuleError || null
   }), [
     items,
     outfits,
@@ -335,7 +358,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) 
     addItem,
     updateItem,
     deleteItem,
-    addOutfit,
+    addOutfitHook,
     updateOutfit,
     handleDeleteOutfit,
     addCapsule,
@@ -343,7 +366,9 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }) 
     deleteCapsule,
     isLoading,
     error,
-    capsuleError
+    outfitsError,
+    capsuleError,
+    userId
   ]);
 
   return (

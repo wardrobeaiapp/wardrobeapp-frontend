@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types';
+import { OutfitExtended } from '../context/WardrobeContext';
 import { useWardrobe } from '../context/WardrobeContext';
 import { useOutfits } from '../hooks/useOutfits';
 import useCapsules from '../hooks/useCapsules';
@@ -112,32 +113,54 @@ export const useHomePageData = () => {
   
   // Filter items based on selected filters
   const filteredItems = useMemo(() => items.filter(item => {
+    const searchLower = searchQuery.toLowerCase();
+    const categoryLower = item.category?.toLowerCase() || '';
+    const brandLower = item.brand?.toLowerCase() || '';
+    
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    const matchesSeason = seasonFilter === 'all' || item.season.includes(seasonFilter as Season);
+    const matchesSeason = seasonFilter === 'all' || (item.season || []).includes(seasonFilter as Season);
     const matchesSearch = searchQuery === '' || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.brand?.toLowerCase().includes(searchQuery.toLowerCase());
+      item.name.toLowerCase().includes(searchLower) ||
+      categoryLower.includes(searchLower) ||
+      brandLower.includes(searchLower);
+    
     return matchesCategory && matchesSeason && matchesSearch && !item.wishlist;
   }), [items, categoryFilter, seasonFilter, searchQuery]);
   
   // Filter outfits based on selected filters
   const filteredOutfits = useMemo(() => outfits.filter(outfit => {
-    const matchesSeason = outfitSeasonFilter === 'all' || outfit.season.includes(outfitSeasonFilter as Season);
-    const matchesScenario = outfitScenarioFilter === 'all' || (outfit.scenarios && outfit.scenarios.includes(outfitScenarioFilter));
+    const searchLower = outfitSearchQuery.toLowerCase();
+    const outfitScenarios = outfit.scenarios || [];
+    
+    const matchesSeason = outfitSeasonFilter === 'all' || 
+      (outfit.season || []).includes(outfitSeasonFilter as Season);
+      
+    const matchesScenario = outfitScenarioFilter === 'all' || 
+      outfitScenarios.includes(outfitScenarioFilter);
+      
     const matchesSearch = outfitSearchQuery === '' || 
-      outfit.name.toLowerCase().includes(outfitSearchQuery.toLowerCase()) ||
-      (outfit.scenarios && outfit.scenarios.some(scenario => scenario.toLowerCase().includes(outfitSearchQuery.toLowerCase())));
+      outfit.name.toLowerCase().includes(searchLower) ||
+      outfitScenarios.some(scenario => scenario.toLowerCase().includes(searchLower));
+      
     return matchesSeason && matchesScenario && matchesSearch;
   }), [outfits, outfitSeasonFilter, outfitScenarioFilter, outfitSearchQuery]);
 
   // Filter capsules based on selected filters
   const filteredCapsules = useMemo(() => capsules.filter(capsule => {
-    const matchesSeason = capsuleSeasonFilter === 'all' || capsule.seasons.includes(capsuleSeasonFilter as Season);
-    const matchesScenario = capsuleScenarioFilter === 'all' || (capsule.scenarios && capsule.scenarios.includes(capsuleScenarioFilter));
+    const searchLower = capsuleSearchQuery.toLowerCase();
+    const capsuleScenarios = capsule.scenarios || [];
+    const capsuleSeasons = capsule.seasons || [];
+    
+    const matchesSeason = capsuleSeasonFilter === 'all' || 
+      capsuleSeasons.includes(capsuleSeasonFilter as Season);
+      
+    const matchesScenario = capsuleScenarioFilter === 'all' || 
+      capsuleScenarios.includes(capsuleScenarioFilter);
+      
     const matchesSearch = capsuleSearchQuery === '' || 
-      capsule.name.toLowerCase().includes(capsuleSearchQuery.toLowerCase()) ||
-      (capsule.scenarios && capsule.scenarios.some(scenario => scenario.toLowerCase().includes(capsuleSearchQuery.toLowerCase())));
+      capsule.name.toLowerCase().includes(searchLower) ||
+      capsuleScenarios.some(scenario => scenario.toLowerCase().includes(searchLower));
+      
     return matchesSeason && matchesScenario && matchesSearch;
   }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
 
@@ -261,47 +284,102 @@ export const useHomePageData = () => {
     setSelectedCapsule(undefined);
   }, [deleteCapsuleById]);
   
-  const handleSubmitAdd = useCallback((item: any, file?: File) => {
-    console.log('[useHomePageData] Adding item with file:', !!file);
-    console.log('[useHomePageData] Item data received:', {
-      neckline: item.neckline,
-      sleeves: item.sleeves,
-      style: item.style,
-      rise: item.rise
-    });
-    addItem(item, file);
-    setIsAddModalOpen(false);
-    
-    // If the item is a wishlist item, switch to the wishlist tab
-    if (item.wishlist) {
-      setActiveTab(TabType.WISHLIST);
+  const handleSubmitAdd = useCallback(async (item: Omit<WardrobeItem, 'id' | 'dateCreated'>, file?: File) => {
+    try {
+      console.log('[useHomePageData] Adding item with file:', !!file);
+      console.log('[useHomePageData] Item data received:', {
+        neckline: item.neckline,
+        sleeves: item.sleeves,
+        style: item.style,
+        rise: item.rise
+      });
+      
+      await addItem(item, file);
+      setIsAddModalOpen(false);
+      
+      // If the item is a wishlist item, switch to the wishlist tab
+      if (item.wishlist) {
+        setActiveTab(TabType.WISHLIST);
+      }
+    } catch (error) {
+      console.error('Failed to add item:', error);
+      // Consider adding error state to show in UI
     }
   }, [addItem, setActiveTab]);
   
-  const handleSubmitEdit = useCallback((item: any) => {
-    if (currentItemId) {
-      updateItem(currentItemId, item);
+  const handleSubmitEdit = useCallback(async (updates: Partial<WardrobeItem>) => {
+    if (!currentItemId) {
+      console.error('No item selected for editing');
+      return;
+    }
+    
+    try {
+      await updateItem(currentItemId, updates);
       
       // If the view modal is open for this item, update the selectedItem with new data
-      if (selectedItem && selectedItem.id === currentItemId) {
-        setSelectedItem({ ...selectedItem, ...item });
+      if (selectedItem?.id === currentItemId) {
+        setSelectedItem({ ...selectedItem, ...updates });
       }
       
       setIsEditModalOpen(false);
       setCurrentItemId(null);
+    } catch (error) {
+      console.error('Failed to update item:', error);
+      // Consider adding error state to show in UI
     }
   }, [currentItemId, updateItem, selectedItem]);
   
-  const handleAddOutfit = useCallback((outfit: any) => {
-    addOutfit(outfit);
-    setIsAddOutfitModalOpen(false);
+  const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'userId' | 'scenarios'> & { scenarios?: string[] }) => {
+    try {
+      // Create a new outfit with all required fields
+      const newOutfit: Omit<OutfitExtended, 'id'> = {
+        ...outfitData,
+        userId: 'current-user-id', // TODO: Get from auth context
+        items: outfitData.items || [],
+        favorite: outfitData.favorite || false,
+        season: outfitData.season || [],
+        occasion: outfitData.occasion || '',
+        lastWorn: outfitData.lastWorn,
+        name: outfitData.name || 'New Outfit',
+        description: '',
+        weather: [],
+        tags: [],
+        dateCreated: new Date().toISOString(),
+        scenarios: outfitData.scenarios || []
+      };
+      
+      await addOutfit(newOutfit);
+      setIsAddOutfitModalOpen(false);
+    } catch (error) {
+      console.error('Failed to add outfit:', error);
+      // Consider adding error state to show in UI
+    }
   }, [addOutfit]);
   
-  const handleEditOutfitSubmit = useCallback((outfitData: any) => {
-    if (currentOutfitId) {
-      updateOutfit(currentOutfitId, outfitData);
+  const handleEditOutfitSubmit = useCallback(async (outfitData: Partial<Outfit> & { id?: string }) => {
+    if (!currentOutfitId) {
+      console.error('No outfit selected for editing');
+      return;
+    }
+    
+    try {
+      // Create a safe updates object with only the fields we want to update
+      const { id, dateCreated, ...updates } = outfitData;
+      
+      // Ensure required fields are not accidentally removed
+      const safeUpdates: Partial<Outfit> = {
+        ...updates,
+        items: updates.items || [],
+        season: updates.season || [],
+        scenarios: updates.scenarios || []
+      };
+      
+      await updateOutfit(currentOutfitId, safeUpdates);
       setIsEditOutfitModalOpen(false);
       setCurrentOutfitId(null);
+    } catch (error) {
+      console.error('Failed to update outfit:', error);
+      // Consider adding error state to show in UI
     }
   }, [currentOutfitId, updateOutfit]);
   
@@ -350,20 +428,24 @@ export const useHomePageData = () => {
       // Here you would call your AI generation service
       
       // For now, create a simple outfit based on the selected data
-      const newOutfit = {
-        name: `${data.scenario} Outfit`,
-        items: data.includedItems.length > 0 ? 
-          data.includedItems : 
-          // If no items were specifically selected, include some random items from the wardrobe
-          // that match the selected seasons
-          items.filter(item => 
-            item.season.some(s => data.seasons.includes(s))
-          ).slice(0, Math.min(5, items.length)).map(item => item.id),
-        season: data.seasons,
-        scenarios: [data.scenario], // Store scenario in the scenarios array
-        occasion: data.scenario, // Keep for backward compatibility
+      const newOutfit: Omit<OutfitExtended, 'id'> = {
+        name: data.name || `${data.scenario || 'New'} Outfit`,
+        description: data.description || '',
+        items: data.includedItems?.length > 0 
+          ? data.includedItems 
+          : items
+              .filter(item => item.season?.some(s => data.seasons?.includes(s)))
+              .slice(0, Math.min(5, items.length))
+              .map(item => item.id),
+        season: data.seasons || [],
+        scenarios: data.scenario ? [data.scenario] : [],
         favorite: false,
-        lastWorn: undefined
+        userId: 'guest',
+        dateCreated: new Date().toISOString(),
+        occasion: data.scenario,
+        lastWorn: undefined,
+        weather: [],
+        tags: []
       };
       
       addOutfit(newOutfit);

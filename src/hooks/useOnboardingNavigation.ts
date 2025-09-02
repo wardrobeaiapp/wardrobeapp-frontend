@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { OnboardingStateHook } from './useOnboardingState';
-import { updateScenarios } from '../services/api';
+import { createScenario, getScenariosForUser } from '../services/scenarios';
 import { generateScenariosFromLifestyle } from '../utils/scenarioUtils';
 import { Scenario } from '../types';
 
@@ -222,9 +222,26 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
         }));
         
         try {
-          console.log('DEBUG - executeOnboardingSubmission - calling updateScenarios with existing scenarios');
-          await updateScenarios(scenarios);
-          console.log('DEBUG - executeOnboardingSubmission - successfully saved scenarios via updateScenarios');
+          console.log('DEBUG - executeOnboardingSubmission - saving existing scenarios');
+          // First, get existing scenarios to avoid duplicates
+          const existingScenarios = await getScenariosForUser(user.id);
+          const existingScenarioNames = new Set(existingScenarios.map(s => s.name));
+          
+          // Only save scenarios that don't already exist
+          const newScenarios = scenarios.filter(s => !existingScenarioNames.has(s.name));
+          
+          if (newScenarios.length > 0) {
+            console.log(`DEBUG - Saving ${newScenarios.length} new scenarios`);
+            for (const scenario of newScenarios) {
+              await createScenario({
+                ...scenario,
+                user_id: user.id
+              });
+            }
+            console.log('DEBUG - Successfully saved new scenarios');
+          } else {
+            console.log('DEBUG - No new scenarios to save');
+          }
         } catch (scenarioError) {
           console.error('DEBUG - executeOnboardingSubmission - error saving existing scenarios:', scenarioError);
           // Continue even if scenario saving fails
@@ -233,6 +250,10 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
         // Generate default scenarios based on user preferences
         console.log('DEBUG - executeOnboardingSubmission - generating default scenarios');
         try {
+          if (!user) {
+            throw new Error('User not authenticated');
+          }
+          
           const generatedScenarios = generateScenariosFromLifestyle(
             onboardingState.dailyActivities,
             onboardingState.leisureActivities,
@@ -243,29 +264,38 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
             onboardingState.outdoorFrequency,
             onboardingState.outdoorPeriod,
             onboardingState.travelFrequency,
-            onboardingState.remoteWorkPriority,
-            onboardingState.otherActivityDescription,
-            onboardingState.otherLeisureActivityDescription
+            onboardingState.remoteWorkPriority
           );
           
           if (generatedScenarios && generatedScenarios.length > 0) {
-            console.log('DEBUG - executeOnboardingSubmission - calling updateScenarios with generated scenarios');
+            console.log('DEBUG - executeOnboardingSubmission - saving generated scenarios');
             
-            // Transform scenarioUtils.Scenario objects to api.Scenario objects
-            const apiScenarios = generatedScenarios.map(scenario => ({
-              ...scenario,
-              user_id: user?.id || '', // Add user_id from useSupabaseAuth hook
-              type: 'lifestyle'  // Add a default type
-            }));
+            // First, get existing scenarios to avoid duplicates
+            const existingScenarios = await getScenariosForUser(user.id);
+            const existingScenarioNames = new Set(existingScenarios.map(s => s.name));
             
-            await updateScenarios(apiScenarios);
-            console.log('DEBUG - executeOnboardingSubmission - successfully saved generated scenarios');
-          } else {
-            console.log('DEBUG - executeOnboardingSubmission - no scenarios were generated');
+            // Transform and filter scenarios
+            const newScenarios = generatedScenarios
+              .filter(scenario => !existingScenarioNames.has(scenario.name))
+              .map(scenario => ({
+                ...scenario,
+                user_id: user.id,
+                type: 'lifestyle'  // Add a default type
+              }));
+            
+            if (newScenarios.length > 0) {
+              console.log(`DEBUG - Saving ${newScenarios.length} new generated scenarios`);
+              for (const scenario of newScenarios) {
+                await createScenario(scenario);
+              }
+              console.log('DEBUG - Successfully saved generated scenarios');
+            } else {
+              console.log('DEBUG - No new generated scenarios to save');
+            }
           }
-        } catch (scenarioError) {
-          console.error('DEBUG - executeOnboardingSubmission - error generating/saving default scenarios:', scenarioError);
-          // Continue even if scenario generation fails
+        } catch (error) {
+          console.error('Error generating or saving scenarios:', error);
+          // Continue with onboarding even if scenario generation fails
         }
       }
       
