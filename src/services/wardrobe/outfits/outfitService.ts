@@ -1,6 +1,43 @@
 import { Outfit } from '../../../types';
 import { supabase } from '../../../services/core';
 
+// API base URL - using relative path to leverage proxy configuration
+const API_URL = '/api';
+
+// Get auth headers for fetch requests
+const getAuthHeaders = (): HeadersInit => {
+  const token = localStorage.getItem('token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json'
+  };
+  
+  if (token) {
+    headers['x-auth-token'] = token;
+  }
+  
+  return headers;
+};
+
+// Helper function to handle API requests with graceful error handling
+const apiRequest = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
+  try {
+    const response = await fetch(url, options);
+    
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    // Detect network connection errors and provide a more specific error
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn(`Network request failed for ${url} - using fallback data`);
+      throw new Error('Network connection error');
+    }
+    throw error;
+  }
+};
+
 // Table names for Supabase
 const OUTFITS_TABLE = 'outfits';
 const OUTFIT_SCENARIOS_TABLE = 'outfit_scenarios';
@@ -8,7 +45,7 @@ const OUTFIT_SCENARIOS_TABLE = 'outfit_scenarios';
 /**
  * Fetch all outfits for the current user
  */
-export const fetchOutfits = async (): Promise<Outfit[]> => {
+export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
   try {
     // Removed excessive logging for performance
     
@@ -108,7 +145,7 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
 /**
  * Create a new outfit
  */
-export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
+export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
   try {
     // Removed excessive logging for performance
     
@@ -265,7 +302,7 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
 /**
  * Update an existing outfit
  */
-export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
+export const updateOutfitInSupabase = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
   try {
     // Removed excessive logging for performance
     
@@ -413,7 +450,7 @@ export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise
 /**
  * Delete an outfit
  */
-export const deleteOutfit = async (id: string): Promise<void> => {
+export const deleteOutfitInSupabase = async (id: string): Promise<void> => {
   try {
     // Removed excessive logging for performance
     
@@ -449,6 +486,127 @@ export const deleteOutfit = async (id: string): Promise<void> => {
 /**
  * Check if the outfits table exists
  */
+// Fetch outfits - now using Supabase with fallback to API
+export const fetchOutfits = async (): Promise<Outfit[]> => {
+  try {
+    // Try to fetch from Supabase first
+    const outfits = await fetchOutfitsFromSupabase();
+    
+    // If we got outfits from Supabase, return them
+    if (outfits && outfits.length > 0) {
+      return outfits;
+    }
+    
+    // If no outfits in Supabase yet, check if we need to migrate from API
+    const tableExists = await checkOutfitsTableExists();
+    
+    if (tableExists) {
+      // Table exists but no outfits - user might not have any outfits yet
+      return [];
+    }
+    
+    // If table doesn't exist or no outfits found, try legacy API
+    const authHeaders = getAuthHeaders();
+    const legacyOutfits = await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
+    
+    // If we got outfits from legacy API, migrate them to Supabase
+    if (legacyOutfits && legacyOutfits.length > 0) {
+      await migrateOutfitsToSupabase(legacyOutfits);
+      return legacyOutfits;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('[outfitService] Error fetching outfits:', error);
+    // Fallback to legacy API if Supabase fails
+    try {
+      const authHeaders = getAuthHeaders();
+      const legacyOutfits = await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
+      
+      // Ensure scenarioNames is properly set for legacy outfits
+      return legacyOutfits.map(outfit => ({
+        ...outfit,
+        scenarioNames: outfit.scenarioNames || []
+      }));
+    } catch (apiError) {
+      console.error('[outfitService] Legacy API also failed:', apiError);
+      return [];
+    }
+  }
+};
+
+// Create outfit - now using Supabase with fallback to API
+export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
+  try {
+    // Ensure scenarioNames is properly set
+    const outfitWithScenarios = {
+      ...outfit,
+      scenarioNames: outfit.scenarioNames || []
+    };
+    
+    // Try to create in Supabase first
+    const newOutfit = await createOutfitInSupabase(outfitWithScenarios);
+    return newOutfit;
+  } catch (error) {
+    console.error('[outfitService] Error creating outfit in Supabase:', error);
+    // Fallback to API
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(outfit)
+    };
+    
+    const response = await apiRequest(`${API_URL}/outfits`, options);
+    return response as Outfit;
+  }
+};
+
+// Update outfit - now using Supabase with fallback to API
+export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
+  try {
+    // Ensure scenarioNames is properly set if it exists in the update
+    const updateData = {
+      ...outfit,
+      ...(outfit.scenarioNames !== undefined && { scenarioNames: outfit.scenarioNames || [] })
+    };
+    
+    // Try to update in Supabase first
+    await updateOutfitInSupabase(id, updateData);
+  } catch (error) {
+    console.error('[outfitService] Error updating outfit in Supabase:', error);
+    // Fallback to legacy API
+    const authHeaders = getAuthHeaders();
+    const options = {
+      method: 'PUT',
+      headers: {
+        ...authHeaders,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(outfit)
+    };
+    await apiRequest(`${API_URL}/outfits/${id}`, options);
+  }
+};
+
+// Delete outfit - now using Supabase with fallback to API
+export const deleteOutfit = async (id: string): Promise<void> => {
+  try {
+    // Try to delete from Supabase first
+    await deleteOutfitInSupabase(id);
+  } catch (error) {
+    console.error('[outfitService] Error deleting outfit from Supabase:', error);
+    // Fallback to legacy API
+    const authHeaders = getAuthHeaders();
+    const options = {
+      method: 'DELETE',
+      headers: authHeaders
+    };
+    await apiRequest(`${API_URL}/outfits/${id}`, options);
+  }
+};
+
 export const checkOutfitsTableExists = async (): Promise<boolean> => {
   try {
     // Removed excessive logging for performance
