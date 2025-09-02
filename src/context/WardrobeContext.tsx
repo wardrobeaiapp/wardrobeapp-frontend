@@ -4,7 +4,7 @@ import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/useWardrobeItemsDB';
 import { useOutfits } from '../hooks/useOutfits';
-import { createCapsule } from '../services/wardrobe/capsules/capsuleService';
+import { createCapsule, updateCapsule as updateCapsuleService, deleteCapsule as deleteCapsuleService } from '../services/wardrobe/capsules';
 
 // Base outfit interface with all possible fields
 interface OutfitBase {
@@ -212,7 +212,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
       if (isAuthenticated) {
         // Use API for authenticated users
         try {
-          await updateCapsule(id, capsuleData);
+          await updateCapsuleService(id, capsuleData);
           const updatedCapsules = capsules.map(capsule => 
             capsule.id === id ? { ...capsule, ...capsuleData } : capsule
           );
@@ -250,7 +250,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
       if (isAuthenticated) {
         // Use API for authenticated users
         try {
-          await deleteCapsule(id);
+          await deleteCapsuleService(id);
           const updatedCapsules = capsules.filter(capsule => capsule.id !== id);
           setCapsules(updatedCapsules);
         } catch (apiError: any) {

@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { WardrobeItem, Outfit, Capsule } from '../../../../types';
 import { Modal, ModalAction } from '../../../common/Modal';
 import styled from 'styled-components';
-import { outfitItemsService, outfitsService, capsuleItemsService } from '../../../../services/wardrobe';
-import { fetchCapsules } from '../../../../services/wardrobe/capsules/capsuleService';
+import { outfitItemsService, outfitsService } from '../../../../services/wardrobe';
+import { fetchCapsules, capsuleItemsService } from '../../../../services/wardrobe/capsules';
 
 interface DeleteItemConfirmModalProps {
   isOpen: boolean;
