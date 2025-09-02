@@ -1,10 +1,15 @@
-import { Capsule } from '../types';
 import {
   fetchOutfits,
   createOutfit,
   updateOutfit,
   deleteOutfit
 } from './wardrobe/outfits/outfitService';
+import {
+  fetchCapsules,
+  createCapsule,
+  updateCapsule,
+  deleteCapsule
+} from './wardrobe/capsules/capsuleService';
 import {
   getScenariosForUser as fetchScenarios,
   updateScenarios,
@@ -15,137 +20,22 @@ import {
 
 // Re-export all the service functions
 export { 
+  // Outfits
   fetchOutfits,
   createOutfit,
   updateOutfit,
   deleteOutfit,
+  
+  // Capsules
+  fetchCapsules,
+  createCapsule,
+  updateCapsule,
+  deleteCapsule,
+  
+  // Scenarios
   fetchScenarios, 
   updateScenarios, 
   createScenario, 
   updateScenario, 
   deleteScenario 
-};
-
-// API base URL - using relative path to leverage proxy configuration
-const API_URL = '/api';
-
-// Helper function to handle API requests with graceful error handling
-const apiRequest = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
-  try {
-    const response = await fetch(url, options);
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    return response.json();
-  } catch (error) {
-    // Detect network connection errors and provide a more specific error
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.warn(`Network request failed for ${url} - using fallback data`);
-      throw new Error('Network connection error');
-    }
-    throw error;
-  }
-};
-
-// Get auth headers for fetch requests
-const getAuthHeaders = (): HeadersInit => {
-  const token = localStorage.getItem('token');
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json'
-  };
-  
-  if (token) {
-    headers['x-auth-token'] = token;
-  }
-  
-  return headers;
-};
-
-// Capsule API calls
-export const fetchCapsules = async (): Promise<Capsule[]> => {
-  try {
-    // Try to fetch from Supabase first
-    const { fetchCapsules: fetchCapsulesFromSupabase } = await import('./supabaseApi');
-    const capsules = await fetchCapsulesFromSupabase();
-    return capsules;
-  } catch (error) {
-    console.error('[api] Error fetching capsules from Supabase:', error);
-    // Fallback to legacy API
-    try {
-      const headers = getAuthHeaders();
-      return await apiRequest<Capsule[]>(`${API_URL}/capsules`, { headers });
-    } catch (fallbackError) {
-      // Log error but don't throw it if it's related to missing capsules
-      if (fallbackError instanceof Error && 
-          (fallbackError.message.includes('404') || fallbackError.message.includes('500'))) {
-        console.log('No capsules found, returning empty array');
-        return [];
-      }
-      throw fallbackError;
-    }
-  }
-};
-
-export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>): Promise<Capsule> => {
-  try {
-    // Use Supabase for capsule creation
-    const { createCapsule: createCapsuleInSupabase } = await import('./supabaseApi');
-    return await createCapsuleInSupabase(capsule);
-  } catch (error) {
-    console.error('[api] Error creating capsule in Supabase:', error);
-    // Fallback to legacy API
-    const headers = getAuthHeaders();
-    const options = {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(capsule)
-    };
-    
-    return apiRequest<Capsule>(`${API_URL}/capsules`, options);
-  }
-};
-
-export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Promise<Capsule | null> => {
-  try {
-    // Use Supabase for capsule updates
-    const { updateCapsule: updateCapsuleInSupabase } = await import('./supabaseApi');
-    return await updateCapsuleInSupabase(id, capsule);
-  } catch (error) {
-    console.error('[api] Error updating capsule in Supabase:', error);
-    // Fallback to legacy API
-    const headers = getAuthHeaders();
-    const options = {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(capsule)
-    };
-    
-    await apiRequest(`${API_URL}/capsules/${id}`, options);
-    // Fetch the updated capsule to return it
-    const updatedCapsule = await apiRequest<Capsule>(`${API_URL}/capsules/${id}`, { headers });
-    return updatedCapsule;
-  }
-};
-
-export const deleteCapsule = async (id: string): Promise<void> => {
-  try {
-    // Use Supabase for capsule deletion
-    const { deleteCapsule: deleteCapsuleInSupabase } = await import('./supabaseApi');
-    await deleteCapsuleInSupabase(id);
-  } catch (error) {
-    console.error('[api] Error deleting capsule from Supabase:', error);
-    // Fallback to legacy API
-    const headers = getAuthHeaders();
-    const options = {
-      method: 'DELETE',
-      headers
-    };
-    
-    const response = await fetch(`${API_URL}/capsules/${id}`, options);
-    if (!response.ok) {
-      throw new Error(`Failed to delete capsule: ${response.statusText}`);
-    }
-  }
 };
