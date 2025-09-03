@@ -104,9 +104,7 @@ export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCr
     const outfitData = {
       name: outfit.name,
       season: outfit.season.map(s => String(s)), // Convert Season enum values to strings
-      favorite: outfit.favorite,
       date_created: dateCreated,
-      last_worn: outfit.lastWorn ? new Date(outfit.lastWorn).toISOString() : null,
       // Remove scenario_names as it doesn't exist in the database schema
       user_uuid: userId
     };
@@ -182,9 +180,7 @@ export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCr
       scenarios: scenarios || [],
       season: Array.isArray(createdData.season) ? createdData.season : [],
       scenarioNames: outfit.scenarioNames || [], // Use the input scenarioNames instead of database field
-      favorite: Boolean(createdData.favorite),
       dateCreated: String(createdData.date_created),
-      lastWorn: createdData.last_worn ? String(createdData.last_worn) : undefined
     };
     
     return createdOutfit;
@@ -208,9 +204,6 @@ export const updateOutfitInSupabase = async (id: string, outfit: Partial<Outfit>
     
     if (outfitWithoutRelations.name !== undefined) outfitData.name = outfitWithoutRelations.name;
     if (outfitWithoutRelations.season !== undefined) outfitData.season = outfitWithoutRelations.season;
-    if (outfitWithoutRelations.favorite !== undefined) outfitData.favorite = outfitWithoutRelations.favorite;
-    if (outfitWithoutRelations.lastWorn !== undefined) outfitData.last_worn = outfitWithoutRelations.lastWorn ? new Date(outfitWithoutRelations.lastWorn).toISOString() : null;
-    // Remove scenario_names field as it doesn't exist in the database schema
     
     // Update outfit in Supabase
     const { error } = await supabase

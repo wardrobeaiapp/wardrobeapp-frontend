@@ -237,8 +237,6 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
       scenarios: selectedScenarios,
       // Also include scenario names for backward compatibility
       scenarioNames: selectedScenarioNames,
-      favorite: initialOutfit?.favorite || false,
-      lastWorn: initialOutfit?.lastWorn
     };
 
     // If we're editing an existing outfit, include the ID

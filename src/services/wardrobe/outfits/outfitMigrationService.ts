@@ -64,7 +64,6 @@ export const migrateOutfitsToSupabase = async (): Promise<boolean> => {
           scenarios: outfitData.scenarios || [],
           scenarioNames: outfitData.scenarioNames || [],
           season: outfitData.season || [],
-          favorite: outfitData.favorite || false
         };
         
         await createOutfitInSupabase(outfitToCreate);

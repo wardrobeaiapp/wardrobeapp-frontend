@@ -15,7 +15,6 @@ interface OutfitBase {
   items: string[];
   dateCreated: string;
   lastWorn?: string;
-  favorite: boolean;
   season: Season[];
   occasion?: string;
   weather?: string[];
@@ -34,7 +33,6 @@ type OutfitInput = {
   description: string;
   items: string[];
   season: Season[];
-  favorite: boolean;
   scenarios: string[];
   scenarioNames?: string[];
   lastWorn?: string;
@@ -123,7 +121,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         description: updates.description ?? currentOutfit.description ?? '',
         items: updates.items ?? currentOutfit.items ?? [],
         season: updates.season ?? currentOutfit.season ?? [],
-        favorite: updates.favorite ?? currentOutfit.favorite ?? false,
         scenarios: updates.scenarios ?? currentOutfit.scenarios ?? [],
         // Optional fields with proper fallbacks
         lastWorn: updates.lastWorn ?? currentOutfit.lastWorn,
@@ -315,7 +312,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
           name: outfitData.name,
           description: outfitData.description || '',
           items: Array.isArray(outfitData.items) ? outfitData.items : [],
-          favorite: Boolean(outfitData.favorite),
           season: Array.isArray(outfitData.season) ? outfitData.season : [],
           scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
           occasion: outfitData.occasion || '',
@@ -336,7 +332,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
           dateCreated: newOutfit.dateCreated || new Date().toISOString(),
           scenarios: newOutfit.scenarios || [],
           items: newOutfit.items || [],
-          favorite: newOutfit.favorite || false,
           season: newOutfit.season || []
         };
         

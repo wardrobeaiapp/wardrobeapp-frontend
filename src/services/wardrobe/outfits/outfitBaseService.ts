@@ -63,9 +63,7 @@ export const convertToOutfit = (data: any): Outfit => {
     scenarios: [], // Initialize with empty array, to be populated later
     scenarioNames: Array.isArray(data.scenario_names) ? data.scenario_names : [],
     season: Array.isArray(data.season) ? data.season : [],
-    favorite: Boolean(data.favorite),
     dateCreated: String(data.date_created),
-    lastWorn: data.last_worn ? String(data.last_worn) : undefined
   };
 };
 

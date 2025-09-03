@@ -320,12 +320,10 @@ export const useHomePageData = () => {
         ...outfitData,
         userId: 'current-user-id', // TODO: Get from auth context
         items: outfitData.items || [],
-        favorite: outfitData.favorite || false,
         season: outfitData.season || [],
         scenarios: outfitData.scenarios || [],
         occasion: outfitData.occasion || '',
         description: outfitData.description || '',
-        lastWorn: outfitData.lastWorn,
         weather: [],
         tags: [],
         dateCreated: new Date().toISOString(),

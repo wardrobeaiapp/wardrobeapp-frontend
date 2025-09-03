@@ -13,10 +13,8 @@ export interface OutfitInput {
   description: string;
   items: string[];
   season: Season[];
-  favorite: boolean;
   userId: string;
   dateCreated?: string;
-  lastWorn?: string;
   occasion?: string;
   weather?: string[];
   tags?: string[];

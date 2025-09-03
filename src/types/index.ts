@@ -70,9 +70,7 @@ export interface Outfit {
   scenarios?: string[]; // Array of scenario IDs
   scenarioNames?: string[]; // Array of scenario names (for backward compatibility)
   season: Season[];
-  favorite: boolean;
   dateCreated: string;
-  lastWorn?: string;
 }
 
 export interface ClaudeResponse {

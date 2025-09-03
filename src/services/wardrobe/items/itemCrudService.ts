@@ -159,7 +159,6 @@ export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
       season: item.season,
       imageUrl: item.imageUrl,
       dateAdded: item.dateAdded || item.date_added,
-      lastWorn: item.lastWorn || item.last_worn,
       timesWorn: item.timesWorn || item.times_worn || 0,
       tags: item.tags,
       wishlist: item.wishlist,
@@ -220,7 +219,6 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
       season: data.season as any[],
       imageUrl: data.imageUrl as string | undefined,
       dateAdded: (data.dateAdded || data.date_added) as string,
-      lastWorn: (data.lastWorn || data.last_worn) as string | undefined,
       timesWorn: (data.timesWorn || data.times_worn || 0) as number,
       // Store the complete tags object as-is with the correct type
       tags: data.tags as Record<string, any> | undefined,

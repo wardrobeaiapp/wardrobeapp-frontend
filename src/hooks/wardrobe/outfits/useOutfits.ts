@@ -67,7 +67,6 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       description: data.description || '',
       items: Array.isArray(data.items) ? data.items : [],
       season,
-      favorite: Boolean(data.favorite),
       dateCreated: data.dateCreated || new Date().toISOString(),
       userId: data.userId || defaultUserId,
       scenarios: Array.isArray(data.scenarios) ? data.scenarios : [],
@@ -163,13 +162,11 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         ...outfitData,
         userId: currentUserId,
         dateCreated: new Date().toISOString(),
-        lastWorn: outfitData.lastWorn ?? undefined,
         scenarios: outfitData.scenarios || [],
         scenarioNames: outfitData.scenarioNames || [],
         items: outfitData.items || [],
         season: outfitData.season || [],
         tags: outfitData.tags || [],
-        favorite: outfitData.favorite || false
       };
       
       let savedOutfit: OutfitExtended;
@@ -226,7 +223,6 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         scenarios: updates.scenarios || existingOutfit.scenarios || [],
         scenarioNames: updates.scenarioNames || existingOutfit.scenarioNames || [],
         season: updates.season || existingOutfit.season || [],
-        favorite: updates.favorite ?? existingOutfit.favorite,
         dateCreated: existingOutfit.dateCreated || new Date().toISOString()
       };
       
