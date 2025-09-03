@@ -2,7 +2,7 @@
  * Calendar utility functions
  */
 
-import { LocalDayPlan } from '../hooks/useCalendar';
+import type { LocalDayPlan } from '../hooks/calendar';
 
 /**
  * Formats a date to YYYY-MM-DD format in local timezone

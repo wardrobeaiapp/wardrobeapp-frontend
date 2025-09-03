@@ -18,7 +18,7 @@ import ItemSelectionPopup from '../components/features/calendar/modals/ItemSelec
 import DateSelectionPopup from '../components/features/calendar/modals/DateSelectionPopup';
 import EditOutfitPopup from '../components/features/calendar/modals/EditOutfitPopup';
 import { useWardrobe } from '../context/WardrobeContext';
-import useCalendar from '../hooks/useCalendar';
+import { useCalendar } from '../hooks/calendar';
 import { WardrobeItem } from '../types';
 import PageContainer from '../components/layout/PageContainer';
 import PageHeader from '../components/common/Typography/PageHeader/PageHeader';
