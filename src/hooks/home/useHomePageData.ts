@@ -10,6 +10,7 @@ import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/
 import { useTabState, TabType } from './useTabState';
 import { useItemFiltering } from './useItemFiltering';
 import { useOutfitFiltering } from './useOutfitFiltering';
+import { useCapsuleFiltering } from './useCapsuleFiltering';
 
 export const useHomePageData = () => {
   const { 
@@ -133,24 +134,12 @@ export const useHomePageData = () => {
     searchQuery: outfitSearchQuery
   });
 
-  // Filter capsules based on selected filters
-  const filteredCapsules = useMemo(() => capsules.filter(capsule => {
-    const searchLower = capsuleSearchQuery.toLowerCase();
-    const capsuleScenarios = capsule.scenarios || [];
-    const capsuleSeasons = capsule.seasons || [];
-    
-    const matchesSeason = capsuleSeasonFilter === 'all' || 
-      capsuleSeasons.includes(capsuleSeasonFilter as Season);
-      
-    const matchesScenario = capsuleScenarioFilter === 'all' || 
-      capsuleScenarios.includes(capsuleScenarioFilter);
-      
-    const matchesSearch = capsuleSearchQuery === '' || 
-      capsule.name.toLowerCase().includes(searchLower) ||
-      capsuleScenarios.some(scenario => scenario.toLowerCase().includes(searchLower));
-      
-    return matchesSeason && matchesScenario && matchesSearch;
-  }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
+  // Filter capsules using the useCapsuleFiltering hook
+  const { filteredCapsules } = useCapsuleFiltering(capsules, {
+    season: capsuleSeasonFilter,
+    scenario: capsuleScenarioFilter,
+    searchQuery: capsuleSearchQuery
+  });
 
   // Filter wishlist items using the useItemFiltering hook
   const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useItemFiltering(

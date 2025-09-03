@@ -1,0 +1,52 @@
+import { useMemo } from 'react';
+import { Capsule, Season } from '../../types';
+
+export interface CapsuleFilterOptions {
+  season?: string;
+  scenario?: string;
+  searchQuery?: string;
+}
+
+export const useCapsuleFiltering = (
+  capsules: Capsule[], 
+  options?: CapsuleFilterOptions
+) => {
+  // Default filter values
+  const {
+    season = 'all',
+    scenario = 'all',
+    searchQuery = ''
+  } = options || {};
+
+  const filteredCapsules = useMemo(() => {
+    return capsules.filter(capsule => {
+      const searchLower = searchQuery.toLowerCase();
+      const capsuleScenarios = capsule.scenarios || [];
+      const capsuleSeasons = capsule.seasons || [];
+      
+      // Season filter
+      const matchesSeason = season === 'all' || 
+        capsuleSeasons.includes(season as Season);
+      
+      // Scenario filter
+      const matchesScenario = scenario === 'all' || 
+        capsuleScenarios.includes(scenario);
+      
+      // Search query - search name and scenarios
+      const matchesSearch = searchQuery === '' || 
+        capsule.name.toLowerCase().includes(searchLower) ||
+        capsuleScenarios.some(s => s.toLowerCase().includes(searchLower)) ||
+        (capsule.style && capsule.style.toLowerCase().includes(searchLower)) ||
+        (capsule.description && capsule.description.toLowerCase().includes(searchLower));
+      
+      return matchesSeason && matchesScenario && matchesSearch;
+    });
+  }, [capsules, season, scenario, searchQuery]);
+
+  return {
+    filteredCapsules,
+    capsuleCount: filteredCapsules.length
+  };
+};
+
+export default useCapsuleFiltering;
