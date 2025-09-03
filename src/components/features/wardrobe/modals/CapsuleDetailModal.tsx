@@ -6,7 +6,7 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 
-import { useCapsuleItems } from '../../../../hooks/wardrobe/items';
+import { useCapsuleItems } from '../../../../hooks/wardrobe/capsules/useCapsuleItems';
 import {
   CapsuleInfo,
   ItemsSection,

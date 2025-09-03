@@ -3,7 +3,7 @@ import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types'
 import { OutfitExtended } from '../context/WardrobeContext';
 import { useWardrobe } from '../context/WardrobeContext';
 import { useOutfits } from './useOutfits';
-import useCapsules from './useCapsules';
+import useCapsules from './wardrobe/capsules/useCapsules';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../services/scenarios/scenariosService';
