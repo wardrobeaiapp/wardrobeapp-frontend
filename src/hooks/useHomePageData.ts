@@ -381,7 +381,7 @@ export const useHomePageData = () => {
       console.error('Failed to add outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [addOutfit]);
+  }, [addOutfit, user]);
   
   const handleEditOutfitSubmit = useCallback(async (outfitData: Partial<Outfit> & { id?: string }) => {
     if (!currentOutfitId) {
@@ -433,7 +433,7 @@ export const useHomePageData = () => {
       console.error('Failed to update outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [currentOutfitId, updateOutfit]);
+  }, [currentOutfitId, updateOutfit, user]);
   
   const handleAddCapsule = useCallback(async (id: string, data: CapsuleFormData) => {
     try {

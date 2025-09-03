@@ -50,7 +50,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   }, [user, isAuthenticated]);
   
   // Helper function to convert any object to OutfitExtended type with all required fields
-  const toOutfit = (data: any, defaultUserId: string): OutfitExtended => {
+  const toOutfit = useCallback((data: any, defaultUserId: string): OutfitExtended => {
     if (!data) {
       throw new Error('Cannot convert undefined or null to OutfitExtended');
     }
@@ -79,7 +79,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       tags: data.tags,
       imageUrl: data.imageUrl
     };
-  };
+  }, []);
 
   // Load outfits from API or local storage
   useEffect(() => {
@@ -148,37 +148,9 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     };
     
     loadOutfits();
-  }, [isAuthenticated, userId]);
+  }, [authState.isAuthenticated, authState.userId, isAuthenticated, user?.id, toOutfit]);
 
-  // Get all outfits - internal implementation
-  const getOutfitsInternal = useCallback(async (): Promise<OutfitExtended[]> => {
-    if (authState.isAuthenticated && authState.userId) {
-      // Fetch outfits without any parameters
-      const data = await fetchOutfitsFromService();
-      return data.map(outfit => toOutfit(outfit, authState.userId));
-    } else {
-      const storedOutfits = localStorage.getItem('outfits');
-      const parsedOutfits = storedOutfits ? JSON.parse(storedOutfits) : [];
-      return Array.isArray(parsedOutfits) ? 
-        parsedOutfits.map((outfit: any) => toOutfit(outfit, 'guest')) : [];
-    }
-  }, [authState.isAuthenticated, authState.userId]);
-  
-  // Public method to get outfits with loading state
-  const getOutfits = useCallback(async (): Promise<OutfitExtended[]> => {
-    setIsLoading(true);
-    try {
-      const outfits = await getOutfitsInternal();
-      setOutfits(outfits);
-      return outfits;
-    } catch (error) {
-      console.error('Error fetching outfits:', error);
-      setError('Failed to load outfits');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [getOutfitsInternal]);
+  // Note: Removed unused getOutfitsInternal and getOutfits functions as they're not being used in the component
 
   // Add a new outfit
   const addOutfit = useCallback(async (outfitData: Omit<OutfitInput, 'userId'>): Promise<OutfitExtended> => {
@@ -230,7 +202,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, userId]);
+  }, [authState.isAuthenticated, getValidUserId, setIsLoading, setError, setOutfits, toOutfit]);
 
   // Update an existing outfit
   const updateOutfit = useCallback(async (outfitId: string, updates: Partial<Omit<OutfitInput, 'id' | 'userId'>>): Promise<OutfitExtended | null> => {
@@ -279,7 +251,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, userId]);
+  }, [authState.isAuthenticated, getValidUserId, outfits, setIsLoading, setError, setOutfits]);
 
   // Delete an outfit
   const deleteOutfit = useCallback(async (outfitId: string): Promise<boolean> => {
@@ -309,7 +281,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthenticated, userId, outfits, authState.isAuthenticated, authState.userId]);
+  }, [outfits, authState.isAuthenticated, authState.userId]);
 
   // Return the public API with proper typing
   const api: UseOutfitsReturn = {
