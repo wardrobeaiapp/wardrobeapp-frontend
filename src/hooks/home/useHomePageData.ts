@@ -7,13 +7,7 @@ import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
-
-export enum TabType {
-  ITEMS = 'items',
-  OUTFITS = 'outfits',
-  CAPSULES = 'capsules',
-  WISHLIST = 'wishlist'
-}
+import { useTabState, TabType } from './useTabState';
 
 export const useHomePageData = () => {
   const { 
@@ -70,7 +64,14 @@ export const useHomePageData = () => {
   const error = itemsError || outfitsError || capsulesError;
   
   // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>(TabType.ITEMS);
+  const { 
+    activeTab, 
+    setActiveTab,
+    isItemsTab,
+    isOutfitsTab,
+    isCapsulesTab,
+    isWishlistTab 
+  } = useTabState(TabType.ITEMS);
   
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
