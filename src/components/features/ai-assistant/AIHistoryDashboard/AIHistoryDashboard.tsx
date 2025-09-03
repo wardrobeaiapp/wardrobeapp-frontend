@@ -6,7 +6,7 @@ import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
 import { PageHeader } from '../../../../components/common/Typography/PageHeader';
 import { FormField, FormSelect } from '../../../common/Form';
-import { ActivityType, CheckStatus } from '../../../../hooks/useAIHistory';
+import { type ActivityType, type CheckStatus } from '../../../../hooks/ai';
 import {
   DashboardContainer,
   DashboardTopBar,

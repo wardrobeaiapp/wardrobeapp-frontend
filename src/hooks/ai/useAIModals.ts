@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { WardrobeItem } from '../types';
+import { WardrobeItem } from '../../types';
 
 export const useAIModals = () => {
   // Wishlist Selection Modal

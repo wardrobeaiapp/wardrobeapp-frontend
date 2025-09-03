@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getScenarioNamesForFilters } from '../utils/scenarioUtils';
+import { getScenarioNamesForFilters } from '../../utils/scenarioUtils';
 
 export const useAIRecommendation = () => {
   const [selectedSeason, setSelectedSeason] = useState('all');

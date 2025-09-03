@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { claudeService } from '../services/ai/claudeService';
-import { DetectedTags } from '../services/ai/formAutoPopulation/types';
-import { WishlistStatus } from '../types';
-import { detectImageTags, extractTopTags } from '../services/ai/ximilarService';
+import { claudeService } from '../../services/ai/claudeService';
+import { DetectedTags } from '../../services/ai/formAutoPopulation/types';
+import { WishlistStatus } from '../../types';
+import { detectImageTags, extractTopTags } from '../../services/ai/ximilarService';
 
 export const useAICheck = () => {
   const [imageLink, setImageLink] = useState('');

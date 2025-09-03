@@ -1,9 +1,13 @@
 import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
-import { useAICheck } from '../hooks/useAICheck';
-import { useAIRecommendation } from '../hooks/useAIRecommendation';
-import { useAIHistory, type ActivityType, type CheckStatus } from '../hooks/useAIHistory';
-import { useAIModals } from '../hooks/useAIModals';
+import {
+  useAICheck,
+  useAIRecommendation,
+  useAIHistory,
+  useAIModals,
+  type ActivityType,
+  type CheckStatus
+} from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
 import PageHeader from '../components/layout/Header/Header';
 import AIHistoryDashboard from '../components/features/ai-assistant/AIHistoryDashboard/AIHistoryDashboard';

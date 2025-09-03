@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
-import { mockHistoryItems } from '../mocks/aiAssistantMockData';
-import { WishlistStatus, UserActionStatus } from '../types';
+import { mockHistoryItems } from '../../mocks/aiAssistantMockData';
+import { WishlistStatus, UserActionStatus } from '../../types';
 
 export type ActivityType = 'all' | 'check' | 'recommendation';
 export type CheckStatus = 'all' | 'approved' | 'potential_issue' | 'not_reviewed';
