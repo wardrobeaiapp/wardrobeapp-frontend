@@ -64,16 +64,12 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     return {
       id: data.id || uuidv4(),
       name: data.name || 'Untitled Outfit',
-      description: data.description || '',
       items: Array.isArray(data.items) ? data.items : [],
       season,
       dateCreated: data.dateCreated || new Date().toISOString(),
       userId: data.userId || defaultUserId,
       scenarios: Array.isArray(data.scenarios) ? data.scenarios : [],
       scenarioNames: Array.isArray(data.scenarioNames) ? data.scenarioNames : [],
-      // Optional fields
-      tags: data.tags,
-      imageUrl: data.imageUrl
     };
   }, []);
 
@@ -163,7 +159,6 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         scenarioNames: outfitData.scenarioNames || [],
         items: outfitData.items || [],
         season: outfitData.season || [],
-        tags: outfitData.tags || [],
       };
       
       let savedOutfit: OutfitExtended;

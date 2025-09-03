@@ -11,12 +11,9 @@ interface OutfitBase {
   id: string;
   userId: string;
   name: string;
-  description: string;
   items: string[];
   dateCreated: string;
   season: Season[];
-  tags?: string[];
-  imageUrl?: string;
   scenarios: string[];
   scenarioNames?: string[];
 }
@@ -27,13 +24,10 @@ type OutfitType = OutfitBase;
 // Input type for creating/updating outfits
 type OutfitInput = {
   name: string;
-  description: string;
   items: string[];
   season: Season[];
   scenarios: string[];
   scenarioNames?: string[];
-  tags?: string[];
-  imageUrl?: string;
 };
 
 export type OutfitExtended = OutfitBase;
@@ -112,13 +106,9 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
       // Create a properly typed update object with all required fields
       const updateData: OutfitInput = {
         name: updates.name ?? currentOutfit.name,
-        description: updates.description ?? currentOutfit.description ?? '',
         items: updates.items ?? currentOutfit.items ?? [],
         season: updates.season ?? currentOutfit.season ?? [],
         scenarios: updates.scenarios ?? currentOutfit.scenarios ?? [],
-        // Optional fields with proper fallbacks
-        tags: updates.tags ?? currentOutfit.tags,
-        imageUrl: updates.imageUrl ?? currentOutfit.imageUrl
       };
       
       // Call the update function with proper types
@@ -301,12 +291,9 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         // Create a properly typed outfit object with all required fields
         const newOutfitData: OutfitInput = {
           name: outfitData.name,
-          description: outfitData.description || '',
           items: Array.isArray(outfitData.items) ? outfitData.items : [],
           season: Array.isArray(outfitData.season) ? outfitData.season : [],
           scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
-          tags: Array.isArray(outfitData.tags) ? outfitData.tags : [],
-          imageUrl: outfitData.imageUrl || '',
         };
         
         const newOutfit = await addOutfitHook(newOutfitData);

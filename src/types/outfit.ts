@@ -10,12 +10,10 @@ export { Season };
 export interface OutfitInput {
   id?: string;
   name: string;
-  description: string;
   items: string[];
   season: Season[];
   userId: string;
   dateCreated?: string;
-  tags?: string[];
   imageUrl?: string;
   scenarios?: string[];
   scenarioNames?: string[];
