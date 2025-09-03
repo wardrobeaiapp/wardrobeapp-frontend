@@ -8,6 +8,7 @@ import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
 import { useTabState, TabType } from './useTabState';
+import { useItemFiltering } from './useItemFiltering';
 
 export const useHomePageData = () => {
   const { 
@@ -116,21 +117,13 @@ export const useHomePageData = () => {
     currentItemId ? items.find(item => item.id === currentItemId) : undefined
   , [items, currentItemId]);
   
-  // Filter items based on selected filters
-  const filteredItems = useMemo(() => items.filter(item => {
-    const searchLower = searchQuery.toLowerCase();
-    const categoryLower = item.category?.toLowerCase() || '';
-    const brandLower = item.brand?.toLowerCase() || '';
-    
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-    const matchesSeason = seasonFilter === 'all' || (item.season || []).includes(seasonFilter as Season);
-    const matchesSearch = searchQuery === '' || 
-      item.name.toLowerCase().includes(searchLower) ||
-      categoryLower.includes(searchLower) ||
-      brandLower.includes(searchLower);
-    
-    return matchesCategory && matchesSeason && matchesSearch && !item.wishlist;
-  }), [items, categoryFilter, seasonFilter, searchQuery]);
+  // Filter items using the useItemFiltering hook
+  const { filteredItems } = useItemFiltering(items, {
+    category: categoryFilter,
+    season: seasonFilter,
+    searchQuery,
+    isWishlist: false
+  });
   
   // Filter outfits based on selected filters
   const filteredOutfits = useMemo(() => outfits.filter(outfit => {
@@ -169,39 +162,22 @@ export const useHomePageData = () => {
     return matchesSeason && matchesScenario && matchesSearch;
   }), [capsules, capsuleSeasonFilter, capsuleScenarioFilter, capsuleSearchQuery]);
 
-  // Memoize wishlist items separately for better performance
+  // Filter wishlist items using the useItemFiltering hook
+  const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useItemFiltering(
+    items,
+    {
+      category: categoryFilter,
+      season: seasonFilter,
+      searchQuery: wishlistSearchQuery,
+      wishlistStatus: wishlistStatusFilter,
+      isWishlist: true
+    }
+  );
+  
+  // Keep wishlistItems for backward compatibility
   const wishlistItems = useMemo(() => 
     items.filter(item => item.wishlist === true)
   , [items]);
-
-  // Filter wishlist items based on selected filters
-  const filteredWishlistItems = useMemo(() => {
-    // Apply all filters
-    return wishlistItems.filter(item => {
-      // Category filter
-      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      
-      // Season filter
-      const matchesSeason = seasonFilter === 'all' || 
-        (Array.isArray(item.season) 
-          ? item.season.includes(seasonFilter as Season)
-          : item.season === seasonFilter);
-      
-      // Status filter - handle null/undefined as 'not_reviewed'
-      const itemStatus = item.wishlistStatus || WishlistStatus.NOT_REVIEWED;
-      const matchesStatus = wishlistStatusFilter === 'all' || 
-        itemStatus === wishlistStatusFilter;
-      
-      // Search query
-      const searchLower = wishlistSearchQuery.toLowerCase();
-      const matchesSearch = wishlistSearchQuery === '' || 
-        item.name.toLowerCase().includes(searchLower) ||
-        (item.category?.toLowerCase() || '').includes(searchLower) ||
-        (item.brand?.toLowerCase() || '').includes(searchLower);
-      
-      return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
-    });
-  }, [wishlistItems, categoryFilter, seasonFilter, wishlistStatusFilter, wishlistSearchQuery]);
   
   // Event handlers
   const handleAddItem = useCallback(() => {
