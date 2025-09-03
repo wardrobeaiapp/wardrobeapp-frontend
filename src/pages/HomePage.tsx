@@ -7,11 +7,14 @@ import { useHomePageData, TabType } from '../hooks/home';
 import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
 
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
-import { theme } from '../styles/theme';
 import {
   PageHeader,
   TabsContainer,
   Tab,
+  HeaderContent,
+  ButtonsContainer,
+  MarkCompleteContainer,
+  MarkCompleteText
 } from './HomePage.styles';
 import Button from '../components/common/Button';
 import PageContainer from '../components/layout/PageContainer';
@@ -121,33 +124,24 @@ const HomePage: React.FC = () => {
       <PageContainer>
         
         <PageHeader>
-          <div style={{ marginBottom: '0' }}>
+          <HeaderContent>
             <CommonPageHeader 
               title="My Wardrobe"
               description="Organize and optimize your wardrobe collection"
               titleSize="lg"
             />
-          </div>
+          </HeaderContent>
           {activeTab === TabType.ITEMS && (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <ButtonsContainer>
               <Button 
                 size="lg" 
-                onClick={handleAddItem} 
-                style={{ 
-                  height: '40px',
-                }}
+                onClick={handleAddItem}
+                style={{ height: '40px' }}
               >
                 <MdAdd />
                 Add Item
               </Button>
-              <div style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                gap: '4px',
-                height: '100%',
-                justifyContent: 'flex-start'
-              }}>
+              <MarkCompleteContainer>
                 <Button 
                   size="lg" 
                   variant="secondary" 
@@ -156,17 +150,11 @@ const HomePage: React.FC = () => {
                 >
                   Mark Wardrobe Complete
                 </Button>
-                <span style={{ 
-                  fontSize: '0.75rem',
-                  color: theme.colors.gray[500],
-                  textAlign: 'center',
-                  maxWidth: '200px',
-                  lineHeight: '1.2'
-                }}>
+                <MarkCompleteText>
                   Mark your wardrobe as complete to start tracking new purchases
-                </span>
-              </div>
-            </div>
+                </MarkCompleteText>
+              </MarkCompleteContainer>
+            </ButtonsContainer>
           )}
           {activeTab === TabType.OUTFITS && (
             <Button size="lg" onClick={() => setIsAddOutfitModalOpen(true)}>
@@ -190,87 +178,35 @@ const HomePage: React.FC = () => {
         
         <TabsContainer>
           <Tab 
-            $active={activeTab === TabType.ITEMS} 
+            $active={activeTab === TabType.ITEMS}
+            $type="items"
             onClick={() => setActiveTab(TabType.ITEMS)}
-            style={{
-              display: 'inline-flex !important',
-              alignItems: 'center !important',
-              gap: '8px !important',
-              padding: '12px 24px !important',
-              borderRadius: '25px !important',
-              border: 'none !important',
-              background: activeTab === TabType.ITEMS ? '#8B5CF6 !important' : 'transparent !important',
-              color: activeTab === TabType.ITEMS ? '#FFFFFF !important' : '#6B7280 !important',
-              fontWeight: '500 !important',
-              fontSize: '14px !important',
-              cursor: 'pointer !important',
-              transition: 'all 0.2s ease !important'
-            }}
           >
-            <MdCheckroom style={{ marginRight: '8px', fontSize: '16px' }} />
+            <MdCheckroom />
             Wardrobe Items
           </Tab>
           <Tab 
-            $active={activeTab === TabType.OUTFITS} 
+            $active={activeTab === TabType.OUTFITS}
+            $type="outfits"
             onClick={() => setActiveTab(TabType.OUTFITS)}
-            style={{
-              display: 'inline-flex !important',
-              alignItems: 'center !important',
-              gap: '8px !important',
-              padding: '12px 24px !important',
-              borderRadius: '25px !important',
-              border: 'none !important',
-              background: activeTab === TabType.OUTFITS ? '#8B5CF6 !important' : 'transparent !important',
-              color: activeTab === TabType.OUTFITS ? '#FFFFFF !important' : '#6B7280 !important',
-              fontWeight: '500 !important',
-              fontSize: '14px !important',
-              cursor: 'pointer !important',
-              transition: 'all 0.2s ease !important'
-            }}
           >
-            <MdOutlineStyle style={{ marginRight: '8px', fontSize: '16px' }} />
+            <MdOutlineStyle />
             Outfits
           </Tab>
           <Tab 
-            $active={activeTab === TabType.CAPSULES} 
+            $active={activeTab === TabType.CAPSULES}
+            $type="capsules"
             onClick={() => setActiveTab(TabType.CAPSULES)}
-            style={{
-              display: 'inline-flex !important',
-              alignItems: 'center !important',
-              gap: '8px !important',
-              padding: '12px 24px !important',
-              borderRadius: '25px !important',
-              border: 'none !important',
-              background: activeTab === TabType.CAPSULES ? '#8B5CF6 !important' : 'transparent !important',
-              color: activeTab === TabType.CAPSULES ? '#FFFFFF !important' : '#6B7280 !important',
-              fontWeight: '500 !important',
-              fontSize: '14px !important',
-              cursor: 'pointer !important',
-              transition: 'all 0.2s ease !important'
-            }}
           >
-            <MdOutlineWorkspaces style={{ marginRight: '8px', fontSize: '16px' }} />
+            <MdOutlineWorkspaces />
             Capsules
           </Tab>
           <Tab 
-            $active={activeTab === TabType.WISHLIST} 
+            $active={activeTab === TabType.WISHLIST}
+            $type="wishlist"
             onClick={() => setActiveTab(TabType.WISHLIST)}
-            style={{
-              display: 'inline-flex !important',
-              alignItems: 'center !important',
-              gap: '8px !important',
-              padding: '12px 24px !important',
-              borderRadius: '25px !important',
-              border: 'none !important',
-              background: activeTab === TabType.WISHLIST ? '#8B5CF6 !important' : 'transparent !important',
-              color: activeTab === TabType.WISHLIST ? '#FFFFFF !important' : '#6B7280 !important',
-              fontWeight: '500 !important',
-              fontSize: '14px !important',
-              cursor: 'pointer !important',
-              transition: 'all 0.2s ease !important'
-            }}
           >
-            <MdFavoriteBorder style={{ marginRight: '8px', fontSize: '16px' }} />
+            <MdFavoriteBorder />
             Wishlist
           </Tab>
         </TabsContainer>

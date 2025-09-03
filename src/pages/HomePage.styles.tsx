@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../styles/theme';
+import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder } from 'react-icons/md';
 
 export const PageHeader = styled.header`
   display: flex;
@@ -8,26 +9,63 @@ export const PageHeader = styled.header`
   margin-bottom: 2rem;
 `;
 
+export const HeaderContent = styled.div`
+  margin-bottom: 0;
+`;
+
+export const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+export const MarkCompleteContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-start;
+`;
+
+export const MarkCompleteText = styled.span`
+  font-size: 0.75rem;
+  color: ${theme.colors.gray[500]};
+  text-align: center;
+  max-width: 200px;
+  line-height: 1.2;
+`;
+
 export const TabsContainer = styled.div`
   display: flex;
   border-bottom: 1px solid #e5e7eb;
   margin-bottom: 2rem;
 `;
 
-export const Tab = styled.button<{ $active: boolean }>`
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  font-weight: ${props => (props.$active ? '600' : '400')};
-  color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[500])};
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid ${props => (props.$active ? theme.colors.primary : 'transparent')};
-  cursor: pointer;
-  transition: all 0.2s ease;
+// Tab button with icon and active state
+interface TabProps {
+  $active: boolean;
+  $type: 'items' | 'outfits' | 'capsules' | 'wishlist';
+}
+
+export const Tab = styled.button<TabProps>`
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 24px !important;
+  border-radius: 25px !important;
+  border: none !important;
+  background: ${props => props.$active ? '#8B5CF6 !important' : 'transparent !important'};
+  color: ${props => props.$active ? '#FFFFFF !important' : '#6B7280 !important'};
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
   
-  &:hover {
-    color: ${props => (props.$active ? theme.colors.primary : theme.colors.gray[600])};
-  }`;
+  svg {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+`;
 
 export const FiltersContainer = styled.div`
   display: flex;
