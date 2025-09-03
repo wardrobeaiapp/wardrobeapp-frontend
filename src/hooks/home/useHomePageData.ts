@@ -9,6 +9,7 @@ import { CapsuleFormData } from '../../components/features/wardrobe/forms/Capsul
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
 import { useTabState, TabType } from './useTabState';
 import { useItemFiltering } from './useItemFiltering';
+import { useOutfitFiltering } from './useOutfitFiltering';
 
 export const useHomePageData = () => {
   const { 
@@ -125,23 +126,12 @@ export const useHomePageData = () => {
     isWishlist: false
   });
   
-  // Filter outfits based on selected filters
-  const filteredOutfits = useMemo(() => outfits.filter(outfit => {
-    const searchLower = outfitSearchQuery.toLowerCase();
-    const outfitScenarios = outfit.scenarios || [];
-    
-    const matchesSeason = outfitSeasonFilter === 'all' || 
-      (outfit.season || []).includes(outfitSeasonFilter as Season);
-      
-    const matchesScenario = outfitScenarioFilter === 'all' || 
-      outfitScenarios.includes(outfitScenarioFilter);
-      
-    const matchesSearch = outfitSearchQuery === '' || 
-      outfit.name.toLowerCase().includes(searchLower) ||
-      outfitScenarios.some(scenario => scenario.toLowerCase().includes(searchLower));
-      
-    return matchesSeason && matchesScenario && matchesSearch;
-  }), [outfits, outfitSeasonFilter, outfitScenarioFilter, outfitSearchQuery]);
+  // Filter outfits using the useOutfitFiltering hook
+  const { filteredOutfits } = useOutfitFiltering(outfits, {
+    season: outfitSeasonFilter,
+    scenario: outfitScenarioFilter,
+    searchQuery: outfitSearchQuery
+  });
 
   // Filter capsules based on selected filters
   const filteredCapsules = useMemo(() => capsules.filter(capsule => {
