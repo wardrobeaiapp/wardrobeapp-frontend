@@ -1,6 +1,6 @@
 import React from 'react';
-import { OnboardingStateHook } from '../../../hooks/useOnboardingState';
-import { OnboardingEventAdapters } from '../../../hooks/useOnboardingEventAdapters';
+import { OnboardingStateHook } from '../../../hooks/onboarding/useOnboardingState';
+import { OnboardingEventAdapters } from '../../../hooks/onboarding/useOnboardingEventAdapters';
 
 // Import step components
 import {

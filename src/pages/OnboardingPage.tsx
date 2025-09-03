@@ -2,9 +2,9 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import Header from '../components/layout/Header/Header';
-import { useOnboardingState } from '../hooks/useOnboardingState';
-import { useOnboardingEventAdapters } from '../hooks/useOnboardingEventAdapters';
-import { useOnboardingNavigation } from '../hooks/useOnboardingNavigation';
+import { useOnboardingState } from '../hooks/onboarding/useOnboardingState';
+import { useOnboardingEventAdapters } from '../hooks/onboarding/useOnboardingEventAdapters';
+import { useOnboardingNavigation } from '../hooks/onboarding/useOnboardingNavigation';
 import OnboardingStepRenderer from '../components/features/onboarding/OnboardingStepRenderer';
 import Button from '../components/common/Button';
 

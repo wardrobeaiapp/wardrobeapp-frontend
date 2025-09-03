@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '../context/SupabaseAuthContext';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { OnboardingStateHook } from './useOnboardingState';
-import { createScenario, getScenariosForUser } from '../services/scenarios';
-import { generateScenariosFromLifestyle } from '../utils/scenarioUtils';
-import { Scenario } from '../types';
+import { createScenario, getScenariosForUser } from '../../services/scenarios';
+import { generateScenariosFromLifestyle } from '../../utils/scenarioUtils';
+import { Scenario } from '../../types';
 
 /**
  * Custom hook to handle onboarding navigation logic
