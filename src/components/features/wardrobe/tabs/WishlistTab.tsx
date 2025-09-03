@@ -23,8 +23,8 @@ interface WishlistTabProps {
   setCategoryFilter: (category: string) => void;
   seasonFilter: string;
   setSeasonFilter: (season: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
+  statusFilter: WishlistStatus | 'all';
+  setStatusFilter: (status: WishlistStatus | 'all') => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewItem?: (item: WardrobeItem) => void; 
@@ -141,18 +141,18 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
           />
         </FilterGroup>
         <FilterGroup>
-          <SelectFilter
-            value={statusFilter}
-            onChange={setStatusFilter}
+          <SelectFilter<Exclude<WishlistStatus, 'all'>>
+            value={statusFilter === 'all' ? WishlistStatus.APPROVED : statusFilter}
+            onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
             label="Status"
             id="status-filter"
             options={[
-              { value: 'all', label: 'All Statuses' },
               { value: WishlistStatus.APPROVED, label: 'Approved' },
               { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
               { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
             ]}
-            includeAllOption={false} // We're handling the 'all' option manually
+            includeAllOption={true}
+            allOptionLabel="All Statuses"
           />
         </FilterGroup>
       </FiltersContainer>

@@ -1,15 +1,15 @@
 import React from 'react';
 import { FormField, FormSelect } from '../../../../common/Form';
 
-type Option = {
-  value: string;
+type Option<T extends string> = {
+  value: T;
   label: string;
 };
 
-type SelectFilterProps = {
-  value: string;
-  onChange: (value: string) => void;
-  options: Option[];
+type SelectFilterProps<T extends string> = {
+  value: T | 'all';
+  onChange: (value: T | 'all') => void;
+  options: Array<Option<T>>;
   label: string;
   id: string;
   className?: string;
@@ -17,7 +17,7 @@ type SelectFilterProps = {
   allOptionLabel?: string;
 };
 
-export const SelectFilter: React.FC<SelectFilterProps> = ({
+export function SelectFilter<T extends string = string>({
   value,
   onChange,
   options,
@@ -26,20 +26,23 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
   className,
   includeAllOption = true,
   allOptionLabel = 'All',
-}) => {
+}: SelectFilterProps<T>) {
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    // Pass the selected value directly, empty string means 'all' was selected
-    onChange(e.target.value);
+    const selectedValue = e.target.value;
+    if (selectedValue === '') {
+      onChange('all');
+      return;
+    }
+    
+    // Find the option to get the correctly typed value
+    const option = options.find(opt => String(opt.value) === selectedValue);
+    if (option) {
+      onChange(option.value);
+    }
   };
 
-  // Convert 'all' to empty string for the select element
-  const displayValue = value === 'all' ? '' : value;
-
-  // Filter out empty value options to avoid duplicates with our custom 'All' option
-  const filteredOptions = options.filter(option => {
-    // Keep all options except empty values that aren't specifically for 'All Scenarios'
-    return option.value !== '' || option.label === allOptionLabel;
-  });
+  // Convert value to string for the select element
+  const displayValue = value === 'all' ? '' : String(value);
 
   return (
     <FormField label={label} htmlFor={id} className={className}>
@@ -51,8 +54,8 @@ export const SelectFilter: React.FC<SelectFilterProps> = ({
         {includeAllOption && (
           <option value="">{allOptionLabel}</option>
         )}
-        {filteredOptions.map((option) => (
-          <option key={option.value} value={option.value}>
+        {options.map(option => (
+          <option key={String(option.value)} value={String(option.value)}>
             {option.label}
           </option>
         ))}

@@ -11,6 +11,7 @@ import { useTabState, TabType } from './useTabState';
 import { useItemFiltering } from './useItemFiltering';
 import { useOutfitFiltering } from './useOutfitFiltering';
 import { useCapsuleFiltering } from './useCapsuleFiltering';
+import { useWishlistFiltering } from './useWishlistFiltering';
 
 export const useHomePageData = () => {
   const { 
@@ -70,10 +71,6 @@ export const useHomePageData = () => {
   const { 
     activeTab, 
     setActiveTab,
-    isItemsTab,
-    isOutfitsTab,
-    isCapsulesTab,
-    isWishlistTab 
   } = useTabState(TabType.ITEMS);
   
   // Filter states
@@ -87,7 +84,7 @@ export const useHomePageData = () => {
   const [capsuleScenarioFilter, setCapsuleScenarioFilter] = useState<string>('all');
   const [capsuleSearchQuery, setCapsuleSearchQuery] = useState<string>('');
   const [wishlistSearchQuery, setWishlistSearchQuery] = useState<string>('');
-  const [wishlistStatusFilter, setWishlistStatusFilter] = useState<string>('all');
+  const [wishlistStatusFilter, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -141,15 +138,14 @@ export const useHomePageData = () => {
     searchQuery: capsuleSearchQuery
   });
 
-  // Filter wishlist items using the useItemFiltering hook
-  const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useItemFiltering(
+  // Filter wishlist items using the useWishlistFiltering hook
+  const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useWishlistFiltering(
     items,
     {
       category: categoryFilter,
       season: seasonFilter,
       searchQuery: wishlistSearchQuery,
-      wishlistStatus: wishlistStatusFilter,
-      isWishlist: true
+      wishlistStatus: wishlistStatusFilter
     }
   );
   
