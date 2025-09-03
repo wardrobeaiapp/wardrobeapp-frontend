@@ -23,7 +23,6 @@ export type { CapsuleFormData } from './utils/formHelpers';
 
 interface CapsuleFormProps {
   onSubmit: (id: string, data: any) => void; // Using any to avoid circular dependency
-  onGenerateWithAI?: (data: any) => void; // Optional callback for AI generation
   onCancel: () => void;
   availableItems: WardrobeItem[];
   editCapsule?: Capsule; // Optional capsule for editing mode
@@ -31,7 +30,6 @@ interface CapsuleFormProps {
 
 const CapsuleForm: React.FC<CapsuleFormProps> = ({ 
   onSubmit, 
-  onGenerateWithAI, 
   onCancel, 
   availableItems, 
   editCapsule 

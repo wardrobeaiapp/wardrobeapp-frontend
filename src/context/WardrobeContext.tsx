@@ -15,7 +15,6 @@ interface OutfitBase {
   items: string[];
   dateCreated: string;
   season: Season[];
-  weather?: string[];
   tags?: string[];
   imageUrl?: string;
   scenarios: string[];
@@ -33,7 +32,6 @@ type OutfitInput = {
   season: Season[];
   scenarios: string[];
   scenarioNames?: string[];
-  weather?: string[];
   tags?: string[];
   imageUrl?: string;
 };
@@ -119,7 +117,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         season: updates.season ?? currentOutfit.season ?? [],
         scenarios: updates.scenarios ?? currentOutfit.scenarios ?? [],
         // Optional fields with proper fallbacks
-        weather: updates.weather ?? currentOutfit.weather,
         tags: updates.tags ?? currentOutfit.tags,
         imageUrl: updates.imageUrl ?? currentOutfit.imageUrl
       };
@@ -308,7 +305,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
           items: Array.isArray(outfitData.items) ? outfitData.items : [],
           season: Array.isArray(outfitData.season) ? outfitData.season : [],
           scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
-          weather: Array.isArray(outfitData.weather) ? outfitData.weather : [],
           tags: Array.isArray(outfitData.tags) ? outfitData.tags : [],
           imageUrl: outfitData.imageUrl || '',
         };

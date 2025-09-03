@@ -38,7 +38,6 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
         availableItems={availableItems}
         editCapsule={editCapsule}
         onSubmit={handleFormSubmit}
-        onGenerateWithAI={onGenerateWithAI}
         onCancel={onClose}
       />
     </Modal>

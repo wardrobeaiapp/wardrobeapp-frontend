@@ -323,7 +323,6 @@ export const useHomePageData = () => {
         season: outfitData.season || [],
         scenarios: outfitData.scenarios || [],
         description: outfitData.description || '',
-        weather: [],
         tags: [],
         dateCreated: new Date().toISOString(),
         scenarioNames: []
