@@ -20,16 +20,6 @@ import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
   // Use our custom hook to get all the data and handlers
-  // AI Generation Handlers
-  const handleGenerateOutfitWithAI = useCallback(async () => {
-    // TODO: Implement AI outfit generation
-    console.log('Generate outfit with AI');
-  }, []);
-
-  const handleGenerateCapsuleWithAI = useCallback(async () => {
-    // TODO: Implement AI capsule generation
-    console.log('Generate capsule with AI');
-  }, []);
 
   const {
     // Data
@@ -89,9 +79,6 @@ const HomePage: React.FC = () => {
     setIsViewCapsuleModalOpen,
     isEditCapsuleModalOpen,
     setIsEditCapsuleModalOpen,
-    // AI generation functionality is now integrated into the forms
-    isGenerateCapsuleWithAIModalOpen,
-    setIsGenerateCapsuleWithAIModalOpen,
     isAddCapsuleModalOpen,
     setIsAddCapsuleModalOpen,
     isViewItemModalOpen,
@@ -387,8 +374,6 @@ const HomePage: React.FC = () => {
           isEditCapsuleModalOpen={isEditCapsuleModalOpen}
           isDeleteConfirmModalOpen={isDeleteConfirmModalOpen}
           itemToDelete={itemToDelete}
-          // AI generation functionality is now integrated into the forms
-          isGenerateCapsuleWithAIModalOpen={isGenerateCapsuleWithAIModalOpen}
           isAddCapsuleModalOpen={isAddCapsuleModalOpen}
           isViewItemModalOpen={isViewItemModalOpen}
           
@@ -401,16 +386,12 @@ const HomePage: React.FC = () => {
           setIsViewCapsuleModalOpen={setIsViewCapsuleModalOpen}
           setIsEditCapsuleModalOpen={setIsEditCapsuleModalOpen}
           setIsDeleteConfirmModalOpen={setIsDeleteConfirmModalOpen}
-          // AI generation functionality is now integrated into the forms
-          setIsGenerateCapsuleWithAIModalOpen={setIsGenerateCapsuleWithAIModalOpen}
           setIsAddCapsuleModalOpen={setIsAddCapsuleModalOpen}
           setIsViewItemModalOpen={setIsViewItemModalOpen}
           
           // Action handlers
           handleSubmitAdd={handleSubmitAdd}
           handleSubmitEdit={handleSubmitEdit}
-          handleGenerateOutfitWithAI={handleGenerateOutfitWithAI}
-          handleGenerateCapsuleWithAI={handleGenerateCapsuleWithAI}
           handleAddOutfit={handleAddOutfit}
           handleEditOutfitSubmit={handleEditOutfitSubmit}
           handleAddCapsule={handleAddCapsule}

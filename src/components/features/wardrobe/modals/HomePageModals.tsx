@@ -1,7 +1,6 @@
 import React from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
-// AI generation functionality is now integrated into the forms
 import CapsuleDetailModal from './CapsuleDetailModal';
 import OutfitDetailModal from './OutfitDetailModal';
 import ItemViewModal from './ItemViewModal';
@@ -31,8 +30,6 @@ interface HomePageModalsProps {
   isViewOutfitModalOpen: boolean;
   isViewCapsuleModalOpen: boolean;
   isEditCapsuleModalOpen: boolean;
-  // AI generation functionality is now integrated into the forms
-  isGenerateCapsuleWithAIModalOpen: boolean;
   isAddCapsuleModalOpen: boolean;
   isViewItemModalOpen: boolean;
   isDeleteConfirmModalOpen: boolean;
@@ -45,8 +42,6 @@ interface HomePageModalsProps {
   setIsViewOutfitModalOpen: (isOpen: boolean) => void;
   setIsViewCapsuleModalOpen: (isOpen: boolean) => void;
   setIsEditCapsuleModalOpen: (isOpen: boolean) => void;
-  // AI generation functionality is now integrated into the forms
-  setIsGenerateCapsuleWithAIModalOpen: (isOpen: boolean) => void;
   setIsAddCapsuleModalOpen: (isOpen: boolean) => void;
   setIsViewItemModalOpen: (isOpen: boolean) => void;
   setIsDeleteConfirmModalOpen: (isOpen: boolean) => void;
@@ -58,8 +53,6 @@ interface HomePageModalsProps {
   handleEditOutfitSubmit: (outfitData: any) => void;
   handleAddCapsule: (id: string, data: CapsuleFormData) => void;
   handleEditCapsuleSubmit: (id: string, data: CapsuleFormData) => void;
-  handleGenerateOutfitWithAI: (data: any) => void;
-  handleGenerateCapsuleWithAI: (data: any) => void;
   confirmDeleteItem: () => void;
   
   // Item handlers
@@ -124,8 +117,6 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   handleEditOutfitSubmit,
   handleAddCapsule,
   handleEditCapsuleSubmit,
-  handleGenerateOutfitWithAI,
-  handleGenerateCapsuleWithAI,
   confirmDeleteItem,
   
   // Item handlers
@@ -175,7 +166,6 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         isOpen={isAddOutfitModalOpen}
         onClose={() => setIsAddOutfitModalOpen(false)}
         onSubmit={handleAddOutfit}
-        onGenerateWithAI={handleGenerateOutfitWithAI}
         availableItems={items}
         isEditing={false}
       />
@@ -206,14 +196,11 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         />
       )}
 
-      {/* AI Generation functionality is now integrated into the OutfitForm and CapsuleForm */}
-
       {/* Capsule Modals */}
       <CapsuleFormModal
         isOpen={isAddCapsuleModalOpen}
         onClose={() => setIsAddCapsuleModalOpen(false)}
         onSubmit={handleAddCapsule}
-        onGenerateWithAI={handleGenerateCapsuleWithAI}
         availableItems={items}
         isEditing={false}
       />
@@ -241,7 +228,6 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         />
       )}
 
-      {/* AI Generation functionality is now integrated into the OutfitForm and CapsuleForm */}
 
       {/* Delete Confirmation Modal */}
       <DeleteItemConfirmModal
