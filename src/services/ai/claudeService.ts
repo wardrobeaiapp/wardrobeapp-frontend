@@ -76,7 +76,6 @@ export const claudeService = {
    */
   async getOutfitSuggestions(
     wardrobeItems: WardrobeItem[],
-    occasion?: string,
     season?: string,
     preferences?: string
   ): Promise<ClaudeResponse> {
@@ -96,7 +95,6 @@ export const claudeService = {
         `${API_URL}/outfit-suggestions`,
         {
           wardrobeItems,
-          occasion,
           season,
           preferences
         },

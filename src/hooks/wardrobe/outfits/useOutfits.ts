@@ -72,8 +72,6 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       scenarios: Array.isArray(data.scenarios) ? data.scenarios : [],
       scenarioNames: Array.isArray(data.scenarioNames) ? data.scenarioNames : [],
       // Optional fields
-      lastWorn: data.lastWorn,
-      occasion: data.occasion,
       weather: data.weather,
       tags: data.tags,
       imageUrl: data.imageUrl

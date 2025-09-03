@@ -6,7 +6,6 @@ import {
   ButtonsContainer,
   SeasonTag,
   TagsContainer,
-  OccasionTag,
   ItemImagesGrid,
   ItemImageSquare,
   ItemImagePlaceholder
@@ -41,10 +40,6 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, onView, onDelete, wardr
           <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
         ))}
       </TagsContainer>
-      
-      {outfit.occasion && (
-        <OccasionTag>{outfit.occasion}</OccasionTag>
-      )}
       
       <OutfitDetail>Items: {outfit.items.length}</OutfitDetail>
       

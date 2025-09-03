@@ -7,12 +7,9 @@ import { Outfit } from '../../../types';
 import { supabase } from '../../../services/core';
 import {
   OUTFITS_TABLE,
-  OUTFIT_ITEMS_TABLE,
-  OUTFIT_SCENARIOS_TABLE,
   API_URL,
   getAuthHeaders,
   apiRequest,
-  handleError,
   getCurrentUserId
 } from './outfitBaseService';
 import {

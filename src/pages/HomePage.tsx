@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import Header from '../components/layout/Header/Header';
 import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';

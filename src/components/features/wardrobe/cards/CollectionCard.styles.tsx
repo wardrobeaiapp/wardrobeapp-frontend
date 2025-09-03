@@ -64,11 +64,6 @@ export const TagsContainer = styled.div`
   margin-bottom: 0.5rem;
 `;
 
-export const OccasionTag = styled(SeasonTag)`
-  background-color: ${theme.colors.purple[50]};
-  color: ${theme.colors.primary};
-`;
-
 export const ItemImagesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, 1fr);

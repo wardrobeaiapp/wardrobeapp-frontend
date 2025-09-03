@@ -61,9 +61,7 @@ export const findOutfitsBySeason = async (season: string): Promise<Outfit[]> => 
       scenarios: [], // These would need to be populated in a follow-up query
       scenarioNames: Array.isArray(outfit.scenario_names) ? outfit.scenario_names : [],
       season: Array.isArray(outfit.season) ? outfit.season : [],
-      favorite: Boolean(outfit.favorite),
       dateCreated: String(outfit.date_created),
-      lastWorn: outfit.last_worn ? String(outfit.last_worn) : undefined
     }));
   } catch (error) {
     console.error('[outfitService] Error finding outfits by season:', error);
@@ -115,9 +113,7 @@ export const findOutfitsByScenario = async (scenarioId: string): Promise<Outfit[
       scenarios: [scenarioId], // We know this scenario is associated
       scenarioNames: Array.isArray(outfit.scenario_names) ? outfit.scenario_names : [],
       season: Array.isArray(outfit.season) ? outfit.season : [],
-      favorite: Boolean(outfit.favorite),
       dateCreated: String(outfit.date_created),
-      lastWorn: outfit.last_worn ? String(outfit.last_worn) : undefined
     }));
   } catch (error) {
     console.error('[outfitService] Error finding outfits by scenario:', error);
@@ -170,9 +166,7 @@ export const findOutfitsByItem = async (itemId: string): Promise<Outfit[]> => {
       scenarios: [], // These would need to be populated in a follow-up query
       scenarioNames: Array.isArray(outfit.scenario_names) ? outfit.scenario_names : [],
       season: Array.isArray(outfit.season) ? outfit.season : [],
-      favorite: Boolean(outfit.favorite),
       dateCreated: String(outfit.date_created),
-      lastWorn: outfit.last_worn ? String(outfit.last_worn) : undefined
     }));
   } catch (error) {
     console.error('[outfitService] Error finding outfits by item:', error);
@@ -206,9 +200,7 @@ export const findFavoriteOutfits = async (): Promise<Outfit[]> => {
       scenarios: [], // These would need to be populated in a follow-up query
       scenarioNames: Array.isArray(outfit.scenario_names) ? outfit.scenario_names : [],
       season: Array.isArray(outfit.season) ? outfit.season : [],
-      favorite: true, // We know these are favorites
       dateCreated: String(outfit.date_created),
-      lastWorn: outfit.last_worn ? String(outfit.last_worn) : undefined
     }));
   } catch (error) {
     console.error('[outfitService] Error finding favorite outfits:', error);

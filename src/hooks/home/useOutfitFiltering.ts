@@ -36,7 +36,6 @@ export const useOutfitFiltering = (
       const matchesSearch = searchQuery === '' || 
         outfit.name.toLowerCase().includes(searchLower) ||
         outfitScenarios.some(s => s.toLowerCase().includes(searchLower)) ||
-        (outfit.occasion && outfit.occasion.toLowerCase().includes(searchLower)) ||
         (outfit.scenarioNames && outfit.scenarioNames.some(s => s.toLowerCase().includes(searchLower)));
       
       return matchesSeason && matchesScenario && matchesSearch;

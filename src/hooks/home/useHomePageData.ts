@@ -322,7 +322,6 @@ export const useHomePageData = () => {
         items: outfitData.items || [],
         season: outfitData.season || [],
         scenarios: outfitData.scenarios || [],
-        occasion: outfitData.occasion || '',
         description: outfitData.description || '',
         weather: [],
         tags: [],
@@ -338,11 +337,6 @@ export const useHomePageData = () => {
             return scenario?.name || '';
           })
           .filter(Boolean);
-      }
-      
-      // Ensure the occasion field is set for backward compatibility
-      if (!newOutfit.occasion && newOutfit.scenarioNames?.[0]) {
-        newOutfit.occasion = newOutfit.scenarioNames[0];
       }
       
       await addOutfit(newOutfit);
@@ -382,11 +376,6 @@ export const useHomePageData = () => {
             return scenario?.name || '';
           })
           .filter(Boolean) as string[];
-      }
-      
-      // Ensure the occasion field is set for backward compatibility
-      if (!safeUpdates.occasion && safeUpdates.scenarioNames?.[0]) {
-        safeUpdates.occasion = safeUpdates.scenarioNames[0];
       }
       
       await updateOutfit(currentOutfitId, safeUpdates);

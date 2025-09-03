@@ -6,7 +6,6 @@ import {
   ButtonsContainer,
   SeasonTag,
   TagsContainer,
-  OccasionTag,
   DescriptionText,
   ItemImagesGrid,
   ItemImageSquare,
@@ -51,11 +50,6 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
           <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
         ))}
       </TagsContainer>
-      
-      {/* Type-specific content */}
-      {type === 'outfit' && (data as Outfit).occasion && (
-        <OccasionTag>{(data as Outfit).occasion}</OccasionTag>
-      )}
       
       {type === 'capsule' && (data as Capsule).description && (
         <DescriptionText>{(data as Capsule).description}</DescriptionText>

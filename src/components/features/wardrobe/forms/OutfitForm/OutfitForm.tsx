@@ -231,8 +231,6 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
       name: generatedName,
       items: selectedItems,
       season: selectedSeasons,
-      // For backward compatibility, set the occasion to the first scenario's name if available
-      occasion: firstScenario?.name || undefined,
       // Store scenario IDs in the scenarios array
       scenarios: selectedScenarios,
       // Also include scenario names for backward compatibility
@@ -274,11 +272,6 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
         formData.scenarioNames = formData.scenarios
           .map(id => scenarios.find(s => s.id === id)?.name)
           .filter((name): name is string => !!name);
-      }
-      
-      // Ensure the occasion field is set for backward compatibility
-      if (!formData.occasion && formData.scenarioNames.length > 0) {
-        formData.occasion = formData.scenarioNames[0];
       }
       
       onSubmit(formData);

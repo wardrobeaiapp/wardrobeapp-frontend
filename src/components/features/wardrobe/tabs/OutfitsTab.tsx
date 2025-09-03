@@ -157,8 +157,7 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
                 scenarioFilter === 'all' ||
                 (outfit.scenarios && outfit.scenarios.some(s => 
                   s && s.toLowerCase() === scenarioFilter.toLowerCase()
-                )) || 
-                (outfit.occasion && outfit.occasion.toLowerCase() === scenarioFilter.toLowerCase());
+                ));
               
               return matchesSeason && matchesScenario;
             })
