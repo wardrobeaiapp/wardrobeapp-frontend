@@ -14,6 +14,7 @@ import { useCapsuleFiltering } from './useCapsuleFiltering';
 import { useWishlistFiltering } from './useWishlistFiltering';
 import { useModalState } from './useModalState';
 import { useItemManagement } from './useItemManagement';
+import useDataLoading from '../core/useDataLoading';
 
 export const useHomePageData = () => {
   const { 
@@ -75,6 +76,24 @@ export const useHomePageData = () => {
     setActiveTab,
   } = useTabState(TabType.ITEMS);
   
+  // Scenarios state with useDataLoading
+  const [scenariosState, scenariosActions] = useDataLoading<Array<{id: string, name: string}>>([]);
+  const { loadData: loadScenarios, setData: setScenarios } = scenariosActions;
+  
+  // Fetch scenarios when user is available
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    loadScenarios(
+      fetchScenarios(user.id)
+        .then(data => {
+          return data;
+        })
+    ).catch(error => {
+      console.error('Error loading scenarios:', error);
+    });
+  }, [user?.id, loadScenarios]);
+  
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [seasonFilter, setSeasonFilter] = useState<string>('all');
@@ -98,8 +117,6 @@ export const useHomePageData = () => {
     isViewOutfitModalOpen,
     isViewCapsuleModalOpen,
     isEditCapsuleModalOpen,
-    isGenerateWithAIModalOpen,
-    isGenerateCapsuleWithAIModalOpen,
     isAddCapsuleModalOpen,
     isViewItemModalOpen,
     
@@ -111,8 +128,6 @@ export const useHomePageData = () => {
     setIsViewOutfitModalOpen,
     setIsViewCapsuleModalOpen,
     setIsEditCapsuleModalOpen,
-    setIsGenerateWithAIModalOpen,
-    setIsGenerateCapsuleWithAIModalOpen,
     setIsAddCapsuleModalOpen,
     setIsViewItemModalOpen,
     
@@ -317,20 +332,14 @@ export const useHomePageData = () => {
         scenarioNames: []
       };
       
-      // If we have scenario IDs but no names, try to fetch them
-      if (newOutfit.scenarios.length > 0 && user) {
-        try {
-          const allScenarios = await fetchScenarios(user.id);
-          newOutfit.scenarioNames = newOutfit.scenarios
-            .map(scenarioId => {
-              const scenario = allScenarios.find(s => s.id === scenarioId);
-              return scenario?.name || '';
-            })
-            .filter(Boolean);
-        } catch (error) {
-          console.error('Failed to fetch scenarios for name mapping:', error);
-          // Continue without scenario names if we can't fetch them
-        }
+      // If we have scenario IDs but no names, use the already loaded scenarios
+      if (newOutfit.scenarios.length > 0 && scenariosState.data) {
+        newOutfit.scenarioNames = newOutfit.scenarios
+          .map(scenarioId => {
+            const scenario = scenariosState.data?.find(s => s.id === scenarioId);
+            return scenario?.name || '';
+          })
+          .filter(Boolean);
       }
       
       // Ensure the occasion field is set for backward compatibility
@@ -365,22 +374,16 @@ export const useHomePageData = () => {
         scenarioNames: scenarioNames || []
       };
       
-      // If we have scenarios but no names, try to fetch them
+      // If we have scenarios but no names, use the already loaded scenarios
       if (safeUpdates.scenarios && safeUpdates.scenarios.length > 0 && 
           (!safeUpdates.scenarioNames || safeUpdates.scenarioNames.length === 0) &&
-          user) {
-        try {
-          const allScenarios = await fetchScenarios(user.id);
-          safeUpdates.scenarioNames = safeUpdates.scenarios
-            .map((scenarioId: string) => {
-              const scenario = allScenarios.find((s: { id: string }) => s.id === scenarioId);
-              return scenario?.name || '';
-            })
-            .filter(Boolean) as string[];
-        } catch (error) {
-          console.error('Failed to fetch scenarios for name mapping:', error);
-          // Continue without scenario names if we can't fetch them
-        }
+          scenariosState.data) {
+        safeUpdates.scenarioNames = safeUpdates.scenarios
+          .map((scenarioId: string) => {
+            const scenario = scenariosState.data?.find(s => s.id === scenarioId);
+            return scenario?.name || '';
+          })
+          .filter(Boolean) as string[];
       }
       
       // Ensure the occasion field is set for backward compatibility
@@ -448,6 +451,11 @@ export const useHomePageData = () => {
     filteredWishlistItems,
     isLoading,
     error,
+    
+    // Scenarios
+    scenarios: scenariosState.data || [],
+    isLoadingScenarios: scenariosState.isLoading,
+    scenariosError: scenariosState.error,
     
     // Tab state
     activeTab,
