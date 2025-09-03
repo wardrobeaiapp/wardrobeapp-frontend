@@ -101,8 +101,6 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   isViewOutfitModalOpen,
   isViewCapsuleModalOpen,
   isEditCapsuleModalOpen,
-  // AI generation functionality is now integrated into the forms
-  isGenerateCapsuleWithAIModalOpen,
   isAddCapsuleModalOpen,
   isViewItemModalOpen,
   isDeleteConfirmModalOpen,
@@ -115,8 +113,6 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   setIsViewOutfitModalOpen,
   setIsViewCapsuleModalOpen,
   setIsEditCapsuleModalOpen,
-  // AI generation functionality is now integrated into the forms
-  setIsGenerateCapsuleWithAIModalOpen,
   setIsAddCapsuleModalOpen,
   setIsViewItemModalOpen,
   setIsDeleteConfirmModalOpen,

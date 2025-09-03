@@ -13,6 +13,7 @@ import { useOutfitFiltering } from './useOutfitFiltering';
 import { useCapsuleFiltering } from './useCapsuleFiltering';
 import { useWishlistFiltering } from './useWishlistFiltering';
 import { useModalState } from './useModalState';
+import { useItemManagement } from './useItemManagement';
 
 export const useHomePageData = () => {
   const { 
@@ -126,12 +127,37 @@ export const useHomePageData = () => {
     closeViewCapsuleModal,
   } = useModalState();
   
-  // Selected item states
+  // Item management
+  const {
+    // State
+    currentItemId,
+    setCurrentItemId,
+    selectedItem,
+    setSelectedItem,
+    isDeleteConfirmModalOpen,
+    setIsDeleteConfirmModalOpen,
+    itemToDelete,
+    setItemToDelete,
+    
+    // Handlers
+    handleAddItem,
+    handleViewItem,
+    handleEditItem,
+    handleDeleteItem: handleDeleteItemInternal,
+    confirmDeleteItem,
+    handleSubmitAdd,
+    handleSubmitEdit,
+  } = useItemManagement({
+    addItem,
+    updateItem,
+    deleteItem,
+    setActiveTab,
+  });
+  
+  // Outfit and capsule states
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
   const [selectedCapsule, setSelectedCapsule] = useState<Capsule | undefined>(undefined);
   const [currentOutfitId, setCurrentOutfitId] = useState<string | null>(null);
-  const [currentItemId, setCurrentItemId] = useState<string | null>(null);
-  const [selectedItem, setSelectedItem] = useState<WardrobeItem | undefined>(undefined);
   
   // Derived states
   const currentOutfit = useMemo(() => {
@@ -181,43 +207,24 @@ export const useHomePageData = () => {
     items.filter(item => item.wishlist === true)
   , [items]);
   
-  // Event handlers
-  const handleAddItem = useCallback(() => {
-    setIsAddModalOpen(true);
-  }, []);
+  // Handle item deletion with items context
+  const handleDeleteItem = useCallback((id: string) => {
+    handleDeleteItemInternal(items, id);
+  }, [handleDeleteItemInternal, items]);
   
-  const handleViewItem = useCallback((item: WardrobeItem) => {
-    setSelectedItem(item);
+  // Additional modal state management
+  const handleViewItemWithModal = useCallback((item: WardrobeItem) => {
+    handleViewItem(item);
     setIsViewItemModalOpen(true);
-  }, []);
+  }, [handleViewItem]);
   
-  const handleEditItem = useCallback((id: string) => {
-    // If we're coming from the view modal, close it
+  const handleEditItemWithModal = useCallback((id: string) => {
     if (isViewItemModalOpen) {
       setIsViewItemModalOpen(false);
     }
-    setCurrentItemId(id);
+    handleEditItem(id);
     setIsEditModalOpen(true);
-  }, [isViewItemModalOpen]);
-  
-  // State for delete confirmation modal
-  const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState<WardrobeItem | undefined>(undefined);
-
-  const handleDeleteItem = useCallback((id: string) => {
-    // Find the item to delete
-    const itemToDelete = items.find(item => item.id === id);
-    setItemToDelete(itemToDelete);
-    setIsDeleteConfirmModalOpen(true);
-  }, [items]);
-  
-  const confirmDeleteItem = useCallback(() => {
-    if (itemToDelete?.id) {
-      deleteItem(itemToDelete.id);
-      setIsDeleteConfirmModalOpen(false);
-      setItemToDelete(undefined);
-    }
-  }, [deleteItem, itemToDelete]);
+  }, [handleEditItem, isViewItemModalOpen]);
   
   const handleViewOutfit = useCallback((outfit: Outfit) => {
     setSelectedOutfit(outfit);
@@ -267,50 +274,26 @@ export const useHomePageData = () => {
     setSelectedCapsule(undefined);
   }, [deleteCapsuleById]);
   
-  const handleSubmitAdd = useCallback(async (item: Omit<WardrobeItem, 'id' | 'dateCreated'>, file?: File) => {
+  // Wrappers for submit handlers to handle modal state
+  const handleSubmitAddWithModal = useCallback(async (item: Omit<WardrobeItem, 'id' | 'dateCreated'>, file?: File) => {
     try {
-      console.log('[useHomePageData] Adding item with file:', !!file);
-      console.log('[useHomePageData] Item data received:', {
-        neckline: item.neckline,
-        sleeves: item.sleeves,
-        style: item.style,
-        rise: item.rise
-      });
-      
-      await addItem(item, file);
+      await handleSubmitAdd(item, file);
       setIsAddModalOpen(false);
-      
-      // If the item is a wishlist item, switch to the wishlist tab
-      if (item.wishlist) {
-        setActiveTab(TabType.WISHLIST);
-      }
     } catch (error) {
-      console.error('Failed to add item:', error);
-      // Consider adding error state to show in UI
+      console.error('Error in handleSubmitAddWithModal:', error);
+      throw error;
     }
-  }, [addItem, setActiveTab]);
+  }, [handleSubmitAdd, setIsAddModalOpen]);
   
-  const handleSubmitEdit = useCallback(async (updates: Partial<WardrobeItem>) => {
-    if (!currentItemId) {
-      console.error('No item selected for editing');
-      return;
-    }
-    
+  const handleSubmitEditWithModal = useCallback(async (updates: Partial<WardrobeItem>) => {
     try {
-      await updateItem(currentItemId, updates);
-      
-      // If the view modal is open for this item, update the selectedItem with new data
-      if (selectedItem?.id === currentItemId) {
-        setSelectedItem({ ...selectedItem, ...updates });
-      }
-      
+      await handleSubmitEdit(updates);
       setIsEditModalOpen(false);
-      setCurrentItemId(null);
     } catch (error) {
-      console.error('Failed to update item:', error);
-      // Consider adding error state to show in UI
+      console.error('Error in handleSubmitEditWithModal:', error);
+      throw error;
     }
-  }, [currentItemId, updateItem, selectedItem]);
+  }, [handleSubmitEdit, setIsEditModalOpen]);
   
   const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'userId' | 'scenarios'> & { 
     scenarios?: string[];
@@ -454,51 +437,6 @@ export const useHomePageData = () => {
     }
   }, [addCapsule]);
   
-  const handleGenerateOutfitWithAI = useCallback(async (data: any) => {
-    try {
-      // Here you would call your AI generation service
-      
-      // For now, create a simple outfit based on the selected data
-      const newOutfit: Omit<OutfitExtended, 'id'> = {
-        name: data.name || `${data.scenario || 'New'} Outfit`,
-        description: data.description || '',
-        items: data.includedItems?.length > 0 
-          ? data.includedItems 
-          : items
-              .filter(item => item.season?.some(s => data.seasons?.includes(s)))
-              .slice(0, Math.min(5, items.length))
-              .map(item => item.id),
-        season: data.seasons || [],
-        scenarios: data.scenario ? [data.scenario] : [],
-        favorite: false,
-        userId: 'guest',
-        dateCreated: new Date().toISOString(),
-        occasion: data.scenario,
-        lastWorn: undefined,
-        weather: [],
-        tags: []
-      };
-      
-      addOutfit(newOutfit);
-      setIsGenerateWithAIModalOpen(false);
-    } catch (error) {
-      alert('Failed to generate outfit. Please try again.');
-    }
-  }, [items, addOutfit]);
-  
-  const handleGenerateCapsuleWithAI = useCallback(async (data: any) => {
-    try {
-      // Here you would call your AI generation service for capsules
-      
-      // For now, just show an alert that this feature is coming soon
-      alert('AI capsule generation is coming soon! Your preferences have been saved.');
-      
-      setIsGenerateCapsuleWithAIModalOpen(false);
-    } catch (error) {
-      alert('There was an error generating the capsule. Please try again.');
-    }
-  }, []);
-  
   return {
     // Data
     items,
@@ -543,7 +481,6 @@ export const useHomePageData = () => {
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,
     itemToDelete,
-    confirmDeleteItem,
     
     // Modal states
     isAddModalOpen,
@@ -580,10 +517,14 @@ export const useHomePageData = () => {
     setCurrentOutfitId,
     
     // Event handlers
-    handleAddItem,
-    handleViewItem,
-    handleEditItem,
+    handleAddItem: () => {
+      handleAddItem();
+      setIsAddModalOpen(true);
+    },
+    handleViewItem: handleViewItemWithModal,
+    handleEditItem: handleEditItemWithModal,
     handleDeleteItem,
+    confirmDeleteItem,
     handleViewOutfit,
     handleEditOutfit,
     handleDeleteOutfit,
@@ -591,12 +532,10 @@ export const useHomePageData = () => {
     handleEditCapsule,
     handleEditCapsuleSubmit,
     handleDeleteCapsule,
-    handleSubmitAdd,
-    handleSubmitEdit,
+    handleSubmitAdd: handleSubmitAddWithModal,
+    handleSubmitEdit: handleSubmitEditWithModal,
     handleAddOutfit,
     handleEditOutfitSubmit,
     handleAddCapsule,
-    handleGenerateOutfitWithAI,
-    handleGenerateCapsuleWithAI
   };
 };

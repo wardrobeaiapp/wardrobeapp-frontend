@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Header from '../components/layout/Header/Header';
 import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
@@ -20,6 +20,17 @@ import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
   // Use our custom hook to get all the data and handlers
+  // AI Generation Handlers
+  const handleGenerateOutfitWithAI = useCallback(async () => {
+    // TODO: Implement AI outfit generation
+    console.log('Generate outfit with AI');
+  }, []);
+
+  const handleGenerateCapsuleWithAI = useCallback(async () => {
+    // TODO: Implement AI capsule generation
+    console.log('Generate capsule with AI');
+  }, []);
+
   const {
     // Data
     items,
@@ -113,8 +124,6 @@ const HomePage: React.FC = () => {
     handleAddOutfit,
     handleEditOutfitSubmit,
     handleAddCapsule,
-    handleGenerateOutfitWithAI,
-    handleGenerateCapsuleWithAI
   } = useHomePageData();
 
   // Main component render
@@ -400,12 +409,12 @@ const HomePage: React.FC = () => {
           // Action handlers
           handleSubmitAdd={handleSubmitAdd}
           handleSubmitEdit={handleSubmitEdit}
+          handleGenerateOutfitWithAI={handleGenerateOutfitWithAI}
+          handleGenerateCapsuleWithAI={handleGenerateCapsuleWithAI}
           handleAddOutfit={handleAddOutfit}
           handleEditOutfitSubmit={handleEditOutfitSubmit}
           handleAddCapsule={handleAddCapsule}
           handleEditCapsuleSubmit={handleEditCapsuleSubmit}
-          handleGenerateOutfitWithAI={handleGenerateOutfitWithAI}
-          handleGenerateCapsuleWithAI={handleGenerateCapsuleWithAI}
           confirmDeleteItem={confirmDeleteItem}
           
           // Item handlers
