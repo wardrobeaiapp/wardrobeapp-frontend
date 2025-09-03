@@ -48,18 +48,33 @@ interface TabProps {
 }
 
 export const Tab = styled.button<TabProps>`
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 12px 24px !important;
-  border-radius: 25px !important;
-  border: none !important;
-  background: ${props => props.$active ? '#8B5CF6 !important' : 'transparent !important'};
-  color: ${props => props.$active ? '#FFFFFF !important' : '#6B7280 !important'};
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  color: ${props => props.$active ? theme.colors.primary : theme.colors.gray[600]};
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: ${props => props.$active ? theme.colors.primary : 'transparent'};
+    transition: background-color 0.2s ease;
+  }
+  
+  &:hover {
+    color: ${theme.colors.primary};
+  }
   
   svg {
     margin-right: 8px;
