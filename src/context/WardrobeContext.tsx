@@ -18,9 +18,6 @@ interface OutfitBase {
   scenarioNames?: string[];
 }
 
-// Alias for backward compatibility
-type OutfitType = OutfitBase;
-
 // Input type for creating/updating outfits
 type OutfitInput = {
   name: string;
