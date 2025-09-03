@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import supabaseAuthService from '../services/auth/supabaseAuthService';
-import { fetchUserPreferences, updateUserPreferences } from '../services/profile/supabasePreferencesService';
-import { getUserProfileByUserId } from '../services/auth/supabaseAuthService';
-import { getClothingBudgetData, getShoppingLimitData } from '../services/profile/userBudgetsService';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import supabaseAuthService from '../../services/auth/supabaseAuthService';
+import { fetchUserPreferences, updateUserPreferences } from '../../services/profile/supabasePreferencesService';
+import { getUserProfileByUserId } from '../../services/auth/supabaseAuthService';
+import { getClothingBudgetData, getShoppingLimitData } from '../../services/profile/userBudgetsService';
 import { 
   UserPreferences, 
   defaultPreferences, 
@@ -12,7 +12,7 @@ import {
   AISettingsData,
   NotificationsData,
   OtherSettingsData
-} from '../types/profile';
+} from '../../types/profile';
 
 export const useProfileData = () => {
   const { user, refreshUserData } = useSupabaseAuth();

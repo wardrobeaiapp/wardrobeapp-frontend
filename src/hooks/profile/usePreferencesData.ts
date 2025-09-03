@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import { UserPreferences, defaultPreferences } from '../types/userPreferences';
-import { fetchUserPreferences, updateUserPreferences } from '../services/profile/supabasePreferencesService';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import { UserPreferences, defaultPreferences } from '../../types/userPreferences';
+import { fetchUserPreferences, updateUserPreferences } from '../../services/profile/supabasePreferencesService';
 
 /**
  * Hook for managing user preferences data using the new user_preferences table

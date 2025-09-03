@@ -3,7 +3,7 @@ import { useSupabaseAuth } from '../context/SupabaseAuthContext';
 import styled from 'styled-components';
 import Header from '../components/layout/Header/Header';
 import { useProfileSections } from '../components/features/profile/ProfileSections';
-import { useProfileData } from '../hooks/useProfileData';
+import { useProfileData } from '../hooks/profile/useProfileData';
 import { ProfileCategory, CATEGORIES } from '../types/profile';
 import { FaPalette, FaCrown, FaChartLine, FaBell, FaCog } from 'react-icons/fa';
 import { FaCalendarDays } from 'react-icons/fa6';
