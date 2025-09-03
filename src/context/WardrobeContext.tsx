@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
-import { useOutfits } from '../hooks/useOutfits';
+import { useOutfits } from '../hooks/wardrobe/outfits/useOutfits';
 import { createCapsule, updateCapsule as updateCapsuleService, deleteCapsule as deleteCapsuleService } from '../services/wardrobe/capsules';
 
 // Base outfit interface with all possible fields

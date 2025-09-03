@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import { OutfitExtended, OutfitInput, Season } from '../types/outfit';
+import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
+import { OutfitExtended, OutfitInput, Season } from '../../../types/outfit';
 import { 
   createOutfit as addOutfitToService,
   updateOutfit as updateOutfitInService,
   deleteOutfit as deleteOutfitInService,
   fetchOutfits as fetchOutfitsFromService
-} from '../services/wardrobe/outfits';
+} from '../../../services/wardrobe/outfits';
 
 // Re-export Season type for consistency
 export type { Season };
