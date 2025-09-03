@@ -11,8 +11,7 @@ import {
 } from './capsuleBaseService';
 import { 
   removeCapsuleFromCache, 
-  removeGuestModeCapsule, 
-  shouldLogDetails 
+  removeGuestModeCapsule
 } from './capsuleUtils';
 import { getUserContext } from './capsuleCrudHelpers';
 import { tryLegacyApiStrategy, tryGuestModeStrategy } from './capsuleFallbackStrategies';
@@ -34,8 +33,8 @@ import { tryLegacyApiStrategy, tryGuestModeStrategy } from './capsuleFallbackStr
  * @throws Will throw an error if all deletion attempts fail
  */
 export const deleteCapsule = async (id: string): Promise<void> => {
-  // Get the user context (user, isGuestMode, shouldLog)
-  const { user, isGuestMode, shouldLog } = await getUserContext();
+  // Get the user context (isGuestMode, shouldLog)
+  const { isGuestMode, shouldLog } = await getUserContext();
   
   if (shouldLog) {
     console.log('ud83dudcdd [INFO] Deleting capsule:', { id });
