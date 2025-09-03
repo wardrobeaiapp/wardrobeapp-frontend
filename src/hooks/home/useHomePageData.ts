@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../../types';
+import { Outfit, Capsule, WardrobeItem, WishlistStatus } from '../../types';
 import { OutfitExtended } from '../../context/WardrobeContext';
 import { useWardrobe } from '../../context/WardrobeContext';
 import { useOutfits } from '../wardrobe/outfits/useOutfits';
@@ -12,6 +12,7 @@ import { useItemFiltering } from './useItemFiltering';
 import { useOutfitFiltering } from './useOutfitFiltering';
 import { useCapsuleFiltering } from './useCapsuleFiltering';
 import { useWishlistFiltering } from './useWishlistFiltering';
+import { useModalState } from './useModalState';
 
 export const useHomePageData = () => {
   const { 
@@ -86,18 +87,44 @@ export const useHomePageData = () => {
   const [wishlistSearchQuery, setWishlistSearchQuery] = useState<string>('');
   const [wishlistStatusFilter, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
-  // Modal states
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAddOutfitModalOpen, setIsAddOutfitModalOpen] = useState(false);
-  const [isEditOutfitModalOpen, setIsEditOutfitModalOpen] = useState(false);
-  const [isViewOutfitModalOpen, setIsViewOutfitModalOpen] = useState(false);
-  const [isViewCapsuleModalOpen, setIsViewCapsuleModalOpen] = useState(false);
-  const [isEditCapsuleModalOpen, setIsEditCapsuleModalOpen] = useState(false);
-  const [isGenerateWithAIModalOpen, setIsGenerateWithAIModalOpen] = useState(false);
-  const [isGenerateCapsuleWithAIModalOpen, setIsGenerateCapsuleWithAIModalOpen] = useState(false);
-  const [isAddCapsuleModalOpen, setIsAddCapsuleModalOpen] = useState(false);
-  const [isViewItemModalOpen, setIsViewItemModalOpen] = useState(false);
+  // Modal states and handlers
+  const {
+    // Modal states
+    isAddModalOpen,
+    isEditModalOpen,
+    isAddOutfitModalOpen,
+    isEditOutfitModalOpen,
+    isViewOutfitModalOpen,
+    isViewCapsuleModalOpen,
+    isEditCapsuleModalOpen,
+    isGenerateWithAIModalOpen,
+    isGenerateCapsuleWithAIModalOpen,
+    isAddCapsuleModalOpen,
+    isViewItemModalOpen,
+    
+    // Modal state setters
+    setIsAddModalOpen,
+    setIsEditModalOpen,
+    setIsAddOutfitModalOpen,
+    setIsEditOutfitModalOpen,
+    setIsViewOutfitModalOpen,
+    setIsViewCapsuleModalOpen,
+    setIsEditCapsuleModalOpen,
+    setIsGenerateWithAIModalOpen,
+    setIsGenerateCapsuleWithAIModalOpen,
+    setIsAddCapsuleModalOpen,
+    setIsViewItemModalOpen,
+    
+    // Modal handlers
+    openEditOutfitModal,
+    openViewOutfitModal,
+    openViewCapsuleModal,
+    openEditCapsuleModal,
+    
+    // Close handlers
+    closeViewOutfitModal,
+    closeViewCapsuleModal,
+  } = useModalState();
   
   // Selected item states
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
@@ -194,31 +221,31 @@ export const useHomePageData = () => {
   
   const handleViewOutfit = useCallback((outfit: Outfit) => {
     setSelectedOutfit(outfit);
-    setIsViewOutfitModalOpen(true);
-  }, []);
+    openViewOutfitModal();
+  }, [openViewOutfitModal]);
   
   const handleEditOutfit = useCallback((outfit: Outfit) => {
     setCurrentOutfitId(outfit.id);
-    setIsViewOutfitModalOpen(false);
-    setIsEditOutfitModalOpen(true);
-  }, []);
+    closeViewOutfitModal();
+    openEditOutfitModal();
+  }, [closeViewOutfitModal, openEditOutfitModal]);
   
   const handleDeleteOutfit = useCallback((id: string) => {
     deleteOutfit(id);
-    setIsViewOutfitModalOpen(false);
+    closeViewOutfitModal();
     setSelectedOutfit(null);
-  }, [deleteOutfit, setIsViewOutfitModalOpen, setSelectedOutfit]);
+  }, [deleteOutfit, closeViewOutfitModal, setSelectedOutfit]);
   
   const handleViewCapsule = useCallback((capsule: Capsule) => {
     setSelectedCapsule(capsule);
-    setIsViewCapsuleModalOpen(true);
-  }, []);
+    openViewCapsuleModal();
+  }, [openViewCapsuleModal]);
   
   const handleEditCapsule = useCallback((capsule: Capsule) => {
     setSelectedCapsule(capsule);
-    setIsViewCapsuleModalOpen(false);
-    setIsEditCapsuleModalOpen(true);
-  }, []);
+    closeViewCapsuleModal();
+    openEditCapsuleModal();
+  }, [closeViewCapsuleModal, openEditCapsuleModal]);
   
   const handleEditCapsuleSubmit = useCallback(async (id: string, data: CapsuleFormData) => {
     const capsuleData = {
