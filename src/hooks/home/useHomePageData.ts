@@ -1,12 +1,12 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../types';
-import { OutfitExtended } from '../context/WardrobeContext';
-import { useWardrobe } from '../context/WardrobeContext';
-import { useOutfits } from './wardrobe/outfits/useOutfits';
-import useCapsules from './wardrobe/capsules/useCapsules';
-import { useSupabaseAuth } from '../context/SupabaseAuthContext';
-import { CapsuleFormData } from '../components/features/wardrobe/forms/CapsuleForm';
-import { getScenariosForUser as fetchScenarios } from '../services/scenarios/scenariosService';
+import { Outfit, Capsule, WardrobeItem, Season, WishlistStatus } from '../../types';
+import { OutfitExtended } from '../../context/WardrobeContext';
+import { useWardrobe } from '../../context/WardrobeContext';
+import { useOutfits } from '../wardrobe/outfits/useOutfits';
+import { useCapsules } from '../wardrobe/capsules/useCapsules';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
+import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
+import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
 
 export enum TabType {
   ITEMS = 'items',
@@ -333,7 +333,10 @@ export const useHomePageData = () => {
     }
   }, [currentItemId, updateItem, selectedItem]);
   
-  const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'userId' | 'scenarios'> & { scenarios?: string[] }) => {
+  const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'userId' | 'scenarios'> & { 
+    scenarios?: string[];
+    description?: string;
+  }) => {
     try {
       // Create a new outfit with all required fields
       const newOutfit: Omit<OutfitExtended, 'id'> = {
@@ -342,15 +345,13 @@ export const useHomePageData = () => {
         items: outfitData.items || [],
         favorite: outfitData.favorite || false,
         season: outfitData.season || [],
+        scenarios: outfitData.scenarios || [],
         occasion: outfitData.occasion || '',
+        description: outfitData.description || '',
         lastWorn: outfitData.lastWorn,
-        name: outfitData.name || 'New Outfit',
-        description: '',
         weather: [],
         tags: [],
         dateCreated: new Date().toISOString(),
-        scenarios: outfitData.scenarios || [],
-        // Initialize scenarioNames as empty array if not provided
         scenarioNames: []
       };
       
@@ -399,7 +400,6 @@ export const useHomePageData = () => {
         items: updates.items || [],
         season: updates.season || [],
         scenarios: updates.scenarios || [],
-        // Preserve scenarioNames if provided, or use empty array
         scenarioNames: scenarioNames || []
       };
       
