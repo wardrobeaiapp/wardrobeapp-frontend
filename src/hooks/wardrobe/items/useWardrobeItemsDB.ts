@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { WardrobeItem, WishlistStatus } from '../types';
-import { getWardrobeItems, migrateLocalStorageItemsToSupabase, addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
-import { supabase } from '../services/core';
+import { WardrobeItem, WishlistStatus } from '../../../types';
+import { getWardrobeItems, migrateLocalStorageItemsToSupabase, addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
+import { supabase } from '../../../services/core';
 
 interface UseWardrobeItemsDBReturn {
   items: WardrobeItem[];

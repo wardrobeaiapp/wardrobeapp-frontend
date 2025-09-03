@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { WardrobeItem, WishlistStatus } from '../types';
-import { addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
+import { WardrobeItem, WishlistStatus } from '../../../types';
+import { addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
 
 export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);

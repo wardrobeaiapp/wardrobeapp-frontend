@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { v4 as uuidv4 } from 'uuid';
 import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
-import { useWardrobeItemsDB } from '../hooks/useWardrobeItemsDB';
+import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
 import { useOutfits } from '../hooks/useOutfits';
 import { createCapsule, updateCapsule as updateCapsuleService, deleteCapsule as deleteCapsuleService } from '../services/wardrobe/capsules';
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { WardrobeItem, WishlistStatus } from '../types';
-import { fetchWardrobeItems, createWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../services/wardrobe/items';
-import { supabase } from '../services/core';
+import { WardrobeItem, WishlistStatus } from '../../../types';
+import { fetchWardrobeItems, createWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
+import { supabase } from '../../../services/core';
 
 export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);

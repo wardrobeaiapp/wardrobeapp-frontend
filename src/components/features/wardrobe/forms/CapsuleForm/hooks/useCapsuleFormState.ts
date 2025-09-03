@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Season } from '../../../../../../types';
 import { Capsule } from '../../../../../../types';
-import useCapsuleItems from '../../../../../../hooks/useCapsuleItems';
+import { useCapsuleItems } from '../../../../../../hooks/wardrobe/items';
 
 export interface UseCapsuleFormStateProps {
   editCapsule?: Capsule;
