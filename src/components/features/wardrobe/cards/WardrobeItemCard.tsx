@@ -11,7 +11,7 @@ import {
   ButtonContainer,
 } from './WardrobeItemCard.styles';
 import Button from '../../../common/Button';
-import { useImageUrl } from '../../../../hooks/useImageUrl';
+import { useImageUrl } from '../../../../hooks/core';
 
 interface WardrobeItemCardProps {
   item: WardrobeItem;

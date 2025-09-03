@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { generateSignedUrl } from '../services/wardrobe/items';
-import { updateItemImageUrl } from '../services/wardrobe/items/updateItemImageUrl';
-import { WardrobeItem } from '../types';
+import { generateSignedUrl } from '../../services/wardrobe/items';
+import { updateItemImageUrl } from '../../services/wardrobe/items/updateItemImageUrl';
+import { WardrobeItem } from '../../types';
 
 interface UseImageUrlResult {
   imageUrl: string;
