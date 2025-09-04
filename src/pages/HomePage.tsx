@@ -4,14 +4,12 @@ import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardro
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData, TabType } from '../hooks/home';
-import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder } from 'react-icons/md';
+import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
 import {
   PageHeader,
-  TabsContainer,
-  Tab,
   HeaderContent,
 } from './HomePage.styles';
 import PageContainer from '../components/layout/PageContainer';
@@ -137,40 +135,10 @@ const HomePage: React.FC = () => {
           />
         </PageHeader>
         
-        <TabsContainer>
-          <Tab 
-            $active={activeTab === TabType.ITEMS}
-            $type="items"
-            onClick={() => setActiveTab(TabType.ITEMS)}
-          >
-            <MdCheckroom />
-            Wardrobe Items
-          </Tab>
-          <Tab 
-            $active={activeTab === TabType.OUTFITS}
-            $type="outfits"
-            onClick={() => setActiveTab(TabType.OUTFITS)}
-          >
-            <MdOutlineStyle />
-            Outfits
-          </Tab>
-          <Tab 
-            $active={activeTab === TabType.CAPSULES}
-            $type="capsules"
-            onClick={() => setActiveTab(TabType.CAPSULES)}
-          >
-            <MdOutlineWorkspaces />
-            Capsules
-          </Tab>
-          <Tab 
-            $active={activeTab === TabType.WISHLIST}
-            $type="wishlist"
-            onClick={() => setActiveTab(TabType.WISHLIST)}
-          >
-            <MdFavoriteBorder />
-            Wishlist
-          </Tab>
-        </TabsContainer>
+        <WardrobeTabs 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+        />
         
         {/* Tab content will be rendered below */}
         
