@@ -3,7 +3,7 @@ import { WardrobeItem, Season, WishlistStatus } from '../../types';
 
 export interface ItemFilterOptions {
   category?: string;
-  season?: string;
+  season?: string | string[];
   searchQuery?: string;
   wishlistStatus?: string;
   isWishlist?: boolean;
@@ -32,11 +32,16 @@ export const useItemFiltering = (
       // Category filter
       const matchesCategory = category === 'all' || item.category === category;
       
-      // Season filter
+      // Season filter - handle both string and string[] for season and item.season
       const matchesSeason = season === 'all' || 
-        (Array.isArray(item.season) 
-          ? item.season.includes(season as Season)
-          : item.season === season);
+        (Array.isArray(season)
+          ? season.some(s => s === 'all' || 
+              (Array.isArray(item.season) 
+                ? item.season.includes(s as Season)
+                : item.season === s))
+          : (Array.isArray(item.season)
+              ? item.season.includes(season as Season)
+              : item.season === season));
       
       // Search query
       const searchLower = searchQuery.toLowerCase();

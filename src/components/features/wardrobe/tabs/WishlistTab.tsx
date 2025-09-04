@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
 import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter } from '../shared/Filters';
-import { Season, WardrobeItem, WishlistStatus } from '../../../../types';
+import { WardrobeItem, WishlistStatus } from '../../../../types';
 import {
   FiltersContainer,
   FilterGroup,
@@ -21,8 +21,8 @@ interface WishlistTabProps {
   error: string | null;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
-  seasonFilter: string;
-  setSeasonFilter: (season: string) => void;
+  seasonFilter: string | string[];
+  setSeasonFilter: (season: string | string[]) => void;
   statusFilter: WishlistStatus | 'all';
   setStatusFilter: (status: WishlistStatus | 'all') => void;
   searchQuery: string;
@@ -50,44 +50,54 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   onDeleteItem,
   onAddItem
 }) => {
+  // Helper to get the first season if seasonFilter is an array
+  const getFirstSeason = (season: string | string[]): string => {
+    return Array.isArray(season) ? (season[0] || 'all') : season;
+  };
+
   // Filter items to only include wishlist items and apply all filters
   const filteredItems = useMemo(() => {
     // First filter only wishlist items
-    let result = items.filter(item => item.wishlist === true);
-    
-    // Apply category filter
-    if (categoryFilter !== 'all') {
-      result = result.filter(item => item.category === categoryFilter);
-    }
-    
-    // Apply season filter
-    if (seasonFilter !== 'all') {
-      result = result.filter(item => 
-        Array.isArray(item.season) 
-          ? item.season.includes(seasonFilter as Season)
-          : item.season === seasonFilter
-      );
-    }
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(item => 
-        (item.wishlistStatus || WishlistStatus.NOT_REVIEWED) === statusFilter
-      );
-    }
-    
-    // Apply search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(item => 
-        item.name.toLowerCase().includes(query) ||
-        (item.category?.toLowerCase() || '').includes(query) ||
-        (item.brand?.toLowerCase() || '').includes(query)
-      );
-    }
-    
-    return result;
+    return items.filter(item => {
+      if (item.wishlist !== true) return false;
+      
+      // Apply category filter
+      if (categoryFilter !== 'all' && item.category !== categoryFilter) {
+        return false;
+      }
+      
+      // Apply season filter (handles both string and string[])
+      if (seasonFilter !== 'all') {
+        const itemSeasons = Array.isArray(item.season) ? item.season : [item.season];
+        const filterSeasons = Array.isArray(seasonFilter) ? seasonFilter : [seasonFilter];
+        const hasMatchingSeason = filterSeasons.some(season => 
+          itemSeasons.some(s => s?.toLowerCase() === season?.toLowerCase())
+        );
+        if (!hasMatchingSeason) return false;
+      }
+      
+      // Apply status filter
+      if (statusFilter !== 'all' && item.wishlistStatus !== statusFilter) {
+        return false;
+      }
+      
+      // Apply search query
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch = 
+          (item.name?.toLowerCase().includes(searchLower) ||
+           item.brand?.toLowerCase().includes(searchLower) ||
+           item.color?.toLowerCase().includes(searchLower));
+        if (!matchesSearch) return false;
+      }
+      
+      return true;
+    });
   }, [items, categoryFilter, seasonFilter, statusFilter, searchQuery]);
+  
+  const handleSeasonChange = (value: string | string[]) => {
+    setSeasonFilter(value);
+  };
   
   // Debug logging
   useEffect(() => {
@@ -136,8 +146,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
         </FilterGroup>
         <FilterGroup>
           <SeasonFilter
-            value={seasonFilter}
-            onChange={setSeasonFilter}
+            value={getFirstSeason(seasonFilter)}
+            onChange={handleSeasonChange}
           />
         </FilterGroup>
         <FilterGroup>

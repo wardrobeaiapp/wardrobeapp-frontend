@@ -15,10 +15,10 @@ type TabContentProps = {
   isLoading: boolean;
   error: string | null;
   categoryFilter: string;
-  seasonFilter: string;
+  seasonFilter: string | string[];
   searchQuery: string;
   setCategoryFilter: (category: string) => void;
-  setSeasonFilter: (season: string) => void;
+  setSeasonFilter: (season: string | string[]) => void;
   setSearchQuery: (query: string) => void;
   onAddItem: () => void;
   onEditItem: (id: string) => void;
@@ -77,8 +77,8 @@ const TabContent: React.FC<TabContentProps> = ({
           wardrobeItems={items}
           isLoading={isLoading}
           error={error}
-          seasonFilter={seasonFilter}
-          setSeasonFilter={setSeasonFilter}
+seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
+          setSeasonFilter={(season) => setSeasonFilter(season)}
           scenarioFilter=""
           setScenarioFilter={() => {}}
           searchQuery={searchQuery}
@@ -94,8 +94,8 @@ const TabContent: React.FC<TabContentProps> = ({
           wardrobeItems={items}
           isLoading={isLoading}
           error={error}
-          seasonFilter={seasonFilter}
-          setSeasonFilter={setSeasonFilter}
+seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
+          setSeasonFilter={(season) => setSeasonFilter(season)}
           scenarioFilter=""
           setScenarioFilter={() => {}}
           searchQuery={searchQuery}

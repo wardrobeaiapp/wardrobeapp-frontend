@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Capsule, Season } from '../../types';
 
 export interface CapsuleFilterOptions {
-  season?: string;
+  season?: string | string[];
   scenario?: string;
   searchQuery?: string;
 }
@@ -24,9 +24,11 @@ export const useCapsuleFiltering = (
       const capsuleScenarios = capsule.scenarios || [];
       const capsuleSeasons = capsule.seasons || [];
       
-      // Season filter
+      // Season filter - handle both string and string[] for season
       const matchesSeason = season === 'all' || 
-        capsuleSeasons.includes(season as Season);
+        (Array.isArray(season)
+          ? season.some(s => s === 'all' || capsuleSeasons.includes(s as Season))
+          : capsuleSeasons.includes(season as Season));
       
       // Scenario filter
       const matchesScenario = scenario === 'all' || 

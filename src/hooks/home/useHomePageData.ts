@@ -1,10 +1,9 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { Outfit, Capsule, WardrobeItem, WishlistStatus } from '../../types';
-import { OutfitExtended } from '../../context/WardrobeContext';
-import { useWardrobe } from '../../context/WardrobeContext';
+import { useWardrobe, OutfitExtended } from '../../context/WardrobeContext';
 import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
-import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
 import { useTabState, TabType } from './useTabState';
@@ -17,6 +16,8 @@ import { useItemManagement } from './useItemManagement';
 import useDataLoading from '../core/useDataLoading';
 
 export const useHomePageData = () => {
+  const { user } = useSupabaseAuth();
+  
   const { 
     items, 
     outfits, 
@@ -26,49 +27,21 @@ export const useHomePageData = () => {
     addOutfit, 
     updateOutfit, 
     deleteOutfit,
-    isLoading: itemsLoading, 
     error: itemsError 
   } = useWardrobe();
   
-  const { user } = useSupabaseAuth();
-  
-  const { isLoading: outfitsLoading, error: outfitsError } = useOutfits([]);
+  const { error: outfitsError } = useOutfits([]);
   
   // Use our new useCapsules hook for better capsule-items relationship management
   const {
     capsules,
-    loading: capsulesLoading,
     error: capsulesError,
     addCapsule,
     updateCapsuleById,
     deleteCapsuleById
   } = useCapsules();
   
-  // Combine loading and error states with debouncing to prevent UI blinking
-  // Only consider the app loading during initial load, not during subsequent data fetches
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
-  
-  // Use a more stable loading state that doesn't flicker
-  const isLoading = useMemo(() => {
-    // After initial load is complete, don't show loader for minor data updates
-    if (initialLoadComplete) {
-      return false;
-    }
-    return itemsLoading || outfitsLoading || capsulesLoading;
-  }, [itemsLoading, outfitsLoading, capsulesLoading, initialLoadComplete]);
-  
-  // Set initial load complete after all data sources finish loading
-  useEffect(() => {
-    if (!itemsLoading && !outfitsLoading && !capsulesLoading && !initialLoadComplete) {
-      // Small timeout to ensure UI is stable before marking load complete
-      const timer = setTimeout(() => {
-        setInitialLoadComplete(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [itemsLoading, outfitsLoading, capsulesLoading, initialLoadComplete]);
-  
-  const error = itemsError || outfitsError || capsulesError;
+  const error = itemsError || outfitsError || capsulesError || null;
   
   // Tab state
   const { 
@@ -78,7 +51,7 @@ export const useHomePageData = () => {
   
   // Scenarios state with useDataLoading
   const [scenariosState, scenariosActions] = useDataLoading<Array<{id: string, name: string}>>([]);
-  const { loadData: loadScenarios, setData: setScenarios } = scenariosActions;
+  const { loadData: loadScenarios } = scenariosActions;
   
   // Fetch scenarios when user is available
   useEffect(() => {
@@ -96,7 +69,7 @@ export const useHomePageData = () => {
   
   // Filter states
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [seasonFilter, setSeasonFilter] = useState<string>('all');
+  const [seasonFilter, setSeasonFilter] = useState<string | string[]>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
   const [outfitScenarioFilter, setOutfitScenarioFilter] = useState<string>('all');
@@ -104,6 +77,8 @@ export const useHomePageData = () => {
   const [capsuleSeasonFilter, setCapsuleSeasonFilter] = useState<string>('all');
   const [capsuleScenarioFilter, setCapsuleScenarioFilter] = useState<string>('all');
   const [capsuleSearchQuery, setCapsuleSearchQuery] = useState<string>('');
+  const [wishlistCategoryFilter, setWishlistCategoryFilter] = useState<string>('all');
+  const [wishlistSeasonFilter, setWishlistSeasonFilter] = useState<string | string[]>('all');
   const [wishlistSearchQuery, setWishlistSearchQuery] = useState<string>('');
   const [wishlistStatusFilter, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
@@ -146,13 +121,10 @@ export const useHomePageData = () => {
   const {
     // State
     currentItemId,
-    setCurrentItemId,
     selectedItem,
-    setSelectedItem,
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,
     itemToDelete,
-    setItemToDelete,
     
     // Handlers
     handleAddItem,
@@ -184,13 +156,22 @@ export const useHomePageData = () => {
     currentItemId ? items.find(item => item.id === currentItemId) : undefined
   , [items, currentItemId]);
   
+  // Get the first season if seasonFilter is an array, or use the string value
+  const getSeasonForFiltering = (filter: string | string[]): string | undefined => {
+    if (filter === 'all') return undefined;
+    return Array.isArray(filter) ? (filter.length > 0 ? filter[0] : undefined) : filter;
+  };
+
   // Filter items using the useItemFiltering hook
-  const { filteredItems } = useItemFiltering(items, {
-    category: categoryFilter,
-    season: seasonFilter,
-    searchQuery,
-    isWishlist: false
-  });
+  const { filteredItems } = useItemFiltering(
+    items,
+    {
+      category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      season: getSeasonForFiltering(seasonFilter),
+      searchQuery,
+      isWishlist: false,
+    }
+  );
   
   // Filter outfits using the useOutfitFiltering hook
   const { filteredOutfits } = useOutfitFiltering(outfits, {
@@ -207,16 +188,13 @@ export const useHomePageData = () => {
   });
 
   // Filter wishlist items using the useWishlistFiltering hook
-  const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useWishlistFiltering(
-    items,
-    {
-      category: categoryFilter,
-      season: seasonFilter,
-      searchQuery: wishlistSearchQuery,
-      wishlistStatus: wishlistStatusFilter
-    }
-  );
-  
+  const { filteredItems: filteredWishlist } = useWishlistFiltering(items, {
+    category: wishlistCategoryFilter,
+    season: wishlistSeasonFilter,
+    searchQuery: wishlistSearchQuery,
+    wishlistStatus: wishlistStatusFilter
+  });
+
   // Keep wishlistItems for backward compatibility
   const wishlistItems = useMemo(() => 
     items.filter(item => item.wishlist === true)
@@ -231,7 +209,7 @@ export const useHomePageData = () => {
   const handleViewItemWithModal = useCallback((item: WardrobeItem) => {
     handleViewItem(item);
     setIsViewItemModalOpen(true);
-  }, [handleViewItem]);
+  }, [handleViewItem, setIsViewItemModalOpen]);
   
   const handleEditItemWithModal = useCallback((id: string) => {
     if (isViewItemModalOpen) {
@@ -239,7 +217,7 @@ export const useHomePageData = () => {
     }
     handleEditItem(id);
     setIsEditModalOpen(true);
-  }, [handleEditItem, isViewItemModalOpen]);
+  }, [handleEditItem, isViewItemModalOpen, setIsViewItemModalOpen, setIsEditModalOpen]);
   
   const handleViewOutfit = useCallback((outfit: Outfit) => {
     setSelectedOutfit(outfit);
@@ -267,7 +245,7 @@ export const useHomePageData = () => {
     setSelectedCapsule(capsule);
     closeViewCapsuleModal();
     openEditCapsuleModal();
-  }, [closeViewCapsuleModal, openEditCapsuleModal]);
+  }, [closeViewCapsuleModal, openEditCapsuleModal, setSelectedCapsule]);
   
   const handleEditCapsuleSubmit = useCallback(async (id: string, data: CapsuleFormData) => {
     const capsuleData = {
@@ -281,13 +259,13 @@ export const useHomePageData = () => {
     
     await updateCapsuleById(id, capsuleData);
     setIsEditCapsuleModalOpen(false);
-  }, [updateCapsuleById]);
+  }, [updateCapsuleById, setIsEditCapsuleModalOpen]);
   
   const handleDeleteCapsule = useCallback((id: string) => {
     deleteCapsuleById(id);
     setIsViewCapsuleModalOpen(false);
     setSelectedCapsule(undefined);
-  }, [deleteCapsuleById]);
+  }, [deleteCapsuleById, setIsViewCapsuleModalOpen, setSelectedCapsule]);
   
   // Wrappers for submit handlers to handle modal state
   const handleSubmitAddWithModal = useCallback(async (item: Omit<WardrobeItem, 'id' | 'dateCreated'>, file?: File) => {
@@ -310,30 +288,33 @@ export const useHomePageData = () => {
     }
   }, [handleSubmitEdit, setIsEditModalOpen]);
   
-  const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'userId' | 'scenarios'> & { 
-    scenarios?: string[];
-    description?: string;
-  }) => {
+  const handleAddOutfit = useCallback(async (outfitData: Omit<Outfit, 'id' | 'dateCreated' | 'scenarioNames' | 'scenarios' | 'items' | 'userId'> & { items: string[] }, scenarioNames?: string[]) => {
+    if (!user?.id) {
+      console.error('User not authenticated');
+      return;
+    }
+    
     try {
-      // Create a new outfit with all required fields
-      const newOutfit: Omit<OutfitExtended, 'id'> = {
+      // Create the new outfit with all required fields for OutfitExtended
+      const newOutfit = {
         ...outfitData,
-        userId: 'current-user-id', // TODO: Get from auth context
-        items: outfitData.items || [],
+        id: '', // Will be set by the database
+        userId: user.id,
+        items: outfitData.items,
+        scenarioNames: scenarioNames || [],
+        scenarios: scenariosState.data?.map(s => s.id) || [],
         season: outfitData.season || [],
-        scenarios: outfitData.scenarios || [],
-        dateCreated: new Date().toISOString(),
-        scenarioNames: []
-      };
+        dateCreated: new Date().toISOString()
+      } as Omit<OutfitExtended, 'id' | 'dateCreated'>;
       
-      // If we have scenario IDs but no names, use the already loaded scenarios
-      if (newOutfit.scenarios.length > 0 && scenariosState.data) {
-        newOutfit.scenarioNames = newOutfit.scenarios
-          .map(scenarioId => {
-            const scenario = scenariosState.data?.find(s => s.id === scenarioId);
-            return scenario?.name || '';
-          })
-          .filter(Boolean);
+      // Ensure scenario names are included if provided
+      if (scenarioNames && scenarioNames.length > 0) {
+        newOutfit.scenarioNames = scenarioNames;
+        const filteredScenarios = (scenariosState.data || [])
+          .filter(s => scenarioNames.includes(s.name))
+          .map(s => s.id)
+          .filter((s): s is string => Boolean(s));
+        newOutfit.scenarios = filteredScenarios;
       }
       
       await addOutfit(newOutfit);
@@ -342,7 +323,7 @@ export const useHomePageData = () => {
       console.error('Failed to add outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [addOutfit, user]);
+  }, [addOutfit, user, scenariosState.data, setIsAddOutfitModalOpen]);
   
   const handleEditOutfitSubmit = useCallback(async (outfitData: Partial<Outfit> & { id?: string }) => {
     if (!currentOutfitId) {
@@ -359,21 +340,11 @@ export const useHomePageData = () => {
         ...updates,
         items: updates.items || [],
         season: updates.season || [],
-        scenarios: updates.scenarios || [],
-        scenarioNames: scenarioNames || []
+        scenarioNames: scenarioNames || [],
+        scenarios: scenariosState.data
+          ?.filter(s => scenarioNames?.includes(s.name))
+          .map(s => s.id) || []
       };
-      
-      // If we have scenarios but no names, use the already loaded scenarios
-      if (safeUpdates.scenarios && safeUpdates.scenarios.length > 0 && 
-          (!safeUpdates.scenarioNames || safeUpdates.scenarioNames.length === 0) &&
-          scenariosState.data) {
-        safeUpdates.scenarioNames = safeUpdates.scenarios
-          .map((scenarioId: string) => {
-            const scenario = scenariosState.data?.find(s => s.id === scenarioId);
-            return scenario?.name || '';
-          })
-          .filter(Boolean) as string[];
-      }
       
       await updateOutfit(currentOutfitId, safeUpdates);
       setIsEditOutfitModalOpen(false);
@@ -382,7 +353,7 @@ export const useHomePageData = () => {
       console.error('Failed to update outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [currentOutfitId, updateOutfit, user]);
+  }, [currentOutfitId, updateOutfit, user, scenariosState.data, setIsEditOutfitModalOpen, setCurrentOutfitId]);
   
   const handleAddCapsule = useCallback(async (id: string, data: CapsuleFormData) => {
     try {
@@ -399,25 +370,15 @@ export const useHomePageData = () => {
       };
       
       // Add the capsule and wait for it to complete
-      const newCapsule = await addCapsule({
-        ...capsuleData,
-        // Make sure the selectedItems are correctly passed through the entire flow
-        selectedItems: data.selectedItems || []
-      });
+      await addCapsule(capsuleData);
       
-      if (!newCapsule) {
-        throw new Error('Failed to create capsule');
-      }
-      
-      // Close the modal
+      // Close the modal after successful addition
       setIsAddCapsuleModalOpen(false);
       
       // No need to dispatch refreshCapsules event here
       // The addCapsule function already dispatches this event
       // Dispatching it twice can cause a race condition where the second fetch
       // happens before the capsule-items relationships are fully established
-      
-      return newCapsule;
     } catch (error) {
       console.error('Error adding capsule:', error);
       throw error; // Re-throw to handle in the component
@@ -432,8 +393,8 @@ export const useHomePageData = () => {
     filteredOutfits,
     capsules,
     filteredCapsules,
-    filteredWishlistItems,
-    isLoading,
+    filteredWishlist,
+    wishlistItems,
     error,
     
     // Scenarios
@@ -464,6 +425,10 @@ export const useHomePageData = () => {
     setCapsuleScenarioFilter,
     capsuleSearchQuery,
     setCapsuleSearchQuery,
+    wishlistCategoryFilter,
+    setWishlistCategoryFilter,
+    wishlistSeasonFilter,
+    setWishlistSeasonFilter,
     wishlistSearchQuery,
     setWishlistSearchQuery,
     wishlistStatusFilter,

@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
-import { WardrobeItem, WishlistStatus } from '../../types';
+import { WardrobeItem, WishlistStatus, Season } from '../../types';
 
 export interface WishlistFilterOptions {
   category?: string;
-  season?: string;
+  season?: string | string[];
   searchQuery?: string;
   wishlistStatus?: WishlistStatus | 'all';
 }
@@ -33,9 +33,16 @@ export const useWishlistFiltering = (
       const matchesCategory = category === 'all' || 
         item.category === category;
       
-      // Season filter
+      // Season filter - handle both string and string[] for season and item.season
       const matchesSeason = season === 'all' || 
-        itemSeasons.some(s => s === season);
+        (Array.isArray(season)
+          ? season.some(s => s === 'all' || 
+              (Array.isArray(item.season) 
+                ? item.season.includes(s as Season)
+                : item.season === s))
+          : (Array.isArray(item.season)
+              ? item.season.includes(season as Season)
+              : item.season === season));
       
       // Wishlist status filter
       const matchesStatus = wishlistStatus === 'all' || 

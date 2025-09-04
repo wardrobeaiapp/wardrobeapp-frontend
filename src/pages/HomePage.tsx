@@ -2,7 +2,11 @@ import React from 'react';
 import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
-import { useHomePageData } from '../hooks/home';
+import { useHomePageData } from '../hooks/home/useHomePageData';
+import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
+import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
+import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
+import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 
@@ -13,19 +17,56 @@ import {
 } from './HomePage.styles';
 import PageContainer from '../components/layout/PageContainer';
 
-
-
 const HomePage: React.FC = () => {
+  // Data loading hooks
+  const { items: allItems, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
+  const { outfits, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
+  const { capsules, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
+  
   // Use our custom hook to get all the data and handlers
+  const homePageData = useHomePageData();
+
+  // Handle error objects by converting them to strings
+  const getErrorMessage = (error: unknown): string | null => {
+    if (!error) return null;
+    if (error instanceof Error) return error.message;
+    if (typeof error === 'string') return error;
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'An unknown error occurred';
+    }
+  };
+
+  // Track overall loading state and handle initial load
+  const { 
+    isLoading, 
+    error, 
+    initialLoadComplete 
+  } = useInitialDataLoading(
+    isLoadingItems,
+    isLoadingOutfits,
+    isLoadingCapsules,
+    itemsError ? getErrorMessage(itemsError) : null,
+    outfitsError ? getErrorMessage(outfitsError) : null,
+    capsulesError ? getErrorMessage(capsulesError) : null
+  );
+
+  // Show loading state while initial data is being loaded
+  if (!initialLoadComplete) {
+    return (
+      <PageContainer>
+        <div>Loading wardrobe data...</div>
+      </PageContainer>
+    );
+  }
 
   const {
     // Data
-    items,
-    filteredItems,
-    filteredOutfits,
-    filteredCapsules,
-    isLoading,
-    error,
+    items = [],
+    filteredItems = [],
+    filteredOutfits = [],
+    filteredCapsules = [],
     
     // Tab state
     activeTab,
@@ -34,7 +75,7 @@ const HomePage: React.FC = () => {
     // Filter states
     categoryFilter,
     setCategoryFilter,
-    seasonFilter,
+    seasonFilter: seasonFilterStr,
     setSeasonFilter,
     searchQuery,
     setSearchQuery,
@@ -92,7 +133,7 @@ const HomePage: React.FC = () => {
     handleAddOutfit,
     handleEditOutfitSubmit,
     handleAddCapsule,
-  } = useHomePageData();
+  } = homePageData;
 
   // Main component render
 
@@ -132,11 +173,11 @@ const HomePage: React.FC = () => {
           isLoading={isLoading}
           error={error}
           categoryFilter={categoryFilter}
-          seasonFilter={seasonFilter}
+          seasonFilter={seasonFilterStr}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          setCategoryFilter={setCategoryFilter}
           setSeasonFilter={setSeasonFilter}
+          setCategoryFilter={setCategoryFilter}
           onAddItem={handleAddItem}
           onEditItem={handleEditItem}
           onDeleteItem={handleDeleteItem}

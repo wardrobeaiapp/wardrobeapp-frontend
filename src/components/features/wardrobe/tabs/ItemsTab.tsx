@@ -46,8 +46,8 @@ interface ItemsTabProps {
   error: string | null;
   categoryFilter: string;
   setCategoryFilter: (category: string) => void;
-  seasonFilter: string;
-  setSeasonFilter: (season: string) => void;
+  seasonFilter: string | string[];
+  setSeasonFilter: (season: string | string[]) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
   onViewItem?: (item: WardrobeItem) => void; // New prop for viewing items
@@ -69,13 +69,18 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   onEditItem,
   onDeleteItem
 }) => {
+  // Helper to get the first season if seasonFilter is an array
+  const getFirstSeason = (season: string | string[]): string => {
+    return Array.isArray(season) ? (season[0] || 'all') : season;
+  };
+
   // Memoize the filtered items calculation
   const filteredItems = React.useMemo(() => {
     return items.filter(item => {
       const isNotWishlist = item.wishlist !== true;
       const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
       const matchesSeason = seasonFilter === 'all' || 
-        (item.season?.some(s => s.toLowerCase() === seasonFilter.toLowerCase()) ?? false);
+        (item.season?.some(s => s.toLowerCase() === getFirstSeason(seasonFilter).toLowerCase()) ?? false);
       
       if (!isNotWishlist || !matchesCategory || !matchesSeason) return false;
       
@@ -103,12 +108,20 @@ const ItemsTab = React.memo<ItemsTabProps>(({
     }, [items.length, filteredItems.length, categoryFilter, seasonFilter, searchQuery]);
   }
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value.toLowerCase());
+  };
+
+  const handleSeasonChange = (season: string | string[]) => {
+    setSeasonFilter(season);
+  };
+
   return (
     <>
       <FiltersContainer>
           <SearchFilter
             value={searchQuery}
-            onChange={setSearchQuery}
+            onChange={handleSearchChange}
             placeholder="Search items..."
           />
           <CategoryFilter
@@ -116,8 +129,8 @@ const ItemsTab = React.memo<ItemsTabProps>(({
             onChange={setCategoryFilter}
           />
           <SeasonFilter
-            value={seasonFilter}
-            onChange={setSeasonFilter}
+            value={getFirstSeason(seasonFilter)}
+            onChange={handleSeasonChange}
           />
       </FiltersContainer>
 

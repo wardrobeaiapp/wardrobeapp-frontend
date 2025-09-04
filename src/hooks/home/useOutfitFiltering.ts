@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Outfit, Season, ItemCategory } from '../../types';
 
 export interface OutfitFilterOptions {
-  season?: string;
+  season?: string | string[];
   scenario?: string;
   searchQuery?: string;
 }
@@ -24,9 +24,11 @@ export const useOutfitFiltering = (
       const outfitScenarios = outfit.scenarios || [];
       const outfitSeasons = Array.isArray(outfit.season) ? outfit.season : [outfit.season];
       
-      // Season filter
+      // Season filter - handle both string and string[] for season
       const matchesSeason = season === 'all' || 
-        outfitSeasons.includes(season as Season);
+        (Array.isArray(season)
+          ? season.some(s => s === 'all' || outfitSeasons.includes(s as Season))
+          : outfitSeasons.includes(season as Season));
       
       // Scenario filter
       const matchesScenario = scenario === 'all' || 

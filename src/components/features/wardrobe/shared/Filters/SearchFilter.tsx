@@ -35,19 +35,21 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
   label = 'Search',
   className,
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
     <SearchContainer label={label} htmlFor="search-input" className={className}>
       <div style={{ position: 'relative' }}>
-        <span className="search-icon">
-          <MdSearch size={20} />
-        </span>
+        <MdSearch className="search-icon" size={20} />
         <FormInput
           id="search-input"
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={handleChange}
           placeholder={placeholder}
-          style={{ paddingLeft: '2.5rem' }}
+          style={{ paddingLeft: '40px' }}
         />
       </div>
     </SearchContainer>
