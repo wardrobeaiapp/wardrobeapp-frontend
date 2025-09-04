@@ -48,21 +48,9 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
   searchQuery,
   setSearchQuery,
   onViewCapsule,
-}) => {
+}: CapsulesTabProps) => {
   const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
-  
-  // Memoize scenario options to prevent recalculation on every render
-  const scenarioOptionsList = useMemo(() => {
-    if (loadingScenarios) {
-      return [{ value: 'loading', label: 'Loading scenarios...', disabled: true }];
-    }
-    return scenarioOptions.map(option => ({
-      value: option,
-      label: option
-    }));
-  }, [scenarioOptions, loadingScenarios]);
-  
   const { user } = useSupabaseAuth();
   
   // Load user's scenarios when component mounts or user changes
@@ -70,19 +58,23 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
     let isMounted = true;
     
     const loadUserScenarios = async () => {
-      if (!user) return;
-      
-      setLoadingScenarios(true);
-      try {
-        const userScenarios = await fetchScenarios(user.id);
-        if (isMounted && userScenarios) {
-          setScenarioOptions(userScenarios.map((scenario: { name: string }) => scenario.name));
-        }
-      } catch (err) {
-        console.error('Error loading user scenarios:', err);
-      } finally {
-        if (isMounted) {
-          setLoadingScenarios(false);
+      if (user) {
+        try {
+          setLoadingScenarios(true);
+          const userScenarios = await fetchScenarios(user.id);
+          if (isMounted) {
+            // Extract scenario names from the Scenario objects
+            const scenarioNames = userScenarios.map(scenario => 
+              scenario?.name || String(scenario)
+            ).filter((name): name is string => Boolean(name));
+            setScenarioOptions(scenarioNames);
+          }
+        } catch (error) {
+          console.error('Failed to load scenarios:', error);
+        } finally {
+          if (isMounted) {
+            setLoadingScenarios(false);
+          }
         }
       }
     };
@@ -92,7 +84,7 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [user]);
 
   // Handle scenario filter change
   const handleScenarioChange = useCallback((value: string) => {
@@ -100,26 +92,22 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
     setScenarioFilter(value === '' ? 'all' : value);
   }, [setScenarioFilter]);
 
-  // Prepare custom filters for the FiltersPanel
-  const customFilters = useMemo(() => {
-    const scenarioOptionsList = loadingScenarios
+  // Prepare scenario options for the filter
+  const scenarioOptionsList = useMemo(() => {
+    return loadingScenarios
       ? [{ value: 'loading', label: 'Loading scenarios...', disabled: true }]
       : scenarioOptions.map(option => ({
           value: option,
           label: option
         }));
-        
-    return [{
-      id: 'scenario',
-      label: 'Scenario',
-      value: scenarioFilter === 'all' ? '' : scenarioFilter,
-      options: scenarioOptionsList,
-      onChange: handleScenarioChange
-    }];
-  }, [scenarioFilter, scenarioOptions, loadingScenarios, handleScenarioChange]);
+  }, [loadingScenarios, scenarioOptions]);
+  
+
+  // Define the filter function type
+  type CapsuleFilterFn = (capsule: Capsule) => boolean;
 
   // Memoize the filter function to prevent recreation on every render
-  const filterCapsules = useCallback((capsule: Capsule) => {
+  const filterCapsules: CapsuleFilterFn = useCallback((capsule: Capsule) => {
     // Filter by search query
     const matchesSearch = searchQuery === '' || 
       capsule.name.toLowerCase().includes(searchQuery.toLowerCase());
