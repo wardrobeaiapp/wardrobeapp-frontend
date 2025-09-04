@@ -21,9 +21,14 @@ import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
   // Data loading hooks with proper null handling
-  const { items: allItems = [], isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
-  const { outfits = [], isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
-  const { capsules = [], isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
+  const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
+  const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
+  const { capsules: capsulesData = null, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
+  
+  // Provide default empty arrays for null data
+  const allItems = itemsData || [];
+  const outfits = outfitsData || [];
+  const capsules = capsulesData || [];
   
   // Use our custom hook to get all the data and handlers
   const homePageData = useHomePageData();
@@ -128,13 +133,10 @@ const HomePage: React.FC = () => {
     
     // Event handlers
     handleAddItem,
-    handleViewItem,
     handleEditItem,
     handleDeleteItem,
-    handleViewOutfit,
     handleEditOutfit,
     handleDeleteOutfit,
-    handleViewCapsule,
     handleEditCapsule,
     handleEditCapsuleSubmit,
     handleDeleteCapsule,
@@ -175,18 +177,20 @@ const HomePage: React.FC = () => {
         />
         
         <TabContent
-          activeTab={activeTab}
-          items={allItems || []}
+          activeTab={homePageData.activeTab}
+          items={allItems}
           filteredItems={filteredItems}
-          filteredOutfits={filteredOutfits}
-          filteredCapsules={filteredCapsules}
-          isLoading={isLoading}
+          filteredOutfits={outfits}
+          filteredCapsules={capsules}
+          isLoading={isLoadingItems || isLoadingOutfits || isLoadingCapsules}
           error={error}
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
+          statusFilter={homePageData.statusFilter}
           searchQuery={searchQuery}
           setCategoryFilter={setCategoryFilter}
           setSeasonFilter={setSeasonFilter}
+          setStatusFilter={homePageData.setStatusFilter}
           setSearchQuery={setSearchQuery}
           onAddItem={homePageData.handleAddItem}
           onEditItem={homePageData.handleEditItem}
@@ -201,10 +205,11 @@ const HomePage: React.FC = () => {
         {/* All modals */}
         <HomePageModals
           // Items
-          items={items}
+          items={allItems}
           currentItem={currentItem}
           selectedItem={selectedItem}
-          activeTab={activeTab}
+          itemToDelete={itemToDelete}
+          activeTab={homePageData.activeTab}
           
           // Outfits
           currentOutfit={currentOutfit}
@@ -221,10 +226,9 @@ const HomePage: React.FC = () => {
           isViewOutfitModalOpen={isViewOutfitModalOpen}
           isViewCapsuleModalOpen={isViewCapsuleModalOpen}
           isEditCapsuleModalOpen={isEditCapsuleModalOpen}
-          isDeleteConfirmModalOpen={isDeleteConfirmModalOpen}
-          itemToDelete={itemToDelete}
           isAddCapsuleModalOpen={isAddCapsuleModalOpen}
           isViewItemModalOpen={isViewItemModalOpen}
+          isDeleteConfirmModalOpen={isDeleteConfirmModalOpen}
           
           // Modal close handlers
           setIsAddModalOpen={setIsAddModalOpen}
@@ -234,9 +238,9 @@ const HomePage: React.FC = () => {
           setIsViewOutfitModalOpen={setIsViewOutfitModalOpen}
           setIsViewCapsuleModalOpen={setIsViewCapsuleModalOpen}
           setIsEditCapsuleModalOpen={setIsEditCapsuleModalOpen}
-          setIsDeleteConfirmModalOpen={setIsDeleteConfirmModalOpen}
           setIsAddCapsuleModalOpen={setIsAddCapsuleModalOpen}
           setIsViewItemModalOpen={setIsViewItemModalOpen}
+          setIsDeleteConfirmModalOpen={setIsDeleteConfirmModalOpen}
           
           // Action handlers
           handleSubmitAdd={handleSubmitAdd}
@@ -248,20 +252,22 @@ const HomePage: React.FC = () => {
           confirmDeleteItem={confirmDeleteItem}
           
           // Item handlers
-          handleEditItem={handleEditItem}
-          handleDeleteItem={handleDeleteItem}
+          handleEditItem={homePageData.handleEditItem}
+          handleDeleteItem={homePageData.handleDeleteItem}
           
           // Outfit handlers
-          handleEditOutfit={handleEditOutfit}
-          handleDeleteOutfit={handleDeleteOutfit}
+          handleEditOutfit={homePageData.handleEditOutfit}
+          handleDeleteOutfit={homePageData.handleDeleteOutfit}
           setCurrentOutfitId={setCurrentOutfitId}
           
           // Capsule handlers
-          handleEditCapsule={handleEditCapsule}
-          handleDeleteCapsule={handleDeleteCapsule}
+          handleEditCapsule={homePageData.handleEditCapsule}
+          handleDeleteCapsule={homePageData.handleDeleteCapsule}
           setSelectedCapsule={setSelectedCapsule}
           setSelectedOutfit={setSelectedOutfit}
-        />
+        />  
+        
+        {/* Removed duplicate code */}
 
     </PageContainer>
     </>

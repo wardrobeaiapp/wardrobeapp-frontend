@@ -43,6 +43,9 @@ export const useHomePageData = () => {
   
   const error = itemsError || outfitsError || capsulesError || null;
   
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<WishlistStatus | 'all'>('all');
+  
   // Tab state
   const { 
     activeTab, 
@@ -405,6 +408,8 @@ export const useHomePageData = () => {
     // Tab state
     activeTab,
     setActiveTab,
+    statusFilter,
+    setStatusFilter,
     
     // Filter states
     categoryFilter,

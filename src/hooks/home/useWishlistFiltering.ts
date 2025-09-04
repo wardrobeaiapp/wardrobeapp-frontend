@@ -27,7 +27,6 @@ export const useWishlistFiltering = (
     // Then apply other filters
     const filtered = wishlistItems.filter(item => {
       const searchLower = searchQuery.toLowerCase();
-      const itemSeasons = Array.isArray(item.season) ? item.season : [item.season];
       
       // Category filter
       const matchesCategory = category === 'all' || 

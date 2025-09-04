@@ -1,6 +1,7 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter } from '../shared/Filters';
 import { WardrobeItem, WishlistStatus } from '../../../../types';
+import { useWishlistFiltering } from '../../../../hooks/home/useWishlistFiltering';
 import {
   FiltersContainer,
   FilterGroup,
@@ -55,45 +56,13 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
     return Array.isArray(season) ? (season[0] || 'all') : season;
   };
 
-  // Filter items to only include wishlist items and apply all filters
-  const filteredItems = useMemo(() => {
-    // First filter only wishlist items
-    return items.filter(item => {
-      if (item.wishlist !== true) return false;
-      
-      // Apply category filter
-      if (categoryFilter !== 'all' && item.category !== categoryFilter) {
-        return false;
-      }
-      
-      // Apply season filter (handles both string and string[])
-      if (seasonFilter !== 'all') {
-        const itemSeasons = Array.isArray(item.season) ? item.season : [item.season];
-        const filterSeasons = Array.isArray(seasonFilter) ? seasonFilter : [seasonFilter];
-        const hasMatchingSeason = filterSeasons.some(season => 
-          itemSeasons.some(s => s?.toLowerCase() === season?.toLowerCase())
-        );
-        if (!hasMatchingSeason) return false;
-      }
-      
-      // Apply status filter
-      if (statusFilter !== 'all' && item.wishlistStatus !== statusFilter) {
-        return false;
-      }
-      
-      // Apply search query
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = 
-          (item.name?.toLowerCase().includes(searchLower) ||
-           item.brand?.toLowerCase().includes(searchLower) ||
-           item.color?.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
-      
-      return true;
-    });
-  }, [items, categoryFilter, seasonFilter, statusFilter, searchQuery]);
+  // Use the wishlist filtering hook
+  const { filteredItems } = useWishlistFiltering(items, {
+    category: categoryFilter,
+    season: seasonFilter,
+    searchQuery,
+    wishlistStatus: statusFilter
+  });
   
   const handleSeasonChange = (value: string | string[]) => {
     setSeasonFilter(value);
@@ -101,15 +70,17 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   
   // Debug logging
   useEffect(() => {
-    console.log('[WishlistTab] Items received:', items.length);
-    console.log('[WishlistTab] Filtered wishlist items:', filteredItems.length);
-    console.log('[WishlistTab] Active filters:', { 
-      categoryFilter, 
-      seasonFilter, 
-      statusFilter,
-      searchQuery 
-    });
-  }, [items, filteredItems, categoryFilter, seasonFilter, statusFilter, searchQuery]);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[WishlistTab] Items received:', items.length);
+      console.log('[WishlistTab] Filtered wishlist items:', filteredItems.length);
+      console.log('[WishlistTab] Active filters:', { 
+        categoryFilter, 
+        seasonFilter, 
+        statusFilter,
+        searchQuery 
+      });
+    }
+  }, [items.length, filteredItems.length, categoryFilter, seasonFilter, statusFilter, searchQuery]);
 
   if (isLoading) {
     return (
@@ -151,8 +122,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
           />
         </FilterGroup>
         <FilterGroup>
-          <SelectFilter<Exclude<WishlistStatus, 'all'>>
-            value={statusFilter === 'all' ? WishlistStatus.APPROVED : statusFilter}
+          <SelectFilter<WishlistStatus>
+            value={statusFilter === 'all' ? 'all' as const : statusFilter}
             onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
             label="Status"
             id="status-filter"

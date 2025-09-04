@@ -1,5 +1,5 @@
 import { supabase } from '../../../services/core';
-import { WardrobeItem } from '../../../types';
+import { WardrobeItem, WishlistStatus } from '../../../types';
 import { removeItemFromAllOutfits } from '../outfits';
 import { 
   TABLE_NAME, 
@@ -58,7 +58,13 @@ export const getWardrobeItem = async (id: string): Promise<WardrobeItem | null> 
  * @returns Created WardrobeItem object
  */
 export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<WardrobeItem | null> => {
-  const snakeCaseItem = camelToSnakeCase(item);
+  // Ensure wishlist status is set to 'not_reviewed' for new wishlist items
+  const itemToAdd = { ...item };
+  if (itemToAdd.wishlist && !itemToAdd.wishlistStatus) {
+    itemToAdd.wishlistStatus = WishlistStatus.NOT_REVIEWED;
+  }
+  
+  const snakeCaseItem = camelToSnakeCase(itemToAdd);
 
   const { data, error } = await supabase
     .from(TABLE_NAME)
@@ -183,12 +189,20 @@ export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
  * @deprecated Use addWardrobeItem instead
  */
 export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>): Promise<WardrobeItem> => {
+  // Ensure wishlist status is set to 'not_reviewed' for new wishlist items
+  const wishlistStatus = item.wishlist && !item.wishlistStatus ? WishlistStatus.NOT_REVIEWED : item.wishlistStatus;
+  
+  const itemToAdd = {
+    ...item,
+    wishlistStatus,
+    dateAdded: new Date(),
+    timesWorn: 0,
+  };
+
   try {
     // Add default values for new items
     const newItem = {
-      ...item,
-      dateAdded: new Date().toISOString(),
-      timesWorn: 0,
+      ...itemToAdd,
       // Ensure tags are properly included in the insert
       tags: item.tags ? { ...item.tags } : undefined
     };

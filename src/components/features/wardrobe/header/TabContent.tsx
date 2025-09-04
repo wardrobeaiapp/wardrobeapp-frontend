@@ -4,9 +4,9 @@ import ItemsTab from '../tabs/ItemsTab';
 import OutfitsTab from '../tabs/OutfitsTab';
 import CapsulesTab from '../tabs/CapsulesTab';
 import WishlistTab from '../tabs/WishlistTab';
-import { WardrobeItem, Outfit, Capsule } from '../../../../types';
+import { WardrobeItem, Outfit, Capsule, WishlistStatus } from '../../../../types';
 
-type TabContentProps = {
+interface TabContentProps {
   activeTab: TabType;
   items: WardrobeItem[];
   filteredItems: WardrobeItem[];
@@ -16,9 +16,11 @@ type TabContentProps = {
   error: string | null;
   categoryFilter: string;
   seasonFilter: string | string[];
+  statusFilter?: WishlistStatus | 'all';
   searchQuery: string;
   setCategoryFilter: (category: string) => void;
   setSeasonFilter: (season: string | string[]) => void;
+  setStatusFilter?: (status: WishlistStatus | 'all') => void;
   setSearchQuery: (query: string) => void;
   onAddItem: () => void;
   onEditItem: (id: string) => void;
@@ -40,10 +42,12 @@ const TabContent: React.FC<TabContentProps> = ({
   error,
   categoryFilter,
   seasonFilter,
+  statusFilter = 'all',
   searchQuery,
   setSearchQuery,
   setCategoryFilter,
   setSeasonFilter,
+  setStatusFilter = () => {},
   onAddItem,
   onEditItem,
   onDeleteItem = () => {},
@@ -115,8 +119,8 @@ seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
           setCategoryFilter={setCategoryFilter}
           seasonFilter={seasonFilter}
           setSeasonFilter={setSeasonFilter}
-          statusFilter="all"
-          setStatusFilter={() => {}}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onViewItem={onViewItem}
