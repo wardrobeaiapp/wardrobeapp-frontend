@@ -4,7 +4,8 @@ import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardro
 import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData, TabType } from '../hooks/home';
-import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder, MdAdd } from 'react-icons/md';
+import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder } from 'react-icons/md';
+import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
 import {
@@ -12,11 +13,7 @@ import {
   TabsContainer,
   Tab,
   HeaderContent,
-  ButtonsContainer,
-  MarkCompleteContainer,
-  MarkCompleteText
 } from './HomePage.styles';
-import Button from '../components/common/Button';
 import PageContainer from '../components/layout/PageContainer';
 
 
@@ -131,49 +128,13 @@ const HomePage: React.FC = () => {
               titleSize="lg"
             />
           </HeaderContent>
-          {activeTab === TabType.ITEMS && (
-            <ButtonsContainer>
-              <Button 
-                size="lg" 
-                onClick={handleAddItem}
-                style={{ height: '40px' }}
-              >
-                <MdAdd />
-                Add Item
-              </Button>
-              <MarkCompleteContainer>
-                <Button 
-                  size="lg" 
-                  variant="secondary" 
-                  outlined
-                  onClick={() => {}}
-                >
-                  Mark Wardrobe Complete
-                </Button>
-                <MarkCompleteText>
-                  Mark your wardrobe as complete to start tracking new purchases
-                </MarkCompleteText>
-              </MarkCompleteContainer>
-            </ButtonsContainer>
-          )}
-          {activeTab === TabType.OUTFITS && (
-            <Button size="lg" onClick={() => setIsAddOutfitModalOpen(true)}>
-              <MdAdd />
-              Add Outfit
-            </Button>
-          )}
-          {activeTab === TabType.CAPSULES && (
-            <Button size="lg" onClick={() => setIsAddCapsuleModalOpen(true)}>
-              <MdAdd />
-              Add Capsule
-            </Button>
-          )}
-          {activeTab === TabType.WISHLIST && (
-            <Button size="lg" onClick={handleAddItem}>
-              <MdAdd />
-              Add Item
-            </Button>
-          )}
+          <HeaderActions 
+            activeTab={activeTab}
+            onAddItem={handleAddItem}
+            onAddOutfit={() => setIsAddOutfitModalOpen(true)}
+            onAddCapsule={() => setIsAddCapsuleModalOpen(true)}
+            onMarkComplete={() => {}}
+          />
         </PageHeader>
         
         <TabsContainer>
