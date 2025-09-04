@@ -1,9 +1,8 @@
 import React from 'react';
 import Header from '../components/layout/Header/Header';
-import { ItemsTab, OutfitsTab, CapsulesTab } from '../components/features/wardrobe/tabs';
-import WishlistTab from '../components/features/wardrobe/tabs/WishlistTab';
+import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
-import { useHomePageData, TabType } from '../hooks/home';
+import { useHomePageData } from '../hooks/home';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 
@@ -39,22 +38,6 @@ const HomePage: React.FC = () => {
     setSeasonFilter,
     searchQuery,
     setSearchQuery,
-    outfitSeasonFilter,
-    setOutfitSeasonFilter,
-    outfitScenarioFilter,
-    setOutfitScenarioFilter,
-    outfitSearchQuery,
-    setOutfitSearchQuery,
-    capsuleSeasonFilter,
-    setCapsuleSeasonFilter,
-    capsuleScenarioFilter,
-    setCapsuleScenarioFilter,
-    capsuleSearchQuery,
-    setCapsuleSearchQuery,
-    wishlistSearchQuery,
-    setWishlistSearchQuery,
-    wishlistStatusFilter,
-    setWishlistStatusFilter,
     
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
@@ -140,79 +123,29 @@ const HomePage: React.FC = () => {
           onTabChange={setActiveTab} 
         />
         
-        {/* Tab content will be rendered below */}
-        
-        {/* Tab Content */}
-        {activeTab === TabType.ITEMS && (
-          <ItemsTab
-            items={filteredItems}
-            isLoading={isLoading}
-            error={error}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            seasonFilter={seasonFilter}
-            setSeasonFilter={setSeasonFilter}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onViewItem={handleViewItem}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItem}
-          />
-        )}
-        
-        {activeTab === TabType.OUTFITS && (
-          <OutfitsTab
-            outfits={filteredOutfits}
-            wardrobeItems={items}
-            isLoading={isLoading}
-            error={error}
-            seasonFilter={outfitSeasonFilter}
-            setSeasonFilter={setOutfitSeasonFilter}
-            scenarioFilter={outfitScenarioFilter}
-            setScenarioFilter={setOutfitScenarioFilter}
-            searchQuery={outfitSearchQuery}
-            setSearchQuery={setOutfitSearchQuery}
-            onViewOutfit={handleViewOutfit}
-            onDeleteOutfit={handleDeleteOutfit}
-          />
-        )}
-        
-        {activeTab === TabType.CAPSULES && (
-          <CapsulesTab
-            capsules={filteredCapsules}
-            wardrobeItems={items}
-            isLoading={isLoading}
-            error={error}
-            seasonFilter={capsuleSeasonFilter}
-            setSeasonFilter={setCapsuleSeasonFilter}
-            scenarioFilter={capsuleScenarioFilter}
-            setScenarioFilter={setCapsuleScenarioFilter}
-            searchQuery={capsuleSearchQuery}
-            setSearchQuery={setCapsuleSearchQuery}
-            onViewCapsule={handleViewCapsule}
-            onDeleteCapsule={handleDeleteCapsule}
-          />
-        )}
-        
-        {activeTab === TabType.WISHLIST && (
-          <WishlistTab
-            items={items}
-            isLoading={isLoading}
-            error={error}
-            categoryFilter={categoryFilter}
-            setCategoryFilter={setCategoryFilter}
-            seasonFilter={seasonFilter}
-            setSeasonFilter={setSeasonFilter}
-            statusFilter={wishlistStatusFilter}
-            setStatusFilter={setWishlistStatusFilter}
-            searchQuery={wishlistSearchQuery}
-            setSearchQuery={setWishlistSearchQuery}
-            onViewItem={handleViewItem}
-            onEditItem={handleEditItem}
-            onDeleteItem={handleDeleteItem}
-            onAddItem={handleAddItem}
-          />
-        )}
+        <TabContent
+          activeTab={activeTab}
+          items={items}
+          filteredItems={filteredItems}
+          filteredOutfits={filteredOutfits}
+          filteredCapsules={filteredCapsules}
+          isLoading={isLoading}
+          error={error}
+          categoryFilter={categoryFilter}
+          seasonFilter={seasonFilter}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setCategoryFilter={setCategoryFilter}
+          setSeasonFilter={setSeasonFilter}
+          onAddItem={handleAddItem}
+          onEditItem={handleEditItem}
+          onDeleteItem={handleDeleteItem}
+          onViewItem={handleViewItem}
+          onViewOutfit={handleViewOutfit}
+          onDeleteOutfit={handleDeleteOutfit}
+          onViewCapsule={handleViewCapsule}
+          onDeleteCapsule={handleDeleteCapsule}
+        />
         
         {/* All modals */}
         <HomePageModals
