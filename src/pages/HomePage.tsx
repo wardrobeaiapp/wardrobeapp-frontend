@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData } from '../hooks/home/useHomePageData';
 import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
+import { useTabState, TabType } from '../hooks/home/useTabState';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
 import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
@@ -30,13 +31,43 @@ const HomePage: React.FC = () => {
   const outfits = outfitsData || [];
   const capsules = capsulesData || [];
   
-  // Use our custom hook to get all the data and handlers
-  const homePageData = useHomePageData();
+  // Tab and filter state management
+  const { 
+    activeTab, 
+    setActiveTab,
+    isItemsTab,
+    isOutfitsTab,
+    isCapsulesTab,
+    isWishlistTab,
+    filters: {
+      category: categoryFilter,
+      season: seasonFilter,
+      status: statusFilter,
+      searchQuery,
+      scenario: scenarioFilter
+    },
+    setCategoryFilter,
+    setSeasonFilter,
+    setStatusFilter,
+    setSearchQuery,
+    setScenarioFilter
+  } = useTabState(TabType.ITEMS);
   
-  // Filtering state for items
-  const [categoryFilter, setCategoryFilter] = useState('all');
-  const [seasonFilter, setSeasonFilter] = useState<string | string[]>('all');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Use our custom hook to get all the data and handlers
+  const homePageData = useHomePageData({
+    activeTab,
+    setActiveTab,
+    categoryFilter,
+    seasonFilter,
+    statusFilter,
+    searchQuery,
+    scenarioFilter,
+    setCategoryFilter,
+    setSeasonFilter,
+    setStatusFilter,
+    setSearchQuery,
+    setScenarioFilter
+  });
   
   // Apply filters to items with proper type assertion
   const filteredItemsResult = useItemFiltering(allItems || [], {
@@ -90,10 +121,6 @@ const HomePage: React.FC = () => {
     items = [],
     filteredOutfits = [],
     filteredCapsules = [],
-    
-    // Tab state
-    activeTab,
-    setActiveTab,
     
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
@@ -177,21 +204,26 @@ const HomePage: React.FC = () => {
         />
         
         <TabContent
-          activeTab={homePageData.activeTab}
+          activeTab={activeTab}
           items={allItems}
           filteredItems={filteredItems}
           filteredOutfits={outfits}
           filteredCapsules={capsules}
           isLoading={isLoadingItems || isLoadingOutfits || isLoadingCapsules}
           error={error}
+          // Filters from useTabState
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
-          statusFilter={homePageData.statusFilter}
+          statusFilter={statusFilter}
           searchQuery={searchQuery}
+          scenarioFilter={scenarioFilter}
+          // Filter handlers from useTabState
           setCategoryFilter={setCategoryFilter}
           setSeasonFilter={setSeasonFilter}
-          setStatusFilter={homePageData.setStatusFilter}
+          setStatusFilter={setStatusFilter}
           setSearchQuery={setSearchQuery}
+          setScenarioFilter={setScenarioFilter}
+          // Action handlers from useHomePageData
           onAddItem={homePageData.handleAddItem}
           onEditItem={homePageData.handleEditItem}
           onDeleteItem={homePageData.handleDeleteItem}

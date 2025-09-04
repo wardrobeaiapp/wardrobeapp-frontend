@@ -14,14 +14,18 @@ interface TabContentProps {
   filteredCapsules: any[]; // Update with proper type
   isLoading: boolean;
   error: string | null;
+  // Filters
   categoryFilter: string;
   seasonFilter: string | string[];
   statusFilter?: WishlistStatus | 'all';
   searchQuery: string;
+  scenarioFilter?: string;
+  // Filter handlers
   setCategoryFilter: (category: string) => void;
   setSeasonFilter: (season: string | string[]) => void;
   setStatusFilter?: (status: WishlistStatus | 'all') => void;
   setSearchQuery: (query: string) => void;
+  setScenarioFilter?: (scenario: string) => void;
   onAddItem: () => void;
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
@@ -40,14 +44,19 @@ const TabContent: React.FC<TabContentProps> = ({
   filteredCapsules = [],
   isLoading,
   error,
+  // Filters
   categoryFilter,
   seasonFilter,
   statusFilter = 'all',
   searchQuery,
+  scenarioFilter = 'all',
+  // Filter handlers
   setSearchQuery,
   setCategoryFilter,
   setSeasonFilter,
   setStatusFilter = () => {},
+  setScenarioFilter = () => {},
+  // Action handlers
   onAddItem,
   onEditItem,
   onDeleteItem = () => {},
@@ -64,12 +73,17 @@ const TabContent: React.FC<TabContentProps> = ({
           items={filteredItems}
           isLoading={isLoading}
           error={error}
+          // Filters
           categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
           seasonFilter={seasonFilter}
-          setSeasonFilter={setSeasonFilter}
           searchQuery={searchQuery}
+          scenarioFilter={scenarioFilter}
+          // Filter handlers
+          setCategoryFilter={setCategoryFilter}
+          setSeasonFilter={setSeasonFilter}
           setSearchQuery={setSearchQuery}
+          setScenarioFilter={setScenarioFilter}
+          // Action handlers
           onViewItem={onViewItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
@@ -82,10 +96,10 @@ const TabContent: React.FC<TabContentProps> = ({
           wardrobeItems={items}
           isLoading={isLoading}
           error={error}
-seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
+          seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
           setSeasonFilter={(season) => setSeasonFilter(season)}
-          scenarioFilter=""
-          setScenarioFilter={() => {}}
+          scenarioFilter={scenarioFilter}
+          setScenarioFilter={setScenarioFilter}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onViewOutfit={onViewOutfit}
@@ -99,10 +113,10 @@ seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
           wardrobeItems={items}
           isLoading={isLoading}
           error={error}
-seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
+          seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
           setSeasonFilter={(season) => setSeasonFilter(season)}
-          scenarioFilter=""
-          setScenarioFilter={() => {}}
+          scenarioFilter={scenarioFilter}
+          setScenarioFilter={setScenarioFilter}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           onViewCapsule={onViewCapsule}
@@ -111,18 +125,21 @@ seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
       );
     case TabType.WISHLIST:
       return (
-        <WishlistTab
+        <WishlistTab 
           items={items}
           isLoading={isLoading}
           error={error}
+          // Filters
           categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
           seasonFilter={seasonFilter}
-          setSeasonFilter={setSeasonFilter}
           statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
           searchQuery={searchQuery}
+          // Filter handlers
+          setCategoryFilter={setCategoryFilter}
+          setSeasonFilter={setSeasonFilter}
+          setStatusFilter={setStatusFilter}
           setSearchQuery={setSearchQuery}
+          // Action handlers
           onViewItem={onViewItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}

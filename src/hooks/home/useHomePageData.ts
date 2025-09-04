@@ -6,7 +6,7 @@ import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
-import { useTabState, TabType } from './useTabState';
+import { TabType } from './useTabState';
 import { useItemFiltering } from './useItemFiltering';
 import { useOutfitFiltering } from './useOutfitFiltering';
 import { useCapsuleFiltering } from './useCapsuleFiltering';
@@ -15,7 +15,35 @@ import { useModalState } from './useModalState';
 import { useItemManagement } from './useItemManagement';
 import useDataLoading from '../core/useDataLoading';
 
-export const useHomePageData = () => {
+interface UseHomePageDataProps {
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
+  categoryFilter: string;
+  seasonFilter: string | string[];
+  statusFilter: WishlistStatus | 'all';
+  searchQuery: string;
+  scenarioFilter: string;
+  setCategoryFilter: (category: string) => void;
+  setSeasonFilter: (season: string | string[]) => void;
+  setStatusFilter: (status: WishlistStatus | 'all') => void;
+  setSearchQuery: (query: string) => void;
+  setScenarioFilter: (scenario: string) => void;
+}
+
+export const useHomePageData = ({
+  activeTab,
+  setActiveTab,
+  categoryFilter,
+  seasonFilter,
+  statusFilter,
+  searchQuery,
+  scenarioFilter,
+  setCategoryFilter,
+  setSeasonFilter,
+  setStatusFilter,
+  setSearchQuery,
+  setScenarioFilter
+}: UseHomePageDataProps) => {
   const { user } = useSupabaseAuth();
   
   const { 
@@ -43,15 +71,6 @@ export const useHomePageData = () => {
   
   const error = itemsError || outfitsError || capsulesError || null;
   
-  // Filter state
-  const [statusFilter, setStatusFilter] = useState<WishlistStatus | 'all'>('all');
-  
-  // Tab state
-  const { 
-    activeTab, 
-    setActiveTab,
-  } = useTabState(TabType.ITEMS);
-  
   // Scenarios state with useDataLoading
   const [scenariosState, scenariosActions] = useDataLoading<Array<{id: string, name: string}>>([]);
   const { loadData: loadScenarios } = scenariosActions;
@@ -70,10 +89,7 @@ export const useHomePageData = () => {
     });
   }, [user?.id, loadScenarios]);
   
-  // Filter states
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [seasonFilter, setSeasonFilter] = useState<string | string[]>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  // Tab-specific filter states
   const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
   const [outfitScenarioFilter, setOutfitScenarioFilter] = useState<string>('all');
   const [outfitSearchQuery, setOutfitSearchQuery] = useState<string>('');

@@ -44,27 +44,37 @@ interface ItemsTabProps {
   items: WardrobeItem[];
   isLoading: boolean;
   error: string | null;
+  // Filters
   categoryFilter: string;
-  setCategoryFilter: (category: string) => void;
   seasonFilter: string | string[];
-  setSeasonFilter: (season: string | string[]) => void;
   searchQuery: string;
+  scenarioFilter?: string;
+  // Filter handlers
+  setCategoryFilter: (category: string) => void;
+  setSeasonFilter: (season: string | string[]) => void;
   setSearchQuery: (query: string) => void;
-  onViewItem?: (item: WardrobeItem) => void; // New prop for viewing items
+  setScenarioFilter?: (scenario: string) => void;
+  // Action handlers
+  onViewItem?: (item: WardrobeItem) => void;
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
+  onAddItem?: () => void;
 }
 
 const ItemsTab = React.memo<ItemsTabProps>(({
   items,
   isLoading: externalIsLoading,
   error,
+  // Filters
   categoryFilter,
-  setCategoryFilter,
   seasonFilter,
-  setSeasonFilter,
   searchQuery,
+  scenarioFilter = 'all',
+  // Filter handlers
+  setCategoryFilter,
+  setSeasonFilter,
   setSearchQuery,
+  setScenarioFilter = () => {},
   onViewItem = () => {},
   onEditItem,
   onDeleteItem
@@ -79,22 +89,28 @@ const ItemsTab = React.memo<ItemsTabProps>(({
     return items.filter(item => {
       const isNotWishlist = item.wishlist !== true;
       const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      const matchesSeason = seasonFilter === 'all' || 
-        (item.season?.some(s => s.toLowerCase() === getFirstSeason(seasonFilter).toLowerCase()) ?? false);
       
-      if (!isNotWishlist || !matchesCategory || !matchesSeason) return false;
+      // Handle season filter (can be string or string[])
+      const currentSeason = Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter;
+      const matchesSeason = currentSeason === 'all' || 
+        (Array.isArray(item.season) 
+          ? item.season.some(s => s === currentSeason)
+          : item.season === currentSeason);
       
-      // Only calculate search if other filters pass
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
-        return (item.name?.toLowerCase().includes(searchLower) ||
-                item.brand?.toLowerCase().includes(searchLower) ||
-                item.color?.toLowerCase().includes(searchLower)) ?? false;
-      }
+      // Handle search
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = searchQuery === '' || 
+        item.name.toLowerCase().includes(searchLower) ||
+        (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
+        (item.material && item.material.toLowerCase().includes(searchLower));
       
-      return true;
+      // Handle scenario filter
+      const matchesScenario = scenarioFilter === 'all' || 
+        (item.scenarios && item.scenarios.includes(scenarioFilter));
+      
+      return isNotWishlist && matchesCategory && matchesSeason && matchesSearch && matchesScenario;
     });
-  }, [items, categoryFilter, seasonFilter, searchQuery]);
+  }, [items, categoryFilter, seasonFilter, searchQuery, scenarioFilter]);
 
   // Debug logging - only in development
   if (process.env.NODE_ENV === 'development') {
