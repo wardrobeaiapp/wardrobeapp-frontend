@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
+import { TabType } from '../../../../hooks/home/useTabState';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
 import CapsuleDetailModal from './CapsuleDetailModal';
 import OutfitDetailModal from './OutfitDetailModal';
@@ -13,7 +14,7 @@ interface HomePageModalsProps {
   currentItem?: WardrobeItem;
   selectedItem?: WardrobeItem;
   itemToDelete?: WardrobeItem;
-  activeTab: string;
+  activeTab: TabType;
   
   // Outfits
   currentOutfit?: Outfit;

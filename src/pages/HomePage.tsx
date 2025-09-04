@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
@@ -8,16 +8,10 @@ import { useTabState, TabType } from '../hooks/home/useTabState';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
 import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
-import useItemFiltering from '../hooks/home/useItemFiltering';
-import { WardrobeItem } from '../types';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
-
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
-import {
-  PageHeader,
-  HeaderContent,
-} from './HomePage.styles';
+import { PageHeader, HeaderContent } from './HomePage.styles';
 import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
@@ -35,10 +29,6 @@ const HomePage: React.FC = () => {
   const { 
     activeTab, 
     setActiveTab,
-    isItemsTab,
-    isOutfitsTab,
-    isCapsulesTab,
-    isWishlistTab,
     filters: {
       category: categoryFilter,
       season: seasonFilter,
@@ -53,33 +43,48 @@ const HomePage: React.FC = () => {
     setScenarioFilter
   } = useTabState(TabType.ITEMS);
   
+  // Get filtered items based on current filters
+  const filteredItems = useMemo(() => {
+    if (!allItems.length) return [];
+    
+    return allItems.filter(item => {
+      // Apply category filter
+      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+      
+      // Apply season filter
+      const currentSeason = Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter;
+      const matchesSeason = currentSeason === 'all' || 
+        (Array.isArray(item.season) 
+          ? item.season.some(s => s === currentSeason)
+          : item.season === currentSeason);
+      
+      // Apply search query
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = searchQuery === '' || 
+        item.name.toLowerCase().includes(searchLower) ||
+        (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
+        (item.material && item.material.toLowerCase().includes(searchLower));
+      
+      return matchesCategory && matchesSeason && matchesSearch;
+    });
+  }, [allItems, categoryFilter, seasonFilter, searchQuery]);
+  
   // Use our custom hook to get all the data and handlers
   const homePageData = useHomePageData({
-    activeTab,
-    setActiveTab,
+    // Filters
     categoryFilter,
     seasonFilter,
     statusFilter,
     searchQuery,
     scenarioFilter,
+    
+    // Filter handlers
     setCategoryFilter,
     setSeasonFilter,
     setStatusFilter,
     setSearchQuery,
     setScenarioFilter
   });
-  
-  // Apply filters to items with proper type assertion
-  const filteredItemsResult = useItemFiltering(allItems || [], {
-    category: categoryFilter,
-    season: seasonFilter,
-    searchQuery: searchQuery
-  });
-  
-  // Ensure we always have an array of filtered items
-  const filteredItems = (Array.isArray(filteredItemsResult) 
-    ? filteredItemsResult 
-    : filteredItemsResult?.filteredItems || []) as WardrobeItem[];
 
   // Handle error objects by converting them to strings
   const getErrorMessage = (error: unknown): string | null => {
@@ -160,13 +165,7 @@ const HomePage: React.FC = () => {
     
     // Event handlers
     handleAddItem,
-    handleEditItem,
-    handleDeleteItem,
-    handleEditOutfit,
-    handleDeleteOutfit,
-    handleEditCapsule,
     handleEditCapsuleSubmit,
-    handleDeleteCapsule,
     handleSubmitAdd,
     handleSubmitEdit,
     handleAddOutfit,
@@ -241,7 +240,7 @@ const HomePage: React.FC = () => {
           currentItem={currentItem}
           selectedItem={selectedItem}
           itemToDelete={itemToDelete}
-          activeTab={homePageData.activeTab}
+          activeTab={activeTab}
           
           // Outfits
           currentOutfit={currentOutfit}

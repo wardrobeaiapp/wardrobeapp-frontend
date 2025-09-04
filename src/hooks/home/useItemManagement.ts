@@ -5,7 +5,7 @@ type UseItemManagementProps = {
   addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
   updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
-  setActiveTab: (tab: any) => void;
+  setActiveTab?: (tab: any) => void;
 };
 
 type UseItemManagementReturn = {
@@ -81,7 +81,9 @@ export const useItemManagement = ({
       
       const newItem = await addItem(item, file);
       if (newItem) {
-        setActiveTab('items');
+        if (setActiveTab) {
+          setActiveTab('items');
+        }
       }
     } catch (error) {
       console.error('Error adding item:', error);

@@ -49,7 +49,6 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
   onDeleteOutfit
 }) => {
   const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
-  const [loadingScenarios, setLoadingScenarios] = useState(false);
   const { user } = useSupabaseAuth();
 
   // Load user's scenarios when component mounts or user changes
@@ -59,7 +58,6 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
     const loadUserScenarios = async () => {
       if (!user) return;
       
-      setLoadingScenarios(true);
       try {
         const userScenarios = await fetchScenarios(user.id);
         if (isMounted && userScenarios) {
@@ -67,10 +65,6 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
         }
       } catch (err) {
         console.error('Error loading user scenarios:', err);
-      } finally {
-        if (isMounted) {
-          setLoadingScenarios(false);
-        }
       }
     };
 

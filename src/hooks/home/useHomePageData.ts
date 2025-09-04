@@ -6,7 +6,6 @@ import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
-import { TabType } from './useTabState';
 import { useItemFiltering } from './useItemFiltering';
 import { useOutfitFiltering } from './useOutfitFiltering';
 import { useCapsuleFiltering } from './useCapsuleFiltering';
@@ -16,13 +15,14 @@ import { useItemManagement } from './useItemManagement';
 import useDataLoading from '../core/useDataLoading';
 
 interface UseHomePageDataProps {
-  activeTab: TabType;
-  setActiveTab: (tab: TabType) => void;
+  // Filters
   categoryFilter: string;
   seasonFilter: string | string[];
   statusFilter: WishlistStatus | 'all';
   searchQuery: string;
   scenarioFilter: string;
+  
+  // Filter handlers
   setCategoryFilter: (category: string) => void;
   setSeasonFilter: (season: string | string[]) => void;
   setStatusFilter: (status: WishlistStatus | 'all') => void;
@@ -31,13 +31,14 @@ interface UseHomePageDataProps {
 }
 
 export const useHomePageData = ({
-  activeTab,
-  setActiveTab,
+  // Filters
   categoryFilter,
   seasonFilter,
   statusFilter,
   searchQuery,
   scenarioFilter,
+  
+  // Filter handlers
   setCategoryFilter,
   setSeasonFilter,
   setStatusFilter,
@@ -157,7 +158,6 @@ export const useHomePageData = ({
     addItem,
     updateItem,
     deleteItem,
-    setActiveTab,
   });
   
   // Outfit and capsule states
@@ -421,9 +421,7 @@ export const useHomePageData = ({
     isLoadingScenarios: scenariosState.isLoading,
     scenariosError: scenariosState.error,
     
-    // Tab state
-    activeTab,
-    setActiveTab,
+    // Status filter (used by wishlist)
     statusFilter,
     setStatusFilter,
     
