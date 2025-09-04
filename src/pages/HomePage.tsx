@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
@@ -7,6 +7,8 @@ import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
 import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
+import useItemFiltering from '../hooks/home/useItemFiltering';
+import { WardrobeItem } from '../types';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 
@@ -18,13 +20,30 @@ import {
 import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
-  // Data loading hooks
-  const { items: allItems, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
-  const { outfits, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
-  const { capsules, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
+  // Data loading hooks with proper null handling
+  const { items: allItems = [], isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
+  const { outfits = [], isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
+  const { capsules = [], isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
   
   // Use our custom hook to get all the data and handlers
   const homePageData = useHomePageData();
+  
+  // Filtering state for items
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [seasonFilter, setSeasonFilter] = useState<string | string[]>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Apply filters to items with proper type assertion
+  const filteredItemsResult = useItemFiltering(allItems || [], {
+    category: categoryFilter,
+    season: seasonFilter,
+    searchQuery: searchQuery
+  });
+  
+  // Ensure we always have an array of filtered items
+  const filteredItems = (Array.isArray(filteredItemsResult) 
+    ? filteredItemsResult 
+    : filteredItemsResult?.filteredItems || []) as WardrobeItem[];
 
   // Handle error objects by converting them to strings
   const getErrorMessage = (error: unknown): string | null => {
@@ -64,21 +83,12 @@ const HomePage: React.FC = () => {
   const {
     // Data
     items = [],
-    filteredItems = [],
     filteredOutfits = [],
     filteredCapsules = [],
     
     // Tab state
     activeTab,
     setActiveTab,
-    
-    // Filter states
-    categoryFilter,
-    setCategoryFilter,
-    seasonFilter: seasonFilterStr,
-    setSeasonFilter,
-    searchQuery,
-    setSearchQuery,
     
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
@@ -166,26 +176,26 @@ const HomePage: React.FC = () => {
         
         <TabContent
           activeTab={activeTab}
-          items={items}
+          items={allItems || []}
           filteredItems={filteredItems}
           filteredOutfits={filteredOutfits}
           filteredCapsules={filteredCapsules}
           isLoading={isLoading}
           error={error}
           categoryFilter={categoryFilter}
-          seasonFilter={seasonFilterStr}
+          seasonFilter={seasonFilter}
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          setSeasonFilter={setSeasonFilter}
           setCategoryFilter={setCategoryFilter}
-          onAddItem={handleAddItem}
-          onEditItem={handleEditItem}
-          onDeleteItem={handleDeleteItem}
-          onViewItem={handleViewItem}
-          onViewOutfit={handleViewOutfit}
-          onDeleteOutfit={handleDeleteOutfit}
-          onViewCapsule={handleViewCapsule}
-          onDeleteCapsule={handleDeleteCapsule}
+          setSeasonFilter={setSeasonFilter}
+          setSearchQuery={setSearchQuery}
+          onAddItem={homePageData.handleAddItem}
+          onEditItem={homePageData.handleEditItem}
+          onDeleteItem={homePageData.handleDeleteItem}
+          onViewItem={homePageData.handleViewItem}
+          onViewOutfit={homePageData.handleViewOutfit}
+          onDeleteOutfit={homePageData.handleDeleteOutfit}
+          onViewCapsule={homePageData.handleViewCapsule}
+          onDeleteCapsule={homePageData.handleDeleteCapsule}
         />
         
         {/* All modals */}

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Outfit, Season, ItemCategory } from '../../types';
+import { Outfit, Season } from '../../types';
 
 export interface OutfitFilterOptions {
   season?: string | string[];

@@ -66,6 +66,7 @@ const TabContent: React.FC<TabContentProps> = ({
           setSeasonFilter={setSeasonFilter}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          onViewItem={onViewItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
         />
