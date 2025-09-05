@@ -11,7 +11,6 @@ import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
 import { useItemFiltering } from '../hooks/home/useItemFiltering';
 import { useOutfitFiltering } from '../hooks/home/useOutfitFiltering';
 import { useCapsuleFiltering } from '../hooks/home/useCapsuleFiltering';
-import { Season } from '../types';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
@@ -85,39 +84,8 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Type-safe season filter function
-  const matchesSeasonFilter = (itemSeasons: Season[] | undefined, filter: string | string[]): boolean => {
-    if (filter === 'all') return true;
-    if (!itemSeasons || itemSeasons.length === 0) return false;
-    
-    // Handle both string and array filters
-    const filterSeasons = Array.isArray(filter) ? filter : [filter];
-    
-    return filterSeasons.some(filterSeason => {
-      // Handle 'all_season' special case (case-insensitive)
-      if (filterSeason.toString().toLowerCase() === 'all_season') {
-        return itemSeasons.includes(Season.ALL_SEASON) || 
-               itemSeasons.length === Object.values(Season).filter(s => s !== Season.ALL_SEASON).length;
-      }
-      
-      // Convert filter to Season enum value if it's a valid season
-      const filterSeasonValue = Object.values(Season).find(
-        s => s.toLowerCase() === filterSeason.toString().toLowerCase()
-      );
-      
-      if (!filterSeasonValue) return false;
-      
-      // Check if any of the item's seasons match the filter
-      return itemSeasons.some(season => 
-        season === filterSeasonValue || 
-        (season === Season.ALL_SEASON && filterSeasonValue !== Season.ALL_SEASON)
-      );
-    });
-  };
-
   // Track overall loading state and handle initial load
   const { 
-    isLoading, 
     error, 
     initialLoadComplete 
   } = useInitialDataLoading(
@@ -157,9 +125,6 @@ const HomePage: React.FC = () => {
   }
 
   const {
-    // Data
-    items = [],
-    
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,

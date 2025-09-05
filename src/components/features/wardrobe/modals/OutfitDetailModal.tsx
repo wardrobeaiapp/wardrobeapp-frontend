@@ -60,7 +60,7 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
     };
     
     loadScenarioNames();
-  }, [outfit.scenarios]);
+  }, [outfit.scenarios, user]);
 
   const actions: ModalAction[] = [
     {

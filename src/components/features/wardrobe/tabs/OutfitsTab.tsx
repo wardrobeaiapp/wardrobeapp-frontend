@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
@@ -79,10 +79,7 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
   const handleScenarioChange = useCallback((value: string) => {
     // Convert empty string to 'all' for consistency with the rest of the app
     setScenarioFilter(value === '' ? 'all' : value);
-  }, []);
-
-  // Prepare custom filters (empty array since we're handling scenario filter separately)
-  const customFilters = useMemo(() => [], []);
+  }, [setScenarioFilter]);
 
   return (
     <>

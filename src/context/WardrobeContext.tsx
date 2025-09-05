@@ -67,12 +67,10 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
   // Initialize state with empty arrays
   const [capsules, setCapsules] = useState<Capsule[]>([]);
   const [capsuleError, setCapsuleError] = useState<string | null>(null);
-  const [capsulesLoading, setCapsulesLoading] = useState<boolean>(false);
   
   // Use the custom hooks for items and outfits
   const { 
     items, 
-    setItems: setWardrobeItems,
     addItem, 
     updateItem, 
     deleteItem, 
@@ -88,7 +86,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     addOutfit: addOutfitHook = async () => null,
     updateOutfit: updateOutfitHook = async () => null,
     deleteOutfit: deleteOutfitHook = async () => false,
-    setError: setOutfitsError = () => {},
   } = useOutfits([]);
 
   // Handle outfit updates with proper type safety
@@ -132,7 +129,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
   }, [deleteOutfitHook]);
   
   // Combine loading states
-  const isLoading = itemsLoading || isOutfitsLoading || capsulesLoading;
+  const isLoading = itemsLoading || isOutfitsLoading;
   
   // Only show errors if we don't have any items loaded
   // This prevents showing API errors when we've successfully loaded items from localStorage
@@ -271,6 +268,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
   }, []);
 
   const contextValue = useMemo<WardrobeContextState>(() => ({
+    // Include all the values and functions that should be in the context
     items,
     outfits,
     capsules,
@@ -337,7 +335,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     error,
     outfitsError,
     capsuleError,
-    userId
+    user
   ]);
 
   return (
