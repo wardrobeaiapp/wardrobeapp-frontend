@@ -227,10 +227,8 @@ export type ArrayFieldsOfProfileData = 'dailyActivities' | 'preferredStyles' | '
 export interface Capsule {
   id: string;
   name: string;
-  description: string; // Made required with default empty string
   scenarios: string[]; // Array of scenario IDs or names
   seasons: Season[];
-  style: string; // Made required with default empty string
   mainItemId?: string; // ID of the main item (single-select)
   selectedItems: string[]; // Made required with default empty array
   dateCreated: string;

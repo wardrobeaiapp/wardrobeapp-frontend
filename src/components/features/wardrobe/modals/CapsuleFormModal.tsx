@@ -7,7 +7,6 @@ interface CapsuleFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (id: string, data: CapsuleFormData) => void;
-  onGenerateWithAI?: (data: CapsuleFormData) => void;
   editCapsule?: Capsule;
   availableItems: WardrobeItem[];
   isEditing: boolean;
@@ -17,7 +16,6 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
-  onGenerateWithAI,
   editCapsule,
   availableItems,
   isEditing

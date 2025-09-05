@@ -221,10 +221,8 @@ export const useCapsules = () => {
                   // Ensure required fields are always present
                   id: enhancedCapsule.id || capsule.id,
                   name: enhancedCapsule.name ?? capsule.name,
-                  description: enhancedCapsule.description ?? capsule.description,
                   scenarios: enhancedCapsule.scenarios ?? capsule.scenarios ?? [],
                   seasons: enhancedCapsule.seasons ?? capsule.seasons ?? [],
-                  style: enhancedCapsule.style ?? capsule.style ?? '',
                   selectedItems: selectedItems ?? capsule.selectedItems ?? [],
                   dateCreated: enhancedCapsule.dateCreated ?? enhancedCapsule.date_created ?? capsule.dateCreated
                 }

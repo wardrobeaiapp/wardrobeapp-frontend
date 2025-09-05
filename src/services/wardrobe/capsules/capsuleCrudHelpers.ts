@@ -20,8 +20,6 @@ export const prepareDbCapsule = (capsule: Partial<Capsule>, userId: string | nul
   
   // Map capsule properties to database fields
   if (capsule.name !== undefined) dbCapsule.name = capsule.name;
-  if (capsule.description !== undefined) dbCapsule.description = capsule.description || null;
-  if (capsule.style !== undefined) dbCapsule.style = capsule.style || null;
   if (capsule.seasons !== undefined) dbCapsule.seasons = Array.isArray(capsule.seasons) ? capsule.seasons : null;
   if (capsule.mainItemId !== undefined) dbCapsule.main_item_id = capsule.mainItemId || null;
   if (capsule.selectedItems !== undefined) dbCapsule.selected_items = Array.isArray(capsule.selectedItems) ? capsule.selectedItems : null;

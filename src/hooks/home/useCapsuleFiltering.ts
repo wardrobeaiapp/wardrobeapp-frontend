@@ -37,9 +37,7 @@ export const useCapsuleFiltering = (
       // Search query - search name and scenarios
       const matchesSearch = searchQuery === '' || 
         capsule.name.toLowerCase().includes(searchLower) ||
-        capsuleScenarios.some(s => s.toLowerCase().includes(searchLower)) ||
-        (capsule.style && capsule.style.toLowerCase().includes(searchLower)) ||
-        (capsule.description && capsule.description.toLowerCase().includes(searchLower));
+        capsuleScenarios.some(s => s.toLowerCase().includes(searchLower));
       
       return matchesSeason && matchesScenario && matchesSearch;
     });

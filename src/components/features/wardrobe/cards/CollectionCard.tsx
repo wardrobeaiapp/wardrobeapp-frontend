@@ -6,7 +6,6 @@ import {
   ButtonsContainer,
   SeasonTag,
   TagsContainer,
-  DescriptionText,
   ItemImagesGrid,
   ItemImageSquare,
   ItemImagePlaceholder
@@ -50,10 +49,6 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
           <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
         ))}
       </TagsContainer>
-      
-      {type === 'capsule' && (data as Capsule).description && (
-        <DescriptionText>{(data as Capsule).description}</DescriptionText>
-      )}
       
       <CollectionDetail>
         Items: {itemIds.length}

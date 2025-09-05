@@ -153,7 +153,6 @@ export const useHomePageData = () => {
   const handleEditCapsuleSubmit = useCallback(async (id: string, data: CapsuleFormData) => {
     const capsuleData = {
       name: data.name,
-      description: data.description || '',
       scenario: data.scenario,
       seasons: data.seasons,
       selectedItems: data.selectedItems,
@@ -247,7 +246,6 @@ export const useHomePageData = () => {
       // For new capsules, we ignore the id parameter (it will be 'new')
       const capsuleData = {
         name: data.name,
-        description: data.description || '',
         style: '', // Default empty style since it's required by the Capsule type
         scenario: data.scenarios?.[0] || '', // Use first scenario or empty string
         scenarios: data.scenarios || [],

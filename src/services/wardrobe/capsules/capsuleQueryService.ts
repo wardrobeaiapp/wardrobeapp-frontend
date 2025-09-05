@@ -158,8 +158,6 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
       const mappedCapsule: Capsule = {
         id: getString(capsule.id, `capsule-${Date.now()}}`),
         name: getString(capsule.name, 'Untitled Capsule'),
-        description: getString(capsule.description),
-        style: getString(capsule.style),
         seasons: getArray<Season>(capsule.seasons),
         // Only use scenarios from the join table map as the scenarios column has been removed
         scenarios: getArray<string>(capsuleScenariosMap[capsule.id] || []),
@@ -191,8 +189,6 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
             // Ensure all required fields are present with proper defaults
             const combinedCapsule: Capsule = {
               ...localCapsule,
-              description: localCapsule.description || '',
-              style: localCapsule.style || '',
               seasons: Array.isArray(localCapsule.seasons) ? localCapsule.seasons : [],
               scenarios: Array.isArray(localCapsule.scenarios) ? localCapsule.scenarios : [],
               selectedItems: Array.isArray(localCapsule.selectedItems) ? localCapsule.selectedItems : [],

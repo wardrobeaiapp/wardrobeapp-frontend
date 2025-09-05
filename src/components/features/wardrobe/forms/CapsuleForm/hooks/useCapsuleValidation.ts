@@ -2,7 +2,6 @@ import { Season, Scenario } from '../../../../../../types';
 
 export interface CapsuleFormData {
   name: string;
-  description: string;
   scenarios: string[]; // Array of scenario IDs or names
   seasons: Season[];
   selectedItems: string[];
@@ -100,7 +99,6 @@ export const useCapsuleValidation = ({
 
     return {
       name: capsuleName, // Use the generated name if original was empty
-      description: '', // Providing empty string as default
       scenarios: scenariosArray,
       seasons,
       selectedItems,

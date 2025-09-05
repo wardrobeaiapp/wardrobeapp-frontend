@@ -43,8 +43,6 @@ export const migrateCapsulesToSupabase = async (capsules: Capsule[]): Promise<vo
     const capsulesData = capsules.map(capsule => ({
       id: capsule.id,
       name: capsule.name,
-      description: capsule.description || null,
-      style: capsule.style || null,
       seasons: Array.isArray(capsule.seasons) ? capsule.seasons : null,
       // Note: scenarios column has been removed, now using capsule_scenarios table only
       selected_items: Array.isArray(capsule.selectedItems) ? capsule.selectedItems : null,

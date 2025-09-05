@@ -2,7 +2,6 @@ import { Season, Scenario } from '../../../../../../types';
 
 export interface CapsuleFormData {
   name: string;
-  description: string;
   scenario: string; // Kept for backward compatibility
   scenarios?: string[]; // Array of scenario IDs
   seasons: Season[];
@@ -87,7 +86,6 @@ export const prepareFormData = (
 
   return {
     name: capsuleName,
-    description: '', // Providing empty string as default
     scenario: scenarioValue,
     scenarios: scenariosArray,
     seasons,
