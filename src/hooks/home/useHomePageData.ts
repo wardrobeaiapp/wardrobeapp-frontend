@@ -10,7 +10,7 @@ import { useCapsuleManagement } from './useCapsuleManagement';
 import { useWardrobe } from '../../context/WardrobeContext';
 import { useMemo } from 'react';
 
-export const useHomePageData = () => {
+export const useHomePageData = (modalState?: ReturnType<typeof import('./useModalState').useModalState>) => {
   // Get the wardrobe context for accessing items data
   const { items } = useWardrobe();
 
@@ -19,13 +19,14 @@ export const useHomePageData = () => {
     addItem: () => Promise.resolve(null),
     updateItem: () => Promise.resolve(null),
     deleteItem: () => Promise.resolve(false),
+    modalState, // Forward shared modalState to ensure sync
   });
   
-  // Use the specialized outfit management hook
-  const outfitManagement = useOutfitManagement();
+  // Use the specialized outfit management hook - pass modalState to ensure modals can be opened
+  const outfitManagement = useOutfitManagement(modalState);
   
-  // Use the specialized capsule management hook
-  const capsuleManagement = useCapsuleManagement();
+  // Use the specialized capsule management hook - pass modalState to ensure modals can be opened
+  const capsuleManagement = useCapsuleManagement(modalState);
 
   // Derive currentItem from currentItemId and items array
   const currentItem = useMemo(() => 

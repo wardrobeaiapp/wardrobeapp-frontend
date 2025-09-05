@@ -6,7 +6,7 @@ import { CapsuleFormData } from '../../components/features/wardrobe/forms/Capsul
 /**
  * Hook for managing capsule operations (add, update, delete)
  */
-export const useCapsuleManagement = () => {
+export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./useModalState').useModalState>) => {
   // Use capsules hook for better capsule-items relationship management
   const {
     addCapsule,
@@ -21,8 +21,15 @@ export const useCapsuleManagement = () => {
    * View a capsule by setting it as the selected capsule
    */
   const handleViewCapsule = useCallback((capsule: Capsule) => {
+    console.log('[useCapsuleManagement] handleViewCapsule called:', capsule.id, capsule.name);
     setSelectedCapsule(capsule);
-  }, []);
+    
+    // Open the modal directly if modalState is provided
+    if (modalState?.setIsViewCapsuleModalOpen) {
+      console.log('[useCapsuleManagement] Opening view modal via modalState');
+      modalState.setIsViewCapsuleModalOpen(true);
+    }
+  }, [modalState]);
   
   /**
    * Edit a capsule

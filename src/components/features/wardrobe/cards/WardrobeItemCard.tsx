@@ -60,7 +60,10 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         
         <ButtonContainer>
           {onView && (
-            <Button fullWidth onClick={() => onView(item)}>
+            <Button fullWidth onClick={() => {
+              console.log('[WardrobeItemCard] View button clicked for item:', item.id, item.name);
+              onView(item);
+            }}>
               View
             </Button>
           )}

@@ -6,7 +6,7 @@ import { Outfit } from '../../types';
 /**
  * Hook for managing outfit operations (add, update, delete)
  */
-export const useOutfitManagement = () => {
+export const useOutfitManagement = (modalState?: ReturnType<typeof import('./useModalState').useModalState>) => {
   // User context for authentication
   const { user } = useSupabaseAuth();
   
@@ -24,8 +24,15 @@ export const useOutfitManagement = () => {
    * View an outfit by setting it as the selected outfit
    */
   const handleViewOutfit = useCallback((outfit: Outfit) => {
+    console.log('[useOutfitManagement] handleViewOutfit called:', outfit.id, outfit.name);
     setSelectedOutfit(outfit);
-  }, []);
+    
+    // Open the modal directly if modalState is provided
+    if (modalState?.setIsViewOutfitModalOpen) {
+      console.log('[useOutfitManagement] Opening view modal via modalState');
+      modalState.setIsViewOutfitModalOpen(true);
+    }
+  }, [modalState]);
   
   /**
    * Edit an outfit by setting the current outfit ID

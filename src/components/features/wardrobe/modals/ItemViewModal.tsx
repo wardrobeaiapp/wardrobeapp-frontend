@@ -28,8 +28,14 @@ interface ItemViewModalProps {
 }
 
 const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, onEdit, onDelete }) => {
+  console.log('[ItemViewModal] Rendering with props:', { isOpen, item: item ? `${item.id} (${item.name})` : 'undefined' });
   const { updateItem } = useWardrobe();
-  if (!item) return null;
+  
+  // If no item is provided, don't render anything
+  if (!item) {
+    console.log('[ItemViewModal] Not rendering - item is undefined');
+    return null;
+  }
   
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Never';

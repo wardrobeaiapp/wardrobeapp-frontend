@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
-import { useHomePageData } from './useHomePageData';
-import { useModalState } from './useModalState';
 import { WardrobeItem, Outfit, Capsule } from '../../types';
 
 /**
- * Hook that combines business logic from useHomePageData with UI state from useModalState
+ * Hook that combines business logic from homePageData with UI state from useModalState
  * to provide tab-specific action handlers.
  */
-export const useTabActions = () => {
-  // Get data handlers and data from useHomePageData
+export const useTabActions = (
+  modalState: ReturnType<typeof import('./useModalState').useModalState>,
+  homePageData: any // Accept homePageData as parameter instead of using the hook directly
+) => {
+  // Extract handlers and data from homePageData
   const {
     // Data
     items,
@@ -30,25 +31,22 @@ export const useTabActions = () => {
     handleViewCapsule: viewCapsuleLogic,
     handleEditCapsule: editCapsuleLogic,
     handleDeleteCapsule: deleteCapsuleLogic,
-  } = useHomePageData();
+  } = homePageData;
   
-  // Get modal state management from useModalState
+  // Extract modal state from parameter - only include the setters we directly use
   const {
     // Item modal setters
     setIsAddModalOpen,
     setIsEditModalOpen,
-    setIsViewItemModalOpen,
     
     // Outfit modal setters
     setIsAddOutfitModalOpen,
     setIsEditOutfitModalOpen,
-    setIsViewOutfitModalOpen,
     
     // Capsule modal setters
     setIsAddCapsuleModalOpen,
     setIsEditCapsuleModalOpen,
-    setIsViewCapsuleModalOpen,
-  } = useModalState();
+  } = modalState;
   
   // Combine data and modal logic for tab actions
   
@@ -59,9 +57,11 @@ export const useTabActions = () => {
   }, [addItemLogic, setIsAddModalOpen]);
   
   const onViewItem = useCallback((item: WardrobeItem) => {
+    console.log('[useTabActions] onViewItem called:', item.id, item.name);
+    // Just call the logic function which will now handle both setting the item and opening the modal
     viewItemLogic(item);
-    setIsViewItemModalOpen(true);
-  }, [viewItemLogic, setIsViewItemModalOpen]);
+    // Modal open is now handled directly in the viewItemLogic function
+  }, [viewItemLogic]);
   
   const onEditItem = useCallback((id: string) => {
     editItemLogic(id);
@@ -74,9 +74,11 @@ export const useTabActions = () => {
   }, [setIsAddOutfitModalOpen]);
   
   const onViewOutfit = useCallback((outfit: Outfit) => {
+    console.log('[useTabActions] onViewOutfit called:', outfit.id, outfit.name);
+    // Just call the logic function which will now handle both setting the outfit and opening the modal
     viewOutfitLogic(outfit);
-    setIsViewOutfitModalOpen(true);
-  }, [viewOutfitLogic, setIsViewOutfitModalOpen]);
+    // Modal open is now handled directly in the viewOutfitLogic function
+  }, [viewOutfitLogic]);
   
   const onEditOutfit = useCallback((outfit: Outfit) => {
     editOutfitLogic(outfit);
@@ -89,9 +91,11 @@ export const useTabActions = () => {
   }, [setIsAddCapsuleModalOpen]);
   
   const onViewCapsule = useCallback((capsule: Capsule) => {
+    console.log('[useTabActions] onViewCapsule called:', capsule.id, capsule.name);
+    // Just call the logic function which will now handle both setting the capsule and opening the modal
     viewCapsuleLogic(capsule);
-    setIsViewCapsuleModalOpen(true);
-  }, [viewCapsuleLogic, setIsViewCapsuleModalOpen]);
+    // Modal open is now handled directly in the viewCapsuleLogic function
+  }, [viewCapsuleLogic]);
   
   const onEditCapsule = useCallback((capsule: Capsule) => {
     editCapsuleLogic(capsule);

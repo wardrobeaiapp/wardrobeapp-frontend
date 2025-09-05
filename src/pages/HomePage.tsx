@@ -3,10 +3,10 @@ import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData } from '../hooks/home/useHomePageData';
-import { useModalState } from '../hooks/home/useModalState';
 import { useTabActions } from '../hooks/home/useTabActions';
 import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
 import { useTabState, TabType } from '../hooks/home/useTabState';
+import { useModalState } from '../hooks/home/useModalState';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
 import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
@@ -71,10 +71,26 @@ const HomePage: React.FC = () => {
     searchQuery: activeTab === TabType.CAPSULES ? searchQuery : ''
   });
   
+  // Get modal state - lifted up to share with both TabActions and HomePageModals
+  const modalState = useModalState();
+  
+  // Debug logging for modal state
+  React.useEffect(() => {
+    console.log('[HomePage] Modal state:', {
+      isAddModalOpen: modalState.isAddModalOpen,
+      isViewItemModalOpen: modalState.isViewItemModalOpen,
+      isViewOutfitModalOpen: modalState.isViewOutfitModalOpen,
+      isViewCapsuleModalOpen: modalState.isViewCapsuleModalOpen,
+    });
+  }, [modalState.isAddModalOpen, modalState.isViewItemModalOpen, modalState.isViewOutfitModalOpen, modalState.isViewCapsuleModalOpen]);
+  
   // Get data handlers from useHomePageData and tab actions from useTabActions
   // Moved above the conditional return to follow React's Rules of Hooks
-  const homePageData = useHomePageData();
-  const tabActions = useTabActions();
+  // Pass modalState to useHomePageData first
+  const homePageData = useHomePageData(modalState);
+  
+  // Then pass both modalState and homePageData to useTabActions to break the circular dependency
+  const tabActions = useTabActions(modalState, homePageData);
 
   // Handle error objects by converting them to strings
   const getErrorMessage = (error: unknown): string | null => {
@@ -102,29 +118,6 @@ const HomePage: React.FC = () => {
   );
 
   // Get modal state directly from useModalState - moved above conditional return
-  const {
-    // Modal states
-    isAddModalOpen,
-    isEditModalOpen,
-    isAddOutfitModalOpen,
-    isEditOutfitModalOpen,
-    isViewOutfitModalOpen,
-    isViewCapsuleModalOpen,
-    isEditCapsuleModalOpen,
-    isAddCapsuleModalOpen,
-    isViewItemModalOpen,
-    
-    // Modal state setters
-    setIsAddModalOpen,
-    setIsEditModalOpen,
-    setIsAddOutfitModalOpen,
-    setIsEditOutfitModalOpen,
-    setIsViewOutfitModalOpen,
-    setIsViewCapsuleModalOpen,
-    setIsEditCapsuleModalOpen,
-    setIsAddCapsuleModalOpen,
-    setIsViewItemModalOpen,
-  } = useModalState();
   
   // Get the appropriate list based on active tab
   const currentItems = useMemo(() => {
@@ -152,34 +145,10 @@ const HomePage: React.FC = () => {
   }
   
   const {
-    // Delete confirmation modal
-    isDeleteConfirmModalOpen,
-    setIsDeleteConfirmModalOpen,
-    itemToDelete,
-    confirmDeleteItem,
-    
-    // Selected items
-    selectedOutfit,
-    selectedCapsule,
-    currentOutfit,
-    currentItem,
-    selectedItem,
     setCurrentOutfitId,
     setSelectedCapsule,
     setSelectedOutfit,
-    
-    // Event handlers
-    handleAddItem,
-    handleEditCapsuleSubmit,
-    handleSubmitAdd,
-    handleSubmitEdit,
-    handleAddOutfit,
-    handleEditOutfitSubmit,
-    handleAddCapsule,
   } = homePageData;
-
-  // Filter outfits and capsules based on active tab and filters
-
 
   // Main component render
 
@@ -247,23 +216,25 @@ const HomePage: React.FC = () => {
         
         {/* All modals */}
         <HomePageModals
+          // Modal state
+          modalState={modalState}
           // Items
           items={allItems}
-          currentItem={currentItem}
-          selectedItem={selectedItem}
-          itemToDelete={itemToDelete}
+          currentItem={homePageData.currentItem}
+          selectedItem={homePageData.selectedItem}
+          itemToDelete={homePageData.itemToDelete}
           activeTab={activeTab}
           
           // Outfits
-          currentOutfit={currentOutfit}
-          selectedOutfit={selectedOutfit}
+          currentOutfit={homePageData.currentOutfit}
+          selectedOutfit={homePageData.selectedOutfit}
           
           // Capsules
-          selectedCapsule={selectedCapsule}
+          selectedCapsule={homePageData.selectedCapsule}
           
           // Delete confirmation modal state
-          isDeleteConfirmModalOpen={isDeleteConfirmModalOpen}
-          setIsDeleteConfirmModalOpen={setIsDeleteConfirmModalOpen}
+          isDeleteConfirmModalOpen={homePageData.isDeleteConfirmModalOpen}
+          setIsDeleteConfirmModalOpen={homePageData.setIsDeleteConfirmModalOpen}
           
           // Action handlers
           handleSubmitAdd={homePageData.handleSubmitAdd}

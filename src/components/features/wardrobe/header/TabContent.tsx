@@ -62,10 +62,16 @@ const TabContent: React.FC<TabContentProps> = ({
   onAddItem,
   onEditItem,
   onDeleteItem = () => {},
-  onViewItem = () => {},
-  onViewOutfit = () => {},
+  onViewItem = () => {
+    console.log('[TabContent] Default onViewItem handler called - this should NOT happen');
+  },
+  onViewOutfit = () => {
+    console.log('[TabContent] Default onViewOutfit handler called - this should NOT happen');
+  },
   onDeleteOutfit = () => {},
-  onViewCapsule = () => {},
+  onViewCapsule = () => {
+    console.log('[TabContent] Default onViewCapsule handler called - this should NOT happen');
+  },
   onDeleteCapsule = () => {},
 }) => {
   // Use currentItems for the active tab, falling back to individual filtered lists

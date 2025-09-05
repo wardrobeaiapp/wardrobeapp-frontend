@@ -1,7 +1,6 @@
 import React from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import { TabType } from '../../../../hooks/home/useTabState';
-import { useModalState } from '../../../../hooks/home/useModalState';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
 import CapsuleDetailModal from './CapsuleDetailModal';
 import OutfitDetailModal from './OutfitDetailModal';
@@ -10,6 +9,8 @@ import DeleteItemConfirmModal from './DeleteItemConfirmModal';
 import { CapsuleFormData } from '../forms/CapsuleForm';
 
 interface HomePageModalsProps {
+  // Modal state
+  modalState: ReturnType<typeof import('../../../../hooks/home/useModalState').useModalState>;
   // Items
   items: WardrobeItem[];
   currentItem?: WardrobeItem;
@@ -54,6 +55,8 @@ interface HomePageModalsProps {
 }
 
 const HomePageModals: React.FC<HomePageModalsProps> = ({
+  // Modal state
+  modalState,
   // Items
   items,
   currentItem,
@@ -96,7 +99,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   setSelectedCapsule,
   setSelectedOutfit
 }) => {
-  // Get modal state directly from useModalState
+  // Destructure modal state from props
   const {
     // Modal states
     isAddModalOpen,
@@ -119,7 +122,27 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
     setIsEditCapsuleModalOpen,
     setIsAddCapsuleModalOpen,
     setIsViewItemModalOpen,
-  } = useModalState();
+  } = modalState;
+
+  // Debug logging for modal states and selected items
+  React.useEffect(() => {
+    console.log('[HomePageModals] Modal states:', {
+      isAddModalOpen,
+      isEditModalOpen,
+      isViewItemModalOpen,
+      isAddOutfitModalOpen,
+      isEditOutfitModalOpen,
+      isViewOutfitModalOpen,
+      isAddCapsuleModalOpen,
+      isEditCapsuleModalOpen,
+      isViewCapsuleModalOpen,
+    });
+  }, [isAddModalOpen, isEditModalOpen, isViewItemModalOpen, isAddOutfitModalOpen, isEditOutfitModalOpen, isViewOutfitModalOpen, isAddCapsuleModalOpen, isEditCapsuleModalOpen, isViewCapsuleModalOpen]);
+  
+  // Track when selected items change
+  React.useEffect(() => {
+    console.log('[HomePageModals] selectedItem changed:', selectedItem ? `${selectedItem.id} (${selectedItem.name})` : 'undefined');
+  }, [selectedItem]);
 
   return (
     <>
@@ -140,6 +163,11 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         isEditing={true}
       />
 
+      {/* Add debug logging to track modal rendering */}
+      {console.log('[HomePageModals] Rendering ItemViewModal with:', {
+        isViewItemModalOpen,
+        selectedItem: selectedItem ? `${selectedItem.id} (${selectedItem.name})` : 'undefined'
+      })}
       <ItemViewModal
         isOpen={isViewItemModalOpen}
         onClose={() => setIsViewItemModalOpen(false)}

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 export const useModalState = () => {
-  // Modal visibility states
+  // Modal visibility states with debug logging
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddOutfitModalOpen, setIsAddOutfitModalOpen] = useState(false);
@@ -13,6 +13,12 @@ export const useModalState = () => {
   const [isGenerateCapsuleWithAIModalOpen, setIsGenerateCapsuleWithAIModalOpen] = useState(false);
   const [isAddCapsuleModalOpen, setIsAddCapsuleModalOpen] = useState(false);
   const [isViewItemModalOpen, setIsViewItemModalOpen] = useState(false);
+
+  // Debug wrapper for isViewItemModalOpen setter
+  const debugSetIsViewItemModalOpen = useCallback((value: boolean) => {
+    console.log('[useModalState] Setting isViewItemModalOpen to', value);
+    setIsViewItemModalOpen(value);
+  }, []);
 
   // Handlers for opening modals
   const openAddModal = useCallback(() => setIsAddModalOpen(true), []);
@@ -85,7 +91,8 @@ export const useModalState = () => {
     setIsGenerateWithAIModalOpen,
     setIsGenerateCapsuleWithAIModalOpen,
     setIsAddCapsuleModalOpen,
-    setIsViewItemModalOpen,
+    // Using the debug wrapper for tracking state changes
+    setIsViewItemModalOpen: debugSetIsViewItemModalOpen,
 
     // Open handlers
     openAddModal,

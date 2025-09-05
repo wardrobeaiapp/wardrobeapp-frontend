@@ -34,7 +34,10 @@ export const useItemManagement = ({
   updateItem,
   deleteItem,
   setActiveTab,
-}: UseItemManagementProps): UseItemManagementReturn => {
+  modalState,
+}: UseItemManagementProps & {
+  modalState?: ReturnType<typeof import('./useModalState').useModalState>
+}): UseItemManagementReturn => {
   // Item selection state
   const [currentItemId, setCurrentItemId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<WardrobeItem | undefined>(undefined);
@@ -49,8 +52,16 @@ export const useItemManagement = ({
   }, []);
 
   const handleViewItem = useCallback((item: WardrobeItem) => {
+    console.log('[useItemManagement] handleViewItem called:', item.id, item.name);
+    // Set the selected item to show in the modal
     setSelectedItem(item);
-  }, []);
+    
+    // Open the modal directly if modalState is provided
+    if (modalState?.setIsViewItemModalOpen) {
+      console.log('[useItemManagement] Opening view modal via modalState');
+      modalState.setIsViewItemModalOpen(true);
+    }
+  }, [modalState]);
 
   const handleEditItem = useCallback((id: string) => {
     setCurrentItemId(id);

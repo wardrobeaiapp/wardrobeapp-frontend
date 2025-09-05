@@ -75,7 +75,10 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
       </ItemImagesGrid>
       
       <ButtonsContainer>
-        <Button fullWidth onClick={() => onView(data)}>View</Button>
+        <Button fullWidth onClick={() => {
+          console.log('[CollectionCard] View button clicked for', type, ':', data.id, data.name);
+          onView(data);
+        }}>View</Button>
       </ButtonsContainer>
     </Card>
   );
