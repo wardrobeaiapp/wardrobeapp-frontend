@@ -14,8 +14,6 @@ interface OutfitBase {
   items: string[];
   dateCreated: string;
   season: Season[];
-  scenarios: string[];
-  scenarioNames?: string[];
 }
 
 // Input type for creating/updating outfits
@@ -23,8 +21,6 @@ type OutfitInput = {
   name: string;
   items: string[];
   season: Season[];
-  scenarios: string[];
-  scenarioNames?: string[];
 };
 
 export type OutfitExtended = OutfitBase;
@@ -102,7 +98,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         name: updates.name ?? currentOutfit.name,
         items: updates.items ?? currentOutfit.items ?? [],
         season: updates.season ?? currentOutfit.season ?? [],
-        scenarios: updates.scenarios ?? currentOutfit.scenarios ?? [],
       };
       
       // Call the update function with proper types
@@ -288,7 +283,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
           name: outfitData.name,
           items: Array.isArray(outfitData.items) ? outfitData.items : [],
           season: Array.isArray(outfitData.season) ? outfitData.season : [],
-          scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
         };
         
         const newOutfit = await addOutfitHook(newOutfitData);
@@ -300,7 +294,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
           id: newOutfit.id || uuidv4(),
           userId: newOutfit.userId || currentUser.id,
           dateCreated: newOutfit.dateCreated || new Date().toISOString(),
-          scenarios: newOutfit.scenarios || [],
           items: newOutfit.items || [],
           season: newOutfit.season || []
         };

@@ -1,13 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { Outfit, Capsule, WardrobeItem } from '../../types';
 import { useWardrobe, OutfitExtended } from '../../context/WardrobeContext';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
-import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
 import { useModalState } from './useModalState';
 import { useItemManagement } from './useItemManagement';
-import useDataLoading from '../core/useDataLoading';
 
 // No props needed for this hook
 export const useHomePageData = () => {
@@ -31,26 +29,6 @@ export const useHomePageData = () => {
     updateCapsuleById,
     deleteCapsuleById
   } = useCapsules();
-  
-  // const error = itemsError || outfitsError || capsulesError || null;
-  
-  // Scenarios state with useDataLoading
-  const [scenariosState, scenariosActions] = useDataLoading<Array<{id: string, name: string}>>([]);
-  const { loadData: loadScenarios } = scenariosActions;
-  
-  // Fetch scenarios when user is available
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    loadScenarios(
-      fetchScenarios(user.id)
-        .then(data => {
-          return data;
-        })
-    ).catch(error => {
-      console.error('Error loading scenarios:', error);
-    });
-  }, [user?.id, loadScenarios]);
   
   // Modal states and handlers
   const {
@@ -226,21 +204,9 @@ export const useHomePageData = () => {
         id: '', // Will be set by the database
         userId: user.id,
         items: outfitData.items,
-        scenarioNames: scenarioNames || [],
-        scenarios: scenariosState.data?.map(s => s.id) || [],
         season: outfitData.season || [],
         dateCreated: new Date().toISOString()
       } as Omit<OutfitExtended, 'id' | 'dateCreated'>;
-      
-      // Ensure scenario names are included if provided
-      if (scenarioNames && scenarioNames.length > 0) {
-        newOutfit.scenarioNames = scenarioNames;
-        const filteredScenarios = (scenariosState.data || [])
-          .filter(s => scenarioNames.includes(s.name))
-          .map(s => s.id)
-          .filter((s): s is string => Boolean(s));
-        newOutfit.scenarios = filteredScenarios;
-      }
       
       await addOutfit(newOutfit);
       setIsAddOutfitModalOpen(false);
@@ -248,7 +214,7 @@ export const useHomePageData = () => {
       console.error('Failed to add outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [addOutfit, user, scenariosState.data, setIsAddOutfitModalOpen]);
+  }, [addOutfit, user, setIsAddOutfitModalOpen]);
   
   const handleEditOutfitSubmit = useCallback(async (outfitData: Partial<Outfit> & { id?: string }) => {
     if (!currentOutfitId) {
@@ -265,10 +231,6 @@ export const useHomePageData = () => {
         ...updates,
         items: updates.items || [],
         season: updates.season || [],
-        scenarioNames: scenarioNames || [],
-        scenarios: scenariosState.data
-          ?.filter(s => scenarioNames?.includes(s.name))
-          .map(s => s.id) || []
       };
       
       await updateOutfit(currentOutfitId, safeUpdates);
@@ -278,7 +240,7 @@ export const useHomePageData = () => {
       console.error('Failed to update outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [currentOutfitId, updateOutfit, scenariosState.data, setIsEditOutfitModalOpen, setCurrentOutfitId]);
+  }, [currentOutfitId, updateOutfit, setIsEditOutfitModalOpen, setCurrentOutfitId]);
   
   const handleAddCapsule = useCallback(async (id: string, data: CapsuleFormData) => {
     try {
@@ -311,11 +273,6 @@ export const useHomePageData = () => {
   }, [addCapsule, setIsAddCapsuleModalOpen]);
   
   return {    
-    // Scenarios
-    scenarios: scenariosState.data || [],
-    isLoadingScenarios: scenariosState.isLoading,
-    scenariosError: scenariosState.error,
-    
     // Status filter is now handled in HomePage component
     
     isDeleteConfirmModalOpen,
