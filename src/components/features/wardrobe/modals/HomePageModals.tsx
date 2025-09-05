@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import { TabType } from '../../../../hooks/home/useTabState';
+import { useModalState } from '../../../../hooks/home/useModalState';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
 import CapsuleDetailModal from './CapsuleDetailModal';
 import OutfitDetailModal from './OutfitDetailModal';
@@ -23,28 +24,8 @@ interface HomePageModalsProps {
   // Capsules
   selectedCapsule?: Capsule;
   
-  // Modal states
-  isAddModalOpen: boolean;
-  isEditModalOpen: boolean;
-  isAddOutfitModalOpen: boolean;
-  isEditOutfitModalOpen: boolean;
-  isViewOutfitModalOpen: boolean;
-  isViewCapsuleModalOpen: boolean;
-  isEditCapsuleModalOpen: boolean;
-  isAddCapsuleModalOpen: boolean;
-  isViewItemModalOpen: boolean;
+  // Delete confirmation modal state
   isDeleteConfirmModalOpen: boolean;
-  
-  // Modal close handlers
-  setIsAddModalOpen: (isOpen: boolean) => void;
-  setIsEditModalOpen: (isOpen: boolean) => void;
-  setIsAddOutfitModalOpen: (isOpen: boolean) => void;
-  setIsEditOutfitModalOpen: (isOpen: boolean) => void;
-  setIsViewOutfitModalOpen: (isOpen: boolean) => void;
-  setIsViewCapsuleModalOpen: (isOpen: boolean) => void;
-  setIsEditCapsuleModalOpen: (isOpen: boolean) => void;
-  setIsAddCapsuleModalOpen: (isOpen: boolean) => void;
-  setIsViewItemModalOpen: (isOpen: boolean) => void;
   setIsDeleteConfirmModalOpen: (isOpen: boolean) => void;
   
   // Action handlers
@@ -87,28 +68,8 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   // Capsules
   selectedCapsule,
   
-  // Modal states
-  isAddModalOpen,
-  isEditModalOpen,
-  isAddOutfitModalOpen,
-  isEditOutfitModalOpen,
-  isViewOutfitModalOpen,
-  isViewCapsuleModalOpen,
-  isEditCapsuleModalOpen,
-  isAddCapsuleModalOpen,
-  isViewItemModalOpen,
+  // Delete confirmation modal state
   isDeleteConfirmModalOpen,
-  
-  // Modal close handlers
-  setIsAddModalOpen,
-  setIsEditModalOpen,
-  setIsAddOutfitModalOpen,
-  setIsEditOutfitModalOpen,
-  setIsViewOutfitModalOpen,
-  setIsViewCapsuleModalOpen,
-  setIsEditCapsuleModalOpen,
-  setIsAddCapsuleModalOpen,
-  setIsViewItemModalOpen,
   setIsDeleteConfirmModalOpen,
   
   // Action handlers
@@ -135,6 +96,31 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   setSelectedCapsule,
   setSelectedOutfit
 }) => {
+  // Get modal state directly from useModalState
+  const {
+    // Modal states
+    isAddModalOpen,
+    isEditModalOpen,
+    isAddOutfitModalOpen,
+    isEditOutfitModalOpen,
+    isViewOutfitModalOpen,
+    isViewCapsuleModalOpen,
+    isEditCapsuleModalOpen,
+    isAddCapsuleModalOpen,
+    isViewItemModalOpen,
+    
+    // Modal state setters
+    setIsAddModalOpen,
+    setIsEditModalOpen,
+    setIsAddOutfitModalOpen,
+    setIsEditOutfitModalOpen,
+    setIsViewOutfitModalOpen,
+    setIsViewCapsuleModalOpen,
+    setIsEditCapsuleModalOpen,
+    setIsAddCapsuleModalOpen,
+    setIsViewItemModalOpen,
+  } = useModalState();
+
   return (
     <>
       {/* Item Modals */}

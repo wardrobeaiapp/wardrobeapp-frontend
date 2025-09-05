@@ -3,6 +3,8 @@ import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
 import { useHomePageData } from '../hooks/home/useHomePageData';
+import { useModalState } from '../hooks/home/useModalState';
+import { useTabActions } from '../hooks/home/useTabActions';
 import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
 import { useTabState, TabType } from '../hooks/home/useTabState';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
@@ -69,8 +71,10 @@ const HomePage: React.FC = () => {
     searchQuery: activeTab === TabType.CAPSULES ? searchQuery : ''
   });
   
-  // Use our custom hook to get all the data and handlers
+  // Get data handlers from useHomePageData and tab actions from useTabActions
+  // Moved above the conditional return to follow React's Rules of Hooks
   const homePageData = useHomePageData();
+  const tabActions = useTabActions();
 
   // Handle error objects by converting them to strings
   const getErrorMessage = (error: unknown): string | null => {
@@ -97,7 +101,30 @@ const HomePage: React.FC = () => {
     capsulesError ? getErrorMessage(capsulesError) : null
   );
 
-  
+  // Get modal state directly from useModalState - moved above conditional return
+  const {
+    // Modal states
+    isAddModalOpen,
+    isEditModalOpen,
+    isAddOutfitModalOpen,
+    isEditOutfitModalOpen,
+    isViewOutfitModalOpen,
+    isViewCapsuleModalOpen,
+    isEditCapsuleModalOpen,
+    isAddCapsuleModalOpen,
+    isViewItemModalOpen,
+    
+    // Modal state setters
+    setIsAddModalOpen,
+    setIsEditModalOpen,
+    setIsAddOutfitModalOpen,
+    setIsEditOutfitModalOpen,
+    setIsViewOutfitModalOpen,
+    setIsViewCapsuleModalOpen,
+    setIsEditCapsuleModalOpen,
+    setIsAddCapsuleModalOpen,
+    setIsViewItemModalOpen,
+  } = useModalState();
   
   // Get the appropriate list based on active tab
   const currentItems = useMemo(() => {
@@ -123,33 +150,13 @@ const HomePage: React.FC = () => {
       </PageContainer>
     );
   }
-
+  
   const {
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,
     itemToDelete,
     confirmDeleteItem,
-    
-    // Modal states
-    isAddModalOpen,
-    setIsAddModalOpen,
-    isEditModalOpen,
-    setIsEditModalOpen,
-    isAddOutfitModalOpen,
-    setIsAddOutfitModalOpen,
-    isEditOutfitModalOpen,
-    setIsEditOutfitModalOpen,
-    isViewOutfitModalOpen,
-    setIsViewOutfitModalOpen,
-    isViewCapsuleModalOpen,
-    setIsViewCapsuleModalOpen,
-    isEditCapsuleModalOpen,
-    setIsEditCapsuleModalOpen,
-    isAddCapsuleModalOpen,
-    setIsAddCapsuleModalOpen,
-    isViewItemModalOpen,
-    setIsViewItemModalOpen,
     
     // Selected items
     selectedOutfit,
@@ -191,9 +198,9 @@ const HomePage: React.FC = () => {
           </HeaderContent>
           <HeaderActions 
             activeTab={activeTab}
-            onAddItem={handleAddItem}
-            onAddOutfit={() => setIsAddOutfitModalOpen(true)}
-            onAddCapsule={() => setIsAddCapsuleModalOpen(true)}
+            onAddItem={tabActions.onAddItem}
+            onAddOutfit={tabActions.onAddOutfit}
+            onAddCapsule={tabActions.onAddCapsule}
             onMarkComplete={() => {}}
           />
         </PageHeader>
@@ -227,15 +234,15 @@ const HomePage: React.FC = () => {
           setStatusFilter={setStatusFilter}
           setSearchQuery={setSearchQuery}
           setScenarioFilter={setScenarioFilter}
-          // Action handlers from useHomePageData
-          onAddItem={homePageData.handleAddItem}
-          onEditItem={homePageData.handleEditItem}
-          onDeleteItem={homePageData.handleDeleteItem}
-          onViewItem={homePageData.handleViewItem}
-          onViewOutfit={homePageData.handleViewOutfit}
-          onDeleteOutfit={homePageData.handleDeleteOutfit}
-          onViewCapsule={homePageData.handleViewCapsule}
-          onDeleteCapsule={homePageData.handleDeleteCapsule}
+          // Action handlers from useTabActions
+          onAddItem={tabActions.onAddItem}
+          onEditItem={tabActions.onEditItem}
+          onDeleteItem={tabActions.onDeleteItem}
+          onViewItem={tabActions.onViewItem}
+          onViewOutfit={tabActions.onViewOutfit}
+          onDeleteOutfit={tabActions.onDeleteOutfit}
+          onViewCapsule={tabActions.onViewCapsule}
+          onDeleteCapsule={tabActions.onDeleteCapsule}
         />
         
         {/* All modals */}
@@ -254,51 +261,31 @@ const HomePage: React.FC = () => {
           // Capsules
           selectedCapsule={selectedCapsule}
           
-          // Modal states
-          isAddModalOpen={isAddModalOpen}
-          isEditModalOpen={isEditModalOpen}
-          isAddOutfitModalOpen={isAddOutfitModalOpen}
-          isEditOutfitModalOpen={isEditOutfitModalOpen}
-          isViewOutfitModalOpen={isViewOutfitModalOpen}
-          isViewCapsuleModalOpen={isViewCapsuleModalOpen}
-          isEditCapsuleModalOpen={isEditCapsuleModalOpen}
-          isAddCapsuleModalOpen={isAddCapsuleModalOpen}
-          isViewItemModalOpen={isViewItemModalOpen}
+          // Delete confirmation modal state
           isDeleteConfirmModalOpen={isDeleteConfirmModalOpen}
-          
-          // Modal close handlers
-          setIsAddModalOpen={setIsAddModalOpen}
-          setIsEditModalOpen={setIsEditModalOpen}
-          setIsAddOutfitModalOpen={setIsAddOutfitModalOpen}
-          setIsEditOutfitModalOpen={setIsEditOutfitModalOpen}
-          setIsViewOutfitModalOpen={setIsViewOutfitModalOpen}
-          setIsViewCapsuleModalOpen={setIsViewCapsuleModalOpen}
-          setIsEditCapsuleModalOpen={setIsEditCapsuleModalOpen}
-          setIsAddCapsuleModalOpen={setIsAddCapsuleModalOpen}
-          setIsViewItemModalOpen={setIsViewItemModalOpen}
           setIsDeleteConfirmModalOpen={setIsDeleteConfirmModalOpen}
           
           // Action handlers
-          handleSubmitAdd={handleSubmitAdd}
-          handleSubmitEdit={handleSubmitEdit}
-          handleAddOutfit={handleAddOutfit}
-          handleEditOutfitSubmit={handleEditOutfitSubmit}
-          handleAddCapsule={handleAddCapsule}
-          handleEditCapsuleSubmit={handleEditCapsuleSubmit}
-          confirmDeleteItem={confirmDeleteItem}
+          handleSubmitAdd={homePageData.handleSubmitAdd}
+          handleSubmitEdit={homePageData.handleSubmitEdit}
+          handleAddOutfit={homePageData.handleAddOutfit}
+          handleEditOutfitSubmit={homePageData.handleEditOutfitSubmit}
+          handleAddCapsule={homePageData.handleAddCapsule}
+          handleEditCapsuleSubmit={homePageData.handleEditCapsuleSubmit}
+          confirmDeleteItem={tabActions.confirmDeleteItem}
           
           // Item handlers
-          handleEditItem={homePageData.handleEditItem}
-          handleDeleteItem={homePageData.handleDeleteItem}
+          handleEditItem={tabActions.onEditItem}
+          handleDeleteItem={tabActions.onDeleteItem}
           
           // Outfit handlers
-          handleEditOutfit={homePageData.handleEditOutfit}
-          handleDeleteOutfit={homePageData.handleDeleteOutfit}
+          handleEditOutfit={tabActions.onEditOutfit}
+          handleDeleteOutfit={tabActions.onDeleteOutfit}
           setCurrentOutfitId={setCurrentOutfitId}
           
           // Capsule handlers
-          handleEditCapsule={homePageData.handleEditCapsule}
-          handleDeleteCapsule={homePageData.handleDeleteCapsule}
+          handleEditCapsule={tabActions.onEditCapsule}
+          handleDeleteCapsule={tabActions.onDeleteCapsule}
           setSelectedCapsule={setSelectedCapsule}
           setSelectedOutfit={setSelectedOutfit}
         />  
