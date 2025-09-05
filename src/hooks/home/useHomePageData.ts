@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { Outfit, Capsule, WardrobeItem } from '../../types';
 import { useWardrobe, OutfitExtended } from '../../context/WardrobeContext';
-import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
@@ -23,21 +22,17 @@ export const useHomePageData = () => {
     addOutfit, 
     updateOutfit, 
     deleteOutfit,
-    error: itemsError 
   } = useWardrobe();
-  
-  const { error: outfitsError } = useOutfits([]);
-  
+    
   // Use our new useCapsules hook for better capsule-items relationship management
   const {
-    capsules,
-    error: capsulesError,
+    // error: capsulesError,
     addCapsule,
     updateCapsuleById,
     deleteCapsuleById
   } = useCapsules();
   
-  const error = itemsError || outfitsError || capsulesError || null;
+  // const error = itemsError || outfitsError || capsulesError || null;
   
   // Scenarios state with useDataLoading
   const [scenariosState, scenariosActions] = useDataLoading<Array<{id: string, name: string}>>([]);
@@ -129,12 +124,6 @@ export const useHomePageData = () => {
   const currentItem = useMemo(() => 
     currentItemId ? items.find(item => item.id === currentItemId) : undefined
   , [items, currentItemId]);
-  
-  
-  // Return unfiltered items for other views
-  const filteredItems = items;
-  const filteredOutfits = outfits;
-  const filteredCapsules = capsules;
   
   // Handle item deletion with items context
   const handleDeleteItem = useCallback((id: string) => {
@@ -321,16 +310,7 @@ export const useHomePageData = () => {
     }
   }, [addCapsule, setIsAddCapsuleModalOpen]);
   
-  return {
-    // Data
-    items,
-    filteredItems,
-    outfits,
-    filteredOutfits,
-    capsules,
-    filteredCapsules,
-    error,
-    
+  return {    
     // Scenarios
     scenarios: scenariosState.data || [],
     isLoadingScenarios: scenariosState.isLoading,
