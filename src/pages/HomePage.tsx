@@ -63,10 +63,7 @@ const HomePage: React.FC = () => {
   });
   
   // Use our custom hook to get all the data and handlers
-  const homePageData = useHomePageData({
-    // We don't pass filters here anymore since filtering is handled by useItemFiltering
-    // in the HomePage component
-  });
+  const homePageData = useHomePageData();
 
   // Handle error objects by converting them to strings
   const getErrorMessage = (error: unknown): string | null => {

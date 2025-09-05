@@ -10,11 +10,8 @@ import { useModalState } from './useModalState';
 import { useItemManagement } from './useItemManagement';
 import useDataLoading from '../core/useDataLoading';
 
-interface UseHomePageDataProps {
-  // No filter props needed here anymore
-}
-
-export const useHomePageData = ({}: UseHomePageDataProps) => {
+// No props needed for this hook
+export const useHomePageData = () => {
   const { user } = useSupabaseAuth();
   
   const { 
@@ -61,15 +58,6 @@ export const useHomePageData = ({}: UseHomePageDataProps) => {
   }, [user?.id, loadScenarios]);
   
   // Tab-specific filter states (simplified)
-  const outfitSeasonFilter = 'all';
-  const outfitScenarioFilter = 'all';
-  const outfitSearchQuery = '';
-  const capsuleSeasonFilter = 'all';
-  const capsuleScenarioFilter = 'all';
-  const capsuleSearchQuery = '';
-  const wishlistCategoryFilter = 'all';
-  const wishlistStatusFilter = 'all';
-  const wishlistSearchQuery = '';
   const [wishlistStatusFilterState, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
   // Modal states and handlers
