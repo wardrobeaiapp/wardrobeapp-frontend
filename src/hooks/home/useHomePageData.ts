@@ -297,7 +297,7 @@ export const useHomePageData = () => {
       console.error('Failed to update outfit:', error);
       // Consider adding error state to show in UI
     }
-  }, [currentOutfitId, updateOutfit, user, scenariosState.data, setIsEditOutfitModalOpen, setCurrentOutfitId]);
+  }, [currentOutfitId, updateOutfit, scenariosState.data, setIsEditOutfitModalOpen, setCurrentOutfitId]);
   
   const handleAddCapsule = useCallback(async (id: string, data: CapsuleFormData) => {
     try {
@@ -327,7 +327,7 @@ export const useHomePageData = () => {
       console.error('Error adding capsule:', error);
       throw error; // Re-throw to handle in the component
     }
-  }, [addCapsule]);
+  }, [addCapsule, setIsAddCapsuleModalOpen]);
   
   return {
     // Data
