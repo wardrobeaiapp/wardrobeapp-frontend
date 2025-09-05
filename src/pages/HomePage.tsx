@@ -10,6 +10,7 @@ import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
 import { useItemFiltering } from '../hooks/home/useItemFiltering';
 import { useOutfitFiltering } from '../hooks/home/useOutfitFiltering';
+import { useCapsuleFiltering } from '../hooks/home/useCapsuleFiltering';
 import { Season } from '../types';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
@@ -60,6 +61,13 @@ const HomePage: React.FC = () => {
     season: seasonFilter,
     scenario: scenarioFilter,
     searchQuery: activeTab === TabType.OUTFITS ? searchQuery : ''
+  });
+
+  // Get filtered capsules using the useCapsuleFiltering hook
+  const { filteredCapsules: filteredCapsulesList, capsuleCount } = useCapsuleFiltering(capsules, {
+    season: seasonFilter,
+    scenario: scenarioFilter,
+    searchQuery: activeTab === TabType.CAPSULES ? searchQuery : ''
   });
   
   // Use our custom hook to get all the data and handlers
@@ -122,16 +130,6 @@ const HomePage: React.FC = () => {
   );
 
   
-  // Filter all capsules (filtering is done in the component that uses this)
-  const filteredCapsulesList = useMemo(() => {
-    return capsules.filter(capsule => {
-      const matchesSeason = matchesSeasonFilter(capsule.seasons, seasonFilter);
-      const matchesSearch = searchQuery === '' || 
-        capsule.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (capsule.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
-      return matchesSeason && matchesSearch;
-    });
-  }, [capsules, seasonFilter, searchQuery]);
   
   // Get the appropriate list based on active tab
   const currentItems = useMemo(() => {
@@ -249,7 +247,9 @@ const HomePage: React.FC = () => {
           filteredCapsules={filteredCapsulesList}
           isLoading={isLoadingItems || isLoadingOutfits || isLoadingCapsules}
           error={error}
-          itemCount={activeTab === TabType.OUTFITS ? outfitCount : itemCount}
+          itemCount={activeTab === TabType.OUTFITS ? outfitCount : 
+                   activeTab === TabType.CAPSULES ? capsuleCount : 
+                   itemCount}
           // Filters from useTabState
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
