@@ -9,11 +9,13 @@ import { WardrobeItem, Outfit, Capsule, WishlistStatus } from '../../../../types
 interface TabContentProps {
   activeTab: TabType;
   items: WardrobeItem[];
+  currentItems: WardrobeItem[] | Outfit[] | Capsule[];
   filteredItems: WardrobeItem[];
-  filteredOutfits: any[]; // Update with proper type
-  filteredCapsules: any[]; // Update with proper type
+  filteredOutfits: Outfit[];
+  filteredCapsules: Capsule[];
   isLoading: boolean;
   error: string | null;
+  itemCount?: number;
   // Filters
   categoryFilter: string;
   seasonFilter: string | string[];
@@ -38,7 +40,7 @@ interface TabContentProps {
 
 const TabContent: React.FC<TabContentProps> = ({
   activeTab,
-  items,
+  currentItems,
   filteredItems,
   filteredOutfits = [],
   filteredCapsules = [],
@@ -66,38 +68,46 @@ const TabContent: React.FC<TabContentProps> = ({
   onViewCapsule = () => {},
   onDeleteCapsule = () => {},
 }) => {
+  // Use currentItems for the active tab, falling back to individual filtered lists
+  const items = activeTab === TabType.ITEMS || activeTab === TabType.WISHLIST 
+    ? (currentItems as WardrobeItem[]) 
+    : [];
+  const outfits = activeTab === TabType.OUTFITS 
+    ? (currentItems as Outfit[]) 
+    : [];
+  const capsules = activeTab === TabType.CAPSULES 
+    ? (currentItems as Capsule[]) 
+    : [];
+
   switch (activeTab) {
     case TabType.ITEMS:
       return (
         <ItemsTab
-          items={filteredItems}
+          items={items}
+          itemCount={items.length}
           isLoading={isLoading}
           error={error}
-          // Filters
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}
           searchQuery={searchQuery}
-          scenarioFilter={scenarioFilter}
-          // Filter handlers
           setCategoryFilter={setCategoryFilter}
           setSeasonFilter={setSeasonFilter}
           setSearchQuery={setSearchQuery}
-          setScenarioFilter={setScenarioFilter}
-          // Action handlers
           onViewItem={onViewItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
+          onAddItem={onAddItem}
         />
       );
     case TabType.OUTFITS:
       return (
-        <OutfitsTab 
-          outfits={filteredOutfits}
-          wardrobeItems={items}
+        <OutfitsTab
+          outfits={outfits}
+          wardrobeItems={items as WardrobeItem[]}
           isLoading={isLoading}
           error={error}
-          seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
-          setSeasonFilter={(season) => setSeasonFilter(season)}
+          seasonFilter={typeof seasonFilter === 'string' ? seasonFilter : 'all'}
+          setSeasonFilter={setSeasonFilter}
           scenarioFilter={scenarioFilter}
           setScenarioFilter={setScenarioFilter}
           searchQuery={searchQuery}
@@ -108,13 +118,13 @@ const TabContent: React.FC<TabContentProps> = ({
       );
     case TabType.CAPSULES:
       return (
-        <CapsulesTab 
-          capsules={filteredCapsules}
-          wardrobeItems={items}
+        <CapsulesTab
+          capsules={capsules}
+          wardrobeItems={items as WardrobeItem[]}
           isLoading={isLoading}
           error={error}
-          seasonFilter={Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter}
-          setSeasonFilter={(season) => setSeasonFilter(season)}
+          seasonFilter={typeof seasonFilter === 'string' ? seasonFilter : 'all'}
+          setSeasonFilter={setSeasonFilter}
           scenarioFilter={scenarioFilter}
           setScenarioFilter={setScenarioFilter}
           searchQuery={searchQuery}
@@ -125,21 +135,18 @@ const TabContent: React.FC<TabContentProps> = ({
       );
     case TabType.WISHLIST:
       return (
-        <WishlistTab 
+        <WishlistTab
           items={items}
           isLoading={isLoading}
           error={error}
-          // Filters
           categoryFilter={categoryFilter}
-          seasonFilter={seasonFilter}
-          statusFilter={statusFilter}
-          searchQuery={searchQuery}
-          // Filter handlers
           setCategoryFilter={setCategoryFilter}
+          seasonFilter={seasonFilter}
           setSeasonFilter={setSeasonFilter}
+          statusFilter={statusFilter}
           setStatusFilter={setStatusFilter}
+          searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          // Action handlers
           onViewItem={onViewItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}

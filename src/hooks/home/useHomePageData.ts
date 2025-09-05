@@ -6,45 +6,15 @@ import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 import { getScenariosForUser as fetchScenarios } from '../../services/scenarios/scenariosService';
-import { useItemFiltering } from './useItemFiltering';
-import { useOutfitFiltering } from './useOutfitFiltering';
-import { useCapsuleFiltering } from './useCapsuleFiltering';
-import { useWishlistFiltering } from './useWishlistFiltering';
 import { useModalState } from './useModalState';
 import { useItemManagement } from './useItemManagement';
 import useDataLoading from '../core/useDataLoading';
 
 interface UseHomePageDataProps {
-  // Filters
-  categoryFilter: string;
-  seasonFilter: string | string[];
-  statusFilter: WishlistStatus | 'all';
-  searchQuery: string;
-  scenarioFilter: string;
-  
-  // Filter handlers
-  setCategoryFilter: (category: string) => void;
-  setSeasonFilter: (season: string | string[]) => void;
-  setStatusFilter: (status: WishlistStatus | 'all') => void;
-  setSearchQuery: (query: string) => void;
-  setScenarioFilter: (scenario: string) => void;
+  // No filter props needed here anymore
 }
 
-export const useHomePageData = ({
-  // Filters
-  categoryFilter,
-  seasonFilter,
-  statusFilter,
-  searchQuery,
-  scenarioFilter,
-  
-  // Filter handlers
-  setCategoryFilter,
-  setSeasonFilter,
-  setStatusFilter,
-  setSearchQuery,
-  setScenarioFilter
-}: UseHomePageDataProps) => {
+export const useHomePageData = ({}: UseHomePageDataProps) => {
   const { user } = useSupabaseAuth();
   
   const { 
@@ -90,17 +60,17 @@ export const useHomePageData = ({
     });
   }, [user?.id, loadScenarios]);
   
-  // Tab-specific filter states
-  const [outfitSeasonFilter, setOutfitSeasonFilter] = useState<string>('all');
-  const [outfitScenarioFilter, setOutfitScenarioFilter] = useState<string>('all');
-  const [outfitSearchQuery, setOutfitSearchQuery] = useState<string>('');
-  const [capsuleSeasonFilter, setCapsuleSeasonFilter] = useState<string>('all');
-  const [capsuleScenarioFilter, setCapsuleScenarioFilter] = useState<string>('all');
-  const [capsuleSearchQuery, setCapsuleSearchQuery] = useState<string>('');
-  const [wishlistCategoryFilter, setWishlistCategoryFilter] = useState<string>('all');
-  const [wishlistSeasonFilter, setWishlistSeasonFilter] = useState<string | string[]>('all');
-  const [wishlistSearchQuery, setWishlistSearchQuery] = useState<string>('');
-  const [wishlistStatusFilter, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
+  // Tab-specific filter states (simplified)
+  const outfitSeasonFilter = 'all';
+  const outfitScenarioFilter = 'all';
+  const outfitSearchQuery = '';
+  const capsuleSeasonFilter = 'all';
+  const capsuleScenarioFilter = 'all';
+  const capsuleSearchQuery = '';
+  const wishlistCategoryFilter = 'all';
+  const wishlistStatusFilter = 'all';
+  const wishlistSearchQuery = '';
+  const [wishlistStatusFilterState, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
   // Modal states and handlers
   const {
@@ -175,45 +145,12 @@ export const useHomePageData = ({
     currentItemId ? items.find(item => item.id === currentItemId) : undefined
   , [items, currentItemId]);
   
-  // Get the first season if seasonFilter is an array, or use the string value
-  const getSeasonForFiltering = (filter: string | string[]): string | undefined => {
-    if (filter === 'all') return undefined;
-    return Array.isArray(filter) ? (filter.length > 0 ? filter[0] : undefined) : filter;
-  };
-
-  // Filter items using the useItemFiltering hook
-  const { filteredItems } = useItemFiltering(
-    items,
-    {
-      category: categoryFilter !== 'all' ? categoryFilter : undefined,
-      season: getSeasonForFiltering(seasonFilter),
-      searchQuery,
-      isWishlist: false,
-    }
-  );
+  // Return unfiltered items - filtering is now handled in the HomePage component
+  const filteredItems = items;
+  const filteredOutfits = outfits;
+  const filteredCapsules = capsules;
+  const filteredWishlistItems = items.filter(item => item.wishlist);
   
-  // Filter outfits using the useOutfitFiltering hook
-  const { filteredOutfits } = useOutfitFiltering(outfits, {
-    season: outfitSeasonFilter,
-    scenario: outfitScenarioFilter,
-    searchQuery: outfitSearchQuery
-  });
-
-  // Filter capsules using the useCapsuleFiltering hook
-  const { filteredCapsules } = useCapsuleFiltering(capsules, {
-    season: capsuleSeasonFilter,
-    scenario: capsuleScenarioFilter,
-    searchQuery: capsuleSearchQuery
-  });
-
-  // Filter wishlist items using the useWishlistFiltering hook
-  const { filteredItems: filteredWishlist } = useWishlistFiltering(items, {
-    category: wishlistCategoryFilter,
-    season: wishlistSeasonFilter,
-    searchQuery: wishlistSearchQuery,
-    wishlistStatus: wishlistStatusFilter
-  });
-
   // Keep wishlistItems for backward compatibility
   const wishlistItems = useMemo(() => 
     items.filter(item => item.wishlist === true)
@@ -412,7 +349,7 @@ export const useHomePageData = ({
     filteredOutfits,
     capsules,
     filteredCapsules,
-    filteredWishlist,
+    filteredWishlistItems,
     wishlistItems,
     error,
     
@@ -422,38 +359,9 @@ export const useHomePageData = ({
     scenariosError: scenariosState.error,
     
     // Status filter (used by wishlist)
-    statusFilter,
-    setStatusFilter,
-    
-    // Filter states
-    categoryFilter,
-    setCategoryFilter,
-    seasonFilter,
-    setSeasonFilter,
-    searchQuery,
-    setSearchQuery,
-    outfitSeasonFilter,
-    setOutfitSeasonFilter,
-    outfitScenarioFilter,
-    setOutfitScenarioFilter,
-    outfitSearchQuery,
-    setOutfitSearchQuery,
-    capsuleSeasonFilter,
-    setCapsuleSeasonFilter,
-    capsuleScenarioFilter,
-    setCapsuleScenarioFilter,
-    capsuleSearchQuery,
-    setCapsuleSearchQuery,
-    wishlistCategoryFilter,
-    setWishlistCategoryFilter,
-    wishlistSeasonFilter,
-    setWishlistSeasonFilter,
-    wishlistSearchQuery,
-    setWishlistSearchQuery,
-    wishlistStatusFilter,
+    wishlistStatusFilter: wishlistStatusFilterState,
     setWishlistStatusFilter,
     
-    // Delete confirmation modal
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,
     itemToDelete,

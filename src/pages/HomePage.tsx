@@ -8,6 +8,8 @@ import { useTabState, TabType } from '../hooks/home/useTabState';
 import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
 import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
 import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
+import { useItemFiltering } from '../hooks/home/useItemFiltering';
+import { Season } from '../types';
 import WardrobeTabs from '../components/features/wardrobe/header/WardrobeTabs';
 import HeaderActions from '../components/features/wardrobe/header/HeaderActions';
 import { PageHeader as CommonPageHeader } from '../components/common/Typography/PageHeader';
@@ -43,47 +45,19 @@ const HomePage: React.FC = () => {
     setScenarioFilter
   } = useTabState(TabType.ITEMS);
   
-  // Get filtered items based on current filters
-  const filteredItems = useMemo(() => {
-    if (!allItems.length) return [];
-    
-    return allItems.filter(item => {
-      // Apply category filter
-      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      
-      // Apply season filter
-      const currentSeason = Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter;
-      const matchesSeason = currentSeason === 'all' || 
-        (Array.isArray(item.season) 
-          ? item.season.some(s => s === currentSeason)
-          : item.season === currentSeason);
-      
-      // Apply search query
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = searchQuery === '' || 
-        item.name.toLowerCase().includes(searchLower) ||
-        (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
-        (item.material && item.material.toLowerCase().includes(searchLower));
-      
-      return matchesCategory && matchesSeason && matchesSearch;
-    });
-  }, [allItems, categoryFilter, seasonFilter, searchQuery]);
+  // Get filtered items using the useItemFiltering hook
+  const { filteredItems, itemCount } = useItemFiltering(allItems, {
+    category: categoryFilter,
+    season: seasonFilter,
+    searchQuery,
+    wishlistStatus: statusFilter,
+    isWishlist: activeTab === TabType.WISHLIST
+  });
   
   // Use our custom hook to get all the data and handlers
   const homePageData = useHomePageData({
-    // Filters
-    categoryFilter,
-    seasonFilter,
-    statusFilter,
-    searchQuery,
-    scenarioFilter,
-    
-    // Filter handlers
-    setCategoryFilter,
-    setSeasonFilter,
-    setStatusFilter,
-    setSearchQuery,
-    setScenarioFilter
+    // We don't pass filters here anymore since filtering is handled by useItemFiltering
+    // in the HomePage component
   });
 
   // Handle error objects by converting them to strings
@@ -96,6 +70,36 @@ const HomePage: React.FC = () => {
     } catch {
       return 'An unknown error occurred';
     }
+  };
+
+  // Type-safe season filter function
+  const matchesSeasonFilter = (itemSeasons: Season[] | undefined, filter: string | string[]): boolean => {
+    if (filter === 'all') return true;
+    if (!itemSeasons || itemSeasons.length === 0) return false;
+    
+    // Handle both string and array filters
+    const filterSeasons = Array.isArray(filter) ? filter : [filter];
+    
+    return filterSeasons.some(filterSeason => {
+      // Handle 'all_season' special case (case-insensitive)
+      if (filterSeason.toString().toLowerCase() === 'all_season') {
+        return itemSeasons.includes(Season.ALL_SEASON) || 
+               itemSeasons.length === Object.values(Season).filter(s => s !== Season.ALL_SEASON).length;
+      }
+      
+      // Convert filter to Season enum value if it's a valid season
+      const filterSeasonValue = Object.values(Season).find(
+        s => s.toLowerCase() === filterSeason.toString().toLowerCase()
+      );
+      
+      if (!filterSeasonValue) return false;
+      
+      // Check if any of the item's seasons match the filter
+      return itemSeasons.some(season => 
+        season === filterSeasonValue || 
+        (season === Season.ALL_SEASON && filterSeasonValue !== Season.ALL_SEASON)
+      );
+    });
   };
 
   // Track overall loading state and handle initial load
@@ -112,6 +116,43 @@ const HomePage: React.FC = () => {
     capsulesError ? getErrorMessage(capsulesError) : null
   );
 
+  // Filter all outfits (filtering is done in the component that uses this)
+  const filteredOutfitsList = useMemo(() => {
+    return outfits.filter(outfit => {
+      const matchesSeason = matchesSeasonFilter(outfit.season, seasonFilter);
+      const matchesSearch = searchQuery === '' || 
+        outfit.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSeason && matchesSearch;
+    });
+  }, [outfits, seasonFilter, searchQuery]);
+  
+  // Filter all capsules (filtering is done in the component that uses this)
+  const filteredCapsulesList = useMemo(() => {
+    return capsules.filter(capsule => {
+      const matchesSeason = matchesSeasonFilter(capsule.seasons, seasonFilter);
+      const matchesSearch = searchQuery === '' || 
+        capsule.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (capsule.description?.toLowerCase() || '').includes(searchQuery.toLowerCase());
+      return matchesSeason && matchesSearch;
+    });
+  }, [capsules, seasonFilter, searchQuery]);
+  
+  // Get the appropriate list based on active tab
+  const currentItems = useMemo(() => {
+    switch (activeTab) {
+      case TabType.ITEMS:
+        return filteredItems;
+      case TabType.OUTFITS:
+        return filteredOutfitsList;
+      case TabType.CAPSULES:
+        return filteredCapsulesList;
+      case TabType.WISHLIST:
+        return filteredItems.filter(item => item.wishlist);
+      default:
+        return [];
+    }
+  }, [activeTab, filteredItems, filteredOutfitsList, filteredCapsulesList]);
+
   // Show loading state while initial data is being loaded
   if (!initialLoadComplete) {
     return (
@@ -124,8 +165,6 @@ const HomePage: React.FC = () => {
   const {
     // Data
     items = [],
-    filteredOutfits = [],
-    filteredCapsules = [],
     
     // Delete confirmation modal
     isDeleteConfirmModalOpen,
@@ -173,6 +212,9 @@ const HomePage: React.FC = () => {
     handleAddCapsule,
   } = homePageData;
 
+  // Filter outfits and capsules based on active tab and filters
+
+
   // Main component render
 
   return (
@@ -205,11 +247,13 @@ const HomePage: React.FC = () => {
         <TabContent
           activeTab={activeTab}
           items={allItems}
+          currentItems={currentItems}
           filteredItems={filteredItems}
-          filteredOutfits={outfits}
-          filteredCapsules={capsules}
+          filteredOutfits={filteredOutfitsList}
+          filteredCapsules={filteredCapsulesList}
           isLoading={isLoadingItems || isLoadingOutfits || isLoadingCapsules}
           error={error}
+          itemCount={itemCount}
           // Filters from useTabState
           categoryFilter={categoryFilter}
           seasonFilter={seasonFilter}

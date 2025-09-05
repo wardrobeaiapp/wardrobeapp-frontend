@@ -42,6 +42,7 @@ const ErrorContainer = styled.div`
 
 interface ItemsTabProps {
   items: WardrobeItem[];
+  itemCount?: number;
   isLoading: boolean;
   error: string | null;
   // Filters
@@ -52,8 +53,8 @@ interface ItemsTabProps {
   // Filter handlers
   setCategoryFilter: (category: string) => void;
   setSeasonFilter: (season: string | string[]) => void;
-  setSearchQuery: (query: string) => void;
   setScenarioFilter?: (scenario: string) => void;
+  setSearchQuery: (query: string) => void;
   // Action handlers
   onViewItem?: (item: WardrobeItem) => void;
   onEditItem: (id: string) => void;
@@ -63,6 +64,7 @@ interface ItemsTabProps {
 
 const ItemsTab = React.memo<ItemsTabProps>(({
   items,
+  itemCount,
   isLoading: externalIsLoading,
   error,
   // Filters
@@ -125,7 +127,7 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   }
 
   const handleSearchChange = (value: string) => {
-    setSearchQuery(value.toLowerCase());
+    setSearchQuery(value);
   };
 
   const handleSeasonChange = (season: string | string[]) => {
@@ -162,19 +164,17 @@ const ItemsTab = React.memo<ItemsTabProps>(({
         <Loader text="Loading your wardrobe items..." />
       ) : (
         <>
-          {filteredItems.length === 0 ? (
+          {!externalIsLoading && filteredItems.length === 0 && (
             <EmptyState>
-              <EmptyStateTitle>Your wardrobe is empty</EmptyStateTitle>
+              <EmptyStateTitle>No items found</EmptyStateTitle>
               <EmptyStateText>
-                {items.length === 0
-                  ? "You haven't added any items to your wardrobe yet."
-                  : "No items match your current filters."}
+                {itemCount === 0 
+                  ? 'Your wardrobe is empty. Add your first item to get started!'
+                  : 'Try adjusting your filters or add a new item to your wardrobe.'}
               </EmptyStateText>
-              {items.length === 0 && (
-                <p>Click the "Add Item" button in the top-right corner to get started.</p>
-              )}
             </EmptyState>
-          ) : (
+          )}
+          {filteredItems.length > 0 && (
             <ItemsGrid $variant="items">
               {filteredItems.map(item => (
                 <WardrobeItemCard
