@@ -1,71 +1,41 @@
-import { useMemo } from 'react';
-import { WardrobeItem, WishlistStatus, Season } from '../../types';
+import { useMemo, useCallback, useState } from 'react';
+import { WardrobeItem, WishlistStatus } from '../../types';
+import { useItemFiltering } from '../home/useItemFiltering';
 
-export interface WishlistFilterOptions {
-  category?: string;
-  season?: string | string[];
-  searchQuery?: string;
-  wishlistStatus?: WishlistStatus | 'all';
+interface UseWishlistFilteringProps {
+  items: WardrobeItem[];
 }
 
-export const useWishlistFiltering = (
-  items: WardrobeItem[],
-  options?: WishlistFilterOptions
-) => {
-  // Default filter values
-  const {
-    category = 'all',
-    season = 'all',
-    searchQuery = '',
-    wishlistStatus = 'all'
-  } = options || {};
-
-  const { filteredItems, itemCount } = useMemo(() => {
-    // First filter by wishlist items only
-    const wishlistItems = items.filter(item => item.wishlist === true);
-    
-    // Then apply other filters
-    const filtered = wishlistItems.filter(item => {
-      const searchLower = searchQuery.toLowerCase();
-      
-      // Category filter
-      const matchesCategory = category === 'all' || 
-        item.category === category;
-      
-      // Season filter - handle both string and string[] for season and item.season
-      const matchesSeason = season === 'all' || 
-        (Array.isArray(season)
-          ? season.some(s => s === 'all' || 
-              (Array.isArray(item.season) 
-                ? item.season.includes(s as Season)
-                : item.season === s))
-          : (Array.isArray(item.season)
-              ? item.season.includes(season as Season)
-              : item.season === season));
-      
-      // Wishlist status filter
-      const matchesStatus = wishlistStatus === 'all' || 
-        item.wishlistStatus === wishlistStatus;
-      
-      // Search query - search name, brand, and category
-      const matchesSearch = searchQuery === '' || 
-        item.name.toLowerCase().includes(searchLower) ||
-        (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
-        item.category.toLowerCase().includes(searchLower) ||
-        (item.subcategory && item.subcategory.toLowerCase().includes(searchLower));
-      
-      return matchesCategory && matchesSeason && matchesStatus && matchesSearch;
-    });
-
-    return {
-      filteredItems: filtered,
-      itemCount: filtered.length
-    };
-  }, [items, category, season, searchQuery, wishlistStatus]);
-
+export const useWishlistFiltering = ({ items }: UseWishlistFilteringProps) => {
+  // Wishlist status filter state
+  const [wishlistStatusFilter, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
+  
+  // Filter wishlist items using the useItemFiltering hook
+  const { filteredItems: filteredWishlistItems, itemCount: wishlistItemCount } = useItemFiltering(
+    items,
+    {
+      isWishlist: true,
+      wishlistStatus: wishlistStatusFilter === 'all' ? undefined : wishlistStatusFilter,
+    }
+  );
+  
+  // Memoize the filtered items for performance
+  const wishlistItems = useMemo(() => filteredWishlistItems, [filteredWishlistItems]);
+  
+  // Handle wishlist status filter changes
+  const handleSetWishlistStatusFilter = useCallback((status: WishlistStatus | 'all') => {
+    setWishlistStatusFilter(status);
+  }, []);
+  
   return {
-    filteredItems,
-    itemCount
+    // Filtered wishlist items
+    filteredWishlistItems,
+    wishlistItems, // For backward compatibility
+    
+    // Wishlist status filtering
+    wishlistStatusFilter,
+    setWishlistStatusFilter: handleSetWishlistStatusFilter,
+    wishlistItemCount,
   };
 };
 

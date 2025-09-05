@@ -57,12 +57,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   };
 
   // Use the wishlist filtering hook
-  const { filteredItems } = useWishlistFiltering(items, {
-    category: categoryFilter,
-    season: seasonFilter,
-    searchQuery,
-    wishlistStatus: statusFilter
-  });
+  const { filteredWishlistItems: filteredItems } = useWishlistFiltering({ items });
   
   const handleSeasonChange = (value: string | string[]) => {
     setSeasonFilter(value);

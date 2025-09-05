@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
-import { Outfit, Capsule, WardrobeItem, WishlistStatus } from '../../types';
+import { Outfit, Capsule, WardrobeItem } from '../../types';
 import { useWardrobe, OutfitExtended } from '../../context/WardrobeContext';
 import { useOutfits } from '../wardrobe/outfits/useOutfits';
 import { useCapsules } from '../wardrobe/capsules/useCapsules';
@@ -56,9 +56,6 @@ export const useHomePageData = () => {
       console.error('Error loading scenarios:', error);
     });
   }, [user?.id, loadScenarios]);
-  
-  // Tab-specific filter states (simplified)
-  const [wishlistStatusFilterState, setWishlistStatusFilter] = useState<WishlistStatus | 'all'>('all');
   
   // Modal states and handlers
   const {
@@ -133,16 +130,11 @@ export const useHomePageData = () => {
     currentItemId ? items.find(item => item.id === currentItemId) : undefined
   , [items, currentItemId]);
   
-  // Return unfiltered items - filtering is now handled in the HomePage component
+  
+  // Return unfiltered items for other views
   const filteredItems = items;
   const filteredOutfits = outfits;
   const filteredCapsules = capsules;
-  const filteredWishlistItems = items.filter(item => item.wishlist);
-  
-  // Keep wishlistItems for backward compatibility
-  const wishlistItems = useMemo(() => 
-    items.filter(item => item.wishlist === true)
-  , [items]);
   
   // Handle item deletion with items context
   const handleDeleteItem = useCallback((id: string) => {
@@ -337,8 +329,6 @@ export const useHomePageData = () => {
     filteredOutfits,
     capsules,
     filteredCapsules,
-    filteredWishlistItems,
-    wishlistItems,
     error,
     
     // Scenarios
@@ -346,9 +336,7 @@ export const useHomePageData = () => {
     isLoadingScenarios: scenariosState.isLoading,
     scenariosError: scenariosState.error,
     
-    // Status filter (used by wishlist)
-    wishlistStatusFilter: wishlistStatusFilterState,
-    setWishlistStatusFilter,
+    // Status filter is now handled in HomePage component
     
     isDeleteConfirmModalOpen,
     setIsDeleteConfirmModalOpen,
