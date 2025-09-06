@@ -22,5 +22,6 @@ export const generateSignedUrl = async (filePath: string, expiresIn: number = 36
   }
   
   console.log('[itemImageService] Data from generate-signed-url function:', data);
-  return data.url;
+  // The server returns { signedUrl: string } but we expect to return just the URL
+  return data.signedUrl || data.url; // Fallback to data.url for backward compatibility
 };
