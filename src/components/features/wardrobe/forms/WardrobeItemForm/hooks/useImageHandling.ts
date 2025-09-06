@@ -190,8 +190,48 @@ export const useImageHandling = ({
     url: string, 
     setImageUrl: (url: string) => void
   ) => {
+    // Set the URL temporarily so the UI shows something
     setImageUrl(url);
-    if (url) {
+    
+    if (!url) {
+      setPreviewImage(null);
+      return;
+    }
+    
+    // Check if this is a retail site image that might have CORS issues
+    const isRetailSite = isKnownRetailSite(url);
+    
+    if (isRetailSite) {
+      console.log('[useImageHandling] Retail site image detected. Using server-side saving:', url);
+      setIsDownloadingImage(true);
+      
+      try {
+        // Import the imageService functions we need
+        const { saveImageFromUrl } = await import('../../../../../../services/core/imageService');
+        
+        // Save the image to our backend storage
+        const savedImageUrl = await saveImageFromUrl(url, 'retail-images');
+        console.log('[useImageHandling] Image saved to backend storage:', savedImageUrl);
+        
+        // Update state with the saved image URL
+        setImageUrl(savedImageUrl);
+        setPreviewImage(savedImageUrl);
+        onImageSuccess();
+        
+        // Detect and log tags for the URL image
+        try {
+          await detectAndLogTags(savedImageUrl);
+        } catch (tagError) {
+          console.error('Error detecting tags for saved image:', tagError);
+        }
+      } catch (error) {
+        console.error('[useImageHandling] Error saving retail site image:', error);
+        onImageError('Failed to save image from retail site. Please try uploading the image directly.');
+      } finally {
+        setIsDownloadingImage(false);
+      }
+    } else {
+      // Regular image URL handling
       setPreviewImage(url);
       onImageSuccess();
       
@@ -201,8 +241,30 @@ export const useImageHandling = ({
       } catch (error) {
         console.error('Error detecting tags for URL image:', error);
       }
-    } else {
-      setPreviewImage(null);
+    }
+  };
+  
+  // Helper function to check if a URL is from a known retail site with CORS issues
+  const isKnownRetailSite = (url: string): boolean => {
+    try {
+      console.log('[useImageHandling] Checking if URL is from a known retail site:', url);
+      const retailDomains = [
+        'reserved.com',
+        'static.reserved.com',
+        'shop.mango.com',
+        'mango.com',
+        'zara.com',
+        'hm.com',
+        'asos.com',
+        'nordstrom.com'
+      ];
+      
+      const domain = new URL(url).hostname;
+      const isRetail = retailDomains.some(retailDomain => domain.includes(retailDomain));
+      console.log('[useImageHandling] URL domain:', domain, 'Is retail site:', isRetail);
+      return isRetail;
+    } catch (e) {
+      return false;
     }
   };
 

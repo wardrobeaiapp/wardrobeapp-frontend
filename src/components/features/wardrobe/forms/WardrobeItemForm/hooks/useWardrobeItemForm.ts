@@ -97,7 +97,15 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       newErrors.color = 'Color is required';
     }
 
-
+    // Check if sleeves is required and not set
+    const isSleevesRequired = (category === ItemCategory.ONE_PIECE || 
+      (category === ItemCategory.TOP && 
+       subcategory && 
+       ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase())));
+       
+    if (isSleevesRequired && !sleeves) {
+      newErrors.sleeves = 'Sleeve type is required for this item';
+    }
 
     if (seasons.length === 0) {
       newErrors.seasons = 'At least one season must be selected';
@@ -157,7 +165,10 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         (category === ItemCategory.TOP && 
          subcategory && 
          ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()))) 
-        ? sleeves || undefined : undefined,
+        ? (sleeves && ['sleeveless', 'short sleeves', 'long sleeves', '3/4 sleeves', 'one sleeve'].includes(sleeves) 
+           ? sleeves 
+           : 'short sleeves') // Ensure value matches exactly one of the valid options
+        : undefined,
       length: (category === ItemCategory.BOTTOM || 
         category === ItemCategory.ONE_PIECE || 
         category === ItemCategory.OUTERWEAR) ? length || undefined : undefined,

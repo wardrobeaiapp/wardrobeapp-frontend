@@ -11,14 +11,14 @@ import { useWardrobe } from '../../context/WardrobeContext';
 import { useMemo } from 'react';
 
 export const useHomePageData = (modalState?: ReturnType<typeof import('./useModalState').useModalState>) => {
-  // Get the wardrobe context for accessing items data
-  const { items } = useWardrobe();
+  // Get the wardrobe context for accessing items data and operations
+  const { items, addItem, updateItem, deleteItem } = useWardrobe();
 
   // Use the specialized item management hook - provides all item-related functionality
   const itemManagement = useItemManagement({
-    addItem: () => Promise.resolve(null),
-    updateItem: () => Promise.resolve(null),
-    deleteItem: () => Promise.resolve(false),
+    addItem, // Use the real addItem function from WardrobeContext
+    updateItem, // Use the real updateItem function from WardrobeContext
+    deleteItem, // Use the real deleteItem function from WardrobeContext
     modalState, // Forward shared modalState to ensure sync
   });
   

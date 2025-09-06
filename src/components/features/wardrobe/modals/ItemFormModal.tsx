@@ -49,7 +49,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
   const handleSubmit = useCallback((item: any, file?: File) => {
     console.log('[ItemFormModal] Handling submit with file:', !!file);
     onSubmit(item, file);
-  }, [onSubmit]);
+    // Close the modal after submission
+    if (isMounted) {
+      console.log('[ItemFormModal] Closing modal after successful submission');
+      onClose();
+    }
+  }, [onSubmit, onClose, isMounted]);
 
   if (!isMounted) return null;
 

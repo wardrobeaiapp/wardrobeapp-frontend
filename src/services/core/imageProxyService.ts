@@ -34,6 +34,7 @@ export const fetchImageViaProxy = async (imageUrl: string): Promise<{ blob: Blob
     }
 
     // Try Supabase Edge Function proxy
+    console.log('[imageProxyService] Using Supabase Edge Function to proxy image:', imageUrl);
     const { data, error } = await supabase.functions.invoke('fetch-image-proxy', {
       body: {
         imageUrl: imageUrl
@@ -47,7 +48,10 @@ export const fetchImageViaProxy = async (imageUrl: string): Promise<{ blob: Blob
         console.warn('[imageProxyService] Quota or rate limit error. Trying direct fetch...');
         return await fetchImageDirectly(imageUrl);
       }
-      throw new Error(`Proxy fetch failed: ${error.message}`);
+      
+      // If the Edge Function fails, fall back to direct fetch
+      console.warn('[imageProxyService] Edge Function failed, falling back to direct fetch');
+      return await fetchImageDirectly(imageUrl);
     }
 
     const response = data as FetchImageProxyResponse;
@@ -93,6 +97,11 @@ export const fetchImageViaProxy = async (imageUrl: string): Promise<{ blob: Blob
  */
 const fetchImageDirectly = async (imageUrl: string): Promise<{ blob: Blob; fileExt: string }> => {
   try {
+    // Validate URL format first to prevent error messages from being processed as URLs
+    if (!isValidImageUrl(imageUrl)) {
+      throw new Error(`Invalid image URL format: ${imageUrl.substring(0, 30)}...`);
+    }
+    
     // Check if this is a retail site with known CORS issues
     const isRetailSite = isKnownRetailSite(imageUrl);
     if (isRetailSite) {
@@ -149,41 +158,34 @@ const fetchImageDirectly = async (imageUrl: string): Promise<{ blob: Blob; fileE
  * @returns Promise with blob and fileExt
  */
 const handleRetailSiteImage = async (imageUrl: string): Promise<{ blob: Blob; fileExt: string }> => {
-  // For retail sites, we'll need to use different approach
-  // Option 1: Try a fetch with no-cors mode (will succeed but result in opaque response)
+  // For retail sites, we need to save the image to our backend and use that URL
   try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const response = await fetch(imageUrl, {
-      method: 'GET',
-      mode: 'no-cors',
-      credentials: 'omit',
-      headers: {
-        'Accept': 'image/*',
-      }
-    });
+    console.log('[imageProxyService] Retail site image detected, saving to backend storage');
     
-    // Extract file extension from URL since we can't read content-type from opaque response
-    const urlExt = imageUrl.split('.').pop()?.split('?')[0]?.toLowerCase();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // Import the imageService functions we need
+    const { saveImageFromUrl } = await import('./imageService');
+    
+    // Save the image to our backend storage
+    const savedImageUrl = await saveImageFromUrl(imageUrl, 'retail-images');
+    console.log('[imageProxyService] Image saved to backend storage:', savedImageUrl);
+    
+    // Now fetch the saved image (which won't have CORS issues)
+    const response = await fetch(savedImageUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch saved image: ${response.status} ${response.statusText}`);
+    }
+    
+    // Get the blob from the response
+    const blob = await response.blob();
+    
+    // Extract file extension from URL
+    const urlExt = savedImageUrl.split('.').pop()?.split('?')[0]?.toLowerCase();
     const fileExt = (urlExt && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(urlExt)) 
       ? (urlExt === 'jpeg' ? 'jpg' : urlExt)
       : 'jpg';
     
-    // With no-cors mode, we get an opaque response that we can't directly use
-    // Instead, we'll need to create a blob URL and open it in a new tab
-    // and guide the user to save the image manually
-    
-    // Create a dummy blob with text instructions
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const dummyBlob = new Blob([
-      new Uint8Array([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46])
-    ], { type: 'image/jpeg' });
-    
-    // We'll need to show guidance to the user about saving the image manually
-    console.log('[imageProxyService] Retail site image - needs manual download');
-    
-    // Signal that this image needs manual handling
-    throw new Error('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED:' + imageUrl);
+    console.log('[imageProxyService] Successfully retrieved saved retail image');
+    return { blob, fileExt };
   } catch (error) {
     // If the error is our special signal, propagate it
     if (error instanceof Error && error.message?.includes('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED')) {
@@ -200,6 +202,7 @@ const handleRetailSiteImage = async (imageUrl: string): Promise<{ blob: Blob; fi
  */
 const isKnownRetailSite = (url: string): boolean => {
   try {
+    console.log('[imageProxyService] Checking if URL is from a known retail site:', url);
     const retailDomains = [
       'shop.mango.com',
       'mango.com',
@@ -215,12 +218,41 @@ const isKnownRetailSite = (url: string): boolean => {
       'fashionnova.com',
       'gap.com',
       'adidas.com',
-      'nike.com'
+      'nike.com',
+      'reserved.com',
+      'static.reserved.com'
     ];
     
     const domain = new URL(url).hostname;
-    return retailDomains.some(retailDomain => domain.includes(retailDomain));
+    const isRetail = retailDomains.some(retailDomain => domain.includes(retailDomain));
+    console.log('[imageProxyService] URL domain:', domain, 'Is retail site:', isRetail);
+    return isRetail;
   } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Utility function to check if a string is a valid image URL
+ * @param url The URL to validate
+ * @returns boolean indicating if the URL is valid for image fetching
+ */
+export const isValidImageUrl = (url: string): boolean => {
+  try {
+    // Check if it's a valid URL format
+    const parsedUrl = new URL(url);
+    // Make sure it's HTTP or HTTPS protocol
+    if (!parsedUrl.protocol.match(/^https?:$/)) {
+      return false;
+    }
+    // Make sure it's not an error message that got mistakenly treated as a URL
+    if (url.includes('has been blocked by CORS policy') || 
+        url.includes('Access to fetch') || 
+        url.startsWith('Error:')) {
+      return false;
+    }
+    return true;
+  } catch {
     return false;
   }
 };
@@ -258,6 +290,45 @@ const isCorsEnabledDomain = (url: string): boolean => {
  * @returns Promise that resolves to the image Blob and its file extension
  */
 export const fetchImageSafely = async (imageUrl: string): Promise<{ blob: Blob; fileExt: string }> => {
+  // Validate the URL first to prevent error messages being processed as URLs
+  if (!isValidImageUrl(imageUrl)) {
+    console.error('[imageProxyService] Invalid image URL format:', imageUrl);
+    throw new Error(`Invalid image URL format. Please provide a valid HTTP or HTTPS URL.`);
+  }
+  
+  // Use the Supabase Edge Function proxy for all retail sites including reserved.com
+  if (isKnownRetailSite(imageUrl)) {
+    console.log('[imageProxyService] Reserved.com URL detected, using direct backend storage');
+    try {
+      // Import the imageService functions we need
+      const { saveImageFromUrl } = await import('./imageService');
+      
+      // Save the image to our backend storage
+      const savedImageUrl = await saveImageFromUrl(imageUrl, 'retail-images');
+      console.log('[imageProxyService] Reserved.com image saved to backend storage:', savedImageUrl);
+      
+      // Now fetch the saved image (which won't have CORS issues)
+      const response = await fetch(savedImageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch saved image: ${response.status} ${response.statusText}`);
+      }
+      
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Extract file extension from URL
+      const urlExt = savedImageUrl.split('.').pop()?.split('?')[0]?.toLowerCase();
+      const fileExt = (urlExt && ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg'].includes(urlExt)) 
+        ? (urlExt === 'jpeg' ? 'jpg' : urlExt)
+        : 'jpg';
+      
+      return { blob, fileExt };
+    } catch (directError) {
+      console.error('[imageProxyService] Direct handling of Reserved.com image failed:', directError);
+      // Fall through to regular handling
+    }
+  }
+  
   // The enhanced fetchImageViaProxy already has multiple fallback mechanisms
   try {
     return await fetchImageViaProxy(imageUrl);

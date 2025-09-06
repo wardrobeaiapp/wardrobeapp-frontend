@@ -10,14 +10,69 @@ interface UseImageUrlResult {
   onImageError?: () => void;
 }
 
+// Helper function to check if a URL is from a retail site with CORS issues
+const isRetailSiteUrl = (url: string): boolean => {
+  try {
+    const retailDomains = [
+      'reserved.com',
+      'static.reserved.com',
+      'shop.mango.com',
+      'mango.com',
+      'zara.com',
+      'hm.com',
+      'asos.com',
+      'nordstrom.com'
+    ];
+    
+    const domain = new URL(url).hostname;
+    return retailDomains.some(retailDomain => domain.includes(retailDomain));
+  } catch (e) {
+    return false;
+  }
+};
+
 export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Function to handle retail site images with CORS issues by proxying through our backend
+  const handleRetailSiteImage = async (url: string) => {
+    try {
+      setIsLoading(true);
+      console.log('[useImageUrl] Retail site image detected, proxying:', url);
+      
+      // Import the imageService to save the image to our backend
+      const { saveImageFromUrl } = await import('../../services/core/imageService');
+      
+      // Save the image to our storage
+      const savedImageUrl = await saveImageFromUrl(url, 'retail-images');
+      console.log('[useImageUrl] Image saved to backend:', savedImageUrl);
+      
+      // Update the state
+      setImageUrl(savedImageUrl);
+      setError(null);
+    } catch (err) {
+      console.error('[useImageUrl] Error handling retail site image:', err);
+      setError('Failed to load retail site image');
+      
+      // Fallback to original URL and let the browser handle CORS error
+      setImageUrl(url);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!item?.imageUrl) {
       setIsLoading(false);
+      return;
+    }
+
+    // Check if it's a retail site URL that might have CORS issues
+    const isRetailUrl = isRetailSiteUrl(item.imageUrl);
+    if (isRetailUrl) {
+      handleRetailSiteImage(item.imageUrl);
       return;
     }
 
