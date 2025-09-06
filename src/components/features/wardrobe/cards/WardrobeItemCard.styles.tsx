@@ -78,10 +78,10 @@ export const StatusIcon = styled.div<{ $status: WishlistStatus }>`
 `;
 
 export const CardContent = styled.div`
-  padding: 1.25rem;
-  flex: 1;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 `;
 
 export const ItemName = styled.h3`
@@ -126,8 +126,19 @@ export const ItemDetail = styled.div`
 export const TagsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
+`;
+
+export const SeasonTag = styled.span`
+  display: inline-block;
+  background-color: ${theme.colors.gray[100]};
+  border-radius: 9999px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  color: ${theme.colors.gray[700]};
+  text-transform: capitalize;
+  line-height: 1.2;
 `;
 
 export const Tag = styled.span`
