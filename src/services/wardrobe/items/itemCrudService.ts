@@ -8,7 +8,7 @@ import {
   convertToWardrobeItem, 
   convertToWardrobeItems,
 } from './itemBaseService';
-import { replaceItemScenarios } from './itemRelationsService';
+import { replaceItemScenarios, getItemScenarios } from './itemRelationsService';
 
 /**
  * Fetches all wardrobe items for a user
@@ -29,7 +29,18 @@ export const getWardrobeItems = async (userId: string, activeOnly: boolean = fal
   const { data, error } = await query;
   handleSupabaseError(error, 'fetching wardrobe items');
 
-  return convertToWardrobeItems(data || []);
+  // Convert data to WardrobeItem objects
+  const items = convertToWardrobeItems(data || []);
+  
+  // Load scenarios for each item
+  for (const item of items) {
+    if (item.id) {
+      const scenarios = await getItemScenarios(item.id);
+      item.scenarios = scenarios;
+    }
+  }
+
+  return items;
 };
 
 /**
@@ -50,7 +61,17 @@ export const getWardrobeItem = async (id: string): Promise<WardrobeItem | null> 
   }
   
   handleSupabaseError(error, 'fetching wardrobe item');
-  return convertToWardrobeItem(data);
+  
+  // Convert database item to WardrobeItem
+  const item = convertToWardrobeItem(data);
+  
+  if (item) {
+    // Fetch scenarios for this item
+    const scenarios = await getItemScenarios(id);
+    item.scenarios = scenarios;
+  }
+  
+  return item;
 };
 
 /**
