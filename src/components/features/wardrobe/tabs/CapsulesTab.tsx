@@ -217,10 +217,7 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
           label="Scenario"
           value={scenarioFilter}
           onChange={handleScenarioChange}
-          options={scenarioOptions.map(option => ({
-            value: option.id, // Use ID as the value
-            label: option.name // Use name as the display label
-          }))}
+          options={scenarioOptionsList}
           allOptionLabel="All Scenarios"
         />
       </FiltersContainer>
