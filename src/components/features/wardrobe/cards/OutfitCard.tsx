@@ -21,7 +21,6 @@ interface OutfitCardProps {
 }
 
 const formatSeasonName = (season: string): string => {
-  if (season === 'ALL_SEASON') return 'All Seasons';
   return season.toLowerCase();
 };
 

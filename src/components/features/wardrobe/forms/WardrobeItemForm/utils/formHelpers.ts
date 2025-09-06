@@ -44,7 +44,7 @@ export const formatCategoryName = (category: ItemCategory): string => {
   }
 };
 
-// Available seasons (excluding ALL_SEASON as requested)
+// Available seasons
 export const AVAILABLE_SEASONS = [
   Season.SPRING, 
   Season.SUMMER, 

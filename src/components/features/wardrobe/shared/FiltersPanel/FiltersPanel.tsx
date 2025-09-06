@@ -140,29 +140,6 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
   layout = 'horizontal',
   className = ''
 }) => {
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onSearchChange) onSearchChange(e.target.value);
-  };
-  
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onCategoryChange) onCategoryChange(e.target.value);
-  };
-  
-  const handleSeasonChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    if (onSeasonChange) onSeasonChange(e.target.value);
-  };
-  
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onColorChange) onColorChange(e.target.value);
-  };
-  
-  // Handle reset button click
-  const handleReset = () => {
-    if (onResetFilters) {
-      onResetFilters();
-    }
-  };
-
   return (
     <FiltersContainer className={className} $layout={layout}>
       <div style={{ display: 'flex', width: '100%', gap: '1rem', alignItems: 'flex-end' }}>
@@ -210,14 +187,12 @@ const FiltersPanel: React.FC<FiltersPanelProps> = ({
                 value={seasonFilter}
                 onChange={(e) => onSeasonChange(e.target.value)}
               >
-                {showAllSeasons && <option value="all">All Seasons</option>}
-                {Object.values(Season)
-                  .filter(season => season !== 'ALL_SEASON')
-                  .map((season) => (
-                    <option key={season} value={season}>
-                      {season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()}
-                    </option>
-                  ))}
+                {showAllSeasons && <option value="">All Seasons</option>}
+                {Object.values(Season).map((season) => (
+                  <option key={season} value={season}>
+                    {season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()}
+                  </option>
+                ))}
               </FormSelect>
             </FormField>
           )}

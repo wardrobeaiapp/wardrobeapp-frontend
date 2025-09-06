@@ -84,18 +84,6 @@ const OutfitItemsSelectionModal: React.FC<OutfitItemsSelectionModalProps> = ({
     onSeasonChange('all');
   };
 
-  const handleItemSelect = (itemId: string) => {
-    if (singleSelect) {
-      onItemSelect(itemId);
-      onClose();
-    } else {
-      const newSelectedItems = selectedItems.includes(itemId)
-        ? selectedItems.filter(id => id !== itemId)
-        : [...selectedItems, itemId];
-      onItemSelect(newSelectedItems);
-    }
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -141,11 +129,9 @@ const OutfitItemsSelectionModal: React.FC<OutfitItemsSelectionModalProps> = ({
                   value: seasonFilter,
                   options: [
                     { value: 'all', label: 'All Seasons' },
-                    ...Object.values(Season)
-                      .filter(season => season !== 'ALL_SEASON')
-                      .map(season => ({
-                        value: season,
-                        label: season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()
+                    ...Object.values(Season).map(season => ({
+                      value: season,
+                      label: season.charAt(0).toUpperCase() + season.slice(1).toLowerCase()
                       }))
                   ],
                   onChange: onSeasonChange

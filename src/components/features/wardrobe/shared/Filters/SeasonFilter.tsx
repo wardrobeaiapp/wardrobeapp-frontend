@@ -19,13 +19,10 @@ export const SeasonFilter: React.FC<SeasonFilterProps> = ({
   includeAllOption = true,
   allOptionLabel = 'All Seasons',
 }) => {
-  // Create season options - filter out ALL_SEASON since we handle 'All' separately
-  const seasonOptions = Object.values(Season)
-    .filter(season => season !== Season.ALL_SEASON)
-    .map(season => ({
-      value: season,
-      label: formatSeasonForDisplay(season),
-    }));
+  const seasonOptions = Object.values(Season).map(season => ({
+    value: season,
+    label: formatSeasonForDisplay(season),
+  }));
 
   // Handle the case when 'all' is selected
   const handleChange = (value: string) => {
@@ -52,7 +49,5 @@ export const SeasonFilter: React.FC<SeasonFilterProps> = ({
 };
 
 function formatSeasonForDisplay(season: string): string {
-  // Skip formatting for ALL_SEASON since we filter it out
-  if (season === Season.ALL_SEASON) return 'All Seasons';
   return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
 }

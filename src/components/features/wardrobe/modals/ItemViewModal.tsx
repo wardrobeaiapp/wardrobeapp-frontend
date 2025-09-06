@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { WardrobeItem, Season } from '../../../../types';
+import { WardrobeItem } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import { Modal, ModalAction } from '../../../common/Modal';
 import { supabase } from '../../../../services/core';
@@ -212,9 +212,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
           <DetailRow>
             <DetailLabel>Season</DetailLabel>
             <DetailValue>
-              {item.season.includes(Season.ALL_SEASON) && item.season.length === 1 
-                ? 'All Season'
-                : item.season.filter(season => season !== Season.ALL_SEASON).join(', ')}
+              {item.season.join(', ')}
             </DetailValue>
           </DetailRow>
           

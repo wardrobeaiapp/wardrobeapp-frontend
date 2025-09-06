@@ -276,11 +276,9 @@ const AICheckModal: React.FC<AICheckModalProps> = ({
 
         <FormFieldComponent label="Seasons">
           <CheckboxGroup
-            options={(Object.values(Season) as string[])
-              .filter((season) => season !== "ALL_SEASON")
-              .map((season) => ({
-                value: season,
-                label:
+            options={(Object.values(Season) as string[]).map((season) => ({
+              value: season,
+              label:
                   season === "FALL"
                     ? "Fall"
                     : season.charAt(0).toUpperCase() +

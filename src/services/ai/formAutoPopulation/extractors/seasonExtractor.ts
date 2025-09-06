@@ -44,16 +44,10 @@ export class SeasonExtractor {
       detectedSeasons.add(Season.SUMMER);
     }
     
-    // If no seasons detected, default to all seasons
+    // If no seasons detected, return empty array
     if (detectedSeasons.size === 0) {
-      this.logger.debug('[SeasonExtractor] No specific seasons detected, defaulting to ALL');
-      detectedSeasons.add(Season.ALL_SEASON);
-    }
-    
-    // If we have Season.ALL and other seasons, remove the others (ALL takes precedence)
-    if (detectedSeasons.has(Season.ALL_SEASON) && detectedSeasons.size > 1) {
-      this.logger.debug('[SeasonExtractor] Found ALL season along with others, keeping only ALL');
-      return [Season.ALL_SEASON];
+      this.logger.debug('[SeasonExtractor] No specific seasons detected');
+      return [];
     }
     
     return Array.from(detectedSeasons);

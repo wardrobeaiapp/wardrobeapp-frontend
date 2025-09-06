@@ -60,17 +60,6 @@ const SEASON_KEYWORD_MAPPING: Record<string, Season> = {
   'december': Season.WINTER,
   'january': Season.WINTER,
   'february': Season.WINTER,
-  
-  // All seasons
-  'all season': Season.ALL_SEASON,
-  'year round': Season.ALL_SEASON,
-  'all year': Season.ALL_SEASON,
-  'versatile': Season.ALL_SEASON,
-  'basic': Season.ALL_SEASON,
-  'essential': Season.ALL_SEASON,
-  'staple': Season.ALL_SEASON,
-  'everyday': Season.ALL_SEASON,
-  'transitional': Season.ALL_SEASON,
 };
 
 /**
@@ -78,7 +67,7 @@ const SEASON_KEYWORD_MAPPING: Record<string, Season> = {
  * @returns Array of all Season enum values
  */
 export function getAllSeasons(): Season[] {
-  return [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER, Season.ALL_SEASON];
+  return [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
 }
 
 /**
@@ -121,8 +110,6 @@ export function getSeasonDisplayName(season: Season): string {
       return 'Fall';
     case Season.WINTER:
       return 'Winter';
-    case Season.ALL_SEASON:
-      return 'All Seasons';
     default:
       return 'Unknown';
   }

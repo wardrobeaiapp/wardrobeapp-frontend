@@ -58,8 +58,7 @@ export enum Season {
   SPRING = 'spring',
   SUMMER = 'summer',
   FALL = 'fall',
-  WINTER = 'winter',
-  ALL_SEASON = 'ALL_SEASON'
+  WINTER = 'winter'
 }
 
 export interface Outfit {

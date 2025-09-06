@@ -29,7 +29,6 @@ const SeasonCheckboxes = styled.div`
 `;
 
 const formatSeason = (season: string): string => {
-  if (season === 'ALL_SEASON') return 'All Seasons';
   return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
 };
 
@@ -53,9 +52,7 @@ const SeasonSelector: React.FC<SeasonSelectorProps> = ({
   showAllSeasons = false,
   label = 'Seasons',
 }) => {
-  const seasons = Object.values(Season).filter(
-    season => showAllSeasons || season !== Season.ALL_SEASON
-  );
+  const seasons = Object.values(Season);
 
   return (
     <FormField
