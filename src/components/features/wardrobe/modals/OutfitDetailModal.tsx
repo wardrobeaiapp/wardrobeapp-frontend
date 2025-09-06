@@ -9,7 +9,6 @@ import { ItemsSection } from './CapsuleDetailModal.styles';
 import { getScenariosForUser as fetchScenarios } from '../../../../services/scenarios/scenariosService';
 import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 
-
 interface OutfitDetailModalProps {
   isOpen: boolean;
   outfit: Outfit;
@@ -38,29 +37,58 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   // Fetch scenarios to map IDs to names
   useEffect(() => {
     const loadScenarioNames = async () => {
-      if (outfit.scenarios && outfit.scenarios.length > 0 && user) {
-        try {
-          const allScenarios = await fetchScenarios(user.id);
-          
-          // Map scenario IDs to names
-          const names = outfit.scenarios.map(scenarioId => {
-            const scenario = allScenarios.find(s => s.id === scenarioId);
-            return scenario ? scenario.name : scenarioId;
-          }).filter(Boolean);
-          
-          setScenarioNames(names.join(', '));
-        } catch (error) {
-          console.error('Error fetching scenario names:', error);
-          // Fallback to showing IDs if fetching fails
-          setScenarioNames(outfit.scenarios.join(', '));
+      console.log('[OutfitDetailModal] Loading scenario names for outfit', outfit.id, 'scenarios:', outfit.scenarios);
+      
+      if (!outfit.scenarios) {
+        console.log('[OutfitDetailModal] No scenarios array found');
+        setScenarioNames('No scenarios available');
+        return;
+      }
+      
+      if (outfit.scenarios.length === 0) {
+        console.log('[OutfitDetailModal] Scenarios array is empty');
+        setScenarioNames('No scenarios selected');
+        return;
+      }
+      
+      if (!user) {
+        console.log('[OutfitDetailModal] No user available to fetch scenarios');
+        // Just display the raw IDs if we can't fetch the names
+        setScenarioNames(outfit.scenarios.join(', '));
+        return;
+      }
+      
+      try {
+        console.log('[OutfitDetailModal] Fetching scenarios for user', user.id);
+        const allScenarios = await fetchScenarios(user.id);
+        console.log('[OutfitDetailModal] Fetched scenarios:', allScenarios);
+        
+        // Map scenario IDs to names
+        const names = outfit.scenarios.map(scenarioId => {
+          const scenario = allScenarios.find(s => s.id === scenarioId);
+          if (!scenario) {
+            console.warn(`[OutfitDetailModal] Could not find scenario name for ID ${scenarioId}`);
+          }
+          return scenario ? scenario.name : scenarioId;
+        }).filter(Boolean);
+        
+        if (names.length === 0) {
+          console.warn('[OutfitDetailModal] No scenario names could be mapped');
+          setScenarioNames('Unknown scenarios');
+          return;
         }
-      } else {
-        setScenarioNames('No scenarios provided');
+        
+        console.log('[OutfitDetailModal] Setting scenario names:', names);
+        setScenarioNames(names.join(', '));
+      } catch (error) {
+        console.error('[OutfitDetailModal] Error fetching scenario names:', error);
+        // Fallback to showing IDs if fetching fails
+        setScenarioNames(`Error: ${outfit.scenarios.join(', ')}`);
       }
     };
     
     loadScenarioNames();
-  }, [outfit.scenarios, user]);
+  }, [outfit.scenarios, outfit.id, user]);
 
   const actions: ModalAction[] = [
     {

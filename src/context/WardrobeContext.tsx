@@ -14,6 +14,8 @@ interface OutfitBase {
   items: string[];
   dateCreated: string;
   season: Season[];
+  scenarios?: string[];
+  scenarioNames?: string[];
 }
 
 // Input type for creating/updating outfits
@@ -21,6 +23,9 @@ type OutfitInput = {
   name: string;
   items: string[];
   season: Season[];
+  userId?: string;
+  scenarios?: string[];
+  scenarioNames?: string[];
 };
 
 export type OutfitExtended = OutfitBase;
@@ -90,15 +95,26 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>
   ): Promise<OutfitExtended | null> => {
     try {
+      console.log('[WardrobeContext.updateOutfit] Starting update for outfit:', id);
+      console.log('[WardrobeContext.updateOutfit] Updates received:', updates);
+      console.log('[WardrobeContext.updateOutfit] Scenarios in updates:', updates.scenarios);
+      
       const currentOutfit = outfits.find((o: OutfitExtended) => o.id === id);
       if (!currentOutfit) return null;
       
       // Create a properly typed update object with all required fields
-      const updateData: OutfitInput = {
+      const updateData: Partial<OutfitInput> = {
         name: updates.name ?? currentOutfit.name,
         items: updates.items ?? currentOutfit.items ?? [],
         season: updates.season ?? currentOutfit.season ?? [],
+        // Explicitly include scenarios to ensure they are passed through
+        scenarios: updates.hasOwnProperty('scenarios') ? updates.scenarios : currentOutfit.scenarios,
+        // Include scenarioNames if present
+        ...(updates.scenarioNames && { scenarioNames: updates.scenarioNames }),
       };
+      
+      console.log('[WardrobeContext.updateOutfit] Prepared updateData:', updateData);
+      console.log('[WardrobeContext.updateOutfit] Scenarios in updateData:', updateData.scenarios);
       
       // Call the update function with proper types
       const updatedOutfit = await updateOutfitHook(id, updateData);

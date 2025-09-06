@@ -147,14 +147,15 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
     };
     
     loadScenarios();
-  }, []);
+  }, [user]); // Add user as dependency
   
   // Handle scenario selection
-  const handleScenarioChange = (scenarioName: string) => {
+  const handleScenarioChange = (scenarioId: string) => {
+    console.log('[OutfitForm] Toggling scenario:', scenarioId);
     setSelectedScenarios(prev => 
-      prev.includes(scenarioName) 
-        ? prev.filter(name => name !== scenarioName) 
-        : [...prev, scenarioName]
+      prev.includes(scenarioId) 
+        ? prev.filter(id => id !== scenarioId) 
+        : [...prev, scenarioId]
     );
   };
   
@@ -216,15 +217,15 @@ function OutfitForm({ onSubmit, onCancel, availableItems, initialOutfit }: Outfi
         : 'New Outfit'
     );
     
-    // Get the first selected scenario for backward compatibility with the occasion field
-    const firstScenario = selectedScenarios.length > 0 
-      ? scenarios.find(s => s.id === selectedScenarios[0])
-      : null;
+    // Previously used for backward compatibility with the occasion field - removed as unused
     
     // Get scenario names for the selected scenario IDs
     const selectedScenarioNames = selectedScenarios
       .map(id => scenarios.find(s => s.id === id)?.name)
       .filter((name): name is string => !!name);
+    
+    console.log('[OutfitForm] Selected scenario IDs:', selectedScenarios);
+    console.log('[OutfitForm] Selected scenario names:', selectedScenarioNames);
     
     // Create the base outfit data
     const outfitData: Omit<Outfit, 'id' | 'dateCreated'> = {

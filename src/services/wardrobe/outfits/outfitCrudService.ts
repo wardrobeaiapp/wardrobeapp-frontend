@@ -16,6 +16,7 @@ import {
   handleError,
   getCurrentUserId
 } from './outfitBaseService';
+import { replaceOutfitScenarios } from './outfitRelationsService';
 
 /**
  * Fetch all outfits for the current user from Supabase
@@ -148,28 +149,18 @@ export const createOutfitInSupabase = async (outfit: Omit<Outfit, 'id' | 'dateCr
     }
     
     // Add scenarios to the join table if there are any
+    console.log('[createOutfitInSupabase] Saving scenarios for outfit:', createdData.id, 'scenarios:', scenarios);
     if (scenarios && scenarios.length > 0) {
       try {
-        // Create records for the scenarios join table
-        const scenarioRecords = scenarios.map(scenarioId => ({
-          outfit_id: createdData.id,
-          scenario_id: scenarioId,
-          user_id: userId
-        }));
-        
-        // Insert one at a time to isolate any problematic records
-        for (const record of scenarioRecords) {
-          const { error: singleError } = await supabase
-            .from(OUTFIT_SCENARIOS_TABLE)
-            .insert(record);
-            
-          if (singleError) {
-            console.warn('[outfitService] Error inserting scenario:', singleError);
-          }
-        }
+        // Use the enhanced replaceOutfitScenarios function which handles batch inserts
+        const scenarioIds = scenarios.map(id => String(id));
+        await replaceOutfitScenarios(String(createdData.id), scenarioIds);
+        console.log('[createOutfitInSupabase] Successfully saved scenarios using replaceOutfitScenarios');
       } catch (scenariosJoinError) {
-        console.warn('[outfitService] Error in outfit-scenarios relation:', scenariosJoinError);
+        console.error('[createOutfitInSupabase] Error in outfit-scenarios relation:', scenariosJoinError);
       }
+    } else {
+      console.log('[createOutfitInSupabase] No scenarios to save for outfit:', createdData.id);
     }
     
     // Convert Supabase response to Outfit format
@@ -254,40 +245,17 @@ export const updateOutfitInSupabase = async (id: string, outfit: Partial<Outfit>
     
     // Update scenarios in the join table if they were provided
     if (scenarios !== undefined) {
+      console.log('[updateOutfitInSupabase] Updating scenarios for outfit:', id, 'scenarios:', scenarios);
       try {
-        // First remove all existing scenarios for this outfit
-        const { error: deleteError } = await supabase
-          .from(OUTFIT_SCENARIOS_TABLE)
-          .delete()
-          .eq('outfit_id', id);
-          
-        if (deleteError) {
-          console.warn('[outfitService] Error removing outfit scenarios:', deleteError);
-        }
-        
-        // Then add the new scenarios if there are any
-        if (scenarios && scenarios.length > 0) {
-          // Create records for the scenarios join table
-          const scenarioRecords = scenarios.map(scenarioId => ({
-            outfit_id: id,
-            scenario_id: scenarioId,
-            user_id: userId
-          }));
-          
-          // Insert one at a time to isolate any problematic records
-          for (const record of scenarioRecords) {
-            const { error: singleError } = await supabase
-              .from(OUTFIT_SCENARIOS_TABLE)
-              .insert(record);
-              
-            if (singleError) {
-              console.warn('[outfitService] Error inserting scenario:', singleError);
-            }
-          }
-        }
+        // Use the enhanced replaceOutfitScenarios function which handles deletion and insertion in one call
+        const scenarioIds = scenarios.map(id => String(id));
+        await replaceOutfitScenarios(String(id), scenarioIds);
+        console.log('[updateOutfitInSupabase] Successfully updated scenarios using replaceOutfitScenarios');
       } catch (scenariosJoinError) {
-        console.warn('[outfitService] Error updating outfit-scenarios relation:', scenariosJoinError);
+        console.error('[updateOutfitInSupabase] Error updating outfit-scenarios relation:', scenariosJoinError);
       }
+    } else {
+      console.log('[updateOutfitInSupabase] No scenario updates requested for outfit:', id);
     }
   } catch (error) {
     return handleError('updating outfit', error);
@@ -379,11 +347,21 @@ export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): 
  */
 export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
   try {
-    // Ensure scenarioNames is properly set if it exists in the update
+    console.log('[outfitCrudService.updateOutfit] Starting update for outfit:', id);
+    console.log('[outfitCrudService.updateOutfit] Received outfit data:', outfit);
+    console.log('[outfitCrudService.updateOutfit] Scenarios in outfit data:', outfit.scenarios);
+    
+    // Make sure scenarios are properly passed through, even if undefined
     const updateData = {
       ...outfit,
+      // Ensure scenarios are included and properly typed
+      scenarios: Array.isArray(outfit.scenarios) ? outfit.scenarios : (outfit.scenarios || []),
+      // Ensure scenarioNames is properly set if it exists
       ...(outfit.scenarioNames !== undefined && { scenarioNames: outfit.scenarioNames || [] })
     };
+    
+    console.log('[outfitCrudService.updateOutfit] Prepared updateData:', updateData);
+    console.log('[outfitCrudService.updateOutfit] Scenarios in updateData:', updateData.scenarios);
     
     // Try to update in Supabase first
     await updateOutfitInSupabase(id, updateData);

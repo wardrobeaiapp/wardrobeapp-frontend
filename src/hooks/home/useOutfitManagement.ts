@@ -87,14 +87,27 @@ export const useOutfitManagement = (modalState?: ReturnType<typeof import('./use
     
     try {
       // Create a safe updates object with only the fields we want to update
-      const { id, dateCreated, scenarioNames, ...updates } = outfitData;
+      const { id, dateCreated, ...updateFields } = outfitData;
       
       // Ensure required fields are not accidentally removed
       const safeUpdates: Partial<Outfit> = {
-        ...updates,
-        items: updates.items || [],
-        season: updates.season || [],
+        ...updateFields,
+        items: updateFields.items || [],
+        season: updateFields.season || [],
       };
+      
+      // Explicitly include scenarios to ensure they're passed through
+      if (outfitData.scenarios) {
+        safeUpdates.scenarios = outfitData.scenarios;
+      }
+      
+      // Explicitly include scenarioNames if present
+      if (outfitData.scenarioNames) {
+        safeUpdates.scenarioNames = outfitData.scenarioNames;
+      }
+      
+      console.log('[handleEditOutfitSubmit] Original scenarios:', outfitData.scenarios);
+      console.log('[handleEditOutfitSubmit] Safe updates with scenarios:', safeUpdates.scenarios);
       
       await updateOutfit(currentOutfitId, safeUpdates);
       setCurrentOutfitId(null);

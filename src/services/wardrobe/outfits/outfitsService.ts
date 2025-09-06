@@ -7,6 +7,10 @@ import {
   removeAllItemsFromOutfit, 
   removeItemFromAllOutfits 
 } from './outfitItemService';
+import {
+  getOutfitScenarios,
+  replaceOutfitScenarios
+} from './outfitRelationsService';
 
 // Get all outfits for the current user
 export const getOutfits = async (): Promise<Outfit[]> => {
@@ -48,19 +52,35 @@ export const getOutfits = async (): Promise<Outfit[]> => {
     // Convert snake_case to camelCase for frontend use
     const outfits = data.map(item => snakeToCamelCase(item)) as Outfit[];
     
-    // For each outfit, fetch its items from the join table
-    const outfitsWithItems = await Promise.all(
+    // For each outfit, fetch its items and scenarios from the join tables
+    const outfitsWithRelations = await Promise.all(
       outfits.map(async (outfit) => {
-        // Get item IDs for this outfit from the join table
-        const itemIds = await getOutfitItems(outfit.id);
-        return {
-          ...outfit,
-          items: itemIds
-        };
+        try {
+          // Get item IDs for this outfit from the join table
+          const itemIds = await getOutfitItems(outfit.id);
+          
+          // Get scenario IDs for this outfit
+          const scenarioIds = await getOutfitScenarios(outfit.id);
+          
+          console.log(`[getOutfits] Found scenarios for outfit ${outfit.id}:`, scenarioIds);
+          
+          return {
+            ...outfit,
+            items: itemIds,
+            scenarios: scenarioIds
+          };
+        } catch (error) {
+          console.error(`[getOutfits] Error fetching relations for outfit ${outfit.id}:`, error);
+          return {
+            ...outfit,
+            items: [],
+            scenarios: []
+          };
+        }
       })
     );
 
-    return outfitsWithItems;
+    return outfitsWithRelations;
   } catch (error: any) {
     console.error('Error fetching outfits:', error.message || error);
     // Return empty array for any errors
@@ -76,12 +96,14 @@ export const addOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Pro
       throw new Error('User not authenticated');
     }
 
-    // Store the items array separately
-    const { items, ...outfitWithoutItems } = outfit;
+    // Store the items and scenarios arrays separately
+    const { items = [], scenarios = [], ...outfitWithoutRelations } = outfit;
+    
+    console.log('[addOutfit] Creating outfit with scenarios:', scenarios);
 
     // Convert camelCase to snake_case for database storage
     const snakeCaseOutfit = camelToSnakeCase({
-      ...outfitWithoutItems,
+      ...outfitWithoutRelations,
       user_uuid: authData.user.id,
       date_created: new Date().toISOString()
     });
@@ -104,10 +126,17 @@ export const addOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Pro
       await addItemsToOutfit(newOutfit.id, items);
     }
 
-    // Return the complete outfit with items
+    // Add scenarios to the join table if there are any
+    if (scenarios && scenarios.length > 0) {
+      console.log(`[addOutfit] Adding scenarios to outfit ${newOutfit.id}:`, scenarios);
+      await replaceOutfitScenarios(newOutfit.id, scenarios);
+    }
+
+    // Return the complete outfit with items and scenarios
     return {
       ...newOutfit,
-      items: items || []
+      items: items,
+      scenarios: scenarios
     };
   } catch (error) {
     console.error('Error adding outfit:', error);
@@ -123,12 +152,12 @@ export const updateOutfit = async (outfit: Outfit): Promise<Outfit | null> => {
       throw new Error('User not authenticated');
     }
 
-    // Store the items array separately
-    const { items, ...outfitWithoutItems } = outfit;
+    // Store the items and scenarios arrays separately
+    const { items, scenarios, ...outfitWithoutRelations } = outfit;
 
     // Convert camelCase to snake_case for database storage
     const snakeCaseOutfit = camelToSnakeCase({
-      ...outfitWithoutItems,
+      ...outfitWithoutRelations,
       updated_at: new Date().toISOString()
     });
 
@@ -157,10 +186,15 @@ export const updateOutfit = async (outfit: Outfit): Promise<Outfit | null> => {
     // Convert snake_case back to camelCase for frontend use
     const updatedOutfit = snakeToCamelCase(data) as Outfit;
     
-    // Return the complete outfit with items
+    // Update scenarios in the join table
+    console.log(`[updateOutfit] Updating scenarios for outfit ${outfit.id}:`, scenarios || []);
+    await replaceOutfitScenarios(outfit.id, scenarios || []);
+    
+    // Return the complete outfit with items and scenarios
     return {
       ...updatedOutfit,
-      items: items || []
+      items: items || [],
+      scenarios: scenarios || []
     };
   } catch (error) {
     console.error('Error updating outfit:', error);

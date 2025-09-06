@@ -197,12 +197,24 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   const updateOutfit = useCallback(async (outfitId: string, updates: Partial<Omit<OutfitInput, 'id' | 'userId'>>): Promise<OutfitExtended | null> => {
     setIsLoading(true);
     try {
+      console.log('[useOutfits.updateOutfit] Starting update for outfit:', outfitId);
+      console.log('[useOutfits.updateOutfit] Updates received:', updates);
+      console.log('[useOutfits.updateOutfit] Scenarios in updates:', updates.scenarios);
+      
       const currentUserId = getValidUserId();
       const existingOutfit = outfits.find(o => o.id === outfitId);
       
       if (!existingOutfit) {
+        console.error('[useOutfits.updateOutfit] Outfit not found:', outfitId);
         throw new Error('Outfit not found');
       }
+      
+      console.log('[useOutfits.updateOutfit] Existing outfit:', existingOutfit);
+      console.log('[useOutfits.updateOutfit] Existing scenarios:', existingOutfit.scenarios);
+      
+      // Explicitly handle scenarios to ensure they're passed correctly
+      const hasDefinedScenarios = updates.hasOwnProperty('scenarios');
+      console.log('[useOutfits.updateOutfit] Updates has scenarios property:', hasDefinedScenarios);
       
       // Merge updates with existing outfit
       const updatedOutfit: OutfitExtended = {
@@ -212,11 +224,15 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         userId: currentUserId, // Ensure user ID is set correctly
         // Ensure required fields are always set
         items: updates.items || existingOutfit.items,
-        scenarios: updates.scenarios || existingOutfit.scenarios || [],
-        scenarioNames: updates.scenarioNames || existingOutfit.scenarioNames || [],
         season: updates.season || existingOutfit.season || [],
-        dateCreated: existingOutfit.dateCreated || new Date().toISOString()
+        dateCreated: existingOutfit.dateCreated || new Date().toISOString(),
+        // Special handling for scenarios to maintain array even when empty
+        scenarios: hasDefinedScenarios ? (updates.scenarios || []) : (existingOutfit.scenarios || []),
+        scenarioNames: updates.scenarioNames || existingOutfit.scenarioNames || []
       };
+      
+      console.log('[useOutfits.updateOutfit] Updated outfit to send to service:', updatedOutfit);
+      console.log('[useOutfits.updateOutfit] Final scenarios being sent to service:', updatedOutfit.scenarios);
       
       if (authState.isAuthenticated) {
         // Update in service
