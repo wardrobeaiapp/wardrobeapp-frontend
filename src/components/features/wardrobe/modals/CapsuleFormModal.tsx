@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WardrobeItem, Capsule } from '../../../../types';
 import CapsuleForm, { CapsuleFormData } from '../forms/CapsuleForm';
 import { Modal } from '../../../common/Modal';
@@ -20,10 +20,29 @@ const CapsuleFormModal: React.FC<CapsuleFormModalProps> = ({
   availableItems,
   isEditing
 }) => {
-  // Create a wrapper function to adapt the signatures
-  const handleFormSubmit = (id: string, data: CapsuleFormData) => {
+  // Track if component is mounted to prevent state updates after unmount
+  const [isMounted, setIsMounted] = useState(true);
+  
+  useEffect(() => {
+    // Set up component mount state
+    setIsMounted(true);
+    
+    // Clean up function to run when component unmounts
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  // Create a wrapper function to adapt the signatures and close the modal after submission
+  const handleFormSubmit = useCallback((id: string, data: CapsuleFormData) => {
+    console.log('[CapsuleFormModal] Handling submit');
     onSubmit(id, data);
-  };
+    // Close the modal after submission
+    if (isMounted) {
+      console.log('[CapsuleFormModal] Closing modal after successful submission');
+      onClose();
+    }
+  }, [onSubmit, onClose, isMounted]);
 
   return (
     <Modal

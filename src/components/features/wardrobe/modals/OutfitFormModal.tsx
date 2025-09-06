@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import OutfitForm from '../forms/OutfitForm/OutfitForm';
 import { Modal } from '../../../common/Modal';
@@ -22,6 +22,29 @@ const OutfitFormModal: React.FC<OutfitFormModalProps> = ({
   availableItems,
   isEditing
 }) => {
+  // Track if component is mounted to prevent state updates after unmount
+  const [isMounted, setIsMounted] = useState(true);
+  
+  useEffect(() => {
+    // Set up component mount state
+    setIsMounted(true);
+    
+    // Clean up function to run when component unmounts
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  const handleSubmit = useCallback((outfit: any) => {
+    console.log('[OutfitFormModal] Handling submit');
+    onSubmit(outfit);
+    // Close the modal after submission
+    if (isMounted) {
+      console.log('[OutfitFormModal] Closing modal after successful submission');
+      onClose();
+    }
+  }, [onSubmit, onClose, isMounted]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -32,7 +55,7 @@ const OutfitFormModal: React.FC<OutfitFormModalProps> = ({
       <OutfitForm
         availableItems={availableItems}
         initialOutfit={initialOutfit}
-        onSubmit={onSubmit}
+        onSubmit={handleSubmit}
         onGenerateWithAI={onGenerateWithAI}
         onCancel={onClose}
       />
