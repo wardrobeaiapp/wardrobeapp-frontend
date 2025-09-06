@@ -48,7 +48,7 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
   onViewOutfit,
   onDeleteOutfit
 }) => {
-  const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
+  const [scenarioOptions, setScenarioOptions] = useState<Array<{id: string, name: string}>>([]);
   const { user } = useSupabaseAuth();
 
   // Load user's scenarios when component mounts or user changes
@@ -61,7 +61,11 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
       try {
         const userScenarios = await fetchScenarios(user.id);
         if (isMounted && userScenarios) {
-          setScenarioOptions(userScenarios.map((scenario: { name: string }) => scenario.name));
+          // Store both id and name to properly map between them
+          setScenarioOptions(userScenarios.map((scenario: { id: string, name: string }) => ({
+            id: scenario.id,
+            name: scenario.name
+          })));
         }
       } catch (err) {
         console.error('Error loading user scenarios:', err);
@@ -75,11 +79,24 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
     };
   }, [user]);
 
-  // Handle scenario filter change
+  // Handle scenario filter change - now using scenario IDs
   const handleScenarioChange = useCallback((value: string) => {
     // Convert empty string to 'all' for consistency with the rest of the app
-    setScenarioFilter(value === '' ? 'all' : value);
-  }, [setScenarioFilter]);
+    // When a name is selected, find the corresponding ID and use that
+    if (value === '' || value === 'all') {
+      // Handle empty or 'all' value
+      setScenarioFilter('all');
+    } else {
+      // Find the scenario ID that matches this name
+      const selectedScenario = scenarioOptions.find(s => s.name === value);
+      if (selectedScenario) {
+        setScenarioFilter(selectedScenario.id);
+      } else {
+        console.debug(`[OutfitsTab] Could not find scenario with name: ${value} - defaulting to 'all'`);
+        setScenarioFilter('all');
+      }
+    }
+  }, [setScenarioFilter, scenarioOptions]);
 
   return (
     <>
@@ -115,11 +132,11 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
         <SelectFilter
           id="outfits-scenario-filter"
           label="Scenario"
-          value={scenarioFilter === 'all' ? '' : scenarioFilter}
+          value={scenarioFilter === 'all' ? '' : scenarioOptions.find(s => s.id === scenarioFilter)?.name || ''}
           onChange={handleScenarioChange}
           options={scenarioOptions.map(option => ({
-            value: option,
-            label: option
+            value: option.name,
+            label: option.name
           }))}
           className="min-w-[200px]"
           allOptionLabel="All Scenarios"
@@ -142,13 +159,22 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
                 (outfit.season && Array.isArray(outfit.season) && 
                   outfit.season.includes(seasonFilter as Season));
               
-                          // Filter by scenario - case insensitive comparison
+                          // Filter by scenario - now using scenario IDs instead of names
+              const hasOutfitScenarios = outfit.scenarios && Array.isArray(outfit.scenarios) && outfit.scenarios.length > 0;
+              // Only check includes if we've verified scenarios exists
+              const scenarioMatch = hasOutfitScenarios && outfit.scenarios?.includes(scenarioFilter);
+              
+              // Debug logging to trace scenario filtering
+              if (scenarioFilter !== 'all' && scenarioFilter) {
+                console.log(`[OutfitsTab] Filtering outfit ${outfit.id} with scenario ${scenarioFilter}:`);
+                console.log(`  - Outfit scenarios:`, outfit.scenarios);
+                console.log(`  - Matches filter:`, scenarioMatch);
+              }
+              
               const matchesScenario = 
                 !scenarioFilter || 
                 scenarioFilter === 'all' ||
-                (outfit.scenarios && outfit.scenarios.some(s => 
-                  s && s.toLowerCase() === scenarioFilter.toLowerCase()
-                ));
+                scenarioMatch;
               
               return matchesSeason && matchesScenario;
             })

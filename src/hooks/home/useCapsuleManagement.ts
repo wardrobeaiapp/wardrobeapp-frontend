@@ -50,13 +50,20 @@ export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./us
    * Handle edit capsule submit
    */
   const handleEditCapsuleSubmit = useCallback(async (id: string, data: CapsuleFormData) => {
+    // Log the incoming form data
+    console.log('[useCapsuleManagement] Edit capsule form data:', data);
+    
     const capsuleData = {
       name: data.name,
       scenario: data.scenario,
+      // Include the full scenarios array to ensure it's properly saved
+      scenarios: data.scenarios || [],
       seasons: data.seasons,
       selectedItems: data.selectedItems,
       mainItemId: data.mainItemId || ''
     };
+    
+    console.log('[useCapsuleManagement] Updating capsule with data:', capsuleData);
     
     await updateCapsuleById(id, capsuleData);
   }, [updateCapsuleById]);

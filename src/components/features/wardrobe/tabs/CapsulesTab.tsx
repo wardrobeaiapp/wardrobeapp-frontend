@@ -49,10 +49,18 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
   setSearchQuery,
   onViewCapsule,
 }: CapsulesTabProps) => {
-  const [scenarioOptions, setScenarioOptions] = useState<string[]>([]);
+  const [scenarioOptions, setScenarioOptions] = useState<Array<{id: string, name: string}>>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
   const { user } = useSupabaseAuth();
   
+  // Add debug logging for current scenario filter and dropdown state
+  useEffect(() => {
+    console.log('[CapsulesTab] Current scenario filter:', scenarioFilter);
+    console.log('[CapsulesTab] Dropdown display value:', scenarioFilter === 'all' ? 'All Scenarios' : 
+      scenarioOptions.find(s => s.id === scenarioFilter)?.name || 'Unknown');
+    console.log('[CapsulesTab] Available scenario options:', scenarioOptions);
+  }, [scenarioFilter, scenarioOptions]);
+
   // Load user's scenarios when component mounts or user changes
   useEffect(() => {
     let isMounted = true;
@@ -63,11 +71,11 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
           setLoadingScenarios(true);
           const userScenarios = await fetchScenarios(user.id);
           if (isMounted) {
-            // Extract scenario names from the Scenario objects
-            const scenarioNames = userScenarios.map(scenario => 
-              scenario?.name || String(scenario)
-            ).filter((name): name is string => Boolean(name));
-            setScenarioOptions(scenarioNames);
+            // Store both id and name to properly map between them
+            setScenarioOptions(userScenarios.map((scenario: { id: string, name: string }) => ({
+              id: scenario.id,
+              name: scenario.name
+            })));
           }
         } catch (error) {
           console.error('Failed to load scenarios:', error);
@@ -86,19 +94,29 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
     };
   }, [user]);
 
-  // Handle scenario filter change
+  // Handle scenario filter change - now using scenario IDs directly
   const handleScenarioChange = useCallback((value: string) => {
-    // Convert empty string to 'all' for consistency
-    setScenarioFilter(value === '' ? 'all' : value);
-  }, [setScenarioFilter]);
+    console.log(`[CapsulesTab] handleScenarioChange called with value: ${value}`);
+    
+    // The value received is already the scenario ID or 'all'
+    setScenarioFilter(value);
+    
+    // Log selected scenario name for debugging
+    if (value !== 'all') {
+      const selectedName = scenarioOptions.find(s => s.id === value)?.name;
+      console.log(`[CapsulesTab] Selected scenario ID ${value} with name: ${selectedName || 'Unknown'}`);
+    } else {
+      console.log(`[CapsulesTab] Filter set to 'all'`);
+    }
+  }, [setScenarioFilter, scenarioOptions]);
 
   // Prepare scenario options for the filter
   const scenarioOptionsList = useMemo(() => {
     return loadingScenarios
       ? [{ value: 'loading', label: 'Loading scenarios...', disabled: true }]
       : scenarioOptions.map(option => ({
-          value: option,
-          label: option
+          value: option.id, // Use ID as the value to match with handleScenarioChange
+          label: option.name  // Use the name as display label for the dropdown
         }));
   }, [loadingScenarios, scenarioOptions]);
   
@@ -116,14 +134,23 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
     const matchesSeason = seasonFilter === 'all' || 
       (Array.isArray(capsule.seasons) && capsule.seasons.includes(seasonFilter as Season));
     
-    // Filter by scenario - check if any of the capsule's scenarios match the filter
+    // Debug logging when filtering with non-default scenario filter
+    if (scenarioFilter && scenarioFilter !== 'all') {
+      console.log(`[CapsulesTab] Filtering capsule ${capsule.id} with scenario filter: ${scenarioFilter}`);
+      console.log(`[CapsulesTab] Capsule scenarios:`, capsule.scenarios);
+    }
+
+    // Filter by scenario ID - match capsule scenario IDs with the filter ID
     const matchesScenario = 
       !scenarioFilter || 
       scenarioFilter === 'all' ||
       (Array.isArray(capsule.scenarios) && 
-       capsule.scenarios.some(scenario => 
-         scenario && scenario.toLowerCase() === scenarioFilter.toLowerCase()
-       ));
+       capsule.scenarios.includes(scenarioFilter));
+    
+    // Log when there's a scenario filter but no match
+    if (scenarioFilter && scenarioFilter !== 'all' && !matchesScenario) {
+      console.log(`[CapsulesTab] No scenario match for capsule ${capsule.id}`);
+    }
     
     return matchesSearch && matchesSeason && matchesScenario;
   }, [searchQuery, seasonFilter, scenarioFilter]);
@@ -184,12 +211,16 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
           value={seasonFilter}
           onChange={handleSeasonChange}
         />
+        {/* Debug logging moved to useEffect */}
         <SelectFilter
           id="scenario-filter"
           label="Scenario"
           value={scenarioFilter}
           onChange={handleScenarioChange}
-          options={scenarioOptionsList}
+          options={scenarioOptions.map(option => ({
+            value: option.id, // Use ID as the value
+            label: option.name // Use name as the display label
+          }))}
           allOptionLabel="All Scenarios"
         />
       </FiltersContainer>
