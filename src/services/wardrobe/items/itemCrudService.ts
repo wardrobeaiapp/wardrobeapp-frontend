@@ -8,7 +8,7 @@ import {
   convertToWardrobeItem, 
   convertToWardrobeItems,
 } from './itemBaseService';
-import { replaceItemScenarios, getItemScenarios } from './itemRelationsService';
+import { replaceItemScenarios, getItemScenarios, getBatchItemScenarios } from './itemRelationsService';
 
 /**
  * Fetches all wardrobe items for a user
@@ -32,13 +32,25 @@ export const getWardrobeItems = async (userId: string, activeOnly: boolean = fal
   // Convert data to WardrobeItem objects
   const items = convertToWardrobeItems(data || []);
   
-  // Load scenarios for each item
-  for (const item of items) {
-    if (item.id) {
-      const scenarios = await getItemScenarios(item.id);
-      item.scenarios = scenarios;
-    }
+  // Skip scenario loading if there are no items
+  if (items.length === 0) {
+    return items;
   }
+  
+  // Extract item IDs for batch loading
+  const itemIds = items.filter(item => item.id).map(item => item.id as string);
+  
+  // Batch load scenarios for all items in a single query
+  const scenariosByItem = await getBatchItemScenarios(itemIds);
+  
+  // Assign scenarios to each item
+  items.forEach(item => {
+    if (item.id && scenariosByItem.has(item.id)) {
+      item.scenarios = scenariosByItem.get(item.id) || [];
+    } else {
+      item.scenarios = [];
+    }
+  });
 
   return items;
 };

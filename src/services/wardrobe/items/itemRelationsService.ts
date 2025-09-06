@@ -34,6 +34,55 @@ export const getItemScenarios = async (itemId: string): Promise<string[]> => {
 };
 
 /**
+ * Get scenarios for multiple items in a single batch query
+ * @param itemIds Array of item IDs to fetch scenarios for
+ * @returns Map of item IDs to their associated scenario IDs
+ */
+export const getBatchItemScenarios = async (itemIds: string[]): Promise<Map<string, string[]>> => {
+  try {
+    if (!itemIds.length) {
+      return new Map();
+    }
+    
+    // Fetch scenarios for all items in a single query
+    const { data, error } = await supabase
+      .from(WARDROBE_ITEM_SCENARIOS_TABLE)
+      .select('item_id, scenario_id')
+      .in('item_id', itemIds);
+      
+    if (error) {
+      console.error('[itemService] Error fetching batch item scenarios:', error);
+      return new Map();
+    }
+    
+    // Organize data by item_id
+    const scenariosByItem = new Map<string, string[]>();
+    
+    // Initialize the map with empty arrays for all item IDs
+    itemIds.forEach(id => scenariosByItem.set(id, []));
+    
+    // Populate the map with scenario IDs
+    if (data) {
+      data.forEach(record => {
+        const itemId = String(record.item_id);
+        const scenarioId = String(record.scenario_id);
+        
+        if (scenariosByItem.has(itemId)) {
+          scenariosByItem.get(itemId)?.push(scenarioId);
+        } else {
+          scenariosByItem.set(itemId, [scenarioId]);
+        }
+      });
+    }
+    
+    return scenariosByItem;
+  } catch (error) {
+    console.error('[itemService] Error getting batch item scenarios:', error);
+    return new Map();
+  }
+};
+
+/**
  * Add scenarios to an item
  */
 export const addScenariosToItem = async (itemId: string, scenarioIds: string[]): Promise<void> => {
