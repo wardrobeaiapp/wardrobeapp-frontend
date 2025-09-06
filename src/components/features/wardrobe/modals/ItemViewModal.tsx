@@ -254,7 +254,7 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
           {/* Display scenarios if they exist */}
           {item.scenarios && item.scenarios.length > 0 && (
             <DetailRow>
-              <DetailLabel>Occasions</DetailLabel>
+              <DetailLabel>Scenarios</DetailLabel>
               <DetailValue>
                 <ScenarioDisplay scenarios={item.scenarios} />
               </DetailValue>

@@ -46,7 +46,7 @@ export const TagsContainer = styled.div`
   margin-bottom: 0.5rem;
 `;
 
-export const OccasionTag = styled(SeasonTag)`
+export const ScenarioTag = styled(SeasonTag)`
   background-color: #eef2ff;
   color: ${theme.colors.primary};
 `;

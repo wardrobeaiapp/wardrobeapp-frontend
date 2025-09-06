@@ -49,14 +49,14 @@ const ScenarioFilter: React.FC<ScenarioFilterProps> = ({ value, onChange }) => {
   };
 
   return (
-    <FormField label="Occasion" htmlFor="scenario-filter">
+    <FormField label="Scenarios" htmlFor="scenario-filter">
       <StyledSelect
         id="scenario-filter"
         value={value}
         onChange={handleChange}
         disabled={isLoading || scenarios.length === 0}
       >
-        <option value="all">All Occasions</option>
+        <option value="all">All Scenarios</option>
         {scenarios.map(scenario => (
           <option key={scenario.id} value={scenario.id}>
             {scenario.name}
