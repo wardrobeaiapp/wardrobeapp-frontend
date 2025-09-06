@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { WardrobeItem, Season } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import { Modal, ModalAction } from '../../../common/Modal';
+import { supabase } from '../../../../services/core';
 // Import shared modal styles
 import {
   DetailRow,
@@ -17,7 +18,63 @@ import {
   ItemDetails,
 } from './ItemViewModal.styles';
 
+// ScenarioDisplay component to show scenario names for the given scenario IDs
+interface ScenarioDisplayProps {
+  scenarios: string[];
+}
 
+const ScenarioDisplay: React.FC<ScenarioDisplayProps> = ({ scenarios }) => {
+  const [scenarioNames, setScenarioNames] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchScenarioNames = async () => {
+      if (!scenarios || scenarios.length === 0) {
+        setScenarioNames([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        setIsLoading(true);
+        
+        // Fetch scenarios by their IDs
+        const { data, error } = await supabase
+          .from('scenarios')
+          .select('name')
+          .in('id', scenarios);
+          
+        if (error) {
+          console.error('[ScenarioDisplay] Error fetching scenario names:', error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (data) {
+          // Extract names from the data
+          const names = data.map(scenario => scenario.name as string);
+          setScenarioNames(names);
+        }
+      } catch (error) {
+        console.error('[ScenarioDisplay] Unexpected error:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchScenarioNames();
+  }, [scenarios]);
+  
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  
+  if (scenarioNames.length === 0) {
+    return <span>None</span>;
+  }
+  
+  return <span>{scenarioNames.join(', ')}</span>;
+};
 
 interface ItemViewModalProps {
   isOpen: boolean;
@@ -194,7 +251,15 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
             <DetailValue>{formatDate(item.dateAdded)}</DetailValue>
           </DetailRow>
           
-
+          {/* Display scenarios if they exist */}
+          {item.scenarios && item.scenarios.length > 0 && (
+            <DetailRow>
+              <DetailLabel>Occasions</DetailLabel>
+              <DetailValue>
+                <ScenarioDisplay scenarios={item.scenarios} />
+              </DetailValue>
+            </DetailRow>
+          )}
           
           {!item.wishlist ? null : (
             <DetailRow>

@@ -24,6 +24,7 @@ export interface WardrobeItemFormData {
   bootHeight?: string;
   type?: string;
   seasons: Season[];
+  scenarios: string[]; // Array of scenario IDs
   isWishlistItem: boolean;
   imageUrl: string;
   detectedTags?: Record<string, string>;
@@ -73,6 +74,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
   const [detectedTags, setDetectedTags] = useState<Record<string, string>>({});
+  const [scenarios, setScenarios] = useState<string[]>(initialItem?.scenarios || []);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,6 +84,15 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       prev.includes(season) 
         ? prev.filter(s => s !== season)
         : [...prev, season]
+    );
+  };
+  
+  // Scenario toggle handler
+  const toggleScenario = (scenarioId: string) => {
+    setScenarios(prev => 
+      prev.includes(scenarioId)
+        ? prev.filter(id => id !== scenarioId)
+        : [...prev, scenarioId]
     );
   };
 
@@ -148,7 +159,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       length,
       neckline,
       silhouette,
-      pattern
+      pattern,
+      scenarios
     });
     
     const formData = {
@@ -192,6 +204,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
+      scenarios,
       isWishlistItem,
       imageUrl,
       detectedTags
@@ -238,6 +251,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setBootHeight('');
     setType('');
     setSeasons([]);
+    setScenarios([]);
     setIsWishlistItem(defaultWishlist);
     setImageUrl('');
     setDetectedTags({});
@@ -288,6 +302,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setType,
     seasons,
     toggleSeason,
+    scenarios,
+    toggleScenario,
     isWishlistItem,
     setIsWishlistItem,
     imageUrl,

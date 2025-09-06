@@ -284,6 +284,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         brand: formData.brand,
         price: parseFloat(formData.price) || 0,
         season: formData.seasons,
+        scenarios: formData.scenarios, // Add scenarios to the item
         wishlist: formData.isWishlistItem,
         imageUrl: finalImageUrl,
         dateAdded: initialItem?.dateAdded || new Date().toISOString(),
@@ -386,6 +387,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onBootHeightChange={formState.setBootHeight}
           type={formState.type}
           onTypeChange={formState.setType}
+          scenarios={formState.scenarios}
+          onScenarioToggle={formState.toggleScenario}
           seasons={formState.seasons}
           onToggleSeason={formState.toggleSeason}
           isWishlistItem={formState.isWishlistItem}

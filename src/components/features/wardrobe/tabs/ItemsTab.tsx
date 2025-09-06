@@ -4,7 +4,7 @@ import WardrobeItemCard from '../cards/WardrobeItemCard';
 import Loader from '../../../common/Loader';
 import styled from 'styled-components';
 import { formTokens } from '../../../../styles/tokens/forms';
-import { CategoryFilter, SearchFilter, SeasonFilter } from '../shared/Filters';
+import { CategoryFilter, SearchFilter, SeasonFilter, ScenarioFilter } from '../shared/Filters';
 import { FiltersContainer } from '../../../../pages/HomePage.styles';
 
 const ItemsGrid = styled.div<{ $variant?: string }>`
@@ -150,6 +150,12 @@ const ItemsTab = React.memo<ItemsTabProps>(({
             value={getFirstSeason(seasonFilter)}
             onChange={handleSeasonChange}
           />
+          {setScenarioFilter && (
+            <ScenarioFilter
+              value={scenarioFilter || 'all'}
+              onChange={setScenarioFilter}
+            />
+          )}
       </FiltersContainer>
 
       {error && (

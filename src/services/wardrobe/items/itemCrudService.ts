@@ -6,8 +6,9 @@ import {
   camelToSnakeCase, 
   handleSupabaseError, 
   convertToWardrobeItem, 
-  convertToWardrobeItems 
+  convertToWardrobeItems,
 } from './itemBaseService';
+import { replaceItemScenarios } from './itemRelationsService';
 
 /**
  * Fetches all wardrobe items for a user
@@ -64,8 +65,13 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
     itemToAdd.wishlistStatus = WishlistStatus.NOT_REVIEWED;
   }
   
+  // Extract scenarios before creating item (they're stored in a join table)
+  const scenarios = itemToAdd.scenarios || [];
+  delete itemToAdd.scenarios;
+  
   const snakeCaseItem = camelToSnakeCase(itemToAdd);
 
+  // Insert the item
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .insert([snakeCaseItem])
@@ -75,7 +81,21 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
   if (!data || data.length === 0) {
     return null;
   }
-  return convertToWardrobeItem(data[0]) as WardrobeItem;
+  
+  // Get the created item with its ID
+  const createdItem = convertToWardrobeItem(data[0]) as WardrobeItem;
+  
+  // If we have scenarios, add them to the join table
+  if (scenarios.length > 0 && createdItem.id) {
+    await replaceItemScenarios(createdItem.id, scenarios);
+    
+    // Add scenarios back to the returned item object
+    createdItem.scenarios = scenarios;
+  } else {
+    createdItem.scenarios = [];
+  }
+  
+  return createdItem;
 };
 
 /**
@@ -85,8 +105,15 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
  * @returns Updated WardrobeItem object
  */
 export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeItem>): Promise<WardrobeItem | null> => {
-  const snakeCaseUpdates = camelToSnakeCase(updates);
+  const updatesToApply = { ...updates };
+  
+  // Extract scenarios before updating item (they're stored in a join table)
+  const scenarios = updatesToApply.scenarios;
+  delete updatesToApply.scenarios;
+  
+  const snakeCaseUpdates = camelToSnakeCase(updatesToApply);
 
+  // Update the item
   const { data, error } = await supabase
     .from(TABLE_NAME)
     .update(snakeCaseUpdates)
@@ -97,7 +124,19 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
   if (!data || data.length === 0) {
     return null;
   }
-  return convertToWardrobeItem(data[0]) as WardrobeItem;
+  
+  // Get the updated item
+  const updatedItem = convertToWardrobeItem(data[0]) as WardrobeItem;
+  
+  // If scenarios were provided, update them in the join table
+  if (scenarios !== undefined) {
+    await replaceItemScenarios(id, scenarios || []);
+    
+    // Add scenarios back to the returned item object
+    updatedItem.scenarios = scenarios || [];
+  }
+  
+  return updatedItem;
 };
 
 /**

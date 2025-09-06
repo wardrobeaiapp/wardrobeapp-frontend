@@ -1,6 +1,8 @@
-import React, { ChangeEvent, useMemo } from 'react';
+import React, { ChangeEvent, useMemo, useState, useEffect } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
-import { ItemCategory, Season } from '../../../../../../types';
+import { ItemCategory, Season, Scenario } from '../../../../../../types';
+import ScenarioSelector from '../../../shared/ScenarioSelector/ScenarioSelector';
+import { supabase } from '../../../../../../services/core';
 import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, getPatternOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
@@ -30,6 +32,8 @@ interface DetailsFieldsProps {
   onBootHeightChange: (bootHeight: string) => void;
   type: string;
   onTypeChange: (type: string) => void;
+  scenarios: string[];
+  onScenarioToggle: (scenarioId: string) => void;
   seasons: Season[];
   onToggleSeason: (season: Season) => void;
   isWishlistItem: boolean;
@@ -66,6 +70,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onBootHeightChange,
   type,
   onTypeChange,
+  scenarios,
+  onScenarioToggle,
   seasons,
   onToggleSeason,
   isWishlistItem,
@@ -74,6 +80,39 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   subcategory,
   errors
 }) => {
+  // State for scenarios
+  const [availableScenarios, setAvailableScenarios] = useState<Scenario[]>([]);
+  const [isLoadingScenarios, setIsLoadingScenarios] = useState(true);
+
+  // Fetch scenarios when component mounts
+  useEffect(() => {
+    const fetchScenarios = async () => {
+      try {
+        setIsLoadingScenarios(true);
+        
+        const { data, error } = await supabase
+          .from('scenarios')
+          .select('*')
+          .order('name', { ascending: true });
+          
+        if (error) {
+          console.error('[DetailsFields] Error fetching scenarios:', error);
+          return;
+        }
+        
+        if (data) {
+          setAvailableScenarios(data as unknown as Scenario[]);
+        }
+      } catch (error) {
+        console.error('[DetailsFields] Unexpected error fetching scenarios:', error);
+      } finally {
+        setIsLoadingScenarios(false);
+      }
+    };
+    
+    fetchScenarios();
+  }, []);
+  
   // Show silhouette field based on category and subcategory
   const shouldShowSilhouette = category && 
     ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER].includes(category as ItemCategory) &&
@@ -344,6 +383,20 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
         </FormField>
       </FormRow>
 
+      {/* Scenarios section */}
+      <FormField 
+        style={{ marginTop: '1.5rem' }}
+      >
+        <ScenarioSelector
+          scenarios={availableScenarios}
+          selectedScenarios={scenarios}
+          onScenarioChange={onScenarioToggle}
+          isLoading={isLoadingScenarios}
+          namespace="item-scenario"
+        />
+      </FormField>
+
+      {/* Seasons section */}
       <FormField 
         label="Seasons" 
         error={errors.seasons}

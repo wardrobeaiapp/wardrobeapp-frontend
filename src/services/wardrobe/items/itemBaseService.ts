@@ -1,7 +1,9 @@
 import { WardrobeItem } from '../../../types';
+import { supabase } from '../../core';
 
 // Constants
 export const TABLE_NAME = 'wardrobe_items';
+export const WARDROBE_ITEM_SCENARIOS_TABLE = 'wardrobe_item_scenarios';
 
 // Type for database error handling
 type SupabaseError = {
@@ -118,4 +120,33 @@ export const convertToWardrobeItems = (data: any[]): WardrobeItem[] => {
 export const convertToWardrobeItem = (data: any): WardrobeItem | null => {
   if (!data) return null;
   return snakeToCamelCase(data) as WardrobeItem;
+};
+
+/**
+ * Gets the current authenticated user ID
+ * @returns Promise resolving to user ID string or null
+ */
+export const getCurrentUserId = async (): Promise<string | null> => {
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('[itemService] Error getting authenticated user:', error);
+      return null;
+    }
+    return data?.user?.id || null;
+  } catch (error) {
+    console.error('[itemService] Error getting user ID:', error);
+    return null;
+  }
+};
+
+/**
+ * Generic error handler for service operations
+ * @param operation Description of the operation that failed
+ * @param error The error that occurred
+ * @returns Empty array or void depending on context
+ */
+export const handleError = (operation: string, error: any): any => {
+  console.error(`[itemService] Error ${operation}:`, error);
+  return Array.isArray(error) ? [] : null;
 };
