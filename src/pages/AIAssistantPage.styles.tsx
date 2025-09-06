@@ -435,11 +435,3 @@ export const ScenarioTag = styled.span`
   font-weight: 500;
 `;
 
-export const SeasonTag = styled.span`
-  font-size: 0.75rem;
-  background: #dcfce7;
-  color: #16a34a;
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: 500;
-`;

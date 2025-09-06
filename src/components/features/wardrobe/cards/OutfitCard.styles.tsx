@@ -31,24 +31,21 @@ export const ButtonsContainer = styled.div`
   margin-top: 1rem;
 `;
 
-export const SeasonTag = styled.span`
+export const TagsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+`;
+
+export const ScenarioTag = styled.span`
   display: inline-block;
-  background-color: ${theme.colors.gray[100]};
+  background-color: #eef2ff;
+  color: ${theme.colors.primary};
   border-radius: 9999px;
   padding: 0.2rem 0.5rem;
   font-size: 0.75rem;
   margin-right: 0.25rem;
-`;
-
-export const TagsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-`;
-
-export const ScenarioTag = styled(SeasonTag)`
-  background-color: #eef2ff;
-  color: ${theme.colors.primary};
 `;
 
 export const ItemImagesGrid = styled.div`

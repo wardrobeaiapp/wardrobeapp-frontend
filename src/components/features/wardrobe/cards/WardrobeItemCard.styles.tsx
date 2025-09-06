@@ -130,17 +130,6 @@ export const TagsContainer = styled.div`
   margin: 0 0 0.75rem;
 `;
 
-export const SeasonTag = styled.span`
-  display: inline-block;
-  background-color: ${theme.colors.gray[100]};
-  border-radius: 9999px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.7rem;
-  color: ${theme.colors.gray[700]};
-  text-transform: capitalize;
-  line-height: 1.2;
-`;
-
 export const Tag = styled.span`
   padding: 0.375rem 0.75rem;
   border-radius: 0.5rem;

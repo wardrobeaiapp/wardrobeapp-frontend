@@ -10,14 +10,10 @@ import {
   ItemName,
   ButtonContainer,
   TagsContainer,
-  SeasonTag,
 } from './WardrobeItemCard.styles';
 import Button from '../../../common/Button';
 import { useImageUrl } from '../../../../hooks/core';
-
-const formatSeasonName = (season: string): string => {
-  return season.toLowerCase();
-};
+import SeasonTag from '../../../common/SeasonTag/SeasonTag';
 
 interface WardrobeItemCardProps {
   item: WardrobeItem;
@@ -66,7 +62,7 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         {item.season && item.season.length > 0 && (
           <TagsContainer>
             {item.season.map((season) => (
-              <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
+              <SeasonTag key={season} season={season} />
             ))}
           </TagsContainer>
         )}

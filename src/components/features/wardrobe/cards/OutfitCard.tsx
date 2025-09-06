@@ -4,7 +4,6 @@ import {
   OutfitName,
   OutfitDetail,
   ButtonsContainer,
-  SeasonTag,
   TagsContainer,
   ItemImagesGrid,
   ItemImageSquare,
@@ -12,6 +11,7 @@ import {
 } from './OutfitCard.styles';
 import { Outfit, WardrobeItem } from '../../../../types';
 import Button from '../../../common/Button';
+import SeasonTag from '../../../common/SeasonTag/SeasonTag';
 
 interface OutfitCardProps {
   outfit: Outfit;
@@ -36,7 +36,7 @@ const OutfitCard: React.FC<OutfitCardProps> = ({ outfit, onView, onDelete, wardr
       
       <TagsContainer>
         {outfit.season.map((season) => (
-          <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
+          <SeasonTag key={season} season={season} />
         ))}
       </TagsContainer>
       

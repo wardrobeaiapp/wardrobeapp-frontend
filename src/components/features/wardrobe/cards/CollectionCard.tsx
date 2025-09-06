@@ -4,7 +4,6 @@ import {
   CollectionName,
   CollectionDetail,
   ButtonsContainer,
-  SeasonTag,
   TagsContainer,
   ItemImagesGrid,
   ItemImageSquare,
@@ -12,6 +11,7 @@ import {
 } from './CollectionCard.styles';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import Button from '../../../common/Button';
+import SeasonTag from '../../../common/SeasonTag/SeasonTag';
 
 interface CollectionCardProps {
   type: 'outfit' | 'capsule';
@@ -19,10 +19,6 @@ interface CollectionCardProps {
   onView: (data: Outfit | Capsule) => void;
   wardrobeItems?: WardrobeItem[];
 }
-
-const formatSeasonName = (season: string): string => {
-  return season.toLowerCase();
-};
 
 const CollectionCard: React.FC<CollectionCardProps> = ({ 
   type, 
@@ -45,7 +41,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
       
       <TagsContainer>
         {seasons.map((season) => (
-          <SeasonTag key={season}>{formatSeasonName(season)}</SeasonTag>
+          <SeasonTag key={season} season={season} />
         ))}
       </TagsContainer>
       

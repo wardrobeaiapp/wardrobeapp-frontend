@@ -12,11 +12,11 @@ import {
   HistoryItemMeta,
   TagsContainer,
   ScenarioTag,
-  SeasonTag,
   ScoreContainer,
   ScoreDisplay,
   ScoreText,
 } from '../../../../pages/AIAssistantPage.styles';
+import SeasonTag from '../../../../components/common/SeasonTag/SeasonTag';
 
 interface AIHistoryItemProps {
   item: AIHistoryItemType;
@@ -91,9 +91,7 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
               </ScenarioTag>
             )}
             {item.season && (
-              <SeasonTag>
-                {item.season}
-              </SeasonTag>
+              <SeasonTag season={item.season} />
             )}
           </TagsContainer>
         )}

@@ -47,17 +47,6 @@ export const ButtonsContainer = styled.div`
   margin-top: 1rem;
 `;
 
-export const SeasonTag = styled.span`
-  display: inline-block;
-  background-color: ${theme.colors.gray[100]};
-  color: ${theme.colors.gray[600]};
-  border-radius: 9999px;
-  padding: 0.2rem 0.5rem;
-  font-size: 0.75rem;
-  margin-right: 0.25rem;
-  font-weight: ${theme.typography.fontWeight.medium};
-`;
-
 export const TagsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
