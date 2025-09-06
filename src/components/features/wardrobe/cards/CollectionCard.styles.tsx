@@ -14,8 +14,7 @@ export const Card = styled(BaseCard).attrs({ $variant: 'default', $padding: 'lg'
 `;
 
 export const CollectionName = styled.h3`
-  margin-top: 0;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.75rem;
   font-size: 1.1rem;
   font-weight: ${theme.typography.fontWeight.semiBold};
   color: ${theme.colors.text};
@@ -50,7 +49,8 @@ export const ButtonsContainer = styled.div`
 export const TagsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  gap: 0.25rem;
+  margin: 0 0 0.75rem;
 `;
 
 export const ItemImagesGrid = styled.div`
