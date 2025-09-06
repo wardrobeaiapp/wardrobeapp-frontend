@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateSignedUrl } from '../../services/wardrobe/items';
-import { updateItemImageUrl } from '../../services/wardrobe/items/updateItemImageUrl';
+import { updateItemImageUrl } from '../../services/wardrobe/items';
 import { WardrobeItem } from '../../types';
 
 const RENEWAL_BUFFER_MS = 24 * 60 * 60 * 1000; // 1 day before expiration
@@ -40,6 +40,7 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
   const [error, setError] = useState<string | null>(null);
   const renewalTimerRef = useRef<NodeJS.Timeout | null>(null);
   const retryCountRef = useRef(0);
+  const generateFreshUrlRef = useRef<((isRetry?: boolean) => Promise<void>) | null>(null);
   
   // Clear any pending renewal timer
   const clearRenewalTimer = useCallback(() => {
@@ -59,12 +60,12 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
     if (timeUntilRenewal > 0) {
       renewalTimerRef.current = setTimeout(() => {
         console.log('[useImageUrl] Proactively renewing URL before expiration');
-        generateFreshUrl();
+        generateFreshUrlRef.current?.();
       }, timeUntilRenewal);
     } else {
       // If we're already within the renewal window, renew immediately
       console.log('[useImageUrl] Within renewal window, renewing URL now');
-      generateFreshUrl();
+      generateFreshUrlRef.current?.();
     }
   }, [clearRenewalTimer]);
 
@@ -124,6 +125,11 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       setIsLoading(false);
     }
   }, [item?.id, item?.imageUrl, scheduleRenewal]);
+  
+  // Store the latest version of generateFreshUrl in the ref
+  useEffect(() => {
+    generateFreshUrlRef.current = generateFreshUrl;
+  }, [generateFreshUrl]);
 
   // Function to handle retail site images with CORS issues by proxying through our backend
   const handleRetailSiteImage = useCallback(async (url: string) => {
