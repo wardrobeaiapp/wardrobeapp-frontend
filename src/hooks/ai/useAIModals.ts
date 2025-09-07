@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { WardrobeItem } from '../../types';
 
-export const useAIModals = () => {
+interface UseAIModalsProps {
+  onItemSelect?: (imageUrl: string) => void;
+}
+
+export const useAIModals = ({ onItemSelect }: UseAIModalsProps = {}) => {
   // Wishlist Selection Modal
   const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
   const [selectedWishlistItem, setSelectedWishlistItem] = useState<WardrobeItem | null>(null);
@@ -22,10 +26,13 @@ export const useAIModals = () => {
     setSelectedWishlistItem(null);
   };
 
-  const handleSelectWishlistItem = (item: WardrobeItem) => {
+  const handleSelectWishlistItem = useCallback((item: WardrobeItem) => {
     setSelectedWishlistItem(item);
-    // Additional logic when an item is selected can go here
-  };
+    // Set the image URL when an item is selected
+    if (item.imageUrl && onItemSelect) {
+      onItemSelect(item.imageUrl);
+    }
+  }, [onItemSelect]);
 
   // Check Result Modal Handlers
   const handleOpenCheckResultModal = () => {

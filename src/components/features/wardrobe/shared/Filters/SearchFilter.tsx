@@ -49,6 +49,7 @@ export const SearchFilter: React.FC<SearchFilterProps> = ({
           value={value}
           onChange={handleChange}
           placeholder={placeholder}
+          variant="outline"
           style={{ paddingLeft: '40px' }}
         />
       </div>

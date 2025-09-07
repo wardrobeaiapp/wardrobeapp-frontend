@@ -124,7 +124,11 @@ const AIAssistantPage: React.FC = () => {
     handleCloseRecommendationModal,
     handleSaveRecommendation,
     handleSkipRecommendation,
-  } = useAIModals();
+  } = useAIModals({
+    onItemSelect: (imageUrl) => {
+      setImageLink(imageUrl);
+    }
+  });
 
   // History view state is now managed by useAIHistory hook
 
