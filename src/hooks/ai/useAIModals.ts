@@ -26,11 +26,48 @@ export const useAIModals = ({ onItemSelect }: UseAIModalsProps = {}) => {
     setSelectedWishlistItem(null);
   };
 
-  const handleSelectWishlistItem = useCallback((item: WardrobeItem) => {
+  const handleSelectWishlistItem = useCallback(async (item: WardrobeItem) => {
     setSelectedWishlistItem(item);
-    // Set the image URL when an item is selected
-    if (item.imageUrl && onItemSelect) {
-      onItemSelect(item.imageUrl);
+    
+    // Ensure imageUrl exists and is a string
+    if (!item.imageUrl || typeof item.imageUrl !== 'string' || !onItemSelect) {
+      return;
+    }
+    
+    const imageUrl = item.imageUrl;
+    
+    try {
+      // If it's already a base64 image, use it directly
+      if (imageUrl.startsWith('data:image')) {
+        onItemSelect(imageUrl);
+        return;
+      }
+      
+      // Otherwise, fetch the image and convert to base64
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        const base64data = reader.result as string;
+        onItemSelect(base64data);
+      };
+      
+      reader.onerror = () => {
+        console.error('Error converting image to base64');
+        // Fallback to original URL if conversion fails
+        onItemSelect(imageUrl);
+      };
+      
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Error processing wishlist item image:', error);
+      // Fallback to original URL if there's an error
+      onItemSelect(imageUrl);
     }
   }, [onItemSelect]);
 

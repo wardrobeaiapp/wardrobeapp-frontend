@@ -26,7 +26,30 @@ const AIAssistantPage: React.FC = () => {
   const { items } = useWardrobe();
   const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
 
-  // Custom hooks for different features
+  // Modal hooks - Must be declared before they're used in other handlers
+  const {
+    // Modal states
+    isWishlistModalOpen,
+    isCheckResultModalOpen,
+    isRecommendationModalOpen,
+
+    // Handlers
+    handleOpenWishlistModal,
+    handleCloseWishlistModal,
+    handleSelectWishlistItem,
+    handleOpenCheckResultModal,
+    handleCloseCheckResultModal,
+    handleCloseRecommendationModal,
+    handleSaveRecommendation,
+    handleSkipRecommendation,
+  } = useAIModals({
+    onItemSelect: (imageUrl) => {
+      // Update image link when an item is selected from wishlist
+      setImageLink(imageUrl);
+    }
+  });
+
+  // AI Check hook
   const {
     // State
     imageLink,
@@ -50,18 +73,27 @@ const AIAssistantPage: React.FC = () => {
     fetchTags,
   } = useAICheck();
 
-  const handleCheckItem = () => {
+  // Handlers for the AI Check feature
+  const handleCheckItem = async () => {
     if (imageLink || uploadedFile) {
       setIsAICheckModalOpen(true);
     } else {
-      handleCheckItemRaw();
+      const result = await handleCheckItemRaw();
+      if (result) {
+        // Open the result modal if analysis was successful
+        handleOpenCheckResultModal();
+      }
     }
   };
 
-  const handleApplyAICheck = (data: { category: string; subcategory: string; seasons: string[] }) => {
+  const handleApplyAICheck = async (data: { category: string; subcategory: string; seasons: string[] }) => {
     setIsAICheckModalOpen(false);
     // TODO: Pass the selected options to the AI check when the API is ready
-    handleCheckItemRaw();
+    const result = await handleCheckItemRaw();
+    if (result) {
+      // Open the result modal if analysis was successful
+      handleOpenCheckResultModal();
+    }
   };
 
   // Wrap file upload handler to handle ChangeEvent
@@ -71,6 +103,7 @@ const AIAssistantPage: React.FC = () => {
     }
   };
 
+  // AI Recommendation hook
   const {
     // State
     selectedSeason,
@@ -87,6 +120,7 @@ const AIAssistantPage: React.FC = () => {
     // resetRecommendation is currently unused but may be needed in the future
   } = useAIRecommendation();
 
+  // AI History hook
   const {
     // State
     historyItems,
@@ -109,28 +143,6 @@ const AIAssistantPage: React.FC = () => {
     handleMoveToWishlist,
     handleDismissHistoryItem,
   } = useAIHistory();
-
-  const {
-    // Modal states
-    isWishlistModalOpen,
-    isCheckResultModalOpen,
-    isRecommendationModalOpen,
-
-    // Handlers
-    handleOpenWishlistModal,
-    handleCloseWishlistModal,
-    handleSelectWishlistItem,
-    handleCloseCheckResultModal,
-    handleCloseRecommendationModal,
-    handleSaveRecommendation,
-    handleSkipRecommendation,
-  } = useAIModals({
-    onItemSelect: (imageUrl) => {
-      setImageLink(imageUrl);
-    }
-  });
-
-  // History view state is now managed by useAIHistory hook
 
   return (
     <>
