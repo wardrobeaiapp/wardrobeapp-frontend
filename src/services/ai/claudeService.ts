@@ -2,6 +2,9 @@ import axios from 'axios';
 import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
 import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
+import { getStylePreferencesData } from '../profile/stylePreferencesService';
+import { getClimateData } from '../profile/climateService';
+import { supabase } from '../core/supabase';
 
 // Extend the base ClaudeResponse to include outfits
 interface ClaudeResponse extends BaseClaudeResponse {
@@ -252,12 +255,44 @@ export const claudeService = {
 
       console.log('[claudeService] Sending image to backend for Claude analysis');
       
+      // Get current user from Supabase and their preferences
+      let userPreferences = null;
+      let climateData = null;
+      
+      try {
+        // Get the current authenticated user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        // Fetch user data if user is logged in
+        if (user?.id) {
+          try {
+            // Fetch style preferences
+            userPreferences = await getStylePreferencesData(user.id);
+            console.log('[claudeService] User preferences loaded successfully');
+            
+            // Fetch climate data
+            climateData = await getClimateData(user.id);
+            console.log('[claudeService] Climate data loaded successfully:', climateData);
+          } catch (dataError) {
+            console.error('[claudeService] Error loading user data:', dataError);
+            // Continue without preferences/climate if there's an error
+          }
+        } else {
+          console.log('[claudeService] No authenticated user found, proceeding without user data');
+        }
+      } catch (authError) {
+        console.error('[claudeService] Error getting authenticated user:', authError);
+        // Continue without user data if there's an auth error
+      }
+      
       // Call our backend endpoint instead of Claude API directly (avoids CORS issues)
       const response = await axios.post(
         `${API_URL}/analyze-wardrobe-item`,
         {
           imageBase64,
-          detectedTags
+          detectedTags,
+          userPreferences,
+          climateData
         }
       );
 

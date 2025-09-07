@@ -52,7 +52,9 @@ global.inMemoryUsers = [];
 global.inMemoryProfiles = [];
 global.inMemoryWardrobeItems = [];
 global.inMemoryOutfits = [];
-console.log('In-memory stores initialized as fallback');
+global.inMemoryUserPreferences = [];
+
+console.log('In-memory stores initialized');
 
 // Mock User model for in-memory operations
 global.User = {
@@ -271,6 +273,36 @@ app.get('/api/auth/user', auth, async (req, res) => {
   }
 });
 
+// Special route to get a token for test user (FOR TESTING ONLY)
+app.get('/api/auth/test-token', async (req, res) => {
+  try {
+    const testUser = global.inMemoryUsers.find(user => user.id === testUserId);
+    if (!testUser) {
+      return res.status(404).json({ message: 'Test user not found' });
+    }
+    
+    // Create JWT payload
+    const payload = {
+      user: {
+        id: testUser.id
+      }
+    };
+    
+    // Sign the token
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || 'devjwtsecret',
+      { expiresIn: '5h' }
+    );
+    
+    console.log('Generated test token for user:', testUser.id);
+    res.json({ token });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Complete onboarding
 app.post('/api/auth/complete-onboarding', auth, async (req, res) => {
   try {
@@ -397,10 +429,78 @@ app.delete('/api/wardrobe-items/:id', auth, async (req, res) => {
   }
 });
 
+// Get user style preferences
+app.get('/api/user/style-preferences', auth, async (req, res) => {
+  try {
+    // Find user preferences
+    const userPreferences = global.inMemoryUserPreferences.find(
+      pref => pref.userId === req.user.id
+    );
+    
+    if (!userPreferences) {
+      return res.json({
+        userId: req.user.id,
+        preferred_styles: '',
+        comfort_vs_style: '',
+        basics_vs_statements: '',
+        style_additional_notes: ''
+      });
+    }
+
+    res.json(userPreferences);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update user style preferences
+app.post('/api/user/style-preferences', auth, async (req, res) => {
+  try {
+    const { preferred_styles, comfort_vs_style, basics_vs_statements, style_additional_notes } = req.body;
+    
+    // Find if user preferences already exist
+    const prefIndex = global.inMemoryUserPreferences.findIndex(
+      pref => pref.userId === req.user.id
+    );
+    
+    const updatedPreferences = {
+      userId: req.user.id,
+      preferred_styles: preferred_styles || '',
+      comfort_vs_style: comfort_vs_style || '',
+      basics_vs_statements: basics_vs_statements || '',
+      style_additional_notes: style_additional_notes || ''
+    };
+    
+    if (prefIndex === -1) {
+      // Create new preferences
+      global.inMemoryUserPreferences.push(updatedPreferences);
+    } else {
+      // Update existing preferences
+      global.inMemoryUserPreferences[prefIndex] = updatedPreferences;
+    }
+    
+    console.log('User style preferences updated for user:', req.user.id);
+    res.json(updatedPreferences);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Analyze wardrobe item with Claude
 app.post('/api/analyze-wardrobe-item', async (req, res) => {
   try {
-    const { imageBase64, detectedTags } = req.body;
+    const { imageBase64, detectedTags, userPreferences, climateData } = req.body;
+    
+    // Log that we received user data
+    if (userPreferences) {
+      console.log('Received user style preferences from frontend for analysis');
+    }
+    
+    if (climateData) {
+      console.log('Received user climate data from frontend for analysis:', climateData);
+    }
 
     if (!imageBase64) {
       return res.status(400).json({ error: 'Image data is required' });
@@ -437,12 +537,68 @@ app.post('/api/analyze-wardrobe-item', async (req, res) => {
     }
 
     // Build a prompt for Claude
-    let systemPrompt = "You are a fashion expert and personal stylist analyzing wardrobe items. ";
-    systemPrompt += "Provide a comprehensive analysis of this clothing item or outfit including: ";
-    systemPrompt += "(1) What type of item it is, (2) Its style characteristics, ";
-    systemPrompt += "(3) Color analysis and how versatile it is, (4) Quality assessment based on visible details, ";
-    systemPrompt += "(5) Styling recommendations and what it pairs well with, ";
-    systemPrompt += "(6) Appropriate occasions or seasons to wear it.";
+    let systemPrompt = "You are an fashion expert, personal stylist and wardrobe consultant. ";
+    systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
+    systemPrompt += "considering the user's existing wardrobe, lifestyle, and individual needs.";
+    
+    // Include user style preferences if available
+    if (userPreferences) {
+      systemPrompt += "\n\nImportant - Consider the user's style preferences:\n";
+      
+      // Handle preferred styles (from Supabase this is an array)
+      if (userPreferences.preferredStyles && userPreferences.preferredStyles.length > 0) {
+        systemPrompt += "- Preferred styles: " + userPreferences.preferredStyles.join(", ") + "\n";
+      }
+      
+      // Handle slider values for style preferences
+      if (userPreferences.stylePreferences) {
+        const { comfortVsStyle, basicsVsStatements } = userPreferences.stylePreferences;
+        
+        if (typeof comfortVsStyle === 'number') {
+          // Convert 0-100 scale to text description
+          let comfortStyleDesc = "Balanced";
+          if (comfortVsStyle > 70) comfortStyleDesc = "Strongly prefers comfort over style";
+          else if (comfortVsStyle > 55) comfortStyleDesc = "Slightly prefers comfort over style";
+          else if (comfortVsStyle < 30) comfortStyleDesc = "Strongly prefers style over comfort";
+          else if (comfortVsStyle < 45) comfortStyleDesc = "Slightly prefers style over comfort";
+          
+          systemPrompt += "- Comfort vs Style: " + comfortStyleDesc + " (" + comfortVsStyle + "/100)\n";
+        }
+        
+        if (typeof basicsVsStatements === 'number') {
+          // Convert 0-100 scale to text description
+          let basicsStatementsDesc = "Balanced mix";
+          if (basicsVsStatements > 70) basicsStatementsDesc = "Strongly prefers basics over statement pieces";
+          else if (basicsVsStatements > 55) basicsStatementsDesc = "Slightly prefers basics over statement pieces";
+          else if (basicsVsStatements < 30) basicsStatementsDesc = "Strongly prefers statement pieces over basics";
+          else if (basicsVsStatements < 45) basicsStatementsDesc = "Slightly prefers statement pieces over basics";
+          
+          systemPrompt += "- Basics vs Statement Pieces: " + basicsStatementsDesc + " (" + basicsVsStatements + "/100)\n";
+        }
+        
+        // Include additional notes if available
+        if (userPreferences.stylePreferences.additionalNotes) {
+          systemPrompt += "- Additional style notes: " + userPreferences.stylePreferences.additionalNotes + "\n";
+        }
+      }
+    }
+    
+    // Include user's local climate if available
+    if (climateData && climateData.localClimate) {
+      // Format the climate string to be more human-readable
+      let formattedClimate = climateData.localClimate
+        .replace(/-/g, ' ')  // Replace hyphens with spaces
+        .split(' ')          // Split into words
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))  // Capitalize each word
+        .join(' ');         // Join back with spaces
+        
+      systemPrompt += "\n\nImportant - Consider the user's local climate:\n";
+      systemPrompt += "- Local climate: " + formattedClimate + "\n";
+      
+      // Add guidance for climate considerations
+      systemPrompt += "- When making recommendations, consider what materials and styles are appropriate for this climate.\n";
+      systemPrompt += "- Mention any climate-specific considerations that might affect the longevity, utility, or appropriateness of the item.\n";
+    }
     
     if (detectedTags) {
       systemPrompt += "\n\nHere are tags that were automatically detected in the image: " + JSON.stringify(detectedTags);
@@ -452,6 +608,11 @@ app.post('/api/analyze-wardrobe-item', async (req, res) => {
     systemPrompt += "Format your response with three sections: ANALYSIS, SCORE, and FEEDBACK. ";
     systemPrompt += "Keep your total response under 300 words.";
 
+    // Log the complete prompt for debugging
+    console.log('==== FULL CLAUDE PROMPT ====');
+    console.log(systemPrompt);
+    console.log('============================');
+    
     // Call Claude API
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
