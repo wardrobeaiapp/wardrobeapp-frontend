@@ -10,9 +10,14 @@ const StyledSelect = styled(FormSelect)`
 interface ScenarioFilterProps {
   value: string;
   onChange: (value: string) => void;
+  includeAllOption?: boolean;
 }
 
-const ScenarioFilter: React.FC<ScenarioFilterProps> = ({ value, onChange }) => {
+const ScenarioFilter: React.FC<ScenarioFilterProps> = ({ 
+  value, 
+  onChange, 
+  includeAllOption = false 
+}) => {
   const [scenarios, setScenarios] = useState<Array<{ id: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -49,15 +54,15 @@ const ScenarioFilter: React.FC<ScenarioFilterProps> = ({ value, onChange }) => {
   };
 
   return (
-    <FormField label="Scenarios" htmlFor="scenario-filter">
+    <FormField label="Scenario" htmlFor="scenario-filter">
       <StyledSelect
         id="scenario-filter"
         value={value}
         onChange={handleChange}
-        disabled={isLoading || scenarios.length === 0}
+        disabled={isLoading}
       >
-        <option value="all">All Scenarios</option>
-        {scenarios.map(scenario => (
+        {includeAllOption && <option value="all">All Scenarios</option>}
+        {scenarios.map((scenario) => (
           <option key={scenario.id} value={scenario.id}>
             {scenario.name}
           </option>

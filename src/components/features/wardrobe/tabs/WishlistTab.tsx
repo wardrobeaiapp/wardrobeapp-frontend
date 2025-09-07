@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter } from '../shared/Filters';
+import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter, ScenarioFilter } from '../shared/Filters';
 import { WardrobeItem, WishlistStatus } from '../../../../types';
 import { useWishlistFiltering } from '../../../../hooks/home/useWishlistFiltering';
 import {
@@ -28,6 +28,8 @@ interface WishlistTabProps {
   setStatusFilter: (status: WishlistStatus | 'all') => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
+  scenarioFilter?: string;
+  setScenarioFilter?: (scenario: string) => void;
   onViewItem?: (item: WardrobeItem) => void; 
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
@@ -46,6 +48,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   setStatusFilter,
   searchQuery,
   setSearchQuery,
+  scenarioFilter = 'all',
+  setScenarioFilter = () => {},
   onViewItem,
   onEditItem,
   onDeleteItem,
@@ -57,10 +61,20 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   };
 
   // Use the wishlist filtering hook
-  const { filteredWishlistItems: filteredItems } = useWishlistFiltering({ items });
+  const { 
+    filteredWishlistItems: filteredItems
+  } = useWishlistFiltering({ 
+    items,
+    scenarioFilter,
+    setScenarioFilter
+  });
   
   const handleSeasonChange = (value: string | string[]) => {
     setSeasonFilter(value);
+  };
+  
+  const handleScenarioChange = (value: string) => {
+    setScenarioFilter(value);
   };
   
   // Debug logging
@@ -114,6 +128,13 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
           <SeasonFilter
             value={getFirstSeason(seasonFilter)}
             onChange={handleSeasonChange}
+          />
+        </FilterGroup>
+        <FilterGroup>
+          <ScenarioFilter
+            value={scenarioFilter}
+            onChange={handleScenarioChange}
+            includeAllOption={true}
           />
         </FilterGroup>
         <FilterGroup>

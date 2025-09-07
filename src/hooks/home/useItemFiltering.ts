@@ -7,6 +7,7 @@ export interface ItemFilterOptions {
   searchQuery?: string;
   wishlistStatus?: string;
   isWishlist?: boolean;
+  scenario?: string;
 }
 
 export const useItemFiltering = (
@@ -18,7 +19,8 @@ export const useItemFiltering = (
     season = 'all',
     searchQuery = '',
     wishlistStatus = 'all',
-    isWishlist = false
+    isWishlist = false,
+    scenario = 'all'
   } = options;
 
   const filteredItems = useMemo(() => {
@@ -45,10 +47,12 @@ export const useItemFiltering = (
       
       // Search query
       const searchLower = searchQuery.toLowerCase();
+      const itemScenarios = item.scenarios || [];
       const matchesSearch = searchQuery === '' || 
         item.name.toLowerCase().includes(searchLower) ||
         (item.category?.toLowerCase() || '').includes(searchLower) ||
-        (item.brand?.toLowerCase() || '').includes(searchLower);
+        (item.brand?.toLowerCase() || '').includes(searchLower) ||
+        itemScenarios.some(s => s.toLowerCase().includes(searchLower));
       
       // Wishlist status filter (only applies to wishlist items)
       let matchesStatus = true;
@@ -57,9 +61,24 @@ export const useItemFiltering = (
         matchesStatus = wishlistStatus === 'all' || itemStatus === wishlistStatus;
       }
       
-      return matchesCategory && matchesSeason && matchesSearch && matchesStatus;
+      // Scenario filter - only apply if scenario is provided and not 'all'
+      const matchesScenario = !scenario || scenario === 'all' || 
+        (Array.isArray(itemScenarios) && itemScenarios.length > 0 && itemScenarios.includes(scenario));
+      
+      // Debug logging
+      if (process.env.NODE_ENV === 'development' && scenario && scenario !== 'all') {
+        console.log('[useItemFiltering] Item:', {
+          name: item.name,
+          itemScenarios,
+          scenario,
+          matchesScenario,
+          matchesAll: matchesCategory && matchesSeason && matchesSearch && matchesStatus && matchesScenario
+        });
+      }
+      
+      return matchesCategory && matchesSeason && matchesSearch && matchesStatus && matchesScenario;
     });
-  }, [items, category, season, searchQuery, wishlistStatus, isWishlist]);
+  }, [items, category, season, searchQuery, wishlistStatus, isWishlist, scenario]);
 
   return {
     filteredItems,
