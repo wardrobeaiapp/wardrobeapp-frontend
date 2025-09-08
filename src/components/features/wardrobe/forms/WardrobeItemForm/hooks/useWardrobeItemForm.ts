@@ -109,7 +109,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     }
 
     // Check if sleeves is required and not set
-    const isSleevesRequired = (category === ItemCategory.ONE_PIECE || 
+    const isSleevesRequired = ((category === ItemCategory.ONE_PIECE && 
+      subcategory && !['overall'].includes(subcategory.toLowerCase())) || 
       (category === ItemCategory.TOP && 
        subcategory && 
        ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase())));
@@ -173,7 +174,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       brand,
       price,
       silhouette,
-      sleeves: (category === ItemCategory.ONE_PIECE || 
+      sleeves: ((category === ItemCategory.ONE_PIECE && subcategory && !['overall'].includes(subcategory.toLowerCase())) || 
         (category === ItemCategory.TOP && 
          subcategory && 
          ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()))) 

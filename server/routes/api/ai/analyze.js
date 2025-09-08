@@ -65,7 +65,8 @@ router.post('/', async (req, res) => {
     systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
     systemPrompt += "considering the user's existing wardrobe, lifestyle, and individual needs.";
     
-    // Include user style preferences if available
+    // User preferences section - disabled for now, but kept for future use
+    /* Temporarily disabled user preferences in prompt
     if (userPreferences) {
       systemPrompt += "\n\nImportant - Consider the user's style preferences:\n";
       
@@ -106,6 +107,10 @@ router.post('/', async (req, res) => {
         }
       }
     }
+    */
+    
+    // Note: We still receive userPreferences in the request (line 14), but don't include them in the prompt
+    // This section is commented out but kept for use in other requests    
     
     // Include user's local climate if available
     if (climateData && climateData.localClimate) {
