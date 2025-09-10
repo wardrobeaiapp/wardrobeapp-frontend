@@ -1,13 +1,11 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
+const { formatStylePreferencesForPrompt } = require('../../../utils/stylePreferencesUtils');
 const router = express.Router();
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  defaultHeaders: {
-    'x-api-key': process.env.ANTHROPIC_API_KEY
-  }
+  apiKey: process.env.ANTHROPIC_API_KEY
 });
 
 // @route   POST /api/analyze-wardrobe-item
@@ -65,51 +63,11 @@ router.post('/', async (req, res) => {
     systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
     systemPrompt += "considering the user's existing wardrobe, lifestyle, and individual needs.";
     
-    // User preferences section - disabled for now, but kept for future use
-    /* Temporarily disabled user preferences in prompt
-    if (userPreferences) {
-      systemPrompt += "\n\nImportant - Consider the user's style preferences:\n";
-      
-      // Handle preferred styles (from Supabase this is an array)
-      if (userPreferences.preferredStyles && userPreferences.preferredStyles.length > 0) {
-        systemPrompt += "- Preferred styles: " + userPreferences.preferredStyles.join(", ") + "\n";
-      }
-      
-      // Handle slider values for style preferences
-      if (userPreferences.stylePreferences) {
-        const { comfortVsStyle, basicsVsStatements } = userPreferences.stylePreferences;
-        
-        if (typeof comfortVsStyle === 'number') {
-          // Convert 0-100 scale to text description
-          let comfortStyleDesc = "Balanced";
-          if (comfortVsStyle > 70) comfortStyleDesc = "Strongly prefers comfort over style";
-          else if (comfortVsStyle > 55) comfortStyleDesc = "Slightly prefers comfort over style";
-          else if (comfortVsStyle < 30) comfortStyleDesc = "Strongly prefers style over comfort";
-          else if (comfortVsStyle < 45) comfortStyleDesc = "Slightly prefers style over comfort";
-          
-          systemPrompt += "- Comfort vs Style: " + comfortStyleDesc + " (" + comfortVsStyle + "/100)\n";
-        }
-        
-        if (typeof basicsVsStatements === 'number') {
-          // Convert 0-100 scale to text description
-          let basicsStatementsDesc = "Balanced mix";
-          if (basicsVsStatements > 70) basicsStatementsDesc = "Strongly prefers basics over statement pieces";
-          else if (basicsVsStatements > 55) basicsStatementsDesc = "Slightly prefers basics over statement pieces";
-          else if (basicsVsStatements < 30) basicsStatementsDesc = "Strongly prefers statement pieces over basics";
-          else if (basicsVsStatements < 45) basicsStatementsDesc = "Slightly prefers statement pieces over basics";
-          
-          systemPrompt += "- Basics vs Statement Pieces: " + basicsStatementsDesc + " (" + basicsVsStatements + "/100)\n";
-        }
-        
-        // Include additional notes if available
-        if (userPreferences.stylePreferences.additionalNotes) {
-          systemPrompt += "- Additional style notes: " + userPreferences.stylePreferences.additionalNotes + "\n";
-        }
-      }
-    }
-    */
+    // Style preferences processing - Currently disabled, but maintained in a utility module
+    // Uncomment the line below to include style preferences in the prompt
+    // systemPrompt += formatStylePreferencesForPrompt(userPreferences);
     
-    // Note: We still receive userPreferences in the request (line 14), but don't include them in the prompt
+    // Note: We still receive userPreferences in the request (line 18), but don't include them in the prompt by default
     // This section is commented out but kept for use in other requests    
     
     // Include user's local climate if available
