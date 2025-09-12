@@ -123,13 +123,12 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
       .select();
 
     if (error) {
-      console.error('💰 UserBudgetsService - Supabase error saving user budgets data:', error);
       throw error;
     }
 
 
   } catch (error) {
-    console.error('💰 UserBudgetsService - Error saving user budgets data:', error);
+    console.error('💰 UserBudgetsService - Error in user budgets operation:', error);
     throw error;
   }
 }
@@ -150,9 +149,6 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
       .limit(1);
 
     if (error) {
-      // Log the actual error details to understand what's happening
-      console.error('🛍️ UserBudgetsService - Supabase error fetching shopping limit data:', error);
-      
       if (error.code === 'PGRST116') {
         // No rows found - new user, return default values
         return {
@@ -193,7 +189,7 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
     return mappedData;
 
   } catch (error) {
-    console.error('🛍️ UserBudgetsService - Error fetching shopping limit data:', error);
+    console.error('🛍️ UserBudgetsService - Error in shopping limit operation:', error);
     throw error;
   }
 }
@@ -214,9 +210,6 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
       .limit(1);
 
     if (error) {
-      // Log the actual error details to understand what's happening
-      console.error('👕 UserBudgetsService - Supabase error fetching clothing budget data:', error);
-      
       if (error.code === 'PGRST116') {
         // No rows found - new user, return default values
         return {
@@ -260,7 +253,7 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
     return mappedData;
 
   } catch (error) {
-    console.error('👕 UserBudgetsService - Error fetching clothing budget data:', error);
+    console.error('👕 UserBudgetsService - Error in clothing budget operation:', error);
     throw error;
   }
 }
@@ -280,7 +273,7 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
       .limit(1);
 
     if (fetchError) {
-      console.error('👕 UserBudgetsService - Error fetching existing data for preservation:', fetchError);
+      console.debug('👕 UserBudgetsService - No existing data found for preservation, will create new record');
       // Continue with save even if fetch fails - just save new data
     }
 
@@ -318,7 +311,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
     }
 
     if (error) {
-      console.error('👕 UserBudgetsService - Supabase error saving clothing budget data:', error);
       throw error;
     }
 
@@ -334,7 +326,7 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
     };
 
   } catch (error) {
-    console.error('👕 UserBudgetsService - Error saving clothing budget data:', error);
+    console.error('👕 UserBudgetsService - Error in clothing budget operation:', error);
     throw error;
   }
 }
@@ -354,13 +346,11 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
       .limit(1);
 
     if (fetchError) {
-      console.error('🛍️ UserBudgetsService - Error fetching existing shopping limit data:', fetchError);
-      throw fetchError;
+      console.debug('🛍️ UserBudgetsService - No existing shopping limit data found');
+      // Continue with empty existing record
     }
 
     const existingRecord = existingData?.[0];
-    console.log('🛍️ UserBudgetsService - Existing record found:', existingRecord?.id ? 'Yes' : 'No');
-
     // Use update-or-insert logic to prevent duplicate records (same as clothing budget)
     let error;
     
@@ -389,14 +379,11 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
     }
 
     if (error) {
-      console.error('🛍️ UserBudgetsService - Supabase error saving shopping limit data:', error);
       throw error;
     }
 
-    console.log('🛍️ UserBudgetsService - Successfully saved shopping limit data');
-
   } catch (error) {
-    console.error('🛍️ UserBudgetsService - Error saving shopping limit data:', error);
+    console.error('🛍️ UserBudgetsService - Error in shopping limit operation:', error);
     throw error;
   }
 }
