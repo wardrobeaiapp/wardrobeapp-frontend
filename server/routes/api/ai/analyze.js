@@ -13,15 +13,23 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, userPreferences, climateData } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios } = req.body;
+    
+    // Log the complete request body for debugging
+    console.log('=== Request Body ===');
+    console.log('imageBase64:', imageBase64 ? 'present' : 'missing');
+    console.log('detectedTags:', detectedTags || 'none');
+    console.log('climateData:', climateData || 'none');
+    console.log('scenarios:', scenarios || 'none');
+    console.log('===================');
     
     // Log that we received user data
-    if (userPreferences) {
-      console.log('Received user style preferences from frontend for analysis');
-    }
-    
     if (climateData) {
       console.log('Received user climate data from frontend for analysis:', climateData);
+    }
+    
+    if (scenarios && scenarios.length > 0) {
+      console.log(`Received ${scenarios.length} scenarios from frontend`);
     }
 
     if (!imageBase64) {
@@ -59,16 +67,31 @@ router.post('/', async (req, res) => {
     }
 
     // Build a prompt for Claude
-    let systemPrompt = "You are an fashion expert, personal stylist and wardrobe consultant. ";
+    let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant. ";
     systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
-    systemPrompt += "considering the user's existing wardrobe, lifestyle, and individual needs.";
+    systemPrompt += "considering the user's existing wardrobe, lifestyle, individual needs, and specific scenarios.";
     
-    // Style preferences processing - Currently disabled, but maintained in a utility module
-    // Uncomment the line below to include style preferences in the prompt
-    // systemPrompt += formatStylePreferencesForPrompt(userPreferences);
-    
-    // Note: We still receive userPreferences in the request (line 18), but don't include them in the prompt by default
-    // This section is commented out but kept for use in other requests    
+    // Include user's scenarios if available
+    if (req.body.scenarios && req.body.scenarios.length > 0) {
+      systemPrompt += "\n\nThe user has provided the following scenarios where they need appropriate clothing:";
+      
+      req.body.scenarios.forEach((scenario, index) => {
+        systemPrompt += `\n${index + 1}. ${scenario.name}`;
+        if (scenario.type) systemPrompt += ` (Type: ${scenario.type})`;
+        if (scenario.frequency) systemPrompt += ` [${scenario.frequency}]`;
+        if (scenario.description) systemPrompt += `: ${scenario.description}`;
+      });
+      
+      systemPrompt += "\n\nWhen analyzing this item, please consider:";
+      systemPrompt += "\n- For outerwear items: Evaluate how well they complement the user's outfits for different scenarios (excluding 'Staying at Home'), even if not worn during the scenario itself.";
+      systemPrompt += "\n- For 'Office Work': Consider how the item might be used for commuting to/from work";
+      systemPrompt += "\n- For each scenario (excluding 'Staying at Home' for outerwear), assess:";
+      systemPrompt += "\n  * If it's outerwear: How well it works with the clothing typically worn in that scenario";
+      systemPrompt += "\n  * If it's not outerwear: How appropriate it is for the scenario itself";
+      systemPrompt += "\n- How versatile the item is across multiple scenarios, considering both direct use and layering potential";
+      systemPrompt += "\n- If the item fills any gaps in the user's wardrobe for these specific scenarios";
+      systemPrompt += "\n\nImportant: For outerwear, completely skip any mention of 'Staying at Home' scenario in your analysis. Do not reference it at all when discussing outerwear items.";
+    }
     
     // Include user's local climate if available
     if (climateData && climateData.localClimate) {

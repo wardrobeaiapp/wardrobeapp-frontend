@@ -2,9 +2,12 @@ import axios from 'axios';
 import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
 import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
-import { getStylePreferencesData } from '../profile/stylePreferencesService';
 import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
+import { getScenariosForUser } from '../scenarios/scenariosService';
+
+// Import the Scenario type from scenarios service
+import type { Scenario } from '../scenarios/types';
 
 // Extend the base ClaudeResponse to include outfits
 interface ClaudeResponse extends BaseClaudeResponse {
@@ -258,6 +261,7 @@ export const claudeService = {
       // Get current user from Supabase and their preferences
       let userPreferences = null;
       let climateData = null;
+      let scenarios: Scenario[] = [];
       
       try {
         // Get the current authenticated user
@@ -265,17 +269,21 @@ export const claudeService = {
         
         // Fetch user data if user is logged in
         if (user?.id) {
-          try {
-            // Fetch style preferences
-            userPreferences = await getStylePreferencesData(user.id);
-            console.log('[claudeService] User preferences loaded successfully');
-            
+          try {            
             // Fetch climate data
             climateData = await getClimateData(user.id);
             console.log('[claudeService] Climate data loaded successfully:', climateData);
+            
+            // Fetch user's scenarios using the scenarios service
+            try {
+              scenarios = await getScenariosForUser(user.id);
+              console.log(`[claudeService] Loaded ${scenarios.length} scenarios`);
+            } catch (scenariosError) {
+              console.error('[claudeService] Error fetching scenarios:', scenariosError);
+            }
           } catch (dataError) {
             console.error('[claudeService] Error loading user data:', dataError);
-            // Continue without preferences/climate if there's an error
+            // Continue without preferences/climate/scenarios if there's an error
           }
         } else {
           console.log('[claudeService] No authenticated user found, proceeding without user data');
@@ -291,8 +299,8 @@ export const claudeService = {
         {
           imageBase64,
           detectedTags,
-          userPreferences,
-          climateData
+          climateData,
+          scenarios: scenarios.length > 0 ? scenarios : undefined
         }
       );
 
