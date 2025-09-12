@@ -1,15 +1,20 @@
 import React, { useState, ChangeEvent } from 'react';
 import { periodOptions } from '../../../data/onboardingOptions';
 import { Modal, ModalAction } from '../../common/Modal';
-import {
-  ModalForm,
-  FormGroup,
-  FormLabel,
-  FormInput,
-  ModalFrequencyControls,
-  FrequencyInput,
-  FrequencySelect
-} from './ScenarioFrequencyStep.styles';
+import { Form, FormField, FormInput, FormSelect } from '../../common/Form';
+import styled from 'styled-components';
+
+// Simple styled components for frequency controls
+const FrequencyControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const FrequencyInput = styled(FormInput)`
+  width: 80px;
+  flex: none;
+`;
 
 export interface Scenario {
   id: string;
@@ -135,9 +140,8 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
       actions={actions}
       size="md"
     >
-      <ModalForm onSubmit={handleSubmit}>
-        <FormGroup>
-          <FormLabel htmlFor="scenarioName">Scenario Name</FormLabel>
+      <Form onSubmit={handleSubmit}>
+        <FormField label="Scenario Name" labelPosition="top">
           <FormInput
             id="scenarioName"
             type="text"
@@ -145,33 +149,33 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
             value={newScenarioName}
             onChange={handleNewScenarioNameChange}
             autoFocus
+            isFullWidth
           />
-        </FormGroup>
+        </FormField>
         
-        <FormGroup>
-          <FormLabel htmlFor="scenarioDescription">Description (Optional)</FormLabel>
+        <FormField label="Description (Optional)" labelPosition="top">
           <FormInput
             id="scenarioDescription"
             type="text"
             placeholder="e.g., Business casual dress code"
             value={newScenarioDescription}
             onChange={handleNewScenarioDescriptionChange}
+            isFullWidth
           />
-        </FormGroup>
+        </FormField>
         
-        <FormGroup>
-          <FormLabel htmlFor="scenarioFrequency">Frequency</FormLabel>
-          <ModalFrequencyControls>
+        <FormField label="Frequency" labelPosition="top">
+          <FrequencyControls>
             <FrequencyInput 
               type="number" 
               min="1"
               id="frequencyValue"
               value={newFrequencyValue}
               onChange={handleNewFrequencyValueChange}
-              style={{ width: '80px' }}
+              isFullWidth
             />
             
-            <FrequencySelect
+            <FormSelect
               id="frequencyPeriod"
               value={newFrequencyPeriod}
               onChange={handleNewFrequencyPeriodChange}
@@ -180,10 +184,10 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
               {periodOptions.map(option => (
                 <option key={option.id} value={option.id}>{option.label}</option>
               ))}
-            </FrequencySelect>
-          </ModalFrequencyControls>
-        </FormGroup>
-      </ModalForm>
+            </FormSelect>
+          </FrequencyControls>
+        </FormField>
+      </Form>
     </Modal>
   );
 };
