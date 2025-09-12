@@ -62,15 +62,56 @@ export class SeasonExtractor {
   }
 
   /**
+   * Generic helper function to check for season-specific indicators with detailed debugging
+   * @param seasonName Name of the season for logging purposes
+   * @param tags Array of tags to check
+   * @param seasonTerms Array of terms specific to the season
+   * @returns Whether any indicators were found
+   */
+  private hasSeasonIndicators(seasonName: string, tags: string[], seasonTerms: string[]): boolean {
+    this.logger.debug(`[SeasonExtractor] Checking for ${seasonName} indicators in tags:`, tags);
+    
+    const matchingTags: string[] = [];
+    const matchingTerms: string[] = [];
+    
+    for (const tag of tags) {
+      for (const term of seasonTerms) {
+        const normalizedTag = ExtractionHelpers.normalizeString(tag);
+        const normalizedTerm = ExtractionHelpers.normalizeString(term);
+        
+        if (normalizedTag.includes(normalizedTerm)) {
+          this.logger.debug(`[SeasonExtractor] ${seasonName} indicator found: tag "${tag}" matches term "${term}"`);
+          matchingTags.push(tag);
+          matchingTerms.push(term);
+        }
+      }
+    }
+    
+    const hasIndicators = matchingTags.length > 0;
+    
+    if (hasIndicators) {
+      this.logger.debug(`[SeasonExtractor] ${seasonName} indicators summary:`, {
+        matchingTags: [...new Set(matchingTags)],
+        matchingTerms: [...new Set(matchingTerms)],
+        totalMatches: matchingTags.length
+      });
+    } else {
+      this.logger.debug(`[SeasonExtractor] No ${seasonName} indicators found`);
+    }
+    
+    return hasIndicators;
+  }
+
+  /**
    * Check if tags contain winter-specific indicators
    */
   private hasWinterIndicators(tags: string[]): boolean {
     const winterTerms = [
-      'winter', 'cold', 'snow', 'warm', 'thick', 'heavy', 'cozy',
-      'wool', 'fleece', 'knit', 'thermal', 'puffer', 'down', 'insulated'
+      'winter', 'cold', 'warm', 'thick', 'heavy', 'cozy',
+      'wool', 'fleece', 'knit', 'thermal', 'puffer', 'down', 'insulated',
     ];
     
-    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, winterTerms));
+    return this.hasSeasonIndicators('winter', tags, winterTerms);
   }
 
   /**
@@ -78,11 +119,11 @@ export class SeasonExtractor {
    */
   private hasSummerIndicators(tags: string[]): boolean {
     const summerTerms = [
-      'summer', 'hot', 'beach', 'light', 'thin', 'cool', 'breathable',
+      'summer', 'hot', 'beach', 'light', 'cool', 'breathable',
       'linen', 'cotton', 'shorts', 'tank', 'sleeveless', 'vacation', 'tropical'
     ];
     
-    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, summerTerms));
+    return this.hasSeasonIndicators('summer', tags, summerTerms);
   }
 
   /**
@@ -95,7 +136,7 @@ export class SeasonExtractor {
       'pastel', 'bright', 'floral', 'lightweight', 'versatile',
     ];
     
-    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, springTerms));
+    return this.hasSeasonIndicators('spring', tags, springTerms);
   }
 
   /**
@@ -108,6 +149,6 @@ export class SeasonExtractor {
       'suede', 'wool'
     ];
     
-    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, fallTerms));
+    return this.hasSeasonIndicators('fall', tags, fallTerms);
   }
 }
