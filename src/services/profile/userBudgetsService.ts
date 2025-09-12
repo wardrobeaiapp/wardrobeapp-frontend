@@ -157,7 +157,7 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
 
 
     // Use upsert to handle both insert and update cases
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('user_progress')
       .upsert(dbData)
       .select();
@@ -329,7 +329,7 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
     
 
     // Simply UPDATE the existing record - no new records, no complex logic
-    let data, error;
+    let error;
     
     if (existingRecord?.id) {
       // Update the existing record - no timestamps needed
@@ -342,7 +342,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
         })
         .eq('id', existingRecord.id)
         .select();
-      data = result.data;
       error = result.error;
     } else {
       // Create new record only if none exists - no timestamps needed
@@ -355,7 +354,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
           clothing_budget_frequency: clothingBudgetData.frequency || 'monthly'
         })
         .select();
-      data = result.data;
       error = result.error;
     }
 
@@ -404,7 +402,7 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
     console.log('🛍️ UserBudgetsService - Existing record found:', existingRecord?.id ? 'Yes' : 'No');
 
     // Use update-or-insert logic to prevent duplicate records (same as clothing budget)
-    let data, error;
+    let error;
     
     if (existingRecord?.id) {
       // Update the existing record - preserve clothing budget data
@@ -416,7 +414,6 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
         })
         .eq('id', existingRecord.id)
         .select();
-      data = result.data;
       error = result.error;
     } else {
       // Create new record only if none exists
@@ -428,7 +425,6 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
           shopping_limit_frequency: shoppingLimitData.shoppingLimitFrequency
         })
         .select();
-      data = result.data;
       error = result.error;
     }
 
@@ -437,7 +433,7 @@ export async function saveShoppingLimitData(userId: string, shoppingLimitData: S
       throw error;
     }
 
-    console.log('🛍️ UserBudgetsService - Successfully saved shopping limit data:', data);
+    console.log('🛍️ UserBudgetsService - Successfully saved shopping limit data');
 
   } catch (error) {
     console.error('🛍️ UserBudgetsService - Error saving shopping limit data:', error);

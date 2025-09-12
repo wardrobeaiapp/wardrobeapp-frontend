@@ -253,35 +253,29 @@ export const useProfileData = () => {
     }
   }, [refreshUserData]);
 
-  // Get subscription data from user preferences
+  // Get subscription data from user profile
   const [subscription, setSubscription] = useState<SubscriptionData>(() => {
-    // Use type assertion to avoid TypeScript errors
-    const preferences = user?.preferences as any;
-    
     return {
-      plan: preferences?.subscriptionPlan || 'free',
-      renewalDate: preferences?.subscriptionRenewalDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      features: preferences?.subscriptionPlan === 'pro' ? 
+      plan: userProfileData?.subscription_plan || 'free',
+      renewalDate: userProfileData?.subscription_renewal_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      features: userProfileData?.subscription_plan === 'pro' ? 
         ['AI Recommendations', 'Unlimited Items', 'Calendar Planning', 'Priority Support'] : 
         ['Basic Recommendations', 'Limited Items (100)', 'Basic Calendar']
     };
   });
   
-  // Update subscription when user data changes
+  // Update subscription when user profile data changes
   useEffect(() => {
-    if (user?.preferences) {
-      // Use type assertion to avoid TypeScript errors
-      const preferences = user.preferences as any;
-      
+    if (userProfileData) {
       setSubscription({
-        plan: preferences.subscriptionPlan || 'free',
-        renewalDate: preferences.subscriptionRenewalDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        features: preferences.subscriptionPlan === 'pro' ? 
+        plan: userProfileData.subscription_plan || 'free',
+        renewalDate: userProfileData.subscription_renewal_date || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        features: userProfileData.subscription_plan === 'pro' ? 
           ['AI Recommendations', 'Unlimited Items', 'Calendar Planning', 'Priority Support'] : 
           ['Basic Recommendations', 'Limited Items (100)', 'Basic Calendar']
       });
     }
-  }, [user?.preferences]);
+  }, [userProfileData]);
   
   // Extract shopping limit values
   const limitAmount = (user?.preferences as any)?.shoppingLimit?.limitAmount;

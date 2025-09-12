@@ -130,7 +130,7 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
         updated_at: new Date().toISOString()
       };
       
-      const { data: insertData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('user_preferences')
         .insert(minimalData)
         .select();

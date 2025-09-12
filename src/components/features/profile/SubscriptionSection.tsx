@@ -38,17 +38,18 @@ interface SubscriptionProps {
   onSave: (section: string) => Promise<SaveResult>; // Keep for backward compatibility
 }
 
-const SubscriptionSection: React.FC<SubscriptionProps> = ({ 
-  profileData, 
-  handleNestedChange, 
-  onSave 
+const SubscriptionSection: React.FC<SubscriptionProps> = ({
+  profileData,
+  handleNestedChange,
+  onSave
 }) => {
-  const { user } = useSupabaseAuth();
+  // State for modals and messages
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-  const currentPlan = profileData.subscriptionPlan || 'free';
-  const renewalDate = profileData.subscriptionRenewalDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  
+  // Get authenticated user
+  const { user } = useSupabaseAuth();
   
   // Function to refresh subscription data from the database
   const refreshSubscriptionData = useCallback(async () => {
@@ -60,19 +61,31 @@ const SubscriptionSection: React.FC<SubscriptionProps> = ({
       console.log('Fresh user profile data:', freshUserProfile);
       
       if (freshUserProfile) {
-        // Update local state with fresh data from database
-        handleNestedChange('subscriptionPlan', '', freshUserProfile.subscription_plan || 'free');
-        handleNestedChange('subscriptionRenewalDate', '', freshUserProfile.subscription_renewal_date || '');
+        // We don't need to update local state here as it will trigger a re-render
+        // with the fresh data from the database
+        console.log('Successfully refreshed subscription data from database');
       }
     } catch (error) {
       console.error('Error refreshing subscription data:', error);
     }
-  }, [user?.id, handleNestedChange]);
-  
+  }, [user?.id]);
+
   // Refresh subscription data when component mounts or when user changes
   useEffect(() => {
-    refreshSubscriptionData();
-  }, [user?.id, refreshSubscriptionData]);
+    if (profileData) {
+      refreshSubscriptionData();
+    }
+  }, [user?.id, refreshSubscriptionData, profileData]);
+  
+  // Ensure profileData is available
+  if (!profileData) {
+    return <div>Loading subscription data...</div>;
+  }
+  
+  // Local state derived from profile data
+  const currentPlan = profileData.subscriptionPlan || 'free';
+  const renewalDate = profileData.subscriptionRenewalDate || 
+    new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const handleUpgrade = async () => {
     try {
@@ -85,39 +98,30 @@ const SubscriptionSection: React.FC<SubscriptionProps> = ({
 
       console.log('DEBUG - handleUpgrade - Starting upgrade process for user:', user.id);
       
-      // Create a copy of the profile data with the updated subscription info
-      const updatedProfileData = {
-        ...profileData,
-        subscriptionPlan: 'pro'
-      };
-      
       // Set renewal date to one month from now
       const oneMonthFromNow = new Date();
       oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
       const formattedDate = oneMonthFromNow.toISOString().split('T')[0];
-      updatedProfileData.subscriptionRenewalDate = formattedDate;
       
-      // Update the local state
-      handleNestedChange('subscriptionPlan', '', 'pro');
-      handleNestedChange('subscriptionRenewalDate', '', formattedDate);
+      // Save directly to user_profiles table
+      const { success, error } = await saveSubscriptionToUserProfile({
+        ...profileData, // Include all existing profile data
+        subscriptionPlan: 'pro',
+        subscriptionRenewalDate: formattedDate
+      }, user.id);
       
-      console.log('DEBUG - handleUpgrade - Updated profile data:', updatedProfileData);
-      
-      // Save the changes directly to user_profiles table
-      const result = await saveSubscriptionToUserProfile(updatedProfileData, user.id);
-      
-      if (result?.success) {
-        setModalMessage('Successfully upgraded to Pro plan!');
-        setIsModalOpen(true);
-        console.log('Successfully upgraded to Pro plan');
+      if (success) {
+        // Show success message
+        setModalMessage('Successfully upgraded to Pro! Your subscription will renew on ' + formattedDate + '.');
         
         // Refresh subscription data from database to ensure UI is up-to-date
         await refreshSubscriptionData();
       } else {
-        console.error('Error upgrading to Pro plan:', result?.error);
-        setModalMessage('There was an error upgrading your plan. Please try again.');
-        setIsModalOpen(true);
+        console.error('Failed to upgrade subscription:', error);
+        setModalMessage('Failed to upgrade subscription. ' + (error?.message || 'Please try again.'));
       }
+      
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error in upgrade process:', error);
       setModalMessage('There was an error upgrading your plan. Please try again.');
@@ -134,40 +138,28 @@ const SubscriptionSection: React.FC<SubscriptionProps> = ({
     try {
       if (!user?.id) {
         console.error('ERROR - confirmDowngrade - No user ID available');
-        setModalMessage('Error: User not authenticated. Please log in and try again.');
-        setIsModalOpen(true);
         return;
       }
-
+      
       console.log('DEBUG - confirmDowngrade - Starting downgrade process for user:', user.id);
       
-      // Create a copy of the profile data with the updated subscription info
-      const updatedProfileData = {
-        ...profileData,
-        subscriptionPlan: 'free'
-      };
+      // Save directly to user_profiles table
+      const result = await saveSubscriptionToUserProfile({
+        ...profileData, // Include all existing profile data
+        subscriptionPlan: 'free',
+        subscriptionRenewalDate: renewalDate // Keep the same renewal date until it expires
+      }, user?.id || '');
       
-      // Update the local state
-      handleNestedChange('subscriptionPlan', '', 'free');
-      
-      console.log('DEBUG - confirmDowngrade - Updated profile data:', updatedProfileData);
-      
-      // Save the changes directly to user_profiles table
-      const result = await saveSubscriptionToUserProfile(updatedProfileData, user.id);
-      
-      if (result?.success) {
-        setModalMessage('Successfully downgraded to Free plan.');
-        setIsModalOpen(true);
-        setIsConfirmModalOpen(false);
-        console.log('Successfully downgraded to Free plan');
-        
-        // Refresh subscription data from database to ensure UI is up-to-date
-        await refreshSubscriptionData();
+      if (result.success) {
+        console.log('Successfully downgraded subscription');
+        // Show success message
+        setModalMessage('Your subscription has been downgraded to Free. Your access will continue until the end of your current billing period.');
       } else {
-        console.error('Error downgrading to Free plan:', result?.error);
-        setModalMessage('There was an error downgrading your plan. Please try again.');
-        setIsModalOpen(true);
+        console.error('Failed to downgrade subscription:', result.error);
+        setModalMessage('Failed to downgrade subscription. Please try again.');
       }
+      
+      setIsModalOpen(true);
     } catch (error) {
       console.error('Error in downgrade process:', error);
       setModalMessage('There was an error downgrading your plan. Please try again.');
