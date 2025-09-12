@@ -186,6 +186,7 @@ export const RegisterPage: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  autoComplete="email"
                   required
                 />
               </FormGroup>
@@ -198,6 +199,7 @@ export const RegisterPage: React.FC = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
+                  autoComplete="username"
                   required
                 />
               </FormGroup>
@@ -211,6 +213,7 @@ export const RegisterPage: React.FC = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    autoComplete="new-password"
                     required
                   />
                   <PasswordToggle 
