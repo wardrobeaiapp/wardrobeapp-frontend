@@ -1,9 +1,8 @@
 import { ProfileData } from '../../types';
 import { SaveResult } from '../../components/features/profile/types/StyleProfileTypes';
-import { ProfileSection, saveUserPreferences } from './userPreferencesService';
-import { saveSubscriptionToUserProfile } from './subscriptionService';
+import { ProfileSection } from './userPreferencesService';
 import { supabase } from '../core';
-import { StylePreferencesData, WardrobeGoalsData, DailyActivitiesData, LeisureActivitiesData, ClimateData, SubscriptionData } from '../../components/features/profile/sections/types';
+import { StylePreferencesData, WardrobeGoalsData, ClimateData, SubscriptionData } from '../../components/features/profile/sections/types';
 
 /**
  * Service for saving specific sections of user profile data to Supabase
@@ -40,9 +39,6 @@ export const saveSectionPreferences = async (
   userId?: string, 
   section?: ProfileSection
 ): Promise<SaveResult> => {
-  console.log(`DEBUG - saveSectionPreferences - Saving ONLY ${section} section for user ${userId}`);
-  
-  // Validate inputs
   if (!sectionData) {
     console.error('ERROR - saveSectionPreferences - Missing sectionData');
     return { success: false, error: new Error('Missing section data') };
@@ -156,9 +152,6 @@ export const saveSectionPreferences = async (
       }
     } 
     else if (effectiveSection === 'wardrobeGoals') {
-      // Wardrobe goals section
-      console.log('DEBUG - saveSectionPreferences - Building payload for wardrobeGoals section');
-      
       // Cast sectionData to WardrobeGoalsData for better type safety
       const goalsData = sectionData as WardrobeGoalsData;
       
@@ -169,75 +162,13 @@ export const saveSectionPreferences = async (
         
       // Add wardrobe goals additional notes
       sectionPayload.wardrobe_goals_additional_notes = goalsData.otherWardrobeGoal || null;
-      
-      console.log('DEBUG - saveSectionPreferences - wardrobeGoals payload:', {
-        wardrobe_goals: sectionPayload.wardrobe_goals,
-        wardrobe_goals_additional_notes: sectionPayload.wardrobe_goals_additional_notes
-      });
-    }
-    else if (effectiveSection === 'dailyActivities') {
-      // Daily activities section
-      console.log('DEBUG - saveSectionPreferences - Building payload for dailyActivities section');
-      
-      // Cast sectionData to DailyActivitiesData for better type safety
-      const activitiesData = sectionData as DailyActivitiesData;
-      
-      
-      // Add daily activities additional notes
-      sectionPayload.other_activity_description = activitiesData.otherActivityDescription || null;
-      
-      // Add office dress code
-      sectionPayload.office_dress_code = activitiesData.officeDressCode || null;
-      
-      // Add remote work priority
-      sectionPayload.remote_work_priority = activitiesData.remoteWorkPriority || null;
-      
-      
-      console.log('DEBUG - saveSectionPreferences - dailyActivities payload:', {
-        other_activity_description: sectionPayload.other_activity_description,
-        office_dress_code: sectionPayload.office_dress_code,
-        remote_work_priority: sectionPayload.remote_work_priority
-      });
-    }
-    else if (effectiveSection === 'leisureActivities') {
-      // Leisure activities section
-      console.log('DEBUG - saveSectionPreferences - Building payload for leisureActivities section');
-      
-      // Cast sectionData to LeisureActivitiesData for better type safety
-      const leisureData = sectionData as LeisureActivitiesData;
-      
-        
-      // Add other leisure activity if present
-      if (leisureData.otherLeisureActivity) {
-        if (typeof leisureData.otherLeisureActivity === 'string') {
-          sectionPayload.other_leisure_activity = leisureData.otherLeisureActivity;
-        } else if (typeof leisureData.otherLeisureActivity === 'object' && leisureData.otherLeisureActivity.text) {
-          sectionPayload.other_leisure_activity = leisureData.otherLeisureActivity.text;
-        }
-      } else {
-        sectionPayload.other_leisure_activity = null;
-      }
-      
-      // REMOVED: Frequency fields don't exist in database schema
-      // All frequency data is now captured in scenarios instead
-      
-      console.log('DEBUG - saveSectionPreferences - leisureActivities payload:', {
-        other_leisure_activity: sectionPayload.other_leisure_activity
-      });
     }
     else if (effectiveSection === 'climate') {
-      // Climate section
-      console.log('DEBUG - saveSectionPreferences - Building payload for climate section');
-      
       // Cast sectionData to ClimateData for better type safety
       const climateData = sectionData as ClimateData;
       
       // Add local climate
       sectionPayload.local_climate = climateData.localClimate || null;
-      
-      console.log('DEBUG - saveSectionPreferences - climate payload:', {
-        local_climate: sectionPayload.local_climate
-      });
     }
     else if (effectiveSection === 'subscription') {
       // Cast sectionData to SubscriptionData for better type safety
@@ -251,20 +182,10 @@ export const saveSectionPreferences = async (
       };
     }
     
-    // Log the final payload for debugging
-    console.log('DEBUG - saveSectionPreferences - FINAL SECTION PAYLOAD:', JSON.stringify(sectionPayload, null, 2));
-    
-    // Skip checking for existing records and use upsert instead
-    console.log(`DEBUG - saveSectionPreferences - Using upsert for user: ${effectiveUserId}`);
-    console.log('DEBUG - saveSectionPreferences - This will create a new record if none exists, or update existing record');
-    
     // Add updated_at timestamp
     sectionPayload.updated_at = new Date().toISOString();
     
-    // Use upsert to handle both insert and update cases
-    console.log('DEBUG - saveSectionPreferences - Using upsert operation for user:', effectiveUserId);
-    
-    const { data: upsertData, error: upsertError } = await supabase
+    const { error: upsertError } = await supabase
       .from('user_preferences')
       .upsert(sectionPayload, { onConflict: 'user_id' })
       .select();
@@ -274,242 +195,22 @@ export const saveSectionPreferences = async (
       return { success: false, error: upsertError };
     }
     
-    console.log('DEBUG - saveSectionPreferences - Upsert successful:', upsertData);
-    
-    const result = { success: true };
-    
     // Verify the save for stylePreferences section
     if (effectiveSection === 'stylePreferences') {
-      console.log('DEBUG - saveSectionPreferences - Verifying stylePreferences save');
-      
-      const { data: verifyData, error: verifyError } = await supabase
+      const { error: verifyError } = await supabase
         .from('user_preferences')
         .select('preferred_styles, comfort_vs_style, classic_vs_trendy, basics_vs_statements, style_additional_notes')
         .eq('user_id', effectiveUserId)
         .single();
         
       if (verifyError) {
-        console.error('DEBUG - saveSectionPreferences - Verification error:', verifyError);
-      } else {
-        console.log('DEBUG - saveSectionPreferences - Verification data:', {
-          preferredStyles: verifyData.preferred_styles,
-          comfortVsStyle: verifyData.comfort_vs_style,
-          classicVsTrendy: verifyData.classic_vs_trendy,
-          basicsVsStatements: verifyData.basics_vs_statements,
-          styleAdditionalNotes: verifyData.style_additional_notes
-        });
+        console.error('Error verifying style preferences save:', verifyError);
       }
     }
     
-    return result;
+    return { success: true };
   } catch (error) {
     console.error('ERROR - saveSectionPreferences - Unexpected error:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves style preferences section to user_preferences table
- * @param profileData Profile data containing style preferences
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveStylePreferences = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveStylePreferences', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveStylePreferences - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveStylePreferences - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the style preferences data being saved
-    console.log('DEBUG - sectionPreferencesService - saveStylePreferences data:', {
-      preferredStyles: profileData.preferredStyles,
-      stylePreferences: profileData.stylePreferences
-    });
-    
-    // Call the userPreferencesService to save just the style preferences section
-    return await saveUserPreferences(profileData, userId, 'stylePreferences');
-  } catch (error) {
-    console.error('Error in saveStylePreferences:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves wardrobe goals section to user_preferences table
- * @param profileData Profile data containing wardrobe goals
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveWardrobeGoals = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveWardrobeGoals', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveWardrobeGoals - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveWardrobeGoals - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the wardrobe goals data being saved
-    console.log('DEBUG - sectionPreferencesService - saveWardrobeGoals data:', {
-      wardrobeGoals: profileData.wardrobeGoals,
-      otherWardrobeGoal: profileData.otherWardrobeGoal
-    });
-    
-    // Call the userPreferencesService to save just the wardrobe goals section
-    return await saveUserPreferences(profileData, userId, 'wardrobeGoals');
-  } catch (error) {
-    console.error('Error in saveWardrobeGoals:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves daily activities section to user_preferences table
- * @param profileData Profile data containing daily activities
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveDailyActivities = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveDailyActivities', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveDailyActivities - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveDailyActivities - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the daily activities data being saved
-    console.log('DEBUG - sectionPreferencesService - saveDailyActivities data:', {
-      dailyActivities: profileData.dailyActivities,
-      otherActivityDescription: profileData.otherActivityDescription,
-      officeDressCode: profileData.officeDressCode,
-      remoteWorkPriority: profileData.remoteWorkPriority,
-      creativeMobility: profileData.creativeMobility
-    });
-    
-    // Call the userPreferencesService to save just the daily activities section
-    return await saveUserPreferences(profileData, userId, 'dailyActivities');
-  } catch (error) {
-    console.error('Error in saveDailyActivities:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves leisure activities section to user_preferences table
- * @param profileData Profile data containing leisure activities
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveLeisureActivities = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveLeisureActivities', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveLeisureActivities - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveLeisureActivities - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the leisure activities data being saved
-    console.log('DEBUG - sectionPreferencesService - saveLeisureActivities data:', {
-      leisureActivities: profileData.leisureActivities,
-      otherLeisureActivity: profileData.otherLeisureActivity
-    });
-    
-    // Call the userPreferencesService to save just the leisure activities section
-    return await saveUserPreferences(profileData, userId, 'leisureActivities');
-  } catch (error) {
-    console.error('Error in saveLeisureActivities:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves climate section to user_preferences table
- * @param profileData Profile data containing climate
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveClimate = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveClimate', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveClimate - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveClimate - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the climate data being saved
-    console.log('DEBUG - sectionPreferencesService - saveClimate data:', {
-      localClimate: profileData.localClimate
-    });
-    
-    // Call the userPreferencesService to save just the climate section
-    return await saveUserPreferences(profileData, userId, 'climate');
-  } catch (error) {
-    console.error('Error in saveClimate:', error);
-    return { success: false, error };
-  }
-};
-
-/**
- * Saves subscription section directly to user_profiles table
- * @param profileData Profile data containing subscription information
- * @param userId User ID
- * @returns Promise with save result
- */
-export const saveSubscription = async (profileData: ProfileData, userId: string): Promise<SaveResult> => {
-  console.log('DEBUG - sectionPreferencesService - saveSubscription', { userId });
-  
-  try {
-    if (!userId) {
-      console.error('ERROR - saveSubscription - Missing userId');
-      throw new Error('Missing userId');
-    }
-    
-    if (!profileData) {
-      console.error('ERROR - saveSubscription - Missing profileData');
-      throw new Error('Missing profileData');
-    }
-    
-    // Log the subscription data being saved
-    console.log('DEBUG - sectionPreferencesService - saveSubscription data:', {
-      subscriptionPlan: profileData.subscriptionPlan,
-      subscriptionRenewalDate: profileData.subscriptionRenewalDate
-    });
-    
-    // Call the dedicated function to save subscription data to user_profiles table
-    return await saveSubscriptionToUserProfile(profileData, userId);
-  } catch (error) {
-    console.error('Error in saveSubscription:', error);
     return { success: false, error };
   }
 };
