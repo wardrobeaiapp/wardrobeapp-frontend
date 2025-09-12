@@ -30,13 +30,27 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setError(null);
     
     try {
+      // Check if we have a session first to avoid AuthSessionMissingError
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session || !sessionData.session.user) {
+        // No active session - user is not authenticated
+        if (isMountedRef.current) {
+          setItems([]);
+          setIsLoading(false);
+        }
+        return;
+      }
+      
       // Get the current authenticated user
       const { data: authData, error: authError } = await supabase.auth.getUser();
       
       if (authError || !authData.user) {
         console.error('Error getting authenticated user:', authError);
-        setError('Authentication required to load items');
-        setIsLoading(false);
+        if (isMountedRef.current) {
+          setError('Authentication required to load items');
+          setIsLoading(false);
+        }
         return;
       }
       

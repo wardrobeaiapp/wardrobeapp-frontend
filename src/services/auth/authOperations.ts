@@ -330,15 +330,25 @@ export const createTemporaryUserFromToken = (token: string): TemporaryUser | nul
 };
 
 // Logout user
-export const logout = (): void => {
+export const logout = async (): Promise<void> => {
   try {
-    // Sign out from Supabase
-    supabase.auth.signOut();
+    // Clear user cache first
+    _userCache.data = null;
+    _userCache.timestamp = 0;
+    
+    // Sign out from Supabase (this is async)
+    await supabase.auth.signOut();
     
     // Remove token from localStorage
     localStorage.removeItem('token');
+    
+    debugLog('Logout completed successfully');
   } catch (error) {
     console.error('Error during logout:', error);
+    // Even if logout fails, clear local data
+    _userCache.data = null;
+    _userCache.timestamp = 0;
+    localStorage.removeItem('token');
   }
 };
 
