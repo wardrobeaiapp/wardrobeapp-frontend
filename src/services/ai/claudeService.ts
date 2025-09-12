@@ -299,7 +299,11 @@ export const claudeService = {
           imageBase64,
           detectedTags,
           climateData,
-          scenarios: scenarios.length > 0 ? scenarios : undefined
+          scenarios: scenarios.length > 0 ? scenarios.map(({ id, name, description }) => ({
+            id,
+            name,
+            description
+          })) : undefined
         }
       );
 
