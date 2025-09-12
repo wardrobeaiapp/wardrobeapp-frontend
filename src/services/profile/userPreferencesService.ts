@@ -18,13 +18,6 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
   } = profileData;
   
   // Process wardrobe goals to include 'other' if needed
-  console.log('DEBUG - userPreferencesService - Processing wardrobe goals - Input:', {
-    wardrobeGoals: profileData.wardrobeGoals,
-    isArray: Array.isArray(profileData.wardrobeGoals),
-    type: typeof profileData.wardrobeGoals,
-    length: profileData.wardrobeGoals?.length || 0,
-    otherWardrobeGoal: profileData.otherWardrobeGoal
-  });
   
   let wardrobeGoals = Array.isArray(profileData.wardrobeGoals) ? [...profileData.wardrobeGoals] : [];
   
@@ -34,10 +27,6 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
   // Convert back to array
   wardrobeGoals = Array.from(uniqueGoalsSet);
   
-  console.log('DEBUG - userPreferencesService - After deduplication:', {
-    wardrobeGoals,
-    length: wardrobeGoals.length
-  });
   
   // Only add the custom goal if 'other' is selected and there's an otherWardrobeGoal value
   if (wardrobeGoals.includes('other') && profileData.otherWardrobeGoal && profileData.otherWardrobeGoal.trim()) {
@@ -46,17 +35,14 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
     if (otherIndex !== -1) {
       const customGoal = profileData.otherWardrobeGoal.trim();
       wardrobeGoals[otherIndex] = customGoal;
-      console.log('DEBUG - userPreferencesService - Replaced "other" with custom goal:', customGoal);
     }
   } else {
     // If 'other' is not checked or there's no custom goal text, make sure we don't add any custom goals
-    console.log('DEBUG - userPreferencesService - "Other" not selected or no custom goal text, keeping standard goals only');
   }
   
   // Final deduplication check
   wardrobeGoals = Array.from(new Set(wardrobeGoals));
   
-  console.log('DEBUG - userPreferencesService - Final wardrobe goals after processing:', wardrobeGoals);
   
   // Create the mapped object with proper null handling for Supabase
   const mappedData = {
@@ -64,16 +50,6 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
     // Add the wardrobe goals array
     wardrobe_goals: wardrobeGoals,
     
-    // Log wardrobe goals being saved to DB
-    ...(function() {
-      console.log('DEBUG - userPreferencesService - Saving wardrobe_goals to DB:', {
-        wardrobeGoals,
-        length: wardrobeGoals.length,
-        isArray: Array.isArray(wardrobeGoals),
-        type: typeof wardrobeGoals
-      });
-      return {};
-    })(),
     // Save the original other wardrobe goal text
     other_wardrobe_goal: profileData.otherWardrobeGoal || null,
     
@@ -83,49 +59,14 @@ const mapProfileDataToUserPreferences = (profileData: ProfileData, userId: strin
     classic_vs_trendy: typeof stylePreferences?.classicVsTrendy === 'number' ? stylePreferences.classicVsTrendy : null,
     basics_vs_statements: typeof stylePreferences?.basicsVsStatements === 'number' ? stylePreferences.basicsVsStatements : null,
     style_additional_notes: stylePreferences?.additionalNotes || null,
-    // Debug logging for style preferences
-    ...(function() {
-      console.log('DEBUG - userPreferencesService - Saving style preferences to DB:', {
-        preferredStyles: profileData.preferredStyles,
-        comfortVsStyle: stylePreferences?.comfortVsStyle,
-        classicVsTrendy: stylePreferences?.classicVsTrendy,
-        basicsVsStatements: stylePreferences?.basicsVsStatements,
-        additionalNotes: stylePreferences?.additionalNotes,
-        mappedComfortVsStyle: typeof stylePreferences?.comfortVsStyle === 'number' ? stylePreferences.comfortVsStyle : null,
-        mappedClassicVsTrendy: typeof stylePreferences?.classicVsTrendy === 'number' ? stylePreferences.classicVsTrendy : null,
-        mappedBasicsVsStatements: typeof stylePreferences?.basicsVsStatements === 'number' ? stylePreferences.basicsVsStatements : null,
-        mappedAdditionalNotes: stylePreferences?.additionalNotes || null
-      });
-      return {};
-    })(),
     
     // Climate preference
     local_climate: profileData.localClimate || null,
-    // Log climate value for debugging
-    ...(function() {
-      console.log('DEBUG - userPreferencesService - Saving local_climate:', {
-        localClimate: profileData.localClimate,
-        mappedValue: profileData.localClimate || null,
-        profileDataKeys: Object.keys(profileData),
-        rawProfileData: JSON.stringify(profileData)
-      });
-      return {};
-    })(),
-    
-    // Debug logging removed for performance
-    ...(function() {
-      // Just return an empty object instead of logging
-      return {};
-    })(),
     
     // Update timestamp
     updated_at: new Date().toISOString()
   };
   
-  // Log the final mapped data
-  console.log('DEBUG - mapProfileDataToUserPreferences - Final mapped data:', JSON.stringify(mappedData, null, 2));
-  // Temporarily comment out other_activity_description logging until DB schema is updated
-  // console.log('DEBUG - mapProfileDataToUserPreferences - other_activity_description:', mappedData.other_activity_description);
   
   return mappedData;
 };
@@ -153,7 +94,6 @@ export type ProfileSection =
  * @returns Promise with save result
  */
 export const saveUserPreferences = async (profileData: ProfileData, userId: string, section: ProfileSection = 'all'): Promise<SaveResult> => {
-  console.log(`DEBUG - saveUserPreferences - ENTRY POINT with userId: ${userId}, section: ${section}`);
   
   // Validate userId
   if (!userId) {
@@ -183,7 +123,6 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
     if (!existingData) {
       // If no record exists, we need to create one with minimal data
       // regardless of which section we're saving
-      console.log('DEBUG - saveUserPreferences - No existing record found, creating new record');
       
       // Create a minimal record with just the required fields
       const minimalData = {
@@ -201,7 +140,6 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
         return { success: false, error: insertError };
       }
       
-      console.log('DEBUG - saveUserPreferences - Created new record:', insertData);
     }
     
     // Now we can update the record with just the fields for the specific section
@@ -213,7 +151,6 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
     
     // For all sections, use the full mapped data
     if (section === 'all') {
-      console.log('DEBUG - saveUserPreferences - Saving ALL sections');
       // Map the entire profile data
       updatePayload = {
         ...mapProfileDataToUserPreferences(profileData, userId)
@@ -221,7 +158,6 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
     }
     // Handle section-specific updates
     else if (section === 'stylePreferences') {
-      console.log('DEBUG - saveUserPreferences - Saving ONLY stylePreferences section');
       
       // Only extract and process stylePreferences fields
       // Preferred styles array
@@ -251,18 +187,9 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
         updatePayload.style_additional_notes = null;
       }
       
-      // Log only the stylePreferences fields being saved
-      console.log('DEBUG - saveUserPreferences - stylePreferences update payload:', {
-        preferred_styles: updatePayload.preferred_styles,
-        comfort_vs_style: updatePayload.comfort_vs_style,
-        classic_vs_trendy: updatePayload.classic_vs_trendy,
-        basics_vs_statements: updatePayload.basics_vs_statements,
-        style_additional_notes: updatePayload.style_additional_notes
-      });
     }
     // Add handlers for other sections as needed
     else if (section === 'wardrobeGoals') {
-      console.log('DEBUG - saveUserPreferences - Saving ONLY wardrobeGoals section');
       
       // Only extract and process wardrobeGoals fields
       updatePayload.wardrobe_goals = Array.isArray(profileData.wardrobeGoals) ? 
@@ -270,35 +197,21 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
       updatePayload.other_wardrobe_goal = typeof profileData.otherWardrobeGoal === 'string' ? 
         profileData.otherWardrobeGoal : null;
         
-      console.log('DEBUG - saveUserPreferences - wardrobeGoals update payload:', {
-        wardrobe_goals: updatePayload.wardrobe_goals,
-        other_wardrobe_goal: updatePayload.other_wardrobe_goal
-      });
     }
 
     else if (section === 'climate') {
-      console.log('DEBUG - saveUserPreferences - Saving ONLY climate section');
       
       // Only extract and process climate fields
       updatePayload.local_climate = profileData.localClimate || null;
         
-      console.log('DEBUG - saveUserPreferences - climate update payload:', {
-        local_climate: updatePayload.local_climate
-      });
     }
     // 🎯 shoppingLimit section logic REMOVED - now handled by unified budget service
 
-    console.log(`DEBUG - saveUserPreferences - Saving ONLY ${section} section with fields:`, Object.keys(updatePayload));
-
-    console.log('DEBUG - saveUserPreferences - BEFORE UPDATE API CALL');
-    console.log('DEBUG - saveUserPreferences - UPDATE user_id:', userId);
-    console.log('DEBUG - saveUserPreferences - UPDATE payload:', JSON.stringify(updatePayload, null, 2));
 
     try {
       // For section-specific saves, we'll create a completely new targeted payload
       // instead of trying to filter an existing full payload
       if (section !== 'all') {
-        console.log(`DEBUG - saveUserPreferences - Creating TARGETED payload for ${section} section`);
         
         // Create a brand new payload with just user_id
         const targetedPayload: any = {
@@ -350,12 +263,8 @@ export const saveUserPreferences = async (profileData: ProfileData, userId: stri
         // Replace the entire updatePayload with our targeted payload
         updatePayload = targetedPayload;
         
-        console.log(`DEBUG - saveUserPreferences - TARGETED UPDATE PAYLOAD for ${section} section:`, 
-          JSON.stringify(updatePayload, null, 2));
       }
       
-      // Log the final update payload right before the API call
-      console.log('DEBUG - saveUserPreferences - FINAL UPDATE PAYLOAD:', JSON.stringify(updatePayload, null, 2));
 
       // Finally, update the user_preferences record
       const { error: updateError } = await supabase
