@@ -83,20 +83,20 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
       title="Select Items"
       size="lg"
     >
-        <FilterSection>
-          <FiltersPanel
-            searchQuery={searchQuery}
-            categoryFilter={selectedCategory}
-            colorFilter={colorFilter}
-            seasonFilter={selectedSeason}
-            onSearchChange={setSearchQuery}
-            onCategoryChange={setSelectedCategory}
-            onColorChange={setColorFilter}
-            onSeasonChange={setSelectedSeason}
-            searchPlaceholder="Search by name, brand, material..."
-          />
-          <ItemsFoundText>{filteredItems.length} items found</ItemsFoundText>
-        </FilterSection>
+      <FilterSection>
+        <FiltersPanel
+          searchQuery={searchQuery}
+          categoryFilter={selectedCategory}
+          colorFilter={colorFilter}
+          seasonFilter={selectedSeason}
+          onSearchChange={setSearchQuery}
+          onCategoryChange={setSelectedCategory}
+          onColorChange={setColorFilter}
+          onSeasonChange={setSelectedSeason}
+          searchPlaceholder="Search by name, brand, material..."
+        />
+        <ItemsFoundText>{filteredItems.length} items found</ItemsFoundText>
+      </FilterSection>
 
         {filteredItems.length > 0 ? (
           <ItemGrid>

@@ -4,7 +4,6 @@ export const ItemGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 0.75rem;
-  padding: 1.5rem;
   max-height: 400px;
   overflow-y: auto;
 `;
@@ -93,8 +92,7 @@ export const EmptyState = styled.div`
 
 // Search and Filter Styles
 export const FilterSection = styled.div`
-  padding: 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1.5rem;
 `;
 
 export const SearchContainer = styled.div`
