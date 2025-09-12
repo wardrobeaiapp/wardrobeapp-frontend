@@ -3,7 +3,8 @@ import {
   SectionDivider,
   SectionWrapper
 } from '../../../pages/ProfilePage.styles';
-import { getShoppingLimitData, getClothingBudgetData, ClothingBudgetData } from '../../../services/profile/userBudgetsService';
+import { getShoppingLimitData, getClothingBudgetData } from '../../../services/profile/userBudgetsService';
+import { ClothingBudgetData } from '../../../types/budget.types';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 import { getUserProfileByUserId } from '../../../services/auth/supabaseAuthService';
 import { getAIUsageData, AIUsageData } from '../../../services/ai/aiUsageService';
