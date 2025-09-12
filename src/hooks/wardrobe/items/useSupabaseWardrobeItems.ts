@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { WardrobeItem, WishlistStatus } from '../../../types';
-import { fetchWardrobeItems, createWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
+import { getWardrobeItems, addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
 import { supabase } from '../../../services/core';
 
 export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
@@ -14,7 +14,12 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
     setError(null);
     
     try {
-      const loadedItems = await fetchWardrobeItems();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      
+      const loadedItems = await getWardrobeItems(user.id);
       setItems(loadedItems);
     } catch (error: any) {
       console.error('[useSupabaseWardrobeItems] Error loading items:', error);
@@ -43,7 +48,11 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
       };
       
       // Add to Supabase
-      const newItem = await createWardrobeItem(itemWithStatus);
+      const newItem = await addWardrobeItem(itemWithStatus);
+      
+      if (!newItem) {
+        throw new Error('Failed to create item');
+      }
       
       // Update local state
       setItems(prevItems => [newItem, ...prevItems]);
