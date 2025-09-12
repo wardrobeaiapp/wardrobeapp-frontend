@@ -1,19 +1,5 @@
 import { supabase } from '../core';
-import { 
-  UserBudgetsData,
-  ShoppingLimitData,
-  ClothingBudgetData
-} from './budget.types';
-import {
-  getShoppingLimitData,
-  saveShoppingLimitData,
-  extractShoppingLimitData
-} from './shoppingLimitService';
-import {
-  getClothingBudgetData,
-  saveClothingBudgetData,
-  extractClothingBudgetData
-} from './clothingBudgetService';
+import { UserBudgetsData } from './budget.types';
 
 /**
  * Fetch unified user budgets data for a specific user from user_budgets table
