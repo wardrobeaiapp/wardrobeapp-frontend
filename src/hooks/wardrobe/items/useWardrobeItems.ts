@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState} from 'react';
 import { WardrobeItem, WishlistStatus } from '../../../types';
 import { addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
 
@@ -7,7 +7,7 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   const [error, setError] = useState<string | null>(null);
 
   // Add a new wardrobe item
-  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => {
+  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded'>) => {
     try {
       console.log('[useWardrobeItems] Adding item with name:', item.name);
       
@@ -19,7 +19,7 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
       }
       
       // Helper function to add item as guest user
-      const addItemAsGuest = (itemData: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => {
+      const addItemAsGuest = (itemData: Omit<WardrobeItem, 'id' | 'dateAdded'>) => {
         // Set default wishlist status for wishlist items
         const wishlistStatus = itemData.wishlist ? WishlistStatus.NOT_REVIEWED : undefined;
         
@@ -27,7 +27,6 @@ export const useWardrobeItems = (initialItems: WardrobeItem[] = []) => {
           ...itemData,
           id: `item-${Date.now()}`,
           dateAdded: new Date().toISOString(),
-          timesWorn: 0,
           wishlistStatus,
         };
         

@@ -37,8 +37,6 @@ export interface WardrobeItem {
   imageUrl?: string;
   imageExpiry?: Date | string; // Timestamp when stored signed URL expires
   dateAdded: string;
-  lastWorn?: string;
-  timesWorn: number;
   tags?: Record<string, any>; // Allow any value type to preserve complete tag structure
   wishlist?: boolean;
   wishlistStatus?: WishlistStatus;

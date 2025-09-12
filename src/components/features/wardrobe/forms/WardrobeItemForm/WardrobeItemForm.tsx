@@ -282,19 +282,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         pattern: formData.pattern,
         material: formData.material,
         brand: formData.brand,
-        price: parseFloat(formData.price) || 0,
-        season: formData.seasons,
-        scenarios: formData.scenarios, // Add scenarios to the item
-        wishlist: formData.isWishlistItem,
-        imageUrl: finalImageUrl,
-        dateAdded: initialItem?.dateAdded || new Date().toISOString(),
-        timesWorn: initialItem?.timesWorn || 0,
-        // Add user ID for row-level security policy
-        userId: userId || undefined,
-        // Add new detail fields
-        sleeves: formData.sleeves,
-        style: formData.style,
-        silhouette: formData.silhouette,
         length: formData.length,
         neckline: formData.neckline,
         heelHeight: formData.heelHeight,

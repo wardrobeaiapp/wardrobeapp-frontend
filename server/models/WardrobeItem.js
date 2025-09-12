@@ -32,13 +32,6 @@ const wardrobeItemSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  timesWorn: {
-    type: Number,
-    default: 0
-  },
-  lastWorn: {
-    type: Date
-  },
   wishlist: {
     type: Boolean,
     default: false

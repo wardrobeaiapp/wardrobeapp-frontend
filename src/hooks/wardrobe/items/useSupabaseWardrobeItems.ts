@@ -25,7 +25,7 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
   };
 
   // Add a new wardrobe item
-  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>) => {
+  const addItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded'>) => {
     try {
       console.log('[useSupabaseWardrobeItems] Adding item with name:', item.name);
       

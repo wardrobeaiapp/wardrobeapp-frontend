@@ -237,7 +237,6 @@ export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
       season: item.season,
       imageUrl: item.imageUrl,
       dateAdded: item.dateAdded || item.date_added,
-      timesWorn: item.timesWorn || item.times_worn || 0,
       tags: item.tags,
       wishlist: item.wishlist,
       wishlistStatus: item.wishlistStatus || item.wishlist_status,
@@ -260,7 +259,7 @@ export const fetchWardrobeItems = async (): Promise<WardrobeItem[]> => {
  * For backward compatibility with existing code
  * @deprecated Use addWardrobeItem instead
  */
-export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded' | 'timesWorn'>): Promise<WardrobeItem> => {
+export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAdded'>): Promise<WardrobeItem> => {
   // Ensure wishlist status is set to 'not_reviewed' for new wishlist items
   const wishlistStatus = item.wishlist && !item.wishlistStatus ? WishlistStatus.NOT_REVIEWED : item.wishlistStatus;
   
@@ -268,7 +267,6 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
     ...item,
     wishlistStatus,
     dateAdded: new Date(),
-    timesWorn: 0,
   };
 
   try {
@@ -305,7 +303,6 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
       season: data.season as any[],
       imageUrl: data.imageUrl as string | undefined,
       dateAdded: (data.dateAdded || data.date_added) as string,
-      timesWorn: (data.timesWorn || data.times_worn || 0) as number,
       // Store the complete tags object as-is with the correct type
       tags: data.tags as Record<string, any> | undefined,
       wishlist: data.wishlist as boolean | undefined,
@@ -318,20 +315,19 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
     console.error('[Supabase] Error creating wardrobe item:', error);
     
     // Fallback to local storage for guest users
-    const newItem: WardrobeItem = {
+    const itemToAdd = {
       ...item,
       id: `item-${Date.now()}`,
-      dateAdded: new Date().toISOString(),
-      timesWorn: 0
+      dateAdded: new Date().toISOString()
     } as WardrobeItem;
     
     // Save to local storage
     const storedItems = localStorage.getItem('guestItems');
     const items = storedItems ? JSON.parse(storedItems) : [];
-    const updatedItems = [newItem, ...items];
+    const updatedItems = [itemToAdd, ...items];
     localStorage.setItem('guestItems', JSON.stringify(updatedItems));
     
-    return newItem;
+    return itemToAdd;
   }
 };
 

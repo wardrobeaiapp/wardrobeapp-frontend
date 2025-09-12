@@ -188,7 +188,6 @@ router.post('/', auth, async (req, res) => {
         ...itemData,
         id: `item-${Date.now()}`,
         dateAdded: new Date().toISOString(),
-        timesWorn: 0
       };
       
       // Make sure the in-memory array exists
@@ -370,10 +369,6 @@ router.put('/:id/wear', auth, async (req, res) => {
     // Update times worn and last worn date
     item = await WardrobeItem.findByIdAndUpdate(
       req.params.id,
-      { 
-        $inc: { timesWorn: 1 },
-        $set: { lastWorn: new Date() }
-      },
       { new: true }
     );
     
