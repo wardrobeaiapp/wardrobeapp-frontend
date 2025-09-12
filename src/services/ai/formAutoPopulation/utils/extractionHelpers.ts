@@ -26,6 +26,7 @@ export class ExtractionHelpers {
     
     return terms.some(term => {
       const normalizedTerm = this.normalizeString(term);
+      
       return exactMatch 
         ? normalizedTag === normalizedTerm
         : normalizedTag.includes(normalizedTerm);

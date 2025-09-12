@@ -44,6 +44,14 @@ export class SeasonExtractor {
       detectedSeasons.add(Season.SUMMER);
     }
     
+    if (this.hasSpringIndicators(allTags)) {
+      detectedSeasons.add(Season.SPRING);
+    }
+    
+    if (this.hasFallIndicators(allTags)) {
+      detectedSeasons.add(Season.FALL);
+    }
+    
     // If no seasons detected, return empty array
     if (detectedSeasons.size === 0) {
       this.logger.debug('[SeasonExtractor] No specific seasons detected');
@@ -75,5 +83,31 @@ export class SeasonExtractor {
     ];
     
     return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, summerTerms));
+  }
+
+  /**
+   * Check if tags contain spring-specific indicators
+   */
+  private hasSpringIndicators(tags: string[]): boolean {
+    const springTerms = [
+      'spring', 'fresh', 'blooming', 'mild', 'transitional', 'layered',
+      'cardigan', 'light jacket', 'denim', 'chinos', 'loafers', 'sneakers',
+      'pastel', 'bright', 'floral', 'lightweight', 'versatile',
+    ];
+    
+    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, springTerms));
+  }
+
+  /**
+   * Check if tags contain fall-specific indicators
+   */
+  private hasFallIndicators(tags: string[]): boolean {
+    const fallTerms = [
+      'fall', 'autumn', 'crisp', 'layering', 'cozy', 'sweater', 'boots', 
+      'scarf', 'plaid', 'corduroy', 'tweed', 'burgundy', 'rust', 'leather', 
+      'suede', 'wool'
+    ];
+    
+    return tags.some(tag => ExtractionHelpers.tagMatchesAny(tag, fallTerms));
   }
 }
