@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaClock, FaTrash } from 'react-icons/fa';
+import { FaClock, FaTrash, FaEdit } from 'react-icons/fa';
 import { getScenarioIcon } from '../../../utils/scenarioIconUtils';
 import { frequencyOptions, periodOptions } from '../../../data/onboardingOptions';
 import {
@@ -26,6 +26,7 @@ export interface ScenarioItemProps {
   onDelete: (id: string) => void;
   onFrequencyChange: (id: string, value: number) => void;
   onPeriodChange: (id: string, value: string) => void;
+  onEdit?: (id: string) => void;
 }
 
 const ScenarioItemComponent: React.FC<ScenarioItemProps> = ({
@@ -36,10 +37,15 @@ const ScenarioItemComponent: React.FC<ScenarioItemProps> = ({
   period,
   onDelete,
   onFrequencyChange,
-  onPeriodChange
+  onPeriodChange,
+  onEdit
 }) => {
   const { Icon, color, bgColor } = getScenarioIcon(type);
   const isTravel = type.toLowerCase().includes('travel');
+  
+  // Check if description is meaningful (not empty and not generic template)
+  const isGenericDescription = description.startsWith('Settings for') && description.endsWith('scenario');
+  const shouldShowDescription = description && description.trim() !== '' && !isGenericDescription;
 
   return (
     <StyledScenarioItem>
@@ -49,13 +55,20 @@ const ScenarioItemComponent: React.FC<ScenarioItemProps> = ({
         </ScenarioIcon>
         <ScenarioName>{type}</ScenarioName>
         <ActionButtons>
+          {onEdit && (
+            <IconButton onClick={() => onEdit(id)}>
+              <FaEdit size={14} />
+            </IconButton>
+          )}
           <IconButton onClick={() => onDelete(id)}>
             <FaTrash size={14} />
           </IconButton>
         </ActionButtons>
       </ScenarioHeader>
         
-      <ScenarioDescription>{description}</ScenarioDescription>
+      {shouldShowDescription && (
+        <ScenarioDescription>{description}</ScenarioDescription>
+      )}
     
       <FrequencyControls>
         {/* Special case for travel scenarios */}

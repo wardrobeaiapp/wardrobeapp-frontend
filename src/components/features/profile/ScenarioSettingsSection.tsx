@@ -18,6 +18,7 @@ import {
 import { ComponentScenario } from '../../../types/scenario';
 import ScenarioItemComponent from './ScenarioItem';
 import SaveConfirmationModal from './modals/SaveConfirmationModal';
+import EditScenarioModal from './EditScenarioModal';
 
 function ScenarioSettingsSection(): React.ReactElement | null {
   // State for scenarios from database
@@ -29,6 +30,8 @@ function ScenarioSettingsSection(): React.ReactElement | null {
   const [error, setError] = useState<string | null>(null);
   const [newScenarioName, setNewScenarioName] = useState('');
   const [showNewScenarioInput, setShowNewScenarioInput] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingScenario, setEditingScenario] = useState<ComponentScenario | null>(null);
   const newScenarioInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch scenarios from database on component mount
@@ -99,6 +102,24 @@ function ScenarioSettingsSection(): React.ReactElement | null {
   // Close the modal
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  // Handle editing a scenario
+  const handleEditScenario = (id: string) => {
+    const scenario = scenarios.find(s => s.id === id);
+    if (scenario) {
+      setEditingScenario(scenario);
+      setShowEditModal(true);
+    }
+  };
+
+  // Handle updating a scenario from the edit modal
+  const handleUpdateScenario = (updatedScenario: ComponentScenario) => {
+    setScenarios(scenarios.map(s => 
+      s.id === updatedScenario.id ? updatedScenario : s
+    ));
+    setShowEditModal(false);
+    setEditingScenario(null);
   };
 
   // Handle deleting a scenario
@@ -304,6 +325,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
                 onDelete={handleDeleteScenario}
                 onFrequencyChange={handleFrequencyChange}
                 onPeriodChange={handlePeriodChange}
+                onEdit={handleEditScenario}
               />
             ))}
 
@@ -365,6 +387,16 @@ function ScenarioSettingsSection(): React.ReactElement | null {
             isOpen={isModalOpen} 
             onClose={closeModal} 
             message="Scenarios saved successfully!" 
+          />
+          
+          <EditScenarioModal
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setEditingScenario(null);
+            }}
+            onSubmit={handleUpdateScenario}
+            scenario={editingScenario}
           />
           <SaveButton onClick={handleSaveScenarios}>
             Save Scenarios
