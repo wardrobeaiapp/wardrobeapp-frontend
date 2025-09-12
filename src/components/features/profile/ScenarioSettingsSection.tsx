@@ -71,7 +71,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
         return {
           id: scenario.id,
           user_id: scenario.user_id,
-          type: scenario.name,
+          name: scenario.name,
           description: scenario.description || `Settings for ${scenario.name} scenario`,
           frequency: frequencyValue,
           period: periodValue
@@ -181,7 +181,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
       const newScenario: ComponentScenario = {
         id: tempId,
         user_id: 'temp-user-id', // Will be updated when saved to database
-        type: scenarioType,
+        name: scenarioType,
         description: `Settings for ${scenarioType} scenario`,
         frequency: isTravel ? 1 : 1,
         period: isTravel ? 'year' : 'week',
@@ -239,13 +239,12 @@ function ScenarioSettingsSection(): React.ReactElement | null {
         
         if (scenario.isNew) {
           // This is a new scenario that needs to be created in the database
-          console.log('Creating new scenario in database:', scenario.type);
+          console.log('Creating new scenario in database:', scenario.name);
           
           // Create the scenario in the database
           const newDbScenario = await createScenario({
             user_id: authData.user.id,
-            name: scenario.type,
-            type: scenario.period === 'year' ? 'travel' : 'regular',
+            name: scenario.name,
             description: scenario.description,
             frequency: frequencyString
           });
@@ -263,7 +262,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
           
           // Update the scenario in the database
           await updateScenario(scenario.id, {
-            name: scenario.type,
+            name: scenario.name,
             description: scenario.description,
             frequency: frequencyString
           });
@@ -298,7 +297,7 @@ function ScenarioSettingsSection(): React.ReactElement | null {
               <ScenarioItemComponent
                 key={scenario.id}
                 id={scenario.id}
-                type={scenario.type}
+                type={scenario.name}
                 description={scenario.description}
                 frequency={scenario.frequency}
                 period={scenario.period}

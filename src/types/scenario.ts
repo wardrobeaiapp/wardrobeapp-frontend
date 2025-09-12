@@ -3,7 +3,7 @@
 export interface ComponentScenario {
   id: string;
   user_id: string;
-  type: string;       // Maps to 'name' in the database
+  name: string;        // Scenario name (maps to database)
   description: string; // UI description
   frequency: number;   // Numeric frequency value
   period: string;      // Period (week, month, etc.)

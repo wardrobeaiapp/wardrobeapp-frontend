@@ -2,7 +2,6 @@ export interface Scenario {
   id: string;
   user_id: string;
   name: string;
-  type: string;
   description?: string;
   frequency?: string;
   created_at?: string;

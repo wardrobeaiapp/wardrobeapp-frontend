@@ -207,18 +207,11 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
           throw new Error('User ID not found');
         }
         
-        const scenarios: Scenario[] = onboardingState.scenarios.map(scenario => ({
-          id: scenario.id,
-          user_id: userId, // Add the required user_id field
-          type: 'custom',  // Add the required type field
+        const scenariosToSave = onboardingState.scenarios.map(scenario => ({
+          user_id: user.id,
           name: scenario.name,
           description: scenario.description,
-          frequency: scenario.frequency || 'weekly',
-          priority: scenario.priority || 'medium',
-          items: scenario.items || [],
-          outfits: scenario.outfits || [],
-          tags: scenario.tags || [],
-          isActive: true
+          frequency: scenario.frequency || 'weekly'
         }));
         
         try {
@@ -285,16 +278,22 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
               .filter(scenario => !existingScenarioNames.has(scenario.name))
               .map(scenario => ({
                 ...scenario,
-                user_id: user.id,
-                type: 'lifestyle'  // Add a default type
+                user_id: user.id
               }));
             
             if (newScenarios.length > 0) {
               console.log(`DEBUG - Saving ${newScenarios.length} new generated scenarios`);
+              console.log('DEBUG - Scenarios to save:', newScenarios);
               for (const scenario of newScenarios) {
-                await createScenario(scenario);
+                try {
+                  console.log('DEBUG - Saving scenario:', scenario.name, 'with description:', scenario.description);
+                  const savedScenario = await createScenario(scenario);
+                  console.log('DEBUG - Successfully saved scenario:', savedScenario);
+                } catch (scenarioError) {
+                  console.error('DEBUG - Error saving scenario:', scenario.name, scenarioError);
+                }
               }
-              console.log('DEBUG - Successfully saved generated scenarios');
+              console.log('DEBUG - Finished saving all scenarios');
             } else {
               console.log('DEBUG - No new generated scenarios to save');
             }

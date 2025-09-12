@@ -209,7 +209,6 @@ export const updateScenarios = async (scenarios: Scenario[]): Promise<Scenario[]
       return {
         user_id: userId,
         name: scenario.name,
-        type: scenario.type || 'custom',
         description: scenario.description || '',
         frequency: scenario.frequency || 'weekly',
         created_at: scenario.created_at || now,
@@ -253,7 +252,6 @@ export const updateScenarios = async (scenarios: Scenario[]): Promise<Scenario[]
         id: scenario.id,
         user_id: scenario.user_id,
         name: scenario.name,
-        type: scenario.type || 'custom',
         description: scenario.description || '',
         frequency: scenario.frequency || 'weekly',
         created_at: scenario.created_at || new Date().toISOString(),
