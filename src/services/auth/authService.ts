@@ -1,111 +1,42 @@
 import axios from 'axios';
+import type {
+  RegisterData,
+  LoginData,
+  OnboardingData,
+  ProfileData,
+  StyleProfileData,
+  BudgetData,
+  AuthResponse,
+  AuthService
+} from '../../types/auth.types';
 
-// API URLs - using relative paths for proxy support
-const AUTH_API_URL = '/api/auth';
-const PROFILE_API_URL = '/api/profile';
-
-// Types
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-}
-
-interface LoginData {
-  email: string;
-  password: string;
-}
-
-interface OnboardingData {
-  preferences: {
-    preferredStyles: string[];
-    scenarios?: any[]; // Added scenarios property
-    dailyActivities?: string[];
-    leisureActivities?: string[];
-    wardrobeGoals?: string[];
-    stylePreferences?: {
-      comfortVsStyle?: number;
-      classicVsTrendy?: number;
-      basicsVsStatements?: number;
-      additionalNotes?: string;
-    };
-    localClimate?: string;
-    officeDressCode?: string;
-    remoteWorkPriority?: string;
-    creativeMobility?: string;
-    studentDressCode?: string;
-    socialFrequency?: string;
-    socialPeriod?: string;
-    formalEventsFrequency?: string;
-    formalEventsPeriod?: string;
-    outdoorFrequency?: string;
-    outdoorPeriod?: string;
-    travelFrequency?: string;
-    otherWardrobeGoal?: string;
-    shoppingLimit?: any;
-    clothingBudget?: any;
-    [key: string]: any; // Allow for additional fields
-  };
-  scenarios?: any[]; // Allow scenarios at top level for backward compatibility
-  dailyActivities?: string[];
-  leisureActivities?: string[];
-  wardrobeGoals?: string[];
-  stylePreferences?: {
-    comfortVsStyle?: number;
-    classicVsTrendy?: number;
-    basicsVsStatements?: number;
-    additionalNotes?: string;
-  };
-  localClimate?: string;
-  officeDressCode?: string;
-  remoteWorkPriority?: string;
-  creativeMobility?: string;
-  studentDressCode?: string;
-  socialFrequency?: string;
-  socialPeriod?: string;
-  formalEventsFrequency?: string;
-  formalEventsPeriod?: string;
-  outdoorFrequency?: string;
-  outdoorPeriod?: string;
-  travelFrequency?: string;
-  otherWardrobeGoal?: string;
-  shoppingLimit?: any;
-  clothingBudget?: any;
-  [key: string]: any; // Allow for additional fields
-}
-
-interface ProfileData {
-  name?: string;
-  email?: string;
-  [key: string]: any;
-}
-
-interface StyleProfileData {
-  styleProfile: any;
-}
-
-interface BudgetData {
-  clothingBudget: any;
-}
-
-interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    profileCompleted: boolean;
-    onboardingCompleted: boolean;
-  };
-}
-
-interface TemporaryUser {
+// Local type definitions
+type TemporaryUser = {
   id: string;
   name: string;
   email: string;
   profileCompleted: boolean;
   onboardingCompleted: boolean;
-}
+};
+
+// API URLs - using relative paths for proxy support
+const AUTH_API_URL = '/api/auth';
+const PROFILE_API_URL = '/api/profile';
+
+// Re-export types for backward compatibility
+export type { 
+  RegisterData, 
+  LoginData, 
+  OnboardingData, 
+  ProfileData, 
+  StyleProfileData, 
+  BudgetData, 
+  AuthResponse, 
+  AuthService 
+};
+
+export type { TemporaryUser };
+
 
 // Set auth token for axios requests
 const setAuthToken = (token: string | null): void => {
@@ -116,22 +47,29 @@ const setAuthToken = (token: string | null): void => {
   }
 };
 
-// Define the authService interface for TypeScript
-interface AuthService {
-  register(userData: RegisterData): Promise<AuthResponse>;
-  login(userData: LoginData): Promise<AuthResponse>;
-  getCurrentUser(): Promise<any>;
-  createTemporaryUserFromToken(token: string): TemporaryUser | null;
-  completeOnboarding(data: OnboardingData): Promise<any>;
-  updateProfile(profileData: ProfileData): Promise<any>;
-  updateStyleProfile(styleProfile: StyleProfileData): Promise<any>;
-  updateBudget(budgetData: BudgetData): Promise<any>;
-  logout(): void;
-  isAuthenticated(): boolean;
-}
 
 // Implement the authService
 const authServiceImpl: AuthService = {
+  // Cache for user data
+  _userCache: {
+    data: null,
+    timestamp: 0,
+    expiryMs: 5 * 60 * 1000 // 5 minutes cache
+  },
+  
+  // Create user profile
+  async createUserProfile(userId: string, userData: RegisterData): Promise<void> {
+    try {
+      await axios.post(`${PROFILE_API_URL}`, {
+        userId,
+        name: userData.name,
+        email: userData.email
+      });
+    } catch (error) {
+      console.error('Error creating user profile:', error);
+      throw error;
+    }
+  },
   // Register a new user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
@@ -343,9 +281,10 @@ const authServiceImpl: AuthService = {
         'shoppingLimit', 'clothingBudget'
       ];
       
-      fieldsToInclude.forEach(field => {
-        if (data[field] !== undefined) {
-          data.preferences[field] = data[field];
+      fieldsToInclude.forEach((field: string) => {
+        const fieldValue = data[field as keyof OnboardingData];
+        if (fieldValue !== undefined) {
+          (data.preferences as any)[field] = fieldValue;
         }
       });
       
@@ -426,7 +365,7 @@ const authServiceImpl: AuthService = {
   },
 
   // Check if user is authenticated
-  isAuthenticated(): boolean {
+  async isAuthenticated(): Promise<boolean> {
     return localStorage.getItem('token') !== null;
   }
 };
