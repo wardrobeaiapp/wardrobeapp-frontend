@@ -4,7 +4,6 @@ import { useSupabaseAuth } from '../../context/SupabaseAuthContext';
 import { OnboardingStateHook } from './useOnboardingState';
 import { createScenario, getScenariosForUser } from '../../services/scenarios';
 import { generateScenariosFromLifestyle } from '../../utils/scenarioUtils';
-import { Scenario } from '../../types';
 
 /**
  * Custom hook to handle onboarding navigation logic
@@ -40,13 +39,11 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
     // Set loading state while submitting
     setLoading(true);
     
-    // Extract all the state values from the onboarding state hook
+    // Extract state values for user_preferences and scenario generation
     const {
       dailyActivities,
-      homeActivities,
       preferredStyles,
       climatePreference,
-      leisureActivities,
       hasShoppingLimit,
       shoppingLimitFrequency,
       shoppingLimitAmount,
@@ -57,22 +54,12 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
       remoteWorkPriority,
       creativeMobility,
       studentDressCode,
-      uniformPreference,
-      outdoorFrequency,
-      outdoorPeriod,
-      socialFrequency,
-      socialPeriod,
-      formalEventsFrequency,
-      formalEventsPeriod,
-      travelFrequency,
       comfortVsStyleValue,
       classicVsTrendyValue,
       basicsVsStatementsValue,
       additionalStyleNotes,
       wardrobeGoals,
       otherWardrobeGoalDescription,
-      otherLeisureActivityDescription,
-      otherActivityDescription,
       scenarios
     } = onboardingState;
 
@@ -81,11 +68,9 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
     console.log('DEBUG - useOnboardingNavigation - dailyActivities includes office?', dailyActivities.includes('office'));
     console.log('DEBUG - useOnboardingNavigation - dailyActivities includes family?', dailyActivities.includes('family'));
     console.log('DEBUG - useOnboardingNavigation - dailyActivities includes student?', dailyActivities.includes('student'));
-    console.log('DEBUG - useOnboardingNavigation - homeActivities value:', homeActivities);
     console.log('DEBUG - useOnboardingNavigation - studentDressCode value:', studentDressCode);
     console.log('DEBUG - useOnboardingNavigation - all state values:', {
       dailyActivities,
-      homeActivities,
       officeDressCode,
       remoteWorkPriority,
       creativeMobility
@@ -106,41 +91,20 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
     }
     
     // Format the data for the API according to OnboardingData interface
+    // Note: dailyActivities, leisureActivities, and follow-up contexts are no longer saved
+    // to user_preferences to avoid data inconsistency - scenarios are the single source of truth
     const onboardingData = {
       // Structure according to the OnboardingData interface
       preferences: {
-        favoriteColors: [], // Add empty array as placeholder
         preferredStyles,
-        seasonalPreferences: [], // Add empty array as placeholder
-        dailyActivities,
-        homeActivities,
-        leisureActivities,
-        otherLeisureActivity: leisureActivities.includes('other') ? otherLeisureActivityDescription : '',
-        otherActivityDescription: dailyActivities.includes('other') ? otherActivityDescription : '',
         wardrobeGoals,
         localClimate: climatePreference,
-        studentDressCode,
-        uniformPreference,
         stylePreferences: {
           comfortVsStyle: comfortVsStyleValue,
           classicVsTrendy: classicVsTrendyValue,
           basicsVsStatements: basicsVsStatementsValue,
           additionalNotes: additionalStyleNotes
         },
-        // Include lifestyle fields with proper nested structure
-        socialFrequency: {
-          frequency: socialFrequency,
-          period: socialPeriod
-        },
-        formalEventsFrequency: {
-          frequency: formalEventsFrequency,
-          period: formalEventsPeriod
-        },
-        outdoorFrequency: {
-          frequency: outdoorFrequency,
-          period: outdoorPeriod
-        },
-        travelFrequency,
         otherWardrobeGoal: wardrobeGoals.includes('other') ? otherWardrobeGoalDescription : '',
         shoppingLimit: hasShoppingLimit ? {
           hasLimit: hasShoppingLimit,
@@ -148,12 +112,6 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
           limitAmount: shoppingLimitAmount
         } : undefined,
         scenarios
-      },
-      // Add workStyle as a separate property at the top level
-      workStyle: {
-        officeDressCode: finalOfficeDressCode,
-        remoteWorkPriority,
-        creativeMobility
       },
       // Add clothing budget properties as separate properties at the top level
       clothingBudgetAmount,
@@ -183,10 +141,16 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
       try {
         // Debug log for final onboardingData object
         console.log('DEBUG - executeOnboardingSubmission - final onboardingData:', JSON.stringify(onboardingData, null, 2));
-        console.log('DEBUG - executeOnboardingSubmission - final officeDressCode value:', onboardingData.workStyle.officeDressCode);
-        // Log the workStyle and preferences objects separately
-        console.log('DEBUG - executeOnboardingSubmission - final workStyle object:', onboardingData.workStyle);
         console.log('DEBUG - executeOnboardingSubmission - final preferences object:', onboardingData.preferences);
+        console.log('DEBUG - executeOnboardingSubmission - style preferences values:', {
+          preferredStyles,
+          climatePreference, 
+          wardrobeGoals,
+          comfortVsStyleValue,
+          classicVsTrendyValue,
+          basicsVsStatementsValue,
+          additionalStyleNotes
+        });
         
         // Call the API to complete onboarding
         await completeOnboarding(onboardingData);
@@ -207,12 +171,7 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
           throw new Error('User ID not found');
         }
         
-        const scenariosToSave = onboardingState.scenarios.map(scenario => ({
-          user_id: user.id,
-          name: scenario.name,
-          description: scenario.description,
-          frequency: scenario.frequency || 'weekly'
-        }));
+        // Scenarios are saved separately in the scenario generation logic below
         
         try {
           console.log('DEBUG - executeOnboardingSubmission - saving existing scenarios');

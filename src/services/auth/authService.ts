@@ -18,9 +18,7 @@ interface LoginData {
 
 interface OnboardingData {
   preferences: {
-    favoriteColors: string[];
     preferredStyles: string[];
-    // seasonalPreferences removed as redundant with climate preference
     scenarios?: any[]; // Added scenarios property
     dailyActivities?: string[];
     leisureActivities?: string[];

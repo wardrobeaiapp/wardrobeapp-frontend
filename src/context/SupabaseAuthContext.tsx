@@ -9,9 +9,7 @@ interface User {
   profileCompleted: boolean;
   onboardingCompleted: boolean;
   preferences?: {
-    favoriteColors: string[];
     preferredStyles: string[];
-    seasonalPreferences: string[];
     dailyActivities?: string[];
     leisureActivities?: string[];
     wardrobeGoals?: string[];

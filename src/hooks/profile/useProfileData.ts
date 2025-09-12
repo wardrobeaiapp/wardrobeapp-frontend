@@ -89,7 +89,6 @@ export const useProfileData = () => {
       // Prioritize data from userPreferencesData (database) over user.preferences
       // This ensures we're using the most up-to-date data from the user_preferences table
       const userPreferences = userPreferencesData || user?.preferences as {
-        favoriteColors?: string[];
         dislikedColors?: string[];
         preferredStyles?: string[];
         dailyActivities?: string[];
@@ -109,7 +108,6 @@ export const useProfileData = () => {
         formalEventsFrequency?: any;
         travelFrequency?: string;
         otherWardrobeGoal?: string;
-        seasonalPreferences?: string[];
         shoppingLimit?: {
           frequency: string;
           amount: number;
@@ -203,8 +201,6 @@ export const useProfileData = () => {
         wardrobeGoals: parseArrayData(userPreferencesData?.wardrobe_goals, userPreferences?.wardrobeGoals || defaultPreferences.wardrobeGoals),
         otherWardrobeGoal: userPreferencesData?.other_wardrobe_goal || userPreferences?.otherWardrobeGoal,
         scenarios: parseArrayData(userPreferencesData?.scenarios, userPreferences?.scenarios || []),
-        favoriteColors: parseArrayData(userPreferencesData?.favorite_colors, userPreferences?.favoriteColors || []),
-        seasonalPreferences: parseArrayData(userPreferencesData?.seasonal_preferences, userPreferences?.seasonalPreferences || []),
         // 🎯 IMPORTANT: Map budget data from user_progress table (unified budget service)
         // This ensures we always use the latest data from the unified budget storage
         shoppingLimit: budgetData?.shoppingLimit ? {

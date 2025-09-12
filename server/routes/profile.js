@@ -137,7 +137,6 @@ router.put('/style', auth, async (req, res) => {
     if (styleProfile.travelFrequency) preferences.travelFrequency = styleProfile.travelFrequency;
     if (styleProfile.wardrobeGoals) preferences.wardrobeGoals = styleProfile.wardrobeGoals;
     if (styleProfile.otherWardrobeGoal) preferences.otherWardrobeGoal = styleProfile.otherWardrobeGoal;
-    if (styleProfile.seasonalPreferences) preferences.seasonalPreferences = styleProfile.seasonalPreferences;
     
     // Update user
     user = await User.findByIdAndUpdate(

@@ -83,9 +83,6 @@ export type UserPreferences = {
   // Subscription information
   subscriptionPlan: string;
   subscriptionRenewalDate?: string;
-  
-  // Legacy fields
-  seasonalPreferences?: string[];
 };
 
 export const defaultPreferences: UserPreferences = {
@@ -113,7 +110,6 @@ export const defaultPreferences: UserPreferences = {
     currency: 'USD',
     frequency: 'monthly'
   },
-  seasonalPreferences: []
 };
 
 export interface SubscriptionData {

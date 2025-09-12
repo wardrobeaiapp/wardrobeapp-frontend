@@ -81,7 +81,6 @@ export interface User {
   id: string;
   name: string;
   preferences?: {
-    favoriteColors?: string[];
     dislikedColors?: string[];
     preferredStyles?: string[];
     dailyActivities?: string[];

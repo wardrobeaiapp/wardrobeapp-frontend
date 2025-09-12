@@ -19,9 +19,7 @@ interface LoginData {
 interface OnboardingData {
   // User preferences as a separate object
   preferences: {
-    favoriteColors: string[];
     preferredStyles: string[];
-    // seasonalPreferences removed as redundant with climate preference
     scenarios?: any[];
     dailyActivities?: string[];
     leisureActivities?: string[];
@@ -609,9 +607,7 @@ const supabaseAuthServiceImpl: AuthService = {
       console.error('ERROR - completeOnboarding - Missing preferences');
       // Initialize with required properties to satisfy TypeScript
       data.preferences = {
-        favoriteColors: [],
         preferredStyles: [],
-        // seasonalPreferences removed as redundant with climate preference
         dailyActivities: [],
         leisureActivities: []
       };

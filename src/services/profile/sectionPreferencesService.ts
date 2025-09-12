@@ -182,10 +182,6 @@ export const saveSectionPreferences = async (
       // Cast sectionData to DailyActivitiesData for better type safety
       const activitiesData = sectionData as DailyActivitiesData;
       
-      // Add daily activities array
-      sectionPayload.daily_activities = Array.isArray(activitiesData.dailyActivities) 
-        ? activitiesData.dailyActivities 
-        : [];
       
       // Add daily activities additional notes
       sectionPayload.other_activity_description = activitiesData.otherActivityDescription || null;
@@ -196,15 +192,11 @@ export const saveSectionPreferences = async (
       // Add remote work priority
       sectionPayload.remote_work_priority = activitiesData.remoteWorkPriority || null;
       
-      // Add creative mobility
-      sectionPayload.creative_mobility = activitiesData.creativeMobility || null;
       
       console.log('DEBUG - saveSectionPreferences - dailyActivities payload:', {
-        daily_activities: sectionPayload.daily_activities,
         other_activity_description: sectionPayload.other_activity_description,
         office_dress_code: sectionPayload.office_dress_code,
-        remote_work_priority: sectionPayload.remote_work_priority,
-        creative_mobility: sectionPayload.creative_mobility
+        remote_work_priority: sectionPayload.remote_work_priority
       });
     }
     else if (effectiveSection === 'leisureActivities') {
@@ -214,10 +206,6 @@ export const saveSectionPreferences = async (
       // Cast sectionData to LeisureActivitiesData for better type safety
       const leisureData = sectionData as LeisureActivitiesData;
       
-      // Add leisure activities array
-      sectionPayload.leisure_activities = Array.isArray(leisureData.leisureActivities) 
-        ? leisureData.leisureActivities 
-        : [];
         
       // Add other leisure activity if present
       if (leisureData.otherLeisureActivity) {
@@ -230,35 +218,11 @@ export const saveSectionPreferences = async (
         sectionPayload.other_leisure_activity = null;
       }
       
-      // Add frequency data if present
-      if (leisureData.outdoorFrequency) {
-        sectionPayload.outdoor_frequency = leisureData.outdoorFrequency.frequency || null;
-        sectionPayload.outdoor_period = leisureData.outdoorFrequency.period || null;
-      }
-      
-      if (leisureData.socialFrequency) {
-        sectionPayload.social_frequency = leisureData.socialFrequency.frequency || null;
-        sectionPayload.social_period = leisureData.socialFrequency.period || null;
-      }
-      
-      if (leisureData.formalEventsFrequency) {
-        sectionPayload.formal_events_frequency = leisureData.formalEventsFrequency.frequency || null;
-        sectionPayload.formal_events_period = leisureData.formalEventsFrequency.period || null;
-      }
-      
-      // Add travel frequency if present
-      sectionPayload.travel_frequency = leisureData.travelFrequency || null;
+      // REMOVED: Frequency fields don't exist in database schema
+      // All frequency data is now captured in scenarios instead
       
       console.log('DEBUG - saveSectionPreferences - leisureActivities payload:', {
-        leisure_activities: sectionPayload.leisure_activities,
-        other_leisure_activity: sectionPayload.other_leisure_activity,
-        outdoor_frequency: sectionPayload.outdoor_frequency,
-        outdoor_period: sectionPayload.outdoor_period,
-        social_frequency: sectionPayload.social_frequency,
-        social_period: sectionPayload.social_period,
-        formal_events_frequency: sectionPayload.formal_events_frequency,
-        formal_events_period: sectionPayload.formal_events_period,
-        travel_frequency: sectionPayload.travel_frequency
+        other_leisure_activity: sectionPayload.other_leisure_activity
       });
     }
     else if (effectiveSection === 'climate') {

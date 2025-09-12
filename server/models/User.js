@@ -85,9 +85,6 @@ const userSchema = new mongoose.Schema({
       }
     ],
     
-    // Legacy fields (keeping for backward compatibility)
-    favoriteColors: [String],
-    seasonalPreferences: [String]
   },
   createdAt: {
     type: Date,
