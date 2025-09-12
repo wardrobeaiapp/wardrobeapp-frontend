@@ -15,25 +15,51 @@ export interface Scenario {
   id: string;
   name: string;
   frequency: string;
+  description?: string;
 }
 
 interface AddScenarioModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (scenario: Scenario) => void;
+  editingScenario?: Scenario | null; // For edit mode
 }
 
 const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
+  editingScenario
 }) => {
   const [newScenarioName, setNewScenarioName] = useState('');
+  const [newScenarioDescription, setNewScenarioDescription] = useState('');
   const [newFrequencyValue, setNewFrequencyValue] = useState('3');
   const [newFrequencyPeriod, setNewFrequencyPeriod] = useState('week');
 
+  // Populate form when editing
+  React.useEffect(() => {
+    if (editingScenario) {
+      setNewScenarioName(editingScenario.name);
+      setNewScenarioDescription(editingScenario.description || '');
+      
+      // Parse frequency
+      const parts = editingScenario.frequency.split(' ');
+      if (parts.length >= 2) {
+        setNewFrequencyValue(parts[0]);
+        setNewFrequencyPeriod(parts[parts.length - 1]);
+      }
+    } else {
+      // Reset to defaults when not editing
+      setNewScenarioName('');
+      setNewScenarioDescription('');
+      setNewFrequencyValue('3');
+      setNewFrequencyPeriod('week');
+    }
+  }, [editingScenario, isOpen]);
+
   const handleClose = () => {
     setNewScenarioName('');
+    setNewScenarioDescription('');
     setNewFrequencyValue('3');
     setNewFrequencyPeriod('week');
     onClose();
@@ -50,21 +76,27 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
     const frequencyText = `${newFrequencyValue} ${newFrequencyPeriod}`;
     
     const newScenario: Scenario = {
-      id: `scenario-${Date.now()}`,
+      id: editingScenario?.id || `scenario-${Date.now()}`,
       name: newScenarioName.trim(),
-      frequency: frequencyText
+      frequency: frequencyText,
+      description: newScenarioDescription.trim() || undefined
     };
     
     onSubmit(newScenario);
     
     // Reset form and close modal
     setNewScenarioName('');
+    setNewScenarioDescription('');
     setNewFrequencyValue('3');
     setNewFrequencyPeriod('week');
   };
 
   const handleNewScenarioNameChange = (e: ChangeEvent<HTMLInputElement>) => {
     setNewScenarioName(e.target.value);
+  };
+
+  const handleNewScenarioDescriptionChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNewScenarioDescription(e.target.value);
   };
 
   const handleNewFrequencyValueChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -88,7 +120,7 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
       fullWidth: true
     },
     {
-      label: 'Add Scenario',
+      label: editingScenario ? 'Update Scenario' : 'Add Scenario',
       onClick: handleModalSubmit,
       variant: 'primary',
       fullWidth: true
@@ -99,7 +131,7 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Add New Scenario"
+      title={editingScenario ? 'Edit Scenario' : 'Add New Scenario'}
       actions={actions}
       size="md"
     >
@@ -113,6 +145,17 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
             value={newScenarioName}
             onChange={handleNewScenarioNameChange}
             autoFocus
+          />
+        </FormGroup>
+        
+        <FormGroup>
+          <FormLabel htmlFor="scenarioDescription">Description (Optional)</FormLabel>
+          <FormInput
+            id="scenarioDescription"
+            type="text"
+            placeholder="e.g., Business casual dress code"
+            value={newScenarioDescription}
+            onChange={handleNewScenarioDescriptionChange}
           />
         </FormGroup>
         

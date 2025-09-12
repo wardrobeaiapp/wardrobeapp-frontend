@@ -1,9 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
+import {
+  dressCodeOptions,
+  remoteWorkOptions,
+  creativeMobilityOptions,
+  studentDressCodeOptions,
+  uniformUsageOptions
+} from '../data/onboardingOptions';
 
 export interface Scenario {
   id: string;
   name: string;
   frequency: string;
+  description?: string;
   isTravel?: boolean;
   originalFrequency?: string;
 }
@@ -25,7 +33,11 @@ export const generateScenariosFromLifestyle = (
   travelFrequency: string,
   remoteWorkPriority: string = '', // Default to empty string if not provided
   otherActivityDescription: string = '', // Other daily activities description
-  otherLeisureActivityDescription: string = '' // Other leisure activities description
+  otherLeisureActivityDescription: string = '', // Other leisure activities description
+  officeDressCode: string = '', // Office dress code context
+  creativeMobility: string = '', // Creative mobility context
+  studentDressCode: string = '', // Student dress code context
+  uniformPreference: string = '' // Uniform preference context
 ): Scenario[] => {
   const scenarios: Scenario[] = [];
   
@@ -34,21 +46,31 @@ export const generateScenariosFromLifestyle = (
 
   // Work-related scenarios from DailyActivitiesStep
   if (dailyActivities.includes('office')) {
+    let description = '';
+    if (officeDressCode) {
+      const option = dressCodeOptions.find(opt => opt.id === officeDressCode);
+      description = option?.label || officeDressCode;
+    }
     scenarios.push({
       id: uuidv4(),
       name: 'Office Work',
-      frequency: '5 times per week'
+      frequency: '5 times per week',
+      description
     });
   }
 
   // Handle Remote Work and Staying at Home relationship
   if (dailyActivities.includes('remote')) {
+    const option = remoteWorkOptions.find(opt => opt.id === remoteWorkPriority);
+    const description = option?.label || '';
+    
     // If user has remote work with Zoom meetings (presentable)
     if (remoteWorkPriority === 'presentable') {
       scenarios.push({
         id: uuidv4(),
         name: 'Remote Work (Presentable)',
-        frequency: '5 times per week'
+        frequency: '5 times per week',
+        description
       });
       
       // Add staying at home for weekends (2 days)
@@ -64,7 +86,8 @@ export const generateScenariosFromLifestyle = (
       scenarios.push({
         id: uuidv4(),
         name: 'Remote Work',
-        frequency: '5 times per week'
+        frequency: '5 times per week',
+        description
       });
       
       // Add staying at home for weekends (2 days)
@@ -81,7 +104,8 @@ export const generateScenariosFromLifestyle = (
       scenarios.push({
         id: uuidv4(),
         name: 'Staying at Home',
-        frequency: '7 times per week'
+        frequency: '7 times per week',
+        description
       });
       hasStayingAtHomeScenario = true;
     }
@@ -90,25 +114,38 @@ export const generateScenariosFromLifestyle = (
       scenarios.push({
         id: uuidv4(),
         name: 'Remote Work',
-        frequency: '5 times per week'
+        frequency: '5 times per week',
+        description
       });
     }
   }
 
   if (dailyActivities.includes('creative')) {
+    let description = '';
+    if (creativeMobility) {
+      const option = creativeMobilityOptions.find(opt => opt.id === creativeMobility);
+      description = option?.label || creativeMobility;
+    }
     scenarios.push({
       id: uuidv4(),
       name: 'Creative Work',
-      frequency: '5 times per week'
+      frequency: '5 times per week',
+      description
     });
   }
 
   // Education-related scenarios from DailyActivitiesStep
   if (dailyActivities.includes('student')) {
+    let description = '';
+    if (studentDressCode) {
+      const option = studentDressCodeOptions.find(opt => opt.id === studentDressCode);
+      description = option?.label || studentDressCode;
+    }
     scenarios.push({
       id: uuidv4(),
       name: 'School/University',
-      frequency: '5 times per week'
+      frequency: '5 times per week',
+      description
     });
   }
 
@@ -151,10 +188,16 @@ export const generateScenariosFromLifestyle = (
 
   // Physical work scenarios from DailyActivitiesStep
   if (dailyActivities.includes('physical')) {
+    let description = '';
+    if (uniformPreference) {
+      const option = uniformUsageOptions.find(opt => opt.id === uniformPreference);
+      description = option?.label || uniformPreference;
+    }
     scenarios.push({
       id: uuidv4(),
       name: 'Physical Work',
-      frequency: '5 times per week'
+      frequency: '5 times per week',
+      description
     });
   }
 

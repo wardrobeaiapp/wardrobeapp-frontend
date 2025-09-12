@@ -202,6 +202,10 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           remoteWorkPriority={remoteWorkPriority.toString()}
           otherActivityDescription={otherActivityDescription}
           otherLeisureActivityDescription={otherLeisureActivityDescription}
+          officeDressCode={onboardingState.officeDressCode}
+          creativeMobility={onboardingState.creativeMobility}
+          studentDressCode={onboardingState.studentDressCode}
+          uniformPreference={onboardingState.uniformPreference}
           scenarios={onboardingState.scenarios}
           handleScenariosChange={onboardingState.handleScenariosChange}
         />

@@ -15,6 +15,10 @@ interface ScenarioStepProps {
   remoteWorkPriority: string;
   otherActivityDescription: string;
   otherLeisureActivityDescription: string;
+  officeDressCode: string;
+  creativeMobility: string;
+  studentDressCode: string;
+  uniformPreference: string;
   scenarios: Scenario[];
   handleScenariosChange: (scenarios: Scenario[]) => void;
 }
@@ -32,6 +36,10 @@ const ScenarioStep: React.FC<ScenarioStepProps> = ({
   remoteWorkPriority,
   otherActivityDescription,
   otherLeisureActivityDescription,
+  officeDressCode,
+  creativeMobility,
+  studentDressCode,
+  uniformPreference,
   scenarios,
   handleScenariosChange
 }) => {
@@ -48,7 +56,11 @@ const ScenarioStep: React.FC<ScenarioStepProps> = ({
     travelFrequency,
     remoteWorkPriority, // Pass the remote work priority to handle Remote Work vs Staying at Home relationship
     otherActivityDescription,
-    otherLeisureActivityDescription
+    otherLeisureActivityDescription,
+    officeDressCode,
+    creativeMobility,
+    studentDressCode,
+    uniformPreference
   );
   
   // Use useEffect to update state outside of render

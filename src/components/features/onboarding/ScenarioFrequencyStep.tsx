@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { frequencyOptions, periodOptions } from '../../../data/onboardingOptions';
 import { StepTitle, StepDescription } from '../../../pages/OnboardingPage.styles';
-import { FaLaptop, FaHome, FaWalking, FaUsers, FaCalendarAlt, FaTrashAlt, FaPlus } from 'react-icons/fa';
+import { FaLaptop, FaHome, FaWalking, FaUsers, FaCalendarAlt, FaTrashAlt, FaPlus, FaEdit } from 'react-icons/fa';
 import Button from '../../common/Button';
 import AddScenarioModal from './AddScenarioModal';
 import {
@@ -13,7 +13,8 @@ import {
   ScenarioName,
   FrequencyControls,
   FrequencyInput,
-  FrequencySelect
+  FrequencySelect,
+  ScenarioDescription,
 } from './ScenarioFrequencyStep.styles';
 
 // Types
@@ -21,6 +22,7 @@ export interface Scenario {
   id: string;
   name: string;
   frequency: string;
+  description?: string; // Additional context from follow-up questions
 }
 
 interface ScenarioFrequencyStepProps {
@@ -101,6 +103,7 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
 }) => {
   const [localScenarios, setLocalScenarios] = useState<Scenario[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
   
   useEffect(() => {
     setLocalScenarios(scenarios);
@@ -138,18 +141,35 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
   };
 
   const handleAddNewScenario = () => {
+    setEditingScenario(null);
+    setShowModal(true);
+  };
+
+  const handleEditScenario = (scenario: Scenario) => {
+    setEditingScenario(scenario);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
+    setEditingScenario(null);
   };
 
-  const handleAddScenario = (newScenario: Scenario) => {
-    const updatedScenarios = [...localScenarios, newScenario];
+  const handleAddScenario = (scenario: Scenario) => {
+    let updatedScenarios;
+    if (editingScenario) {
+      // Update existing scenario
+      updatedScenarios = localScenarios.map(s => 
+        s.id === scenario.id ? scenario : s
+      );
+    } else {
+      // Add new scenario
+      updatedScenarios = [...localScenarios, scenario];
+    }
     setLocalScenarios(updatedScenarios);
     onScenariosChange(updatedScenarios);
     setShowModal(false);
+    setEditingScenario(null);
   };
 
   return (
@@ -166,6 +186,9 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
           const { icon, className } = getScenarioIcon(scenario.name);
           const { value, period } = parseFrequency(scenario.frequency);
           
+          // Debug log to see scenario data
+          console.log('Scenario data:', scenario.name, 'description:', scenario.description);
+          
           return (
             <ScenarioItem key={scenario.id}>
               <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
@@ -174,15 +197,29 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
                   <ScenarioName>{scenario.name}</ScenarioName>
                 </ScenarioContent>
                 
-                <Button
-                  variant="error"
-                  size="sm"
-                  onClick={() => handleDeleteScenario(scenario.id)}
-                  style={{ background: 'none', border: 'none', color: '#888', padding: '4px', minHeight: 'auto' }}
-                >
-                  <FaTrashAlt />
-                </Button>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleEditScenario(scenario)}
+                    style={{ background: 'none', border: 'none', color: '#666', padding: '4px', minHeight: 'auto' }}
+                  >
+                    <FaEdit />
+                  </Button>
+                  <Button
+                    variant="error"
+                    size="sm"
+                    onClick={() => handleDeleteScenario(scenario.id)}
+                    style={{ background: 'none', border: 'none', color: '#888', padding: '4px', minHeight: 'auto' }}
+                  >
+                    <FaTrashAlt />
+                  </Button>
+                </div>
               </div>
+              
+              {scenario.description && (
+                <ScenarioDescription>{scenario.description}</ScenarioDescription>
+              )}
               
               <FrequencyControls>
                 {scenario.name === 'Travel' ? (
@@ -248,6 +285,7 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
         isOpen={showModal}
         onClose={handleCloseModal}
         onSubmit={handleAddScenario}
+        editingScenario={editingScenario}
       />
     </PageContainer>
   );

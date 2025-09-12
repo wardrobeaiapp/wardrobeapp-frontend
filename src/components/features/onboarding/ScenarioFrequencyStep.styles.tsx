@@ -65,13 +65,6 @@ export const ScenarioName = styled.div`
   color: #333;
 `;
 
-export const ScenarioDescription = styled.div`
-  font-size: 14px;
-  color: #666;
-  margin-top: 4px;
-  line-height: 1.4;
-`;
-
 export const FrequencyControls = styled.div`
   display: flex;
   align-items: center;
@@ -245,4 +238,13 @@ export const SaveIcon = styled.span`
   margin-right: 10px;
   color: #2196f3;
   font-size: 18px;
+`;
+
+export const ScenarioDescription = styled.div`
+  font-size: 0.875rem;
+  color: #666;
+  margin-top: 4px;
+  padding: 6px 12px;
+  margin-left: 64px;
+  text-align: left;
 `;

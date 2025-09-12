@@ -259,7 +259,6 @@ export const claudeService = {
       console.log('[claudeService] Sending image to backend for Claude analysis');
       
       // Get current user from Supabase and their preferences
-      let userPreferences = null;
       let climateData = null;
       let scenarios: Scenario[] = [];
       
