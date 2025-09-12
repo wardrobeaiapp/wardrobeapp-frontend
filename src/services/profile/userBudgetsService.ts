@@ -49,7 +49,6 @@ export interface ClothingBudgetData {
  * Fetch unified user budgets data for a specific user from user_budgets table
  */
 export async function getUserBudgetsData(userId: string): Promise<UserBudgetsData> {
-  console.log('💰 UserBudgetsService - Fetching user budgets data for user:', userId);
 
   try {
     // Query user_progress table for user's unified budget data
@@ -69,16 +68,9 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
 
     if (error) {
       // Log the actual error details to understand what's happening
-      console.log('💰 UserBudgetsService - Error details:', {
-        code: error.code,
-        message: error.message,
-        details: error.details,
-        hint: error.hint
-      });
       
       // If no record exists, this is expected for new users
       if (error.code === 'PGRST116') {
-        console.log('💰 UserBudgetsService - No existing user budgets data found, returning defaults');
         return {
           currency: 'USD',
           periodStartDate: undefined,
@@ -93,7 +85,6 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
       }
       
       // For now, also handle other errors gracefully
-      console.log('💰 UserBudgetsService - Unhandled error, returning defaults');
       return {
         currency: 'USD',
         periodStartDate: undefined,
@@ -109,7 +100,6 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
 
     // Handle case where no data is returned
     if (!data || data.length === 0) {
-      console.log('💰 UserBudgetsService - No budget data found, returning defaults');
       return {
         currency: 'USD',
         periodStartDate: undefined,
@@ -139,7 +129,6 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
       clothingCurrentSpent: 0
     };
 
-    console.log('💰 UserBudgetsService - Successfully fetched user budgets data:', mappedData);
     return mappedData;
 
   } catch (error) {
@@ -152,7 +141,6 @@ export async function getUserBudgetsData(userId: string): Promise<UserBudgetsDat
  * Save unified user budgets data for a specific user to user_budgets table
  */
 export async function saveUserBudgetsData(userId: string, userBudgetsData: UserBudgetsData): Promise<void> {
-  console.log('💰 UserBudgetsService - Saving user budgets data for user:', userId, userBudgetsData);
 
   try {
     // Map UserBudgetsData interface to database fields
@@ -167,7 +155,6 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
       clothing_budget_frequency: userBudgetsData.clothingBudgetFrequency
     };
 
-    console.log('💰 UserBudgetsService - Mapped data for database:', dbData);
 
     // Use upsert to handle both insert and update cases
     const { data, error } = await supabase
@@ -180,7 +167,6 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
       throw error;
     }
 
-    console.log('💰 UserBudgetsService - Successfully saved user budgets data:', data);
 
   } catch (error) {
     console.error('💰 UserBudgetsService - Error saving user budgets data:', error);
@@ -192,7 +178,6 @@ export async function saveUserBudgetsData(userId: string, userBudgetsData: UserB
  * Get shopping limit data only (optimized query for shopping limit section)
  */
 export async function getShoppingLimitData(userId: string): Promise<ShoppingLimitData> {
-  console.log('🛍️ UserBudgetsService - Fetching shopping limit data for user:', userId);
 
   try {
     // Query only shopping limit specific columns - get most recent record if multiple exist
@@ -210,7 +195,6 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
       
       if (error.code === 'PGRST116') {
         // No rows found - new user, return default values
-        console.log('🛍️ UserBudgetsService - No shopping limit data found, returning defaults for new user');
         return {
           shoppingLimitAmount: undefined,
           shoppingLimitFrequency: 'monthly',
@@ -225,7 +209,6 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
 
     // Handle case where no data is returned
     if (!data || data.length === 0) {
-      console.log('🛍️ UserBudgetsService - No shopping limit data found, returning defaults');
       return {
         shoppingLimitAmount: undefined,
         shoppingLimitFrequency: 'monthly',
@@ -247,7 +230,6 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
       periodEndDate: undefined
     };
 
-    console.log('🛍️ UserBudgetsService - Mapped shopping limit data:', mappedData);
     return mappedData;
 
   } catch (error) {
@@ -260,7 +242,6 @@ export async function getShoppingLimitData(userId: string): Promise<ShoppingLimi
  * Get clothing budget data only (optimized fetch for clothing budget section)
  */
 export async function getClothingBudgetData(userId: string): Promise<ClothingBudgetData> {
-  console.log('👕 UserBudgetsService - Fetching clothing budget data for user:', userId);
 
   try {
     // Query only clothing budget specific columns - get most recent record if multiple exist
@@ -278,7 +259,6 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
       
       if (error.code === 'PGRST116') {
         // No rows found - new user, return default values
-        console.log('👕 UserBudgetsService - No clothing budget data found, returning defaults for new user');
         return {
           amount: 0,
           currency: 'USD',
@@ -294,7 +274,6 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
 
     // Handle case where no data is returned
     if (!data || data.length === 0) {
-      console.log('👕 UserBudgetsService - No clothing budget data found, returning defaults');
       return {
         amount: 0,
         currency: 'USD',
@@ -318,7 +297,6 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
       periodEndDate: undefined
     };
 
-    console.log('👕 UserBudgetsService - Mapped clothing budget data:', mappedData);
     return mappedData;
 
   } catch (error) {
@@ -332,8 +310,6 @@ export async function getClothingBudgetData(userId: string): Promise<ClothingBud
  */
 export async function saveClothingBudgetData(userId: string, clothingBudgetData: ClothingBudgetData): Promise<ClothingBudgetData> {
   try {
-    console.log('👕 UserBudgetsService - Starting to save clothing budget data:', clothingBudgetData);
-    console.log('👕 UserBudgetsService - DEBUGGING: frequency value received:', clothingBudgetData.frequency, 'type:', typeof clothingBudgetData.frequency);
     
     // First fetch ANY existing record for this user to determine update vs insert
     const { data: existingData, error: fetchError } = await supabase
@@ -351,18 +327,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
     // Preserve existing shopping limit data if available
     const existingRecord = existingData?.[0];
     
-    console.log('👕 UserBudgetsService - Existing record found:', existingRecord?.id ? 'Yes' : 'No');
-    console.log('👕 UserBudgetsService - Existing record ID:', existingRecord?.id);
-    console.log('👕 UserBudgetsService - CRITICAL DEBUG: About to send clothing_budget_frequency to DB:', clothingBudgetData.frequency);
-    
-    // DEBUGGING: Let's see what happens before and after the save
-    console.log('👕 BEFORE SAVE - Checking current database state...');
-    const beforeSave = await supabase
-      .from('user_progress')
-      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
-      .eq('user_id', userId)
-      .order('id', { ascending: false });
-    console.log('👕 BEFORE SAVE - Current records:', beforeSave.data);
 
     // Simply UPDATE the existing record - no new records, no complex logic
     let data, error;
@@ -400,24 +364,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
       throw error;
     }
 
-    console.log('👕 UserBudgetsService - Successfully saved clothing budget data:', data);
-    
-    // DEBUGGING: Let's see what the database looks like after the save
-    console.log('👕 AFTER SAVE - Checking updated database state...');
-    const afterSave = await supabase
-      .from('user_progress')
-      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
-      .eq('user_id', userId)
-      .order('id', { ascending: false });
-    console.log('👕 AFTER SAVE - All records (ordered by ID DESC):', afterSave.data);
-    
-    // Also check with different ordering to see what's happening
-    const afterSaveAsc = await supabase
-      .from('user_progress')
-      .select('id, user_id, clothing_budget_amount, clothing_budget_frequency')
-      .eq('user_id', userId)
-      .order('id', { ascending: true });
-    console.log('👕 AFTER SAVE - All records (ordered by ID ASC):', afterSaveAsc.data);
 
     // Return the saved clothing budget data
     return {
@@ -439,7 +385,6 @@ export async function saveClothingBudgetData(userId: string, clothingBudgetData:
  * Save shopping limit data only (optimized save for shopping limit section)
  */
 export async function saveShoppingLimitData(userId: string, shoppingLimitData: ShoppingLimitData): Promise<void> {
-  console.log('🛍️ UserBudgetsService - Saving shopping limit data for user:', userId, shoppingLimitData);
 
   try {
     // First fetch ANY existing record for this user to determine update vs insert
