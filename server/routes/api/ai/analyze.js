@@ -13,7 +13,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, gapAnalysisContext } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -22,6 +22,8 @@ router.post('/', async (req, res) => {
     console.log('climateData:', climateData || 'none');
     console.log('scenarios:', scenarios || 'none');
     console.log('formData:', formData || 'none');
+    console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
+    console.log('gapAnalysisContext:', gapAnalysisContext ? `${gapAnalysisContext.length} items` : 'none');
     console.log('===================');
     
     // Log that we received user data
@@ -128,6 +130,59 @@ router.post('/', async (req, res) => {
       // Add guidance for climate considerations
       systemPrompt += "- When making recommendations, consider what materials and styles are appropriate for this climate.\n";
       systemPrompt += "- Mention any climate-specific considerations that might affect the longevity, utility, or appropriateness of the item.\n";
+    }
+    
+    // Include styling context (similar category/subcategory items for styling compatibility)
+    if (stylingContext && stylingContext.length > 0) {
+      systemPrompt += "\n\nFor styling context, here are similar items the user already owns in their wardrobe:\n";
+      
+      stylingContext.forEach((item, index) => {
+        systemPrompt += `${index + 1}. ${item.name} - ${item.category}`;
+        if (item.color) systemPrompt += ` (${item.color})`;
+        if (item.season && item.season.length > 0) {
+          systemPrompt += ` [${item.season.join(', ')}]`;
+        }
+        systemPrompt += "\n";
+      });
+      
+      systemPrompt += "\nWhen analyzing the new item, consider:";
+      systemPrompt += "\n- How well it will coordinate with these existing similar items";
+      systemPrompt += "\n- Whether it adds variety or just duplicates what the user already has";
+      systemPrompt += "\n- Styling opportunities and outfit combinations with these existing pieces";
+    }
+    
+    // Include gap analysis context (items from different categories/seasons for wardrobe completeness)
+    if (gapAnalysisContext && gapAnalysisContext.length > 0) {
+      systemPrompt += "\n\nFor gap analysis, here is a sample of the user's existing wardrobe across different categories:\n";
+      
+      const categorySummary = {};
+      gapAnalysisContext.forEach(item => {
+        if (!categorySummary[item.category]) {
+          categorySummary[item.category] = [];
+        }
+        categorySummary[item.category].push(item);
+      });
+      
+      Object.keys(categorySummary).forEach(category => {
+        const items = categorySummary[category];
+        systemPrompt += `\n${category} (${items.length} item${items.length > 1 ? 's' : ''}):`;
+        items.slice(0, 3).forEach(item => { // Show max 3 items per category to avoid prompt bloat
+          systemPrompt += `\n- ${item.name}`;
+          if (item.color) systemPrompt += ` (${item.color})`;
+          if (item.season && item.season.length > 0) {
+            systemPrompt += ` [${item.season.join(', ')}]`;
+          }
+        });
+        if (items.length > 3) {
+          systemPrompt += `\n- ... and ${items.length - 3} more`;
+        }
+      });
+      
+      systemPrompt += "\n\nWhen analyzing the new item, consider:";
+      systemPrompt += "\n- What gaps this item might fill in the user's wardrobe";
+      systemPrompt += "\n- How it expands their outfit possibilities across different categories";
+      systemPrompt += "\n- Whether the user has enough complementary pieces to make this item useful";
+      systemPrompt += "\n- Seasonal balance and coverage across the user's wardrobe";
     }
     
     if (detectedTags) {
