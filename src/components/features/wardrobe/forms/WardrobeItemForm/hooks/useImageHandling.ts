@@ -8,6 +8,8 @@ interface UseImageHandlingProps {
   onImageSuccess: () => void;
   onNewImageSelected?: () => void;
   onTagsDetected?: (tags: any) => void;
+  onSetIsImageFromUrl?: (isFromUrl: boolean) => void;
+  onBackgroundRemovalReset?: () => void;
 }
 
 export const useImageHandling = ({ 
@@ -15,7 +17,9 @@ export const useImageHandling = ({
   onImageError, 
   onImageSuccess,
   onNewImageSelected,
-  onTagsDetected
+  onTagsDetected,
+  onSetIsImageFromUrl,
+  onBackgroundRemovalReset
 }: UseImageHandlingProps) => {
   const [previewImage, setPreviewImage] = useState<string | null>(initialImageUrl || null);
   const [isDownloadingImage, setIsDownloadingImage] = useState(false);
@@ -321,6 +325,89 @@ export const useImageHandling = ({
     }
   };
 
+  /**
+   * Handles retail site images that can't be directly loaded due to CORS restrictions
+   * @param imageUrl URL of the retail site image
+   * @param setImageUrl Function to set the image URL in the form
+   */
+  const handleRetailSiteImage = (imageUrl: string, setImageUrl: (url: string) => void) => {
+    // Clear any previous errors
+    onImageError('');
+    
+    setIsDownloadingImage(false);
+    
+    // Set a user-friendly error message with guidance
+    onImageError('This retailer restricts direct image access. Please save the image to your device first, then upload it directly.');
+    
+    // Optionally open the image in a new tab to help the user download it
+    window.open(imageUrl, '_blank');
+  };
+
+  /**
+   * Handles loading an image from a URL
+   * @param url The URL to load the image from
+   * @param setImageUrl Function to set the image URL in the form
+   */
+  const handleUrlLoad = async (url: string, setImageUrl: (url: string) => void) => {
+    setIsDownloadingImage(true);
+    onImageError('');
+    
+    try {
+      // Import the image proxy service
+      const { fetchImageViaProxy } = await import('../../../../../../services/core');
+      
+      // Fetch the image via proxy to get a blob and extension
+      const { blob, fileExt } = await fetchImageViaProxy(url);
+      
+      // Convert blob to File object
+      const fileName = `image-from-url.${fileExt}`;
+      const file = new File([blob], fileName, { type: blob.type });
+      
+      // Use the existing file selection logic
+      handleFileSelect(file, setImageUrl);
+      
+      // Reset processed state when new image is loaded
+      onBackgroundRemovalReset?.();
+      
+      // Store the original URL
+      setImageUrl(url);
+      
+      // Mark that this image came from URL AFTER everything else
+      setTimeout(() => {
+        onSetIsImageFromUrl?.(true);
+        console.log('Set isImageFromUrl to true for URL image');
+      }, 100);
+    } catch (error) {
+      console.error('Failed to load image from URL:', error);
+      
+      // Check for special retail site errors
+      if (error instanceof Error && error.message.includes('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED')) {
+        const imageUrl = error.message.split('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED:')[1];
+        handleRetailSiteImage(imageUrl, setImageUrl);
+        return;
+      }
+      
+      // Handle other errors
+      let errorMessage = 'Failed to load image from URL. Please check the URL and try again.';
+      
+      // More descriptive error for specific cases
+      if (error instanceof Error) {
+        if (error.message.includes('403') || error.message.includes('Forbidden')) {
+          errorMessage = 'This retailer blocks image access. Try downloading the image and uploading it directly.';
+        } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
+          errorMessage = 'Too many requests to our image service. Please try again in a few minutes.';
+        } else if (error.message.includes('Proxy fetch failed')) {
+          errorMessage = 'Image proxy service is currently unavailable. Try downloading and uploading the image.';
+        }
+      }
+      
+      onImageError(errorMessage);
+      onSetIsImageFromUrl?.(false);
+    } finally {
+      setIsDownloadingImage(false);
+    }
+  };
+
   return {
     previewImage,
     setPreviewImage,
@@ -333,6 +420,7 @@ export const useImageHandling = ({
     handleDrop,
     handleDragOver,
     handleUrlChange,
+    handleUrlLoad,
     compressImage
   };
 };

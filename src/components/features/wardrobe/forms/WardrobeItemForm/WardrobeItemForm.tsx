@@ -25,7 +25,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   onSubmit,
   onCancel
 }) => {
-  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
   const { userId } = useAuthUser();
   const { processDetectedTags } = useTagProcessing();
@@ -51,6 +50,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     handleDrop,
     handleDragOver,
     handleFileSelect,
+    handleUrlLoad,
+    isDownloadingImage,
     setPreviewImage,
     setSelectedFile
   } = useImageHandling({
@@ -65,6 +66,12 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       backgroundRemoval.resetProcessedState();
       setIsImageFromUrl(false);
       console.log('Reset isImageFromUrl to false for new file selection');
+    },
+    onSetIsImageFromUrl: (isFromUrl) => {
+      setIsImageFromUrl(isFromUrl);
+    },
+    onBackgroundRemovalReset: () => {
+      backgroundRemoval.resetProcessedState();
     },
     onTagsDetected: async (tags) => {
       console.log('[WardrobeItemForm] Received detected tags:', tags);
@@ -126,95 +133,78 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     );
   };
 
+
   /**
-   * Handles retail site images that can't be directly loaded due to CORS restrictions
-   * @param imageUrl URL of the retail site image
+   * Creates a wardrobe item object from form data
    */
-  const handleRetailSiteImage = (imageUrl: string) => {
-    // Clear any previous errors
-    formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+  const createWardrobeItem = (formData: ReturnType<typeof formState.getFormData>, finalImageUrl: string) => {
+    // Use the detected tags from useImageHandling hook
+    const currentDetectedTags = detectedTags || {};
     
-    setIsLoadingUrl(false);
+    // Process tags to exclude ones that were used in form fields
+    const tags = processDetectedTags(currentDetectedTags, formData);
     
-    // Set a user-friendly error message with guidance
-    formState.setErrors(prev => ({ 
-      ...prev, 
-      imageUrl: 'This retailer restricts direct image access. Please save the image to your device first, then upload it directly.'
-    }));
-    
-    // Optionally open the image in a new tab to help the user download it
-    window.open(imageUrl, '_blank');
+    return {
+      ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
+      name: formData.name,
+      category: formData.category as any,
+      subcategory: formData.subcategory,
+      color: formData.color,
+      pattern: formData.pattern,
+      material: formData.material,
+      brand: formData.brand,
+      length: formData.length,
+      neckline: formData.neckline,
+      heelHeight: formData.heelHeight,
+      bootHeight: formData.bootHeight,
+      type: formData.type,
+      rise: formData.rise,
+      imageUrl: finalImageUrl, // Add image URL to the item
+      scenarios: formData.scenarios, // Add scenarios field
+      season: formData.seasons, // Make sure seasons are also included
+      tags: tags // Save as JSON object
+    } as WardrobeItem;
   };
 
-  const handleUrlLoad = async (url: string) => {
-    setIsLoadingUrl(true);
-    formState.setErrors(prev => ({ ...prev, imageUrl: '' }));
+  /**
+   * Determines how to handle the image file based on the image URL
+   */
+  const determineImageToSubmit = (imageUrl: string) => {
+    // If image is already a Supabase URL, we don't need to upload it again
+    const isSupabaseUrl = imageUrl && imageUrl.includes('supabase.co');
     
-    try {
-      // Import the image proxy service
-      const { fetchImageViaProxy } = await import('../../../../../services/core');
-      
-      // Fetch the image via proxy to get a blob and extension
-      // Note: Tag detection will happen automatically in handleFileSelect
-      const { blob, fileExt } = await fetchImageViaProxy(url);
-      
-      // Convert blob to File object
-      const fileName = `image-from-url.${fileExt}`;
-      const file = new File([blob], fileName, { type: blob.type });
-      
-      // Use the existing file selection logic
-      handleFileSelect(file, formState.setImageUrl);
-      
-      // Reset processed state when new image is loaded
-      backgroundRemoval.resetProcessedState();
-      
-      // Store the original URL
-      formState.setImageUrl(url);
-      
-      // Mark that this image came from URL AFTER everything else
-      setTimeout(() => {
-        setIsImageFromUrl(true);
-        console.log('Set isImageFromUrl to true for URL image');
-      }, 100);
-    } catch (error) {
-      console.error('Failed to load image from URL:', error);
-      
-      // Check for special retail site errors
-      if (error instanceof Error && error.message.includes('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED')) {
-        const imageUrl = error.message.split('RETAIL_SITE_MANUAL_DOWNLOAD_NEEDED:')[1];
-        handleRetailSiteImage(imageUrl);
-        return;
-      }
-      
-      // Handle other errors
-      let errorMessage = 'Failed to load image from URL. Please check the URL and try again.';
-      
-      // More descriptive error for specific cases
-      if (error instanceof Error) {
-        if (error.message.includes('403') || error.message.includes('Forbidden')) {
-          errorMessage = 'This retailer blocks image access. Try downloading the image and uploading it directly.';
-        } else if (error.message.includes('429') || error.message.includes('Too Many Requests')) {
-          errorMessage = 'Too many requests to our image service. Please try again in a few minutes.';
-        } else if (error.message.includes('Proxy fetch failed')) {
-          errorMessage = 'Image proxy service is currently unavailable. Try downloading and uploading the image.';
-        }
-      }
-      
-      formState.setErrors(prev => ({ 
-        ...prev, 
-        imageUrl: errorMessage 
-      }));
-      setIsImageFromUrl(false);
-    } finally {
-      setIsLoadingUrl(false);
-    }
+    // If image is a data URL or from a file, we need to pass the file for upload
+    // If image is a regular URL but not from Supabase, we should pass it for server-side processing
+    return isSupabaseUrl ? undefined : selectedFile || undefined;
   };
 
+  /**
+   * Logs submission details for debugging
+   */
+  const logSubmissionDetails = (item: WardrobeItem, finalImageUrl: string, fileToSubmit: File | undefined) => {
+    console.log('[WardrobeItemForm] Submitting with:', {
+      hasFile: !!fileToSubmit,
+      hasImageUrl: !!finalImageUrl,
+      isSupabaseUrl: finalImageUrl && finalImageUrl.includes('supabase.co'),
+      imageUrlPrefix: finalImageUrl ? finalImageUrl.substring(0, 30) + '...' : 'none',
+      imageUrlType: finalImageUrl ? (
+        finalImageUrl.startsWith('data:') ? 'DATA_URL' : 
+        finalImageUrl.includes('supabase.co') ? 'SUPABASE_URL' : 
+        finalImageUrl.startsWith('http') ? 'EXTERNAL_URL' : 'OTHER'
+      ) : 'NONE',
+      userId: userId,
+      scenarios: item.scenarios,
+      scenariosCount: item.scenarios ? item.scenarios.length : 0
+    });
+  };
+
+  /**
+   * Main form submission handler
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formState.validateForm()) {
       const formData = formState.getFormData();
-      const finalImageUrl = formData.imageUrl || previewImage || '';
       
       // Debug logging for neckline data flow
       console.log('[WardrobeItemForm] handleSubmit - Form data:', {
@@ -223,55 +213,11 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         subcategory: formData.subcategory
       });
       
-      // Use the detected tags from useImageHandling hook
-      const currentDetectedTags = detectedTags || {};
+      const finalImageUrl = formData.imageUrl || previewImage || '';
+      const item = createWardrobeItem(formData, finalImageUrl);
+      const fileToSubmit = determineImageToSubmit(finalImageUrl);
       
-      // Process tags to exclude ones that were used in form fields
-      const tags = processDetectedTags(currentDetectedTags, formData);
-      
-      const item: WardrobeItem = {
-        ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
-        name: formData.name,
-        category: formData.category as any,
-        subcategory: formData.subcategory,
-        color: formData.color,
-        pattern: formData.pattern,
-        material: formData.material,
-        brand: formData.brand,
-        length: formData.length,
-        neckline: formData.neckline,
-        heelHeight: formData.heelHeight,
-        bootHeight: formData.bootHeight,
-        type: formData.type,
-        rise: formData.rise,
-        imageUrl: finalImageUrl, // Add image URL to the item
-        scenarios: formData.scenarios, // Add scenarios field
-        season: formData.seasons, // Make sure seasons are also included
-        tags: tags // Save as JSON object
-      } as WardrobeItem;
-      
-      // Determine how to handle the image based on its source
-      // If image is already a Supabase URL, we don't need to upload it again
-      const isSupabaseUrl = finalImageUrl && finalImageUrl.includes('supabase.co');
-      // If image is a data URL or from a file, we need to pass the file for upload
-      // If image is a regular URL but not from Supabase, we should pass it for server-side processing
-      const fileToSubmit = isSupabaseUrl ? undefined : selectedFile || undefined;
-      
-      console.log('[WardrobeItemForm] Submitting with:', {
-        hasFile: !!fileToSubmit,
-        hasImageUrl: !!finalImageUrl,
-        isSupabaseUrl,
-        imageUrlPrefix: finalImageUrl ? finalImageUrl.substring(0, 30) + '...' : 'none',
-        imageUrlType: finalImageUrl ? (
-          finalImageUrl.startsWith('data:') ? 'DATA_URL' : 
-          finalImageUrl.includes('supabase.co') ? 'SUPABASE_URL' : 
-          finalImageUrl.startsWith('http') ? 'EXTERNAL_URL' : 'OTHER'
-        ) : 'NONE',
-        userId: userId,
-        scenarios: item.scenarios,
-        scenariosCount: item.scenarios ? item.scenarios.length : 0
-      });
-      
+      logSubmissionDetails(item, finalImageUrl, fileToSubmit);
       onSubmit(item, fileToSubmit);
     }
   };
@@ -285,11 +231,11 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
           onDragOver={handleDragOver}
           onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
-          onUrlLoad={handleUrlLoad}
+          onUrlLoad={(url: string) => handleUrlLoad(url, formState.setImageUrl)}
           onRemoveBackground={handleRemoveBackground}
           isProcessingBackground={backgroundRemoval.isProcessing}
           isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
-          isLoadingUrl={isLoadingUrl}
+          isLoadingUrl={isDownloadingImage}
           isImageFromUrl={isImageFromUrl}
           error={formState.errors.imageUrl || ''}
         />
@@ -357,7 +303,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         <FormActions
           onCancel={onCancel}
           isSubmitting={formState.isSubmitting}
-          isDownloadingImage={isLoadingUrl}
+          isDownloadingImage={isDownloadingImage}
         />
       </form>
     </FormContainer>
