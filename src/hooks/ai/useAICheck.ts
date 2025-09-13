@@ -30,7 +30,7 @@ export const useAICheck = () => {
     setImageLink(base64Image);
   };
 
-  const checkItem = async () => {
+  const checkItem = async (formData?: { category: string; subcategory: string; seasons: string[] }) => {
     if (!imageLink.trim()) {
       setError('Please provide an image link to check.');
       return null;
@@ -85,7 +85,7 @@ export const useAICheck = () => {
       }
 
       // Call Claude API for analysis
-      const response = await claudeService.analyzeWardrobeItem(base64Image);
+      const response = await claudeService.analyzeWardrobeItem(base64Image, detectedTags || undefined, formData);
       analysisResult = response.analysis;
       score = response.score || 0;
       

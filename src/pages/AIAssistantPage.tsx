@@ -88,8 +88,8 @@ const AIAssistantPage: React.FC = () => {
 
   const handleApplyAICheck = async (data: { category: string; subcategory: string; seasons: string[] }) => {
     setIsAICheckModalOpen(false);
-    // TODO: Pass the selected options to the AI check when the API is ready
-    const result = await handleCheckItemRaw();
+    // Pass the form data to the AI check function
+    const result = await handleCheckItemRaw(data);
     if (result) {
       // Open the result modal if analysis was successful
       handleOpenCheckResultModal();

@@ -13,7 +13,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -21,6 +21,7 @@ router.post('/', async (req, res) => {
     console.log('detectedTags:', detectedTags || 'none');
     console.log('climateData:', climateData || 'none');
     console.log('scenarios:', scenarios || 'none');
+    console.log('formData:', formData || 'none');
     console.log('===================');
     
     // Log that we received user data
@@ -70,6 +71,25 @@ router.post('/', async (req, res) => {
     let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant. ";
     systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
     systemPrompt += "considering the user's existing wardrobe, lifestyle, individual needs, and specific scenarios.";
+    
+    // Include category and subcategory from formData if available
+    if (formData && (formData.category || formData.subcategory)) {
+      systemPrompt += "\n\nThe user has provided the following information about this item:";
+      
+      if (formData.category) {
+        systemPrompt += "\n- Category: " + formData.category;
+      }
+      
+      if (formData.subcategory) {
+        systemPrompt += "\n- Subcategory: " + formData.subcategory;
+      }
+      
+      if (formData.seasons && formData.seasons.length > 0) {
+        systemPrompt += "\n- Seasons: " + formData.seasons.join(", ");
+      }
+      
+      systemPrompt += "\n\nPlease consider this information when analyzing the item.";
+    }
     
     // Include user's scenarios if available
     if (req.body.scenarios && req.body.scenarios.length > 0) {

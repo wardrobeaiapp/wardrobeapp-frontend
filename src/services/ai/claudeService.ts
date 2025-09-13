@@ -182,7 +182,7 @@ export const claudeService = {
    * @param detectedTags - Optional object with tags detected from the image
    * @returns Promise with analysis, score, and feedback
    */
-  async analyzeWardrobeItem(imageBase64: string, detectedTags?: DetectedTags): Promise<{
+  async analyzeWardrobeItem(imageBase64: string, detectedTags?: DetectedTags, formData?: { category?: string; subcategory?: string; seasons?: string[] }): Promise<{
     analysis: string;
     score: number;
     feedback: string;
@@ -213,6 +213,7 @@ export const claudeService = {
       // Check if image data is too small (likely invalid)
       // Log the length for debugging
       console.log('[claudeService] Image data length:', imageBase64.length, 'starts with:', imageBase64.substring(0, 50));
+      console.log('[claudeService] Form data:', formData);
       
       if (imageBase64.length < 50) {
         console.error('[claudeService] Image data too small to be valid');
@@ -303,7 +304,13 @@ export const claudeService = {
             id,
             name,
             description
-          })) : undefined
+          })) : undefined,
+          // Include form data if provided
+          formData: formData ? {
+            category: formData.category,
+            subcategory: formData.subcategory,
+            seasons: formData.seasons
+          } : undefined
         }
       );
 
