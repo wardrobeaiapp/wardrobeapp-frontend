@@ -33,25 +33,12 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
     };
   }, []);
   
-  useEffect(() => {
-    if (isOpen) {
-      console.log('[ItemFormModal] Modal opened with defaultWishlist:', defaultWishlist);
-      console.log('[ItemFormModal] Modal opened with initialItem:', initialItem);
-      
-      // Add null check before spreading initialItem
-      console.log('[ItemFormModal] initialItem with wishlist:', initialItem ? {
-        ...initialItem,
-        wishlist: initialItem?.wishlist ?? defaultWishlist
-      } : { wishlist: defaultWishlist });
-    }
-  }, [isOpen, initialItem, defaultWishlist]);
+  // Removed blocking console.log operations for performance
 
   const handleSubmit = useCallback((item: any, file?: File) => {
-    console.log('[ItemFormModal] Handling submit with file:', !!file);
     onSubmit(item, file);
     // Close the modal after submission
     if (isMounted) {
-      console.log('[ItemFormModal] Closing modal after successful submission');
       onClose();
     }
   }, [onSubmit, onClose, isMounted]);

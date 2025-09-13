@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import { useAuthUser } from './hooks/useAuthUser';
+import React, { useState, Suspense, lazy } from 'react';
 import { useTagProcessing } from './hooks/useTagProcessing';
 import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
-import { ImageUploadSection } from './components/ImageUploadSection';
-import { BasicInfoFields } from './components/BasicInfoFields';
-import { DetailsFields } from './components/DetailsFields';
-import { BackgroundRemovalPreview } from './components/BackgroundRemovalPreview';
-import { FormActions } from './components/FormActions';
 import { FormContainer } from '../../shared/styles/form.styles';
+
+// Lazy load heavy form components to prevent blocking modal opening
+const ImageUploadSection = lazy(() => import('./components/ImageUploadSection').then(module => ({ default: module.ImageUploadSection })));
+const BasicInfoFields = lazy(() => import('./components/BasicInfoFields').then(module => ({ default: module.BasicInfoFields })));
+const DetailsFields = lazy(() => import('./components/DetailsFields').then(module => ({ default: module.DetailsFields })));
+const BackgroundRemovalPreview = lazy(() => import('./components/BackgroundRemovalPreview').then(module => ({ default: module.BackgroundRemovalPreview })));
+const FormActions = lazy(() => import('./components/FormActions').then(module => ({ default: module.FormActions })));
 
 interface WardrobeItemFormProps {
   initialItem?: WardrobeItem;
@@ -26,7 +27,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   onCancel
 }) => {
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
-  const { userId } = useAuthUser();
   const { processDetectedTags } = useTagProcessing();
   
   const formState = useWardrobeItemForm({
@@ -65,7 +65,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     onNewImageSelected: () => {
       backgroundRemoval.resetProcessedState();
       setIsImageFromUrl(false);
-      console.log('Reset isImageFromUrl to false for new file selection');
     },
     onSetIsImageFromUrl: (isFromUrl) => {
       setIsImageFromUrl(isFromUrl);
@@ -74,46 +73,47 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       backgroundRemoval.resetProcessedState();
     },
     onTagsDetected: async (tags) => {
-      console.log('[WardrobeItemForm] Received detected tags:', tags);
       formState.setDetectedTags(tags);
       
       // Auto-fill form fields using the dedicated service
       if (tags) {
-        try {
-          console.log('[WardrobeItemForm] Starting auto-population with tags:', tags);
-          const { FormAutoPopulationService } = await import('../../../../../services/ai/formAutoPopulation');
-          console.log('[WardrobeItemForm] FormAutoPopulationService imported successfully');
-          
-          await FormAutoPopulationService.autoPopulateFromTags(
-            tags,
-            {
-              setCategory: formState.setCategory,
-              setSubcategory: formState.setSubcategory,
-              setColor: formState.setColor,
-              setPattern: formState.setPattern,
-              setMaterial: formState.setMaterial,
-              setBrand: formState.setBrand,
-              setSilhouette: formState.setSilhouette,
-              setLength: formState.setLength,
-              setSleeves: formState.setSleeves,
-              setStyle: formState.setStyle,
-              setRise: formState.setRise,
-              setNeckline: formState.setNeckline,
-              setHeelHeight: formState.setHeelHeight,
-              setBootHeight: formState.setBootHeight,
-              setType: formState.setType,
-              setName: formState.setName,
-              toggleSeason: formState.toggleSeason,
-            },
-            {
-              overwriteExisting: false,
-              skipFields: [],
-              debug: true,
+        // Defer auto-population to idle time to avoid blocking the UI
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(async () => {
+            try {
+              const { FormAutoPopulationService } = await import('../../../../../services/ai/formAutoPopulation');
+              
+              await FormAutoPopulationService.autoPopulateFromTags(
+                tags,
+                {
+                  setCategory: formState.setCategory,
+                  setSubcategory: formState.setSubcategory,
+                  setColor: formState.setColor,
+                  setPattern: formState.setPattern,
+                  setMaterial: formState.setMaterial,
+                  setBrand: formState.setBrand,
+                  setSilhouette: formState.setSilhouette,
+                  setLength: formState.setLength,
+                  setSleeves: formState.setSleeves,
+                  setStyle: formState.setStyle,
+                  setRise: formState.setRise,
+                  setNeckline: formState.setNeckline,
+                  setHeelHeight: formState.setHeelHeight,
+                  setBootHeight: formState.setBootHeight,
+                  setType: formState.setType,
+                  setName: formState.setName,
+                  toggleSeason: formState.toggleSeason,
+                },
+                {
+                  overwriteExisting: false,
+                  skipFields: [],
+                  debug: false,
+                }
+              );
+            } catch (error) {
+              console.error('[WardrobeItemForm] Auto-population failed:', error);
             }
-          );
-          console.log('[WardrobeItemForm] Auto-population completed successfully');
-        } catch (error) {
-          console.error('[WardrobeItemForm] Auto-population failed:', error);
+          }, { timeout: 1000 });
         }
       }
     }
@@ -178,25 +178,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     return isSupabaseUrl ? undefined : selectedFile || undefined;
   };
 
-  /**
-   * Logs submission details for debugging
-   */
-  const logSubmissionDetails = (item: WardrobeItem, finalImageUrl: string, fileToSubmit: File | undefined) => {
-    console.log('[WardrobeItemForm] Submitting with:', {
-      hasFile: !!fileToSubmit,
-      hasImageUrl: !!finalImageUrl,
-      isSupabaseUrl: finalImageUrl && finalImageUrl.includes('supabase.co'),
-      imageUrlPrefix: finalImageUrl ? finalImageUrl.substring(0, 30) + '...' : 'none',
-      imageUrlType: finalImageUrl ? (
-        finalImageUrl.startsWith('data:') ? 'DATA_URL' : 
-        finalImageUrl.includes('supabase.co') ? 'SUPABASE_URL' : 
-        finalImageUrl.startsWith('http') ? 'EXTERNAL_URL' : 'OTHER'
-      ) : 'NONE',
-      userId: userId,
-      scenarios: item.scenarios,
-      scenariosCount: item.scenarios ? item.scenarios.length : 0
-    });
-  };
+  // Removed expensive debug logging for performance
 
   /**
    * Main form submission handler
@@ -206,18 +188,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     if (formState.validateForm()) {
       const formData = formState.getFormData();
       
-      // Debug logging for neckline data flow
-      console.log('[WardrobeItemForm] handleSubmit - Form data:', {
-        neckline: formData.neckline,
-        category: formData.category,
-        subcategory: formData.subcategory
-      });
-      
       const finalImageUrl = formData.imageUrl || previewImage || '';
       const item = createWardrobeItem(formData, finalImageUrl);
       const fileToSubmit = determineImageToSubmit(finalImageUrl);
       
-      logSubmissionDetails(item, finalImageUrl, fileToSubmit);
       onSubmit(item, fileToSubmit);
     }
   };
@@ -225,86 +199,96 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   return (
     <FormContainer>
       <form onSubmit={handleSubmit}>
-        <ImageUploadSection
-          previewImage={previewImage}
-          selectedFile={selectedFile}
-          onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
-          onDragOver={handleDragOver}
-          onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
-          onUrlLoad={(url: string) => handleUrlLoad(url, formState.setImageUrl)}
-          onRemoveBackground={handleRemoveBackground}
-          isProcessingBackground={backgroundRemoval.isProcessing}
-          isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
-          isLoadingUrl={isDownloadingImage}
-          isImageFromUrl={isImageFromUrl}
-          error={formState.errors.imageUrl || ''}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <ImageUploadSection
+            previewImage={previewImage}
+            selectedFile={selectedFile}
+            onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
+            onDragOver={handleDragOver}
+            onFileSelect={(file: File) => handleFileSelect(file, formState.setImageUrl)}
+            onUrlLoad={(url: string) => handleUrlLoad(url, formState.setImageUrl)}
+            onRemoveBackground={handleRemoveBackground}
+            isProcessingBackground={backgroundRemoval.isProcessing}
+            isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
+            isLoadingUrl={isDownloadingImage}
+            isImageFromUrl={isImageFromUrl}
+            error={formState.errors.imageUrl || ''}
+          />
+        </Suspense>
 
-        <BackgroundRemovalPreview
-          isOpen={backgroundRemoval.showPreview}
-          originalImage={backgroundRemoval.originalImage || ''}
-          processedImage={backgroundRemoval.processedImage || ''}
-          onUseOriginal={backgroundRemoval.useOriginal}
-          onUseProcessed={handleUseProcessed}
-          onClose={backgroundRemoval.closePreview}
-          isProcessing={backgroundRemoval.isProcessing}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <BackgroundRemovalPreview
+            isOpen={backgroundRemoval.showPreview}
+            originalImage={backgroundRemoval.originalImage || ''}
+            processedImage={backgroundRemoval.processedImage || ''}
+            onUseOriginal={backgroundRemoval.useOriginal}
+            onUseProcessed={handleUseProcessed}
+            onClose={backgroundRemoval.closePreview}
+            isProcessing={backgroundRemoval.isProcessing}
+          />
+        </Suspense>
 
-        <BasicInfoFields
-          name={formState.name}
-          onNameChange={formState.setName}
-          category={formState.category}
-          onCategoryChange={formState.setCategory}
-          subcategory={formState.subcategory}
-          onSubcategoryChange={formState.setSubcategory}
-          color={formState.color}
-          onColorChange={formState.setColor}
-          errors={formState.errors}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <BasicInfoFields
+            name={formState.name}
+            onNameChange={formState.setName}
+            category={formState.category}
+            onCategoryChange={formState.setCategory}
+            subcategory={formState.subcategory}
+            onSubcategoryChange={formState.setSubcategory}
+            color={formState.color}
+            onColorChange={formState.setColor}
+            errors={formState.errors}
+          />
+        </Suspense>
 
-        <DetailsFields
-          material={formState.material}
-          onMaterialChange={formState.setMaterial}
-          brand={formState.brand}
-          onBrandChange={formState.setBrand}
-          price={formState.price}
-          onPriceChange={formState.setPrice}
-          pattern={formState.pattern}
-          onPatternChange={formState.setPattern}
-          silhouette={formState.silhouette}
-          onSilhouetteChange={formState.setSilhouette}
-          length={formState.length}
-          onLengthChange={formState.setLength}
-          sleeves={formState.sleeves}
-          onSleeveChange={formState.setSleeves}
-          style={formState.style}
-          onStyleChange={formState.setStyle}
-          rise={formState.rise}
-          onRiseChange={formState.setRise}
-          neckline={formState.neckline}
-          onNecklineChange={formState.setNeckline}
-          heelHeight={formState.heelHeight}
-          onHeelHeightChange={formState.setHeelHeight}
-          bootHeight={formState.bootHeight}
-          onBootHeightChange={formState.setBootHeight}
-          type={formState.type}
-          onTypeChange={formState.setType}
-          scenarios={formState.scenarios}
-          onScenarioToggle={formState.toggleScenario}
-          seasons={formState.seasons}
-          onToggleSeason={formState.toggleSeason}
-          isWishlistItem={formState.isWishlistItem}
-          onWishlistToggle={formState.setIsWishlistItem}
-          category={formState.category}
-          subcategory={formState.subcategory}
-          errors={formState.errors}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <DetailsFields
+            material={formState.material}
+            onMaterialChange={formState.setMaterial}
+            brand={formState.brand}
+            onBrandChange={formState.setBrand}
+            price={formState.price}
+            onPriceChange={formState.setPrice}
+            pattern={formState.pattern}
+            onPatternChange={formState.setPattern}
+            silhouette={formState.silhouette}
+            onSilhouetteChange={formState.setSilhouette}
+            length={formState.length}
+            onLengthChange={formState.setLength}
+            sleeves={formState.sleeves}
+            onSleeveChange={formState.setSleeves}
+            style={formState.style}
+            onStyleChange={formState.setStyle}
+            rise={formState.rise}
+            onRiseChange={formState.setRise}
+            neckline={formState.neckline}
+            onNecklineChange={formState.setNeckline}
+            heelHeight={formState.heelHeight}
+            onHeelHeightChange={formState.setHeelHeight}
+            bootHeight={formState.bootHeight}
+            onBootHeightChange={formState.setBootHeight}
+            type={formState.type}
+            onTypeChange={formState.setType}
+            scenarios={formState.scenarios}
+            onScenarioToggle={formState.toggleScenario}
+            seasons={formState.seasons}
+            onToggleSeason={formState.toggleSeason}
+            isWishlistItem={formState.isWishlistItem}
+            onWishlistToggle={formState.setIsWishlistItem}
+            category={formState.category}
+            subcategory={formState.subcategory}
+            errors={formState.errors}
+          />
+        </Suspense>
 
-        <FormActions
-          onCancel={onCancel}
-          isSubmitting={formState.isSubmitting}
-          isDownloadingImage={isDownloadingImage}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <FormActions
+            onCancel={onCancel}
+            isSubmitting={formState.isSubmitting}
+            isDownloadingImage={isDownloadingImage}
+          />
+        </Suspense>
       </form>
     </FormContainer>
   );

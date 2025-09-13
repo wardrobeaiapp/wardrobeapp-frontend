@@ -48,22 +48,16 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [silhouette, setSilhouette] = useState(initialItem?.silhouette || '');
   const [length, setLength] = useState(initialItem?.length || '');
   
-  // Debug wrapper for setLength
-  const setLengthWithDebug = (value: string) => {
-    console.log('[DEBUG] setLength called with:', value);
-    console.log('[DEBUG] Current length before update:', length);
+  // Optimized setLength function
+  const setLengthOptimized = (value: string) => {
     setLength(value);
-    console.log('[DEBUG] Length setter executed');
   };
   const [sleeves, setSleeves] = useState(initialItem?.sleeves || '');
   const [style, setStyle] = useState(initialItem?.style || '');
   
-  // Debug wrapper for setStyle
-  const setStyleWithDebug = (value: string) => {
-    console.log('[DEBUG] setStyle called with:', value);
-    console.log('[DEBUG] Current style before update:', style);
+  // Optimized setStyle function
+  const setStyleOptimized = (value: string) => {
     setStyle(value);
-    console.log('[DEBUG] Style setter executed');
   };
   const [rise, setRise] = useState(initialItem?.rise || '');
   const [neckline, setNeckline] = useState(initialItem?.neckline || '');
@@ -153,16 +147,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
 
   // Get form data
   const getFormData = (): WardrobeItemFormData => {
-    console.log('[DEBUG] getFormData - Current form values:', {
-      sleeves,
-      style,
-      rise,
-      length,
-      neckline,
-      silhouette,
-      pattern,
-      scenarios
-    });
     
     const formData = {
       name: name.trim() || generateAutoName(),
@@ -211,23 +195,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       detectedTags
     };
     
-    // Debug logging
-    console.log('[useWardrobeItemForm] Form data debug:', {
-      category,
-      subcategory,
-      silhouette: formData.silhouette,
-      length: formData.length,
-      rise: formData.rise,
-      neckline: formData.neckline,
-      necklineValue: neckline,
-      heelHeight: formData.heelHeight,
-      heelHeightValue: heelHeight,
-      bootHeight: formData.bootHeight,
-      bootHeightValue: bootHeight,
-      shouldIncludeNeckline: subcategory && 
-        ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'blazer'].includes(subcategory.toLowerCase()),
-      shouldIncludeBootHeight: category === ItemCategory.FOOTWEAR && subcategory && subcategory.toLowerCase() === 'boots'
-    });
+    // Debug logging removed for performance
     
     return formData;
   };
@@ -286,11 +254,11 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     silhouette,
     setSilhouette,
     length,
-    setLength: setLengthWithDebug,
+    setLength: setLengthOptimized,
     sleeves,
     setSleeves,
     style,
-    setStyle: setStyleWithDebug,
+    setStyle: setStyleOptimized,
     rise,
     setRise,
     neckline,

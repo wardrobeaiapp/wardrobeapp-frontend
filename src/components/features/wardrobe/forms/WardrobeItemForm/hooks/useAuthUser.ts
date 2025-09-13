@@ -15,22 +15,44 @@ export const useAuthUser = () => {
       setIsLoading(true);
       setError(null);
       
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error) {
-          console.error('Error getting authenticated user:', error);
-          setError(error);
-          return;
-        }
-        
-        if (data?.user) {
-          setUserId(data.user.id);
-        }
-      } catch (err) {
-        console.error('Unexpected error getting user:', err);
-        setError(err instanceof Error ? err : new Error(String(err)));
-      } finally {
-        setIsLoading(false);
+      // Defer to idle time to avoid blocking modal opening
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(async () => {
+          try {
+            const { data, error } = await supabase.auth.getUser();
+            if (error) {
+              setError(error);
+              return;
+            }
+            
+            if (data?.user) {
+              setUserId(data.user.id);
+            }
+          } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
+          } finally {
+            setIsLoading(false);
+          }
+        }, { timeout: 500 });
+      } else {
+        // Fallback for older browsers
+        setTimeout(async () => {
+          try {
+            const { data, error } = await supabase.auth.getUser();
+            if (error) {
+              setError(error);
+              return;
+            }
+            
+            if (data?.user) {
+              setUserId(data.user.id);
+            }
+          } catch (err) {
+            setError(err instanceof Error ? err : new Error(String(err)));
+          } finally {
+            setIsLoading(false);
+          }
+        }, 10);
       }
     };
     

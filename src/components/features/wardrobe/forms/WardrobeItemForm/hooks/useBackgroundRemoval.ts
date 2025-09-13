@@ -30,7 +30,6 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
       onSuccess();
       
     } catch (error) {
-      console.error('Background removal failed:', error);
       onError(
         error instanceof Error 
           ? error.message 
@@ -54,18 +53,14 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
     setSelectedFile?: (file: File | null) => void
   ) => {
     if (processedImage) {
-      console.log('[useBackgroundRemoval] Using processed image:', processedImage);
-      
       try {
         setIsProcessing(true);
         
         // Fetch image via proxy but don't save to storage yet
-        console.log('[useBackgroundRemoval] Downloading processed image via proxy...');
         const { blob, fileExt } = await fetchImageSafely(processedImage);
         
         // Create a local blob URL for preview
         const blobUrl = URL.createObjectURL(blob);
-        console.log('[useBackgroundRemoval] Created blob URL for preview:', blobUrl);
         
         // Create a File object from the blob for form handling with correct mime type
         const mimeType = blob.type || `image/${fileExt === 'jpg' ? 'jpeg' : fileExt}`;
@@ -78,7 +73,6 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
         // Set the processed image as the selected file for form submission
         if (setSelectedFile) {
           setSelectedFile(processedFile);
-          console.log('[useBackgroundRemoval] Set processed image as selected file for form submission');
         }
         
         setShowPreview(false);
@@ -86,8 +80,6 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
         setIsUsingProcessedImage(true);
         
       } catch (error) {
-        console.error('[useBackgroundRemoval] Error fetching processed image:', error);
-        
         // Fallback: use external URL directly
         setPreviewImage(processedImage);
         setImageUrl(processedImage);
