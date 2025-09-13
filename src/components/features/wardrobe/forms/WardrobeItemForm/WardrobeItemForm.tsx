@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../../../../../services/core/supabase';
+import React, { useState } from 'react';
+import { useAuthUser } from './hooks/useAuthUser';
+import { useTagProcessing } from './hooks/useTagProcessing';
 import { WardrobeItem } from '../../../../../types';
 import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
@@ -26,23 +27,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 }) => {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  
-  // Get the current authenticated user ID on component mount
-  useEffect(() => {
-    const getUserId = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error getting authenticated user:', error);
-        return;
-      }
-      if (data?.user) {
-        setUserId(data.user.id);
-      }
-    };
-    
-    getUserId();
-  }, []);
+  const { userId } = useAuthUser();
+  const { processDetectedTags } = useTagProcessing();
   
   const formState = useWardrobeItemForm({
     initialItem,
@@ -240,38 +226,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       // Use the detected tags from useImageHandling hook
       const currentDetectedTags = detectedTags || {};
       
-      // Create tags object with all detected tags plus any form field overrides
-      const tags: Record<string, string> = {};
-      
-      // Only save tags that weren't used to populate form fields
-      // Create a set of form field names that got populated
-      const populatedFormFields = new Set<string>();
-      if (formData.category) populatedFormFields.add('category');
-      if (formData.color) populatedFormFields.add('color');  
-      if (formData.pattern) populatedFormFields.add('pattern');
-      if (formData.material) populatedFormFields.add('material');
-      if (formData.brand) populatedFormFields.add('brand');
-      if (formData.subcategory) populatedFormFields.add('subcategory');
-      if (formData.silhouette) populatedFormFields.add('silhouette');
-      if (formData.length) populatedFormFields.add('length');
-      if (formData.sleeves) populatedFormFields.add('sleeves');
-      if (formData.style) populatedFormFields.add('style');
-      if (formData.rise) populatedFormFields.add('rise');
-      if (formData.neckline) populatedFormFields.add('neckline');
-      if (formData.heelHeight) populatedFormFields.add('heelheight');
-      if (formData.bootHeight) populatedFormFields.add('bootheight');
-      if (formData.type) populatedFormFields.add('type');
-      
-      // Add only unused detected tags to the tags object
-      Object.entries(currentDetectedTags).forEach(([key, value]) => {
-        if (value) {
-          const normalizedKey = key.toLowerCase();
-          // Only include if this tag wasn't used to populate a form field
-          if (!populatedFormFields.has(normalizedKey)) {
-            tags[normalizedKey] = value;
-          }
-        }
-      });
+      // Process tags to exclude ones that were used in form fields
+      const tags = processDetectedTags(currentDetectedTags, formData);
       
       const item: WardrobeItem = {
         ...(initialItem?.id && { id: initialItem.id }), // Only include id if editing existing item
