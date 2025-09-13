@@ -13,11 +13,12 @@ import {
   getWardrobeItems,
   getWardrobeItem,
   addWardrobeItem,
-  setWardrobeItemActive,
-  // API-compatible functions
-  updateWardrobeItem as updateWardrobeItemApi,
-  deleteWardrobeItem as deleteWardrobeItemApi
+  updateWardrobeItem,
+  deleteWardrobeItem,
+  setWardrobeItemActive
 } from './itemCrudService';
+
+// Legacy functions have been removed
 
 // Specialized queries
 import {
@@ -47,6 +48,8 @@ export {
   getWardrobeItems,
   getWardrobeItem,
   addWardrobeItem,
+  updateWardrobeItem,
+  deleteWardrobeItem,
   setWardrobeItemActive,
   
   // Specialized queries
@@ -56,11 +59,7 @@ export {
   getItemsByIds,
   
   // Migration utilities
-  migrateLocalStorageItemsToSupabase,
-  
-  // API-compatible functions (deprecated but maintained for backward compatibility)
-  updateWardrobeItemApi as updateWardrobeItem,
-  deleteWardrobeItemApi as deleteWardrobeItem
+  migrateLocalStorageItemsToSupabase
 };
 
 // For backward compatibility with old imports
@@ -70,8 +69,8 @@ export const wardrobeItemsService = {
   getWardrobeItems,
   getWardrobeItem,
   addWardrobeItem,
-  updateWardrobeItem: updateWardrobeItemApi,
-  deleteWardrobeItem: deleteWardrobeItemApi,
+  updateWardrobeItem,
+  deleteWardrobeItem,
   setWardrobeItemActive,
   
   // Specialized queries
