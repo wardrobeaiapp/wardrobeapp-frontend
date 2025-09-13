@@ -15,8 +15,6 @@ import {
   addWardrobeItem,
   setWardrobeItemActive,
   // API-compatible functions
-  fetchWardrobeItems,
-  createWardrobeItem,
   updateWardrobeItem as updateWardrobeItemApi,
   deleteWardrobeItem as deleteWardrobeItemApi
 } from './itemCrudService';
@@ -61,8 +59,6 @@ export {
   migrateLocalStorageItemsToSupabase,
   
   // API-compatible functions (deprecated but maintained for backward compatibility)
-  fetchWardrobeItems,
-  createWardrobeItem,
   updateWardrobeItemApi as updateWardrobeItem,
   deleteWardrobeItemApi as deleteWardrobeItem
 };

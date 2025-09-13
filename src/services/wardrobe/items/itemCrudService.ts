@@ -1,5 +1,5 @@
 import { supabase } from '../../../services/core';
-import { WardrobeItem, WishlistStatus } from '../../../types';
+import { WardrobeItem, WishlistStatus, Season } from '../../../types';
 import { removeItemFromAllOutfits } from '../outfits';
 import { 
   TABLE_NAME, 
@@ -7,6 +7,7 @@ import {
   handleSupabaseError, 
   convertToWardrobeItem, 
   convertToWardrobeItems,
+  getCurrentUserId
 } from './itemBaseService';
 import { replaceItemScenarios, getItemScenarios, getBatchItemScenarios } from './itemRelationsService';
 
@@ -98,9 +99,25 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
     itemToAdd.wishlistStatus = WishlistStatus.NOT_REVIEWED;
   }
   
+  // Ensure season field always has a value to satisfy the not-null constraint
+  if (!itemToAdd.season || !Array.isArray(itemToAdd.season) || itemToAdd.season.length === 0) {
+    // Default to all seasons if not specified
+    itemToAdd.season = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+  }
+  
   // Extract scenarios before creating item (they're stored in a join table)
   const scenarios = itemToAdd.scenarios || [];
   delete itemToAdd.scenarios;
+  
+  // Get the current authenticated user ID
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    console.error('[itemService] Cannot add wardrobe item: No authenticated user');
+    throw new Error('Authentication required to add wardrobe item');
+  }
+  
+  // Set the user_id field to satisfy RLS policy
+  itemToAdd.userId = userId;
   
   const snakeCaseItem = camelToSnakeCase(itemToAdd);
 
@@ -263,11 +280,25 @@ export const createWardrobeItem = async (item: Omit<WardrobeItem, 'id' | 'dateAd
   // Ensure wishlist status is set to 'not_reviewed' for new wishlist items
   const wishlistStatus = item.wishlist && !item.wishlistStatus ? WishlistStatus.NOT_REVIEWED : item.wishlistStatus;
   
+  // Get the current authenticated user ID
+  const userId = await getCurrentUserId();
+  if (!userId) {
+    console.error('[itemService] Cannot add wardrobe item: No authenticated user');
+    throw new Error('Authentication required to add wardrobe item');
+  }
+  
   const itemToAdd = {
     ...item,
     wishlistStatus,
     dateAdded: new Date(),
+    userId: userId, // Set user ID to satisfy RLS policy
   };
+  
+  // Ensure season field always has a value to satisfy the not-null constraint
+  if (!itemToAdd.season || !Array.isArray(itemToAdd.season) || itemToAdd.season.length === 0) {
+    // Default to all seasons if not specified
+    itemToAdd.season = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+  }
 
   try {
     // Add default values for new items
