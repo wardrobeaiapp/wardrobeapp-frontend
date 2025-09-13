@@ -69,6 +69,19 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
     }
   }, [clearRenewalTimer]);
 
+  // Utility to defer non-critical operations to idle time
+  const deferToIdle = useCallback((callback: () => void | Promise<void>) => {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(async () => {
+        await callback();
+      }, { timeout: 2000 });
+    } else {
+      setTimeout(async () => {
+        await callback();
+      }, 10);
+    }
+  }, []);
+
   // Generate fresh URL with retry logic
   const generateFreshUrl = useCallback(async (isRetry = false): Promise<void> => {
     if (!item?.imageUrl) return;
@@ -80,7 +93,10 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       // Extract file path from expired URL or use stored path
       let filePath = item.imageUrl;
       
-      console.log('[useImageUrl] Processing URL for renewal:', filePath);
+      // Defer console logging to idle time to avoid blocking
+      deferToIdle(() => {
+        console.log('[useImageUrl] Processing URL for renewal:', filePath);
+      });
       
       // If it's a Supabase URL (signed or storage), extract the file path
       if (filePath.includes('supabase')) {
@@ -94,13 +110,16 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
         
         if (pathMatch) {
           filePath = pathMatch[1];
-          console.log('[useImageUrl] Extracted file path:', filePath);
-        } else {
-          console.error('[useImageUrl] Could not extract file path from URL:', filePath);
+          deferToIdle(() => {
+            console.log('[useImageUrl] Extracted file path:', filePath);
+          });
         }
       }
       
-      console.log(`[useImageUrl] Generating fresh URL for ${filePath}${isRetry ? ' (retry attempt ' + (retryCountRef.current + 1) + ')' : ''}`);
+      deferToIdle(() => {
+        console.log(`[useImageUrl] Generating fresh URL for ${filePath}${isRetry ? ' (retry attempt ' + (retryCountRef.current + 1) + ')' : ''}`);
+      });
+      
       const freshUrl = await generateSignedUrl(filePath, 604800); // 7 days for production
       
       if (!freshUrl) {
@@ -110,23 +129,32 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       setImageUrl(freshUrl);
       retryCountRef.current = 0; // Reset retry counter on success
       
-      // Update database with fresh URL and new 7-day expiry
+      // Defer database update to idle time - non-critical for UI
       const newExpiry = new Date(Date.now() + (604800 * 1000)); // 7 days from now
-      await updateItemImageUrl(item.id, freshUrl, newExpiry);
+      deferToIdle(async () => {
+        try {
+          await updateItemImageUrl(item.id, freshUrl, newExpiry);
+          console.log('[useImageUrl] Generated and cached fresh URL for image, expires:', newExpiry);
+        } catch (updateError) {
+          console.error('[useImageUrl] Failed to update image URL in database:', updateError);
+        }
+      });
       
       // Schedule next renewal
       scheduleRenewal(newExpiry);
       
-      console.log('[useImageUrl] Generated and cached fresh URL for image, expires:', newExpiry);
-      
     } catch (err) {
-      console.error('Fresh URL generation error:', err);
+      deferToIdle(() => {
+        console.error('Fresh URL generation error:', err);
+      });
       
       // Only retry if we haven't exceeded max retries
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current += 1;
         const retryDelay = Math.min(1000 * Math.pow(2, retryCountRef.current), 30000); // Exponential backoff, max 30s
-        console.log(`[useImageUrl] Retry ${retryCountRef.current}/${MAX_RETRIES} in ${retryDelay}ms`);
+        deferToIdle(() => {
+          console.log(`[useImageUrl] Retry ${retryCountRef.current}/${MAX_RETRIES} in ${retryDelay}ms`);
+        });
         
         await new Promise(resolve => setTimeout(resolve, retryDelay));
         return generateFreshUrl(true);
@@ -136,7 +164,7 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
     } finally {
       setIsLoading(false);
     }
-  }, [item?.id, item?.imageUrl, scheduleRenewal]);
+  }, [item?.id, item?.imageUrl, scheduleRenewal, deferToIdle]);
   
   // Store the latest version of generateFreshUrl in the ref
   useEffect(() => {

@@ -22,6 +22,34 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
   // Use a ref to track if the component is mounted
   const isMountedRef = useRef<boolean>(true);
 
+  // Utility function to yield control back to the main thread
+  const yieldToMain = () => {
+    return new Promise(resolve => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => resolve(undefined), { timeout: 50 });
+      } else {
+        setTimeout(() => resolve(undefined), 0);
+      }
+    });
+  };
+
+  // Async function to parse localStorage without blocking
+  const parseLocalStorageAsync = async (key: string): Promise<any[]> => {
+    return new Promise(resolve => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => {
+          const data = localStorage.getItem(key);
+          resolve(data ? JSON.parse(data) : []);
+        }, { timeout: 100 });
+      } else {
+        setTimeout(() => {
+          const data = localStorage.getItem(key);
+          resolve(data ? JSON.parse(data) : []);
+        }, 0);
+      }
+    });
+  };
+
   // Memoize the loadItems function to prevent recreation on every render
   const loadItems = useCallback(async () => {
     if (!isMountedRef.current) return;
@@ -32,6 +60,11 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     try {
       // Check if we have a session first to avoid AuthSessionMissingError
       const { data: sessionData } = await supabase.auth.getSession();
+      
+      // Yield control after session check
+      await yieldToMain();
+      
+      if (!isMountedRef.current) return;
       
       if (!sessionData.session || !sessionData.session.user) {
         // No active session - user is not authenticated
@@ -54,6 +87,10 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
         return;
       }
       
+      // Yield control after auth check
+      await yieldToMain();
+      if (!isMountedRef.current) return;
+      
       // Always attempt to load from the database first with the actual user ID
       const dbItems = await getWardrobeItems(authData.user.id, false);
       
@@ -64,27 +101,40 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
         return;
       }
       
-      // If no items in database, try to migrate from localStorage if there are any
-      const localStorageItems = JSON.parse(localStorage.getItem('wardrobe-items-guest') || '[]');
+      // If no items in database, check localStorage asynchronously
+      const localStorageItems = await parseLocalStorageAsync('wardrobe-items-guest');
+      
+      if (!isMountedRef.current) return;
       
       if (localStorageItems.length > 0) {
-        // Use the migration service from our proper imports
-        const migrationSuccess = await migrateLocalStorageItemsToSupabase();
+        // Show local items immediately for better UX
+        setItems(localStorageItems);
+        setIsLoading(false);
         
-        if (!isMountedRef.current) return;
-        
-        if (migrationSuccess) {
-          // If migration was successful, fetch the items again with the actual user ID
-          const migratedItems = await getWardrobeItems(authData.user.id, false);
-          if (isMountedRef.current) {
-            setItems(migratedItems);
-            // Clear localStorage after successful migration
-            localStorage.removeItem('wardrobe-items-guest');
-          }
-        } else {
-          // If migration failed, use the localStorage items
-          setItems(localStorageItems);
+        // Defer migration to idle time to avoid blocking
+        if ('requestIdleCallback' in window) {
+          requestIdleCallback(async () => {
+            if (!isMountedRef.current) return;
+            
+            try {
+              const migrationSuccess = await migrateLocalStorageItemsToSupabase();
+              
+              if (migrationSuccess && isMountedRef.current) {
+                // If migration was successful, fetch the items again
+                const migratedItems = await getWardrobeItems(authData.user.id, false);
+                if (isMountedRef.current) {
+                  setItems(migratedItems);
+                  // Clear localStorage after successful migration
+                  localStorage.removeItem('wardrobe-items-guest');
+                }
+              }
+            } catch (migrationError) {
+              console.error('Background migration failed:', migrationError);
+              // Keep using localStorage items if migration fails
+            }
+          }, { timeout: 5000 });
         }
+        return;
       }
     } catch (error) {
       console.error('Error loading items:', error);

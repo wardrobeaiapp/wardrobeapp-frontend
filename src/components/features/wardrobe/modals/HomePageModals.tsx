@@ -124,25 +124,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
     setIsViewItemModalOpen,
   } = modalState;
 
-  // Debug logging for modal states and selected items
-  React.useEffect(() => {
-    console.log('[HomePageModals] Modal states:', {
-      isAddModalOpen,
-      isEditModalOpen,
-      isViewItemModalOpen,
-      isAddOutfitModalOpen,
-      isEditOutfitModalOpen,
-      isViewOutfitModalOpen,
-      isAddCapsuleModalOpen,
-      isEditCapsuleModalOpen,
-      isViewCapsuleModalOpen,
-    });
-  }, [isAddModalOpen, isEditModalOpen, isViewItemModalOpen, isAddOutfitModalOpen, isEditOutfitModalOpen, isViewOutfitModalOpen, isAddCapsuleModalOpen, isEditCapsuleModalOpen, isViewCapsuleModalOpen]);
-  
-  // Track when selected items change
-  React.useEffect(() => {
-    console.log('[HomePageModals] selectedItem changed:', selectedItem ? `${selectedItem.id} (${selectedItem.name})` : 'undefined');
-  }, [selectedItem]);
+  // Debug logging removed for performance
 
   return (
     <>
@@ -163,11 +145,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         isEditing={true}
       />
 
-      {/* Add debug logging to track modal rendering */}
-      {console.log('[HomePageModals] Rendering ItemViewModal with:', {
-        isViewItemModalOpen,
-        selectedItem: selectedItem ? `${selectedItem.id} (${selectedItem.name})` : 'undefined'
-      })}
+      {/* ItemViewModal */}
       <ItemViewModal
         isOpen={isViewItemModalOpen}
         onClose={() => setIsViewItemModalOpen(false)}
