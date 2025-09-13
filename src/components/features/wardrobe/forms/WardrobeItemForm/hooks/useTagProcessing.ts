@@ -1,4 +1,3 @@
-import { WardrobeItem } from '../../../../../../types';
 import { WardrobeItemFormData } from './useWardrobeItemForm';
 
 type TagRecord = Record<string, string>;
