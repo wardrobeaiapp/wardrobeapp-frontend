@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { detectImageTags, extractTopTags } from '../../../../../../services/ai/ximilarService';
+import { uploadImageBlob, saveImageToStorage } from '../../../../../../services/core/imageService';
 
 interface UseImageHandlingProps {
   initialImageUrl?: string;
@@ -141,6 +142,33 @@ export const useImageHandling = ({
     });
   };
 
+  // Upload a file to Supabase storage and return a permanent URL
+  const uploadFileToStorage = async (file: File): Promise<string> => {
+    try {
+      console.log('[useImageHandling] Uploading file to Supabase storage:', file.name);
+      
+      // Get file extension from file name
+      const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      
+      // Convert file to blob for upload
+      const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+      
+      // Use the imageService functions to upload to Supabase storage
+      const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+      
+      // Save with proper permissions and get public URL
+      const publicUrl = await saveImageToStorage(filePath, blob);
+      
+      console.log('[useImageHandling] File uploaded successfully to:', filePath);
+      console.log('[useImageHandling] Public URL:', publicUrl);
+      
+      return publicUrl;
+    } catch (error) {
+      console.error('[useImageHandling] Error uploading file to storage:', error);
+      throw new Error('Failed to upload image to storage');
+    }
+  };
+
   const handleFileSelect = async (file: File, setImageUrl: (url: string) => void) => {
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
@@ -158,18 +186,26 @@ export const useImageHandling = ({
       // Store the original file
       setSelectedFile(file);
       
+      // For immediate preview, use a compressed data URL
       const compressedImageUrl = await compressImage(file);
-      setImageUrl(compressedImageUrl);
       setPreviewImage(compressedImageUrl);
-      onImageSuccess();
       
-      // Detect and log tags for the uploaded file
-      await detectAndLogTags(file);
+      // Detect and log tags for the uploaded file while uploading to storage
+      detectAndLogTags(file).catch(error => {
+        console.error('[useImageHandling] Error detecting tags:', error);
+      });
+      
+      // Upload the file to Supabase storage (this gives us a permanent URL)
+      const storedImageUrl = await uploadFileToStorage(file);
+      
+      // Update the form with the permanent storage URL
+      setImageUrl(storedImageUrl);
+      onImageSuccess();
       
       // Reset any background removal state when new image is selected
       onNewImageSelected?.();
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('[useImageHandling] Error processing image:', error);
       onImageError('Failed to process image');
     }
   };
@@ -231,15 +267,32 @@ export const useImageHandling = ({
         setIsDownloadingImage(false);
       }
     } else {
-      // Regular image URL handling
+      // Regular image URL handling - preview immediately
       setPreviewImage(url);
-      onImageSuccess();
       
-      // Detect and log tags for the URL image
       try {
+        // Import fetch utilities
+        const { fetchImageFromUrl } = await import('../../../../../../services/core/imageService');
+        
+        // Fetch the image as a blob
+        console.log('[useImageHandling] Fetching non-retail URL image:', url);
+        const { blob, fileExt } = await fetchImageFromUrl(url);
+        
+        // Upload to storage for consistency with other images
+        const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+        const storedUrl = await saveImageToStorage(filePath, blob);
+        
+        // Update with permanent URL
+        setImageUrl(storedUrl);
+        console.log('[useImageHandling] Non-retail URL image stored at:', storedUrl);
+        
+        // Detect and log tags for the URL image
         await detectAndLogTags(url);
+        
+        onImageSuccess();
       } catch (error) {
-        console.error('Error detecting tags for URL image:', error);
+        console.error('[useImageHandling] Error processing URL image:', error);
+        onImageError('Failed to process image URL');
       }
     }
   };

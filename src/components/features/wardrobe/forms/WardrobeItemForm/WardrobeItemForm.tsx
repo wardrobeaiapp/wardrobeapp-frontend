@@ -288,20 +288,29 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         bootHeight: formData.bootHeight,
         type: formData.type,
         rise: formData.rise,
+        imageUrl: finalImageUrl, // Add image URL to the item
         scenarios: formData.scenarios, // Add scenarios field
         season: formData.seasons, // Make sure seasons are also included
         tags: tags // Save as JSON object
       } as WardrobeItem;
       
-      // If we have a Supabase storage URL (processed image), don't pass the file
-      const isSupabaseUrl = finalImageUrl && finalImageUrl.includes('supabase');
+      // Determine how to handle the image based on its source
+      // If image is already a Supabase URL, we don't need to upload it again
+      const isSupabaseUrl = finalImageUrl && finalImageUrl.includes('supabase.co');
+      // If image is a data URL or from a file, we need to pass the file for upload
+      // If image is a regular URL but not from Supabase, we should pass it for server-side processing
       const fileToSubmit = isSupabaseUrl ? undefined : selectedFile || undefined;
       
       console.log('[WardrobeItemForm] Submitting with:', {
         hasFile: !!fileToSubmit,
         hasImageUrl: !!finalImageUrl,
         isSupabaseUrl,
-        imageUrl: finalImageUrl,
+        imageUrlPrefix: finalImageUrl ? finalImageUrl.substring(0, 30) + '...' : 'none',
+        imageUrlType: finalImageUrl ? (
+          finalImageUrl.startsWith('data:') ? 'DATA_URL' : 
+          finalImageUrl.includes('supabase.co') ? 'SUPABASE_URL' : 
+          finalImageUrl.startsWith('http') ? 'EXTERNAL_URL' : 'OTHER'
+        ) : 'NONE',
         userId: userId,
         scenarios: item.scenarios,
         scenariosCount: item.scenarios ? item.scenarios.length : 0

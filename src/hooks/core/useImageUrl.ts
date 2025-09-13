@@ -80,11 +80,23 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       // Extract file path from expired URL or use stored path
       let filePath = item.imageUrl;
       
-      // If it's a signed URL, extract the file path
-      if (filePath.includes('/storage/v1/object/sign/')) {
-        const pathMatch = filePath.match(/\/wardrobe-images\/([^?]+)/);
+      console.log('[useImageUrl] Processing URL for renewal:', filePath);
+      
+      // If it's a Supabase URL (signed or storage), extract the file path
+      if (filePath.includes('supabase')) {
+        // Try different patterns to extract the path
+        let pathMatch = filePath.match(/\/wardrobe-images\/([^?]+)/);
+        
+        if (!pathMatch) {
+          // Try alternative pattern for storage URLs
+          pathMatch = filePath.match(/\/storage\/v1\/object\/public\/wardrobe-images\/([^?]+)/);
+        }
+        
         if (pathMatch) {
           filePath = pathMatch[1];
+          console.log('[useImageUrl] Extracted file path:', filePath);
+        } else {
+          console.error('[useImageUrl] Could not extract file path from URL:', filePath);
         }
       }
       
