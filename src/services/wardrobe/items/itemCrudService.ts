@@ -137,11 +137,18 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
   
   // If we have scenarios, add them to the join table
   if (scenarios.length > 0 && createdItem.id) {
-    await replaceItemScenarios(createdItem.id, scenarios);
+    console.log('ATTEMPTING TO SAVE SCENARIOS for item:', createdItem.id, 'Scenarios:', scenarios);
+    try {
+      await replaceItemScenarios(createdItem.id, scenarios);
+      console.log('SCENARIOS SAVED SUCCESSFULLY for item:', createdItem.id);
+    } catch (scenarioError) {
+      console.error('ERROR SAVING SCENARIOS:', scenarioError);
+    }
     
     // Add scenarios back to the returned item object
     createdItem.scenarios = scenarios;
   } else {
+    console.log('NO SCENARIOS TO SAVE for item:', createdItem.id || 'unknown');
     createdItem.scenarios = [];
   }
   

@@ -288,6 +288,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         bootHeight: formData.bootHeight,
         type: formData.type,
         rise: formData.rise,
+        scenarios: formData.scenarios, // Add scenarios field
+        season: formData.seasons, // Make sure seasons are also included
         tags: tags // Save as JSON object
       } as WardrobeItem;
       
@@ -300,7 +302,9 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         hasImageUrl: !!finalImageUrl,
         isSupabaseUrl,
         imageUrl: finalImageUrl,
-        userId: userId
+        userId: userId,
+        scenarios: item.scenarios,
+        scenariosCount: item.scenarios ? item.scenarios.length : 0
       });
       
       onSubmit(item, fileToSubmit);

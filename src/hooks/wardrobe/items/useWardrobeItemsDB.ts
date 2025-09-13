@@ -138,7 +138,13 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => [...prevItems, optimisticItem]);
     
     try {
-      const newItem = await addWardrobeItem(item);
+      // Ensure scenarios is set before passing to addWardrobeItem
+      const itemWithScenarios = {
+        ...item,
+        scenarios: item.scenarios || []
+      };
+      console.log('HOOK: About to add wardrobe item with scenarios:', itemWithScenarios.scenarios);
+      const newItem = await addWardrobeItem(itemWithScenarios);
       
       if (isMountedRef.current) {
         if (newItem) {

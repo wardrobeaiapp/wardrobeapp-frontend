@@ -89,6 +89,12 @@ export const addScenariosToItem = async (itemId: string, scenarioIds: string[]):
   try {
     const userId = await getCurrentUserId();
     
+    // Check if we have a valid user ID
+    if (!userId) {
+      console.error('[itemService] Cannot add scenarios: No authenticated user');
+      return;
+    }
+    
     // Create records for the scenarios join table
     const scenarioRecords = scenarioIds.map(scenarioId => ({
       item_id: itemId,
@@ -96,16 +102,22 @@ export const addScenariosToItem = async (itemId: string, scenarioIds: string[]):
       user_id: userId
     }));
     
+    console.log('[itemService] Adding scenarios for item:', itemId, 'Scenarios:', scenarioIds);
+    
     // Insert into the join table
     // Note: Using upsert to avoid conflicts if records already exist
     const { error } = await supabase
       .from(WARDROBE_ITEM_SCENARIOS_TABLE)
       .upsert(scenarioRecords, { onConflict: 'item_id,scenario_id' });
-      
+    
     if (error) {
+      console.error('[itemService] Error adding scenarios:', error);
       return handleError('adding scenarios to item', error);
+    } else {
+      console.log('[itemService] Successfully added scenarios for item:', itemId);
     }
   } catch (error) {
+    console.error('[itemService] Exception adding scenarios:', error);
     return handleError('adding scenarios to item', error);
   }
 };
@@ -134,7 +146,15 @@ export const removeScenariosFromItem = async (itemId: string, scenarioIds: strin
  * Replace all scenarios for an item
  */
 export const replaceItemScenarios = async (itemId: string, scenarioIds: string[]): Promise<void> => {
+  console.log('DIRECT LOG: replaceItemScenarios called with ID:', itemId, 'Scenarios:', scenarioIds);
   try {
+    console.log('[itemService] Replacing scenarios for item:', itemId, 'New scenarios:', scenarioIds);
+    
+    // Check if we have a valid item ID
+    if (!itemId) {
+      console.error('[itemService] Cannot replace scenarios: Invalid item ID');
+      return;
+    }
     
     // First remove all existing scenarios for this item
     const { error: deleteError } = await supabase
@@ -143,14 +163,21 @@ export const replaceItemScenarios = async (itemId: string, scenarioIds: string[]
       .eq('item_id', itemId);
       
     if (deleteError) {
+      console.error('[itemService] Error removing existing scenarios:', deleteError);
       return handleError('removing item scenarios', deleteError);
     }
     
+    console.log('[itemService] Successfully removed existing scenarios for item:', itemId);
+    
     // Then add the new scenarios if there are any
     if (scenarioIds.length > 0) {
+      console.log('[itemService] Adding', scenarioIds.length, 'new scenarios to item:', itemId);
       await addScenariosToItem(itemId, scenarioIds);
+    } else {
+      console.log('[itemService] No new scenarios to add for item:', itemId);
     }
   } catch (error) {
+    console.error('[itemService] Exception replacing scenarios:', error);
     return handleError('replacing item scenarios', error);
   }
 };
