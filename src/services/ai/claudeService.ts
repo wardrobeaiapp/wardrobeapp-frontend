@@ -339,7 +339,7 @@ export const claudeService = {
             return (matchesMainCategories || matchesAccessories) && matchesSeason;
           }
 
-          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'hoodie') {
+          if (formData.category === ItemCategory.TOP && (formData.subcategory?.toLowerCase() === 'hoodie' || formData.subcategory?.toLowerCase() === 'sweatshirt')) {
             console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
             
             const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
