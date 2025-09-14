@@ -285,3 +285,31 @@ export const filterGapAnalysisContext = (
     return matchesCategory && matchesSeason;
   });
 };
+
+/**
+ * Filters wardrobe items for additional context based on category relationships
+ */
+export const filterAdditionalContext = (
+  wardrobeItems: WardrobeItem[], 
+  formData: { category?: string; seasons?: string[] }
+): WardrobeItem[] => {
+  return wardrobeItems.filter(item => {
+    const matchesSeason = formData.seasons?.some(season => 
+      item.season?.includes(season as any)
+    ) ?? true; // If no seasons specified, include all
+
+    // For TOP or BOTTOM categories, include ONE_PIECE items
+    if (formData.category === ItemCategory.TOP || formData.category === ItemCategory.BOTTOM) {
+      const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE;
+      return matchesOnePiece && matchesSeason;
+    }
+
+    // For ONE_PIECE category, include TOP and BOTTOM items
+    if (formData.category === ItemCategory.ONE_PIECE) {
+      const matchesTopOrBottom = [ItemCategory.TOP, ItemCategory.BOTTOM].includes(item.category as ItemCategory);
+      return matchesTopOrBottom && matchesSeason;
+    }
+
+    return false; // No additional context for other categories
+  });
+};

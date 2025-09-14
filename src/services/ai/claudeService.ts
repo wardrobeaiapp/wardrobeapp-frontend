@@ -6,7 +6,7 @@ import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
 import { getWardrobeItems } from '../wardrobe/items';
-import { filterStylingContext, filterGapAnalysisContext } from './wardrobeContextHelpers';
+import { filterStylingContext, filterGapAnalysisContext, filterAdditionalContext } from './wardrobeContextHelpers';
 
 // Import the Scenario type from scenarios service
 import type { Scenario } from '../scenarios/types';
@@ -252,6 +252,7 @@ export const claudeService = {
       // Generate styling and gap analysis context
       let stylingContext: WardrobeItem[] = [];
       let gapAnalysisContext: WardrobeItem[] = [];
+      let additionalContext: WardrobeItem[] = [];
       
       if (wardrobeItems.length > 0 && formData) {
         console.log('[claudeService] Debug - formData:', formData);
@@ -263,9 +264,14 @@ export const claudeService = {
         // Filter for gap analysis context using helper function
         gapAnalysisContext = filterGapAnalysisContext(wardrobeItems, formData);
         
+        // Filter for additional context using helper function
+        additionalContext = filterAdditionalContext(wardrobeItems, formData);
+        
         console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
         stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));
         console.log(`[claudeService] Generated gap analysis context: ${gapAnalysisContext.length} items`);
+        console.log(`[claudeService] Generated additional context: ${additionalContext.length} items`);
+        additionalContext.forEach(item => console.log(`[claudeService] Additional context item: ${item.name}`));
       }
       
       // Call our backend endpoint instead of Claude API directly (avoids CORS issues)
@@ -288,7 +294,8 @@ export const claudeService = {
           } : undefined,
           // Include wardrobe context for enhanced analysis
           stylingContext: stylingContext.length > 0 ? stylingContext : undefined,
-          gapAnalysisContext: gapAnalysisContext.length > 0 ? gapAnalysisContext : undefined
+          gapAnalysisContext: gapAnalysisContext.length > 0 ? gapAnalysisContext : undefined,
+          additionalContext: additionalContext.length > 0 ? additionalContext : undefined
         }
       );
 
