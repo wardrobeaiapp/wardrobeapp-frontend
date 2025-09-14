@@ -288,13 +288,26 @@ export const claudeService = {
             return (matchesMainCategories || matchesAccessories) && matchesSeason;
           }
 
-          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'Blouse') {
+          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'blouse') {
             console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
             
             const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
             
             const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
               ['scarf', 'belt', 'bag', 'jewelry', 'watch'].includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesAccessories) && matchesSeason;
+          }
+
+          if (formData.category === ItemCategory.TOP && (formData.subcategory?.toLowerCase() === 'Top' || formData.subcategory?.toLowerCase() === 'Tank Top')) {
+            console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+            
+            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
+              [ 'hat', 'bag', 'jewelry', 'sunglasses'].includes(item.subcategory?.toLowerCase() || '');
             
             console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
