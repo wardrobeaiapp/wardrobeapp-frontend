@@ -268,10 +268,13 @@ export const claudeService = {
             console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, season: ${item.season}`);
             
             const matchesCategory = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+
+            const matchesTops = (item.category as string) === ItemCategory.TOP && 
+              ['cardigan', 'blazer', 'vest'].includes(item.subcategory?.toLowerCase() || '');
             
             console.log(`[claudeService] Debug - matchesCategory: ${matchesCategory}, matchesSeason: ${matchesSeason}`);
             
-            return matchesCategory && matchesSeason;
+            return (matchesCategory || matchesTops) && matchesSeason;
           }
           
           // For top/shirt, select complementary categories + specific accessories
@@ -282,10 +285,13 @@ export const claudeService = {
             
             const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
               ['scarf', 'belt', 'bag', 'jewelry', 'watch', 'ties'].includes(item.subcategory?.toLowerCase() || '');
+
+            const matchesTops = (item.category as string) === ItemCategory.TOP && 
+              ['cardigan', 'blazer', 'vest'].includes(item.subcategory?.toLowerCase() || '');
             
             console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
-            return (matchesMainCategories || matchesAccessories) && matchesSeason;
+            return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
           }
 
           if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'blouse') {
@@ -295,10 +301,13 @@ export const claudeService = {
             
             const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
               ['scarf', 'belt', 'bag', 'jewelry', 'watch'].includes(item.subcategory?.toLowerCase() || '');
+
+            const matchesTops = (item.category as string) === ItemCategory.TOP && 
+              ['cardigan', 'blazer'].includes(item.subcategory?.toLowerCase() || '');
             
             console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
-            return (matchesMainCategories || matchesAccessories) && matchesSeason;
+            return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
           }
 
           if (formData.category === ItemCategory.TOP && (formData.subcategory?.toLowerCase() === 'Top' || formData.subcategory?.toLowerCase() === 'Tank Top')) {
@@ -309,9 +318,12 @@ export const claudeService = {
             const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
               [ 'hat', 'bag', 'jewelry', 'sunglasses'].includes(item.subcategory?.toLowerCase() || '');
             
+            const matchesTops = (item.category as string) === ItemCategory.TOP && 
+              ['cardigan', 'blazer'].includes(item.subcategory?.toLowerCase() || '');
+
             console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
-            return (matchesMainCategories || matchesAccessories) && matchesSeason;
+            return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
           }
 
           if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'sweater') {
@@ -321,6 +333,19 @@ export const claudeService = {
             
             const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
               ['scarf', 'belt', 'bag', 'jewelry', 'watch'].includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesAccessories) && matchesSeason;
+          }
+
+          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'hoodie') {
+            console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+            
+            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
+              ['bag', 'hat', 'sunglasses'].includes(item.subcategory?.toLowerCase() || '');
             
             console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
