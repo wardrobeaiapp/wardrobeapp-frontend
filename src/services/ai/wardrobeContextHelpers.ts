@@ -227,6 +227,17 @@ export const filterStylingContext = (
         return (matchesCategories || matchesOnePiece) && matchesSeason;
     }
 
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'socks') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE].includes(item.category as ItemCategory);
+
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return matchesCategories && matchesSeason;
+    }
+
     if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'sunglasses') {
         console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
         return false; // No styling context for sunglasses
