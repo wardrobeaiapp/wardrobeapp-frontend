@@ -144,6 +144,32 @@ export const filterStylingContext = (
         }
         
     }
+
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'hat') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return matchesCategories && matchesSeason;
+    }
+
+
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'іcarf') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.OUTERWEAR, ItemCategory.TOP].includes(item.category as ItemCategory);
+
+        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
+              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return (matchesCategories || matchesOnePiece) && matchesSeason;
+    }
     
     return false; // No styling rules for this category/subcategory
   });
