@@ -212,6 +212,11 @@ export const filterStylingContext = (
         
         return (matchesCategories || matchesOnePiece) && matchesSeason;
     }
+
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'sunglasses') {
+        console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
+        return false; // No styling context for sunglasses
+    }
     
     return false; // No styling rules for this category/subcategory
   });
