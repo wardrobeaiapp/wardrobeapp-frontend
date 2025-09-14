@@ -351,6 +351,22 @@ export const claudeService = {
             
             return (matchesMainCategories || matchesAccessories) && matchesSeason;
           }
+
+          if (formData.category === ItemCategory.TOP && (formData.subcategory?.toLowerCase() === 'cardigan' || formData.subcategory?.toLowerCase() === 'blazer' || formData.subcategory?.toLowerCase() === 'vest')) {
+            console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+            
+            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
+              ['belt', 'bag', 'jewelry', 'watch'].includes(item.subcategory?.toLowerCase() || '');
+
+            const matchesTops = (item.category as string) === ItemCategory.TOP && 
+              ['t-shirt', 'shirt', 'blouse', 'top', 'tank top'].includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
+          }
           
           return false; // No other category/subcategory logic implemented yet
         });
