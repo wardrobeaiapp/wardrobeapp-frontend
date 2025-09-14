@@ -213,6 +213,20 @@ export const filterStylingContext = (
         return (matchesCategories || matchesOnePiece) && matchesSeason;
     }
 
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'watch') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.TOP].includes(item.category as ItemCategory);
+
+        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
+              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return (matchesCategories || matchesOnePiece) && matchesSeason;
+    }
+
     if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'sunglasses') {
         console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
         return false; // No styling context for sunglasses
