@@ -24,6 +24,7 @@ router.post('/', async (req, res) => {
     console.log('formData:', formData || 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('gapAnalysisContext:', gapAnalysisContext ? `${gapAnalysisContext.length} items` : 'none');
+    console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
     console.log('===================');
     
     // Log that we received user data
