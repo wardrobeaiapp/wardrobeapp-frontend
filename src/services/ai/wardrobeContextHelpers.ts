@@ -24,7 +24,7 @@ export const filterStylingContext = (
         console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
         
         // Always include main categories (bottoms, footwear, outerwear)
-        const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+        const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
         
         // Check for matching accessories
         const matchesAccessories = rules.accessories && 
@@ -120,6 +120,27 @@ export const filterStylingContext = (
             console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesOnePiece: ${matchesOnePiece}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
             
             return (matchesMainCategories || matchesOnePiece || matchesTops || matchesAccessories) && matchesSeason;
+        }
+        
+    }
+
+    if (formData.category === ItemCategory.FOOTWEAR && formData.subcategory) {
+        const subcategoryKey = formData.subcategory.toLowerCase();
+        const rules = stylingRules[subcategoryKey];
+
+        if (rules) {
+            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            // Always include main categories (bottoms, footwear)
+            const matchesMainCategories = [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE].includes(item.category as ItemCategory);
+            
+            // Check for matching accessories
+            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
+            ['socks'].includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesAccessories) && matchesSeason;
         }
         
     }
