@@ -6,6 +6,7 @@ import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
 import { getWardrobeItems } from '../wardrobe/items';
+import { filterStylingContext, filterGapAnalysisContext } from './wardrobeContextHelpers';
 
 // Import the Scenario type from scenarios service
 import type { Scenario } from '../scenarios/types';
@@ -248,54 +249,7 @@ export const claudeService = {
         // Continue without user data if there's an auth error
       }
       
-      // Styling context configuration for different subcategories
-      const stylingRules: Record<string, {
-        accessories?: string[];
-        tops?: string[];
-      }> = {
-        't-shirt': {
-          tops: ['cardigan', 'blazer', 'vest']
-        },
-        'shirt': {
-          accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch', 'ties'],
-          tops: ['cardigan', 'blazer', 'vest']
-        },
-        'blouse': {
-          accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],
-          tops: ['cardigan', 'blazer']
-        },
-        'top': {
-          accessories: ['hat', 'bag', 'jewelry', 'sunglasses'],
-          tops: ['cardigan', 'blazer']
-        },
-        'tank top': {
-          accessories: ['hat', 'bag', 'jewelry', 'sunglasses'],
-          tops: ['cardigan', 'blazer']
-        },
-        'sweater': {
-          accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch']
-        },
-        'hoodie': {
-          accessories: ['bag', 'hat', 'sunglasses']
-        },
-        'sweatshirt': {
-          accessories: ['bag', 'hat', 'sunglasses']
-        },
-        'cardigan': {
-          accessories: ['belt', 'bag', 'jewelry', 'watch'],
-          tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top']
-        },
-        'blazer': {
-          accessories: ['belt', 'bag', 'jewelry', 'watch'],
-          tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top']
-        },
-        'vest': {
-          accessories: ['belt', 'bag', 'jewelry', 'watch'],
-          tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top']
-        }
-      };
-
-      // Generate styling context (similar items based on category, subcategory, and season)
+      // Generate styling and gap analysis context
       let stylingContext: WardrobeItem[] = [];
       let gapAnalysisContext: WardrobeItem[] = [];
       
@@ -303,52 +257,11 @@ export const claudeService = {
         console.log('[claudeService] Debug - formData:', formData);
         console.log('[claudeService] Debug - All wardrobe items:', wardrobeItems.map(item => ({ name: item.name, category: item.category, subcategory: item.subcategory })));
         
-        // Filter for styling context - items that complement the new item for styling analysis
-        stylingContext = wardrobeItems.filter(item => {
-          // Common season matching logic
-          const matchesSeason = formData.seasons?.some(season => 
-            item.season?.includes(season as any)
-          ) ?? true; // If no seasons specified, include all
-          
-          // Only process TOP category items with styling rules
-          if (formData.category === ItemCategory.TOP && formData.subcategory) {
-            const subcategoryKey = formData.subcategory.toLowerCase();
-            const rules = stylingRules[subcategoryKey];
-            
-            if (rules) {
-              console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-              
-              // Always include main categories (bottoms, footwear, outerwear)
-              const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-              
-              // Check for matching accessories
-              const matchesAccessories = rules.accessories && 
-                (item.category as string) === ItemCategory.ACCESSORY && 
-                rules.accessories.includes(item.subcategory?.toLowerCase() || '');
-              
-              // Check for matching tops
-              const matchesTops = rules.tops && 
-                (item.category as string) === ItemCategory.TOP && 
-                rules.tops.includes(item.subcategory?.toLowerCase() || '');
-              
-              console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesTops: ${!!matchesTops}, matchesSeason: ${matchesSeason}`);
-              
-              return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
-            }
-          }
-          
-          return false; // No styling rules for this category/subcategory
-        });
+        // Filter for styling context using helper function
+        stylingContext = filterStylingContext(wardrobeItems, formData);
         
-        // Filter for gap analysis context - items from same category for comparison
-        gapAnalysisContext = wardrobeItems.filter(item => {
-          const matchesCategory = item.category === formData.category;
-          const matchesSeason = formData.seasons?.some(season => 
-            item.season?.includes(season as any)
-          ) ?? true; // If no seasons specified, include all
-          
-          return matchesCategory && matchesSeason;
-        });
+        // Filter for gap analysis context using helper function
+        gapAnalysisContext = filterGapAnalysisContext(wardrobeItems, formData);
         
         console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
         stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));

@@ -1,0 +1,64 @@
+import { ItemCategory } from '../../types';
+import { WardrobeItem } from '../../types/wardrobe';
+import { stylingRules } from './wardrobeContextRules';
+
+/**
+ * Filters wardrobe items to find styling context based on form data
+ */
+export const filterStylingContext = (
+  wardrobeItems: WardrobeItem[], 
+  formData: { category?: string; subcategory?: string; seasons?: string[] }
+): WardrobeItem[] => {
+  return wardrobeItems.filter(item => {
+    // Common season matching logic
+    const matchesSeason = formData.seasons?.some(season => 
+      item.season?.includes(season as any)
+    ) ?? true; // If no seasons specified, include all
+    
+    // Only process TOP category items with styling rules
+    if (formData.category === ItemCategory.TOP && formData.subcategory) {
+      const subcategoryKey = formData.subcategory.toLowerCase();
+      const rules = stylingRules[subcategoryKey];
+      
+      if (rules) {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // Always include main categories (bottoms, footwear, outerwear)
+        const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+        
+        // Check for matching accessories
+        const matchesAccessories = rules.accessories && 
+          (item.category as string) === ItemCategory.ACCESSORY && 
+          rules.accessories.includes(item.subcategory?.toLowerCase() || '');
+        
+        // Check for matching tops
+        const matchesTops = rules.tops && 
+          (item.category as string) === ItemCategory.TOP && 
+          rules.tops.includes(item.subcategory?.toLowerCase() || '');
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesTops: ${!!matchesTops}, matchesSeason: ${matchesSeason}`);
+        
+        return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
+      }
+    }
+    
+    return false; // No styling rules for this category/subcategory
+  });
+};
+
+/**
+ * Filters wardrobe items to find gap analysis context (same category items)
+ */
+export const filterGapAnalysisContext = (
+  wardrobeItems: WardrobeItem[], 
+  formData: { category?: string; seasons?: string[] }
+): WardrobeItem[] => {
+  return wardrobeItems.filter(item => {
+    const matchesCategory = item.category === formData.category;
+    const matchesSeason = formData.seasons?.some(season => 
+      item.season?.includes(season as any)
+    ) ?? true; // If no seasons specified, include all
+    
+    return matchesCategory && matchesSeason;
+  });
+};
