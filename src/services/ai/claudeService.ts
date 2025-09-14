@@ -1,10 +1,11 @@
 import axios from 'axios';
 import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
-import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
+import { Outfit, ClaudeResponse as BaseClaudeResponse, ItemCategory } from '../../types';
 import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
+import { getWardrobeItems } from '../wardrobe/items';
 
 // Import the Scenario type from scenarios service
 import type { Scenario } from '../scenarios/types';
@@ -22,54 +23,6 @@ interface StyleAdviceResponse {
   details?: string;
 }
 
-/**
- * Generate a mock analysis when API key is not available
- * @param detectedTags - Optional object with tags detected from the image
- * @returns Analysis object with mock data
- */
-const generateMockAnalysis = (detectedTags?: DetectedTags) => {
-  // Extract some basic information from tags if available
-  const category = detectedTags?.category || 'clothing item';
-  const color = detectedTags?.color || '';
-  const pattern = detectedTags?.pattern || '';
-  const material = detectedTags?.material || '';
-  const style = detectedTags?.style || '';
-  
-  // Generate a random score between 6.5 and 9.5
-  const score = (Math.random() * 3 + 6.5).toFixed(1);
-  const numericScore = parseFloat(score);
-  
-  // Build a plausible analysis based on available tags
-  let analysis = `This appears to be a ${color ? color + ' ' : ''}${style ? style + ' ' : ''}${category}.`;
-  analysis += ` It's a versatile piece that would work well in various outfit combinations.`;
-  
-  if (material) {
-    analysis += ` The ${material} material gives it a quality feel and durability.`;
-  }
-  
-  if (pattern) {
-    analysis += ` The ${pattern} pattern adds visual interest and uniqueness to this piece.`;
-  }
-  
-  // Add style advice
-  analysis += ` This item would pair well with both casual and semi-formal outfits, making it a good addition to your wardrobe.`;
-  
-  // Feedback based on score
-  let feedback = '';
-  if (numericScore >= 8.5) {
-    feedback = `This is an excellent ${category} that offers great versatility and style. Highly recommended for your wardrobe.`;
-  } else if (numericScore >= 7) {
-    feedback = `This ${category} is a solid choice with good potential for various outfits. Consider how it complements your existing wardrobe items.`;
-  } else {
-    feedback = `While this ${category} has some appeal, consider whether it truly adds value to your wardrobe. It might have limited versatility or may not align with your personal style.`;
-  }
-  
-  return {
-    analysis,
-    score: numericScore,
-    feedback
-  };
-};
 
 // Backend API URL - point to the actual backend server
 const API_URL = 'http://localhost:5000/api';
@@ -190,13 +143,6 @@ export const claudeService = {
     details?: string;
   }> {
     try {
-      // Use our mock mode for offline testing if needed
-      const useMockMode = false; // Set to true to enable mock mode regardless of API availability
-      
-      if (useMockMode) {
-        console.log('[claudeService] Using mock mode');
-        return generateMockAnalysis(detectedTags);
-      }
 
       // Validate image data before sending to server
       if (!imageBase64) {
@@ -262,6 +208,7 @@ export const claudeService = {
       // Get current user from Supabase and their preferences
       let climateData = null;
       let scenarios: Scenario[] = [];
+      let wardrobeItems: WardrobeItem[] = [];
       
       try {
         // Get the current authenticated user
@@ -281,6 +228,14 @@ export const claudeService = {
             } catch (scenariosError) {
               console.error('[claudeService] Error fetching scenarios:', scenariosError);
             }
+            
+            // Fetch user's wardrobe items for context
+            try {
+              wardrobeItems = await getWardrobeItems(user.id);
+              console.log(`[claudeService] Loaded ${wardrobeItems.length} wardrobe items for context`);
+            } catch (wardrobeError) {
+              console.error('[claudeService] Error fetching wardrobe items:', wardrobeError);
+            }
           } catch (dataError) {
             console.error('[claudeService] Error loading user data:', dataError);
             // Continue without preferences/climate/scenarios if there's an error
@@ -291,6 +246,47 @@ export const claudeService = {
       } catch (authError) {
         console.error('[claudeService] Error getting authenticated user:', authError);
         // Continue without user data if there's an auth error
+      }
+      
+      // Generate styling context (similar items based on category, subcategory, and season)
+      let stylingContext: WardrobeItem[] = [];
+      let gapAnalysisContext: WardrobeItem[] = [];
+      
+      if (wardrobeItems.length > 0 && formData) {
+        console.log('[claudeService] Debug - formData:', formData);
+        
+        // Filter for styling context - items that complement the new item for styling analysis
+        stylingContext = wardrobeItems.filter(item => {
+          // For top/t-shirt, select complementary categories: bottoms, footwear, outerwear
+          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 't-shirt') {
+            console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, season: ${item.season}`);
+            
+            const matchesCategory = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+            const matchesSeason = formData.seasons?.some(season => 
+              item.season?.includes(season as any)
+            ) ?? true; // If no seasons specified, include all
+            
+            console.log(`[claudeService] Debug - matchesCategory: ${matchesCategory}, matchesSeason: ${matchesSeason}`);
+            
+            return matchesCategory && matchesSeason;
+          }
+          
+          return false; // No other category/subcategory logic implemented yet
+        });
+        
+        // Filter for gap analysis context - items from same category for comparison
+        gapAnalysisContext = wardrobeItems.filter(item => {
+          const matchesCategory = item.category === formData.category;
+          const matchesSeason = formData.seasons?.some(season => 
+            item.season?.includes(season as any)
+          ) ?? true; // If no seasons specified, include all
+          
+          return matchesCategory && matchesSeason;
+        });
+        
+        console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
+        stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));
+        console.log(`[claudeService] Generated gap analysis context: ${gapAnalysisContext.length} items`);
       }
       
       // Call our backend endpoint instead of Claude API directly (avoids CORS issues)
@@ -310,7 +306,10 @@ export const claudeService = {
             category: formData.category,
             subcategory: formData.subcategory,
             seasons: formData.seasons
-          } : undefined
+          } : undefined,
+          // Include wardrobe context for enhanced analysis
+          stylingContext: stylingContext.length > 0 ? stylingContext : undefined,
+          gapAnalysisContext: gapAnalysisContext.length > 0 ? gapAnalysisContext : undefined
         }
       );
 
