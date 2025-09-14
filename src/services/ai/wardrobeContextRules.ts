@@ -79,4 +79,24 @@ export const stylingRules: Record<string, {
     accessories: ['bag', 'jewelry', 'hat', 'sunglasses'],
     tops: ['t-shirt', 'shirt', 'top', 'tank top', 'sweater']
   },
+  'coat': { 
+    accessories: ['bag', 'hat','scarf'],
+    tops: ['sweater', 'blazer', 'cardigan', 'hoodie', 'sweatshirt', 'vest', 'shirt', 'blouse']
+  },
+  'jacket': { 
+    accessories: ['bag', 'scarf'],
+    tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'vest']
+  },
+  'parka': { 
+    accessories: ['bag', 'scarf', 'hat',],
+    tops: ['sweater', 'cardigan', 'hoodie', 'sweatshirt', 'vest', 'shirt', 'blouse']
+  },
+  'trench coat': { 
+    accessories: ['bag'],
+    tops: ['sweater', 'cardigan', 'hoodie', 'sweatshirt', 'vest', 'shirt', 'blouse']
+  },
+  'windbreaker': { 
+    accessories: ['bag'],
+    tops: ['t-shirt', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt',]
+  },
 };

@@ -93,6 +93,36 @@ export const filterStylingContext = (
         }
         
     }
+
+    if (formData.category === ItemCategory.OUTERWEAR && formData.subcategory) {
+        const subcategoryKey = formData.subcategory.toLowerCase();
+        const rules = stylingRules[subcategoryKey];
+
+        if (rules) {
+            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            // Always include main categories (bottoms, footwear)
+            const matchesMainCategories = [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM].includes(item.category as ItemCategory);
+
+            // Only include specific ONE_PIECE items (dress and jumpsuit)
+            const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
+              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
+
+            const matchesTops = rules.tops && 
+              (item.category as string) === ItemCategory.TOP && 
+              rules.tops.includes(item.subcategory?.toLowerCase() || '');
+            
+            // Check for matching accessories
+            const matchesAccessories = rules.accessories && 
+              (item.category as string) === ItemCategory.ACCESSORY && 
+              rules.accessories.includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesOnePiece: ${matchesOnePiece}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesOnePiece || matchesTops || matchesAccessories) && matchesSeason;
+        }
+        
+    }
     
     return false; // No styling rules for this category/subcategory
   });
