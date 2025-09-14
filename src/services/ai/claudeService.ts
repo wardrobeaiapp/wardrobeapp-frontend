@@ -254,21 +254,38 @@ export const claudeService = {
       
       if (wardrobeItems.length > 0 && formData) {
         console.log('[claudeService] Debug - formData:', formData);
+        console.log('[claudeService] Debug - All wardrobe items:', wardrobeItems.map(item => ({ name: item.name, category: item.category, subcategory: item.subcategory })));
         
         // Filter for styling context - items that complement the new item for styling analysis
         stylingContext = wardrobeItems.filter(item => {
+          // Common season matching logic
+          const matchesSeason = formData.seasons?.some(season => 
+            item.season?.includes(season as any)
+          ) ?? true; // If no seasons specified, include all
+          
           // For top/t-shirt, select complementary categories: bottoms, footwear, outerwear
           if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 't-shirt') {
             console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, season: ${item.season}`);
             
             const matchesCategory = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-            const matchesSeason = formData.seasons?.some(season => 
-              item.season?.includes(season as any)
-            ) ?? true; // If no seasons specified, include all
             
             console.log(`[claudeService] Debug - matchesCategory: ${matchesCategory}, matchesSeason: ${matchesSeason}`);
             
             return matchesCategory && matchesSeason;
+          }
+          
+          // For top/shirt, select complementary categories + specific accessories
+          if (formData.category === ItemCategory.TOP && formData.subcategory?.toLowerCase() === 'shirt') {
+            console.log(`[claudeService] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+            
+            const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+            
+            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
+              ['scarf', 'belt', 'bag', 'jewelry', 'watch', 'ties'].includes(item.subcategory?.toLowerCase() || '');
+            
+            console.log(`[claudeService] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${matchesAccessories}, matchesSeason: ${matchesSeason}`);
+            
+            return (matchesMainCategories || matchesAccessories) && matchesSeason;
           }
           
           return false; // No other category/subcategory logic implemented yet
