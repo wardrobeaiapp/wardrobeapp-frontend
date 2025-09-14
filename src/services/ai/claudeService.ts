@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
-import { Outfit, ClaudeResponse as BaseClaudeResponse, ItemCategory } from '../../types';
+import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
 import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
