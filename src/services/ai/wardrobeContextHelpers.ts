@@ -198,6 +198,20 @@ export const filterStylingContext = (
         
         return matchesCategories && matchesSeason;
     }
+
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'jewelry') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.TOP].includes(item.category as ItemCategory);
+
+        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
+              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return (matchesCategories || matchesOnePiece) && matchesSeason;
+    }
     
     return false; // No styling rules for this category/subcategory
   });
