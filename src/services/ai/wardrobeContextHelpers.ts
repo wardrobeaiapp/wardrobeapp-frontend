@@ -259,6 +259,11 @@ export const filterStylingContext = (
         console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
         return false; // No styling context for sunglasses
     }
+
+    if (formData.category === ItemCategory.OTHER) {
+        console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
+        return false; // No styling context for sunglasses
+    }
     
     return false; // No styling rules for this category/subcategory
   });
