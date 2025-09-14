@@ -187,6 +187,17 @@ export const filterStylingContext = (
         
         return (matchesCategories || matchesOnePiece || matchesTops) && matchesSeason;
     }
+
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'bag') {
+        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+        
+        // For hat accessories, include bottoms and outerwear
+        const matchesCategories = [ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+        
+        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
+        
+        return matchesCategories && matchesSeason;
+    }
     
     return false; // No styling rules for this category/subcategory
   });
