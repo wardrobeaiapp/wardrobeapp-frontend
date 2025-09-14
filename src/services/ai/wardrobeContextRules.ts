@@ -7,7 +7,7 @@ export const stylingRules: Record<string, {
     tops: ['cardigan', 'blazer', 'vest']
   },
   'shirt': {
-    accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch', 'ties'],
+    accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],
     tops: ['cardigan', 'blazer', 'vest']
   },
   'blouse': {
