@@ -186,7 +186,7 @@ const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] =
 /**
  * Filters wardrobe items to find gap analysis context (same category items)
  */
-export const filterGapAnalysisContext = (
+export const filterSimilarContext = (
   wardrobeItems: WardrobeItem[], 
   formData: { category?: string; seasons?: string[] }
 ): WardrobeItem[] => {

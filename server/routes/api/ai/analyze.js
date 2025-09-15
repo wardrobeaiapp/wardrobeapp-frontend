@@ -13,7 +13,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, gapAnalysisContext } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -23,7 +23,7 @@ router.post('/', async (req, res) => {
     console.log('scenarios:', scenarios || 'none');
     console.log('formData:', formData || 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
-    console.log('gapAnalysisContext:', gapAnalysisContext ? `${gapAnalysisContext.length} items` : 'none');
+    console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
     console.log('===================');
     
@@ -153,11 +153,11 @@ router.post('/', async (req, res) => {
     }
     
     // Include gap analysis context (items from different categories/seasons for wardrobe completeness)
-    if (gapAnalysisContext && gapAnalysisContext.length > 0) {
+    if (similarContext && similarContext.length > 0) {
       systemPrompt += "\n\nFor gap analysis, here is a sample of the user's existing wardrobe across different categories:\n";
       
       const categorySummary = {};
-      gapAnalysisContext.forEach(item => {
+      similarContext.forEach(item => {
         if (!categorySummary[item.category]) {
           categorySummary[item.category] = [];
         }
