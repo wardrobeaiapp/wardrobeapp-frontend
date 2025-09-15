@@ -32,7 +32,7 @@ router.post('/', async (req, res) => {
     console.log('detectedTags:', detectedTags || 'none');
     console.log('climateData:', climateData || 'none');
     console.log('scenarios:', scenarios || 'none');
-    console.log('formData:', formData || 'none');
+    console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');

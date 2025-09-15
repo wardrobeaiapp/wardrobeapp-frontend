@@ -1,18 +1,24 @@
 // Utility functions for building AI analysis prompts
 
 function buildSystemPrompt() {
-  let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant with deep knowledge of both timeless style principles and current fashion relevance. ";
-  systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
-  systemPrompt += "considering the user's existing wardrobe, lifestyle, individual needs, and specific scenarios.";
+  let systemPrompt = "You are a STRICT financial advisor and wardrobe consultant whose PRIMARY JOB is to save users money by preventing unnecessary purchases. ";
+  systemPrompt += "Your role is to be the voice of financial reason - you help people make smart, strategic wardrobe investments while avoiding wasteful spending. ";
+  systemPrompt += "You should be skeptical, financially conservative, and ruthless about TRUE duplicates, but understand that different colors serve different styling purposes.";
+  
+  systemPrompt += "\n\n=== YOUR MINDSET ===";
+  systemPrompt += "\n• ASSUME the item is NOT needed unless it fills a genuine gap";
+  systemPrompt += "\n• Be RUTHLESS about TRUE duplicates (same color + same style)";
+  systemPrompt += "\n• UNDERSTAND that different colors are NOT duplicates (white tee ≠ black tee)";
+  systemPrompt += "\n• RECOMMEND only when item significantly improves wardrobe coverage, versatility, or scenario preparedness";
+  systemPrompt += "\n• Consider cost-per-wear and long-term value";
+  systemPrompt += "\n• Be direct and honest about both positives and negatives";
   
   systemPrompt += "\n\n=== FASHION RELEVANCE ===";
   systemPrompt += "\nEvaluate whether the piece feels current and stylish:";
   systemPrompt += "\n• Does it look modern or dated?";
   systemPrompt += "\n• Are the proportions flattering and contemporary?";
   systemPrompt += "\n• Do colors/patterns feel fresh or outdated?";
-  systemPrompt += "\nWrite naturally about these aspects - avoid technical jargon like 'fashion-relevant' or 'contemporary fashion sensibilities'.";
-  
-  systemPrompt += "\n\n**Important**: Support the user's style exploration and preferences - whether they gravitate toward classic, trendy, minimalist, or extravagant pieces. Your role is to ensure their choices work well with their existing wardrobe and feel fashion-relevant, not to impose a particular aesthetic. Focus on helping them build a cohesive, wearable wardrobe that reflects their personal style while avoiding truly outdated elements.";
+  systemPrompt += "\nBut REMEMBER: even if it's fashionable, if they don't NEED it, recommend SKIP.";
   
   systemPrompt += "\n\n=== QUALITY ISSUES ===";
   systemPrompt += "\nMention quality ONLY if you see obvious problems like poor stitching, loose threads, bad fit, cheap-looking materials, or broken hardware.";
@@ -91,6 +97,13 @@ function addClimateSection(systemPrompt, climateData) {
 
 function addStylingContextSection(systemPrompt, stylingContext) {
   if (stylingContext && stylingContext.length > 0) {
+    // DEBUG: Log the styling context items being passed to AI
+    console.log('=== DEBUG: STYLING CONTEXT ITEMS BEING SENT TO AI ===');
+    stylingContext.forEach((item, index) => {
+      console.log(`${index + 1}. ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color}`);
+    });
+    console.log('================================================');
+    
     systemPrompt += "\n\nFor styling context, here are similar items the user already owns in their wardrobe:\n";
     
     stylingContext.forEach((item, index) => {
@@ -119,12 +132,7 @@ function addStylingContextSection(systemPrompt, stylingContext) {
       systemPrompt += "\n";
     });
     
-    systemPrompt += "\n\n**CRITICAL DUPLICATE CHECK:** Before evaluating styling, scan the above items for EXACT or NEAR-EXACT duplicates of the new item. Look specifically for items with matching:";
-    systemPrompt += "\n- Same category AND color (e.g., 'black t-shirt' vs 'black t-shirt')";  
-    systemPrompt += "\n- Same subcategory AND color AND similar silhouette";
-    systemPrompt += "\n- Identical or very similar function and appearance";
-    systemPrompt += "\nIf you find duplicates, this is a CRITICAL CONCERN that should heavily impact your recommendation.";
-    systemPrompt += "\n\nThen evaluate STYLING COMPATIBILITY by considering proportion balance (silhouettes, lengths, rise), coordination (necklines, material weights, formality levels), and specific combination opportunities or mismatches.";
+    systemPrompt += "\n\nUse these items to suggest specific outfit combinations and styling possibilities with the new item.";
   }
   
   return systemPrompt;
@@ -147,7 +155,7 @@ function addScenarioCoverageSection(systemPrompt, scenarioCoverage) {
       }
     });
     
-    systemPrompt += "\n\n**Purchase Decision:** Assess if this item fills genuine gaps or would be redundant. High-frequency scenarios with low coverage = valuable; well-covered scenarios = question the value. Consider cost-per-wear potential.";
+    systemPrompt += "\n\n**Purchase Decision:** Focus on HIGH-FREQUENCY scenarios with LOW coverage. These gaps justify purchases. Well-covered scenarios = likely redundant. Consider: Will this item be worn regularly enough to justify its cost?";
   }
   
   return systemPrompt;
@@ -155,32 +163,59 @@ function addScenarioCoverageSection(systemPrompt, scenarioCoverage) {
 
 function addGapAnalysisSection(systemPrompt, similarContext) {
   if (similarContext && similarContext.length > 0) {
-    systemPrompt += "\n\nFor gap analysis, here is a sample of the user's existing wardrobe across different categories:\n";
+    systemPrompt += "\n\n=== DUPLICATE CHECK - CRITICAL TASK ===";
+    systemPrompt += "\nHere are items from the SAME category and subcategory in your wardrobe. CHECK FOR DUPLICATES FIRST:\n";
     
-    const categorySummary = {};
-    similarContext.forEach(item => {
-      if (!categorySummary[item.category]) {
-        categorySummary[item.category] = [];
-      }
-      categorySummary[item.category].push(item);
+    // Sort items to put most relevant duplicates first (same subcategory, same color)
+    const sortedContext = [...similarContext].sort((a, b) => {
+      // Prioritize items with color information
+      if (a.color && !b.color) return -1;
+      if (!a.color && b.color) return 1;
+      // Prioritize items with subcategory information
+      if (a.subcategory && !b.subcategory) return -1;
+      if (!a.subcategory && b.subcategory) return 1;
+      return 0;
     });
     
-    Object.keys(categorySummary).forEach(category => {
-      const items = categorySummary[category];
-      systemPrompt += `\n${category} (${items.length} item${items.length > 1 ? 's' : ''}):`;
-      items.slice(0, 3).forEach(item => { // Show max 3 items per category to avoid prompt bloat
-        systemPrompt += `\n- ${item.name}`;
-        if (item.color) systemPrompt += ` (${item.color})`;
-        if (item.season && item.season.length > 0) {
-          systemPrompt += ` [${item.season.join(', ')}]`;
-        }
-      });
-      if (items.length > 3) {
-        systemPrompt += `\n- ... and ${items.length - 3} more`;
+    sortedContext.forEach((item, index) => {
+      systemPrompt += `${index + 1}. ${item.name} - ${item.category}`;
+      if (item.subcategory) systemPrompt += ` (${item.subcategory})`;
+      if (item.color) systemPrompt += ` - COLOR: ${item.color}`;
+      
+      // Add detailed properties for better duplicate detection
+      const details = [];
+      if (item.length) details.push(`length: ${item.length}`);
+      if (item.silhouette) details.push(`silhouette: ${item.silhouette}`);
+      if (item.rise) details.push(`rise: ${item.rise}`);
+      if (item.neckline) details.push(`neckline: ${item.neckline}`);
+      if (item.material) details.push(`material: ${item.material}`);
+      if (item.fit) details.push(`fit: ${item.fit}`);
+      
+      if (details.length > 0) {
+        systemPrompt += ` [${details.join(', ')}]`;
       }
+      
+      if (item.season && item.season.length > 0) {
+        systemPrompt += ` {${item.season.join(', ')}}`;
+      }
+      systemPrompt += "\n";
     });
     
-    systemPrompt += "\n\nConsider wardrobe gaps this item might fill, outfit expansion opportunities, and whether complementary pieces exist to make it useful.";
+    systemPrompt += "\n**DUPLICATE DETECTION INSTRUCTIONS:**";
+    systemPrompt += "\n\n**TRUE DUPLICATES (flag for SKIP):**";
+    systemPrompt += "\n- Items that are the SAME color + SAME subcategory + similar style";
+    systemPrompt += "\n- Example: Analyzing a black t-shirt when you own another black t-shirt";
+    systemPrompt += "\n- Example: Analyzing blue jeans when you own other blue jeans with same fit";
+    systemPrompt += "\n\n**NOT DUPLICATES (different items, do NOT flag):**";
+    systemPrompt += "\n- Different colors: white vs black, grey vs black, blue vs red, etc.";
+    systemPrompt += "\n- Different subcategories: t-shirt vs tank top, jeans vs leggings";
+    systemPrompt += "\n- Different styles: fitted vs oversized, high-waisted vs low-rise";
+    systemPrompt += "\n\n**FOR EACH ITEM IN THE LIST ABOVE:**";
+    systemPrompt += "\n1. Compare the COLOR - if different colors, NOT a duplicate";
+    systemPrompt += "\n2. Compare the SUBCATEGORY - if different subcategories, NOT a duplicate";
+    systemPrompt += "\n3. Only if BOTH color and subcategory match, then check if it's a duplicate";
+    systemPrompt += "\n\n**REMEMBER:** Having multiple colors of basic items is normal and useful for outfit variety.";
+    systemPrompt += "\n\n**Duplicate Analysis:** Look through the list above for items that match BOTH the color and subcategory of the new item. Only flag those as duplicates.";
   }
   
   return systemPrompt;
@@ -199,9 +234,10 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n2. [How THIS item fills gaps in their wardrobe]";
   systemPrompt += "\n3. [Specific styling opportunities with THIS item]";
   systemPrompt += "\nCONS:";
-  systemPrompt += "\n1. [EXACT DUPLICATES: List any items you found that are nearly identical - same color, category, silhouette]";
-  systemPrompt += "\n2. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility]";
-  systemPrompt += "\n3. [Other specific concerns about this item]";
+  systemPrompt += "\n1. [EXACT DUPLICATES ONLY: Only mention items that are the SAME color AND same subcategory. Different colors are NOT duplicates. Example: 'You already own [exact item name] in the same black color which is an unnecessary duplicate']";
+  systemPrompt += "\n2. [WASTEFUL SPENDING: Explain why this purchase is unnecessary, but NEVER cite different colored items as reasons]";
+  systemPrompt += "\n3. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility]";
+  systemPrompt += "\n4. [OTHER CONCERNS: Any other reasons to avoid this purchase, excluding different colored items]";
   systemPrompt += "\n\nIMPORTANT: ";
   systemPrompt += "\n- ONLY include bullet points that have actual issues to report";
   systemPrompt += "\n- SKIP any bullet point if no issues exist (don't write 'none noted' or 'no issues found')";
@@ -215,14 +251,23 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n3. [Third specific styling suggestion]";
   systemPrompt += "\n\nSCORE: X/10";
   systemPrompt += "\nScore reasoning based on THIS item's value";
-  systemPrompt += "\n\nSCORING GUIDELINES:";
-  systemPrompt += "\n- EXACT DUPLICATES: If identical items exist, score should be 3/10 or lower";
-  systemPrompt += "\n- NEAR DUPLICATES: If very similar items exist, score should be 4-5/10";
-  systemPrompt += "\n- FILLS GAP: If item fills genuine wardrobe gap, score 7-9/10";
-  systemPrompt += "\n- HIGH VERSATILITY + NO DUPLICATES: Score 8-10/10";
+  systemPrompt += "\n\nSCORING GUIDELINES (BE STRICT):";
+  systemPrompt += "\n- EXACT DUPLICATES: Score MUST be 1-2/10 (automatic rejection)";
+  systemPrompt += "\n- NEAR DUPLICATES: Score MUST be 2-3/10 (automatic rejection)";
+  systemPrompt += "\n- SIMILAR ITEMS: Score MUST be 3-4/10 (automatic rejection)";
+  systemPrompt += "\n- SLIGHT OVERLAP: Score should be 4-5/10 (likely rejection)";
+  systemPrompt += "\n- FILLS MINOR GAP: Score 5-6/10 (question if truly necessary)";
+  systemPrompt += "\n- FILLS MAJOR GAP: Score 6-7/10 (cautious recommendation)";
+  systemPrompt += "\n- ESSENTIAL ITEM: Score 7-8/10 (recommend only if truly needed)";
+  systemPrompt += "\n- CRITICAL WARDROBE NEED: Score 8-10/10 (rare, must be genuinely essential)";
   systemPrompt += "\n\nFEEDBACK:";
   systemPrompt += "\nSpecific recommendation for THIS item";
-  systemPrompt += "\n\nFINAL RECOMMENDATION: [One clear sentence stating: SKIP if critical issues exist (exact duplicates, poor quality), or RECOMMEND if item fills genuine gap and adds value]";
+  systemPrompt += "\n\nFINAL RECOMMENDATION: [Be selective and strategic. Examples:";
+  systemPrompt += "\n- 'SKIP - You already own [specific item] which serves the same purpose.'";
+  systemPrompt += "\n- 'SKIP - This overlaps too much with existing items and won't add meaningful value.'";
+  systemPrompt += "\n- 'RECOMMEND - This fills a genuine gap in [specific scenario] and offers high versatility with [specific existing items].'";
+  systemPrompt += "\n- 'RECOMMEND - Essential for [specific scenarios] where you currently lack appropriate options.'";
+  systemPrompt += "\nRECOMMEND only when item significantly improves wardrobe functionality, scenario coverage, or versatility.]";
   systemPrompt += "\n\nCRITICAL: Analyze the ACTUAL item in the image, not generic examples. Be specific about color, style, fit. Ensure pros and cons are consistent and logical for the same item.";
   
   return systemPrompt;

@@ -120,7 +120,10 @@ export const filterStylingContext = (
   wardrobeItems: WardrobeItem[], 
   formData: { category?: string; subcategory?: string; seasons?: string[] }
 ): WardrobeItem[] => {
-  return wardrobeItems.filter(item => {
+  console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}`);
+  console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
+  
+  const filtered = wardrobeItems.filter(item => {
     const matchesSeason = checkSeasonMatch(item, formData.seasons);
     
     // Handle ACCESSORY category with configuration
@@ -164,6 +167,13 @@ export const filterStylingContext = (
     
     return false; // No styling rules for this category/subcategory
   });
+  
+  console.log(`[wardrobeContextHelpers] STYLING CONTEXT FILTERED RESULTS: ${filtered.length} items selected`);
+  filtered.forEach(item => {
+    console.log(`[wardrobeContextHelpers] Selected item: ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color}`);
+  });
+  
+  return filtered;
 };
 
 const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] => {
@@ -184,20 +194,57 @@ const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] =
 };
 
 /**
- * Filters wardrobe items to find gap analysis context (same category items)
+ * Filters wardrobe items to find gap analysis context (same category and subcategory items for duplicate detection)
+ * For basic items, also tries to match color to avoid showing different colored items as duplicates
  */
 export const filterSimilarContext = (
   wardrobeItems: WardrobeItem[], 
-  formData: { category?: string; seasons?: string[] }
+  formData: { category?: string; subcategory?: string; seasons?: string[]; color?: string }
 ): WardrobeItem[] => {
-  return wardrobeItems.filter(item => {
+  console.log(`[wardrobeContextHelpers] FILTERING SIMILAR CONTEXT for category: ${formData.category}, subcategory: ${formData.subcategory}, color: ${formData.color}, seasons: ${formData.seasons?.join(',')}`);
+  
+  const filtered = wardrobeItems.filter(item => {
     const matchesCategory = item.category === formData.category;
+    const matchesSubcategory = formData.subcategory ? 
+      item.subcategory?.toLowerCase() === formData.subcategory.toLowerCase() : true;
     const matchesSeason = formData.seasons?.some(season => 
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all
     
-    return matchesCategory && matchesSeason;
+    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Color: ${item.color}`);
+    
+    const shouldInclude = matchesCategory && matchesSubcategory && matchesSeason;
+    
+    return shouldInclude;
   });
+
+  // Sort items to prioritize same-color items first for better duplicate detection
+  const sortedFiltered = filtered.sort((a, b) => {
+    // If we have color information for the form data, prioritize matching colors
+    if (formData.color) {
+      const formColorLower = formData.color.toLowerCase();
+      const aColorMatch = a.color?.toLowerCase() === formColorLower;
+      const bColorMatch = b.color?.toLowerCase() === formColorLower;
+      
+      if (aColorMatch && !bColorMatch) return -1;
+      if (!aColorMatch && bColorMatch) return 1;
+    }
+    
+    // Secondary sort by whether item has color info (items with color info first)
+    const aHasColor = !!a.color;
+    const bHasColor = !!b.color;
+    if (aHasColor && !bHasColor) return -1;
+    if (!aHasColor && bHasColor) return 1;
+    
+    return 0;
+  });
+  
+  console.log(`[wardrobeContextHelpers] SIMILAR CONTEXT FILTERED RESULTS: ${sortedFiltered.length} items selected`);
+  sortedFiltered.forEach(item => {
+    console.log(`[wardrobeContextHelpers] Similar item: ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color}`);
+  });
+  
+  return sortedFiltered;
 };
 
 /**

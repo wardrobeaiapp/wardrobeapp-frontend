@@ -93,7 +93,7 @@ export const useAICheck = () => {
       // Determine status based on score
       if (score >= 8) {
         status = WishlistStatus.APPROVED;
-      } else if (score >= 6) {
+      } else {
         status = WishlistStatus.POTENTIAL_ISSUE;
       }
 
