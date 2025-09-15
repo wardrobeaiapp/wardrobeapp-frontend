@@ -284,17 +284,39 @@ router.post('/', async (req, res) => {
       
       stylingContext.forEach((item, index) => {
         systemPrompt += `${index + 1}. ${item.name} - ${item.category}`;
-        if (item.color) systemPrompt += ` (${item.color})`;
+        if (item.subcategory) systemPrompt += ` (${item.subcategory})`;
+        if (item.color) systemPrompt += ` - ${item.color}`;
+        
+        // Add detailed styling properties for better combination analysis
+        const details = [];
+        if (item.length) details.push(`length: ${item.length}`);
+        if (item.silhouette) details.push(`silhouette: ${item.silhouette}`);
+        if (item.rise) details.push(`rise: ${item.rise}`);
+        if (item.neckline) details.push(`neckline: ${item.neckline}`);
+        if (item.heel_height) details.push(`heel: ${item.heel_height}`);
+        if (item.boot_height) details.push(`boot height: ${item.boot_height}`);
+        if (item.material) details.push(`material: ${item.material}`);
+        if (item.fit) details.push(`fit: ${item.fit}`);
+        
+        if (details.length > 0) {
+          systemPrompt += ` [${details.join(', ')}]`;
+        }
+        
         if (item.season && item.season.length > 0) {
-          systemPrompt += ` [${item.season.join(', ')}]`;
+          systemPrompt += ` {${item.season.join(', ')}}`;
         }
         systemPrompt += "\n";
       });
       
-      systemPrompt += "\nWhen analyzing the new item, consider:";
-      systemPrompt += "\n- How well it will coordinate with these existing similar items";
-      systemPrompt += "\n- Whether it adds variety or just duplicates what the user already has";
-      systemPrompt += "\n- Styling opportunities and outfit combinations with these existing pieces";
+      systemPrompt += "\nWhen analyzing the new item, consider these STYLING COMPATIBILITY factors:";
+      systemPrompt += "\n- **Silhouette balance**: How different silhouettes work together (e.g., fitted top with wide-leg pants)";
+      systemPrompt += "\n- **Length proportions**: Proper hem relationships (e.g., cropped tops with high-waisted bottoms)";
+      systemPrompt += "\n- **Rise compatibility**: How trouser/skirt rise works with top length and tucking options";
+      systemPrompt += "\n- **Neckline coordination**: How necklines pair with accessories and layering pieces";
+      systemPrompt += "\n- **Material weight matching**: Lightweight vs heavy fabrics and seasonal appropriateness";
+      systemPrompt += "\n- **Heel height practicality**: How footwear heel heights affect outfit proportions and occasion suitability";
+      systemPrompt += "\n- **Overall style coherence**: Whether pieces create cohesive looks or clash in formality/aesthetic";
+      systemPrompt += "\n- Identify specific combination opportunities and warn against poor styling matches";
     }
 
     // Analyze scenario coverage with existing wardrobe
