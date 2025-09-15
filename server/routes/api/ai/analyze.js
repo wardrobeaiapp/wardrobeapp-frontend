@@ -1,7 +1,7 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { formatStylePreferencesForPrompt } = require('../../../utils/stylePreferencesUtils');
-const { analyzeScenarioCoverage } = require('../../utils/scenarioAnalysis');
+const { analyzeScenarioCoverage } = require('../../../utils/scenarioAnalysis');
 const {
   buildSystemPrompt,
   addFormDataSection,
@@ -11,7 +11,7 @@ const {
   addScenarioCoverageSection,
   addGapAnalysisSection,
   addFinalInstructions
-} = require('../../utils/promptBuilder');
+} = require('../../../utils/promptBuilder');
 const router = express.Router();
 
 // Initialize Anthropic client
