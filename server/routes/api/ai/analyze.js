@@ -1,152 +1,18 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { formatStylePreferencesForPrompt } = require('../../../utils/stylePreferencesUtils');
+const { analyzeScenarioCoverage } = require('../../utils/scenarioAnalysis');
+const {
+  buildSystemPrompt,
+  addFormDataSection,
+  addScenariosSection,
+  addClimateSection,
+  addStylingContextSection,
+  addScenarioCoverageSection,
+  addGapAnalysisSection,
+  addFinalInstructions
+} = require('../../utils/promptBuilder');
 const router = express.Router();
-
-// Helper function to analyze scenario coverage with existing wardrobe
-function analyzeScenarioCoverage(scenarios, wardrobeItems) {
-  return scenarios.map(scenario => {
-    console.log('Scenario:', scenario);
-    // Get items that are suitable for this scenario
-    const suitableItems = wardrobeItems.filter(item => {
-      // Check if item is explicitly tagged for this scenario
-      if (item.scenarios && item.scenarios.includes(scenario.name)) {
-        return true;
-      }
-      
-      // Auto-detect suitability based on scenario type and item characteristics
-      return isItemSuitableForScenario(item, scenario);
-    });
-
-    // Analyze coverage by category
-    const categoryAnalysis = analyzeCategoryBalance(suitableItems);
-    const coverageLevel = calculateCoverageScore(categoryAnalysis, scenario);
-    const gaps = identifyGaps(categoryAnalysis, scenario);
-    const strengths = identifyStrengths(categoryAnalysis);
-
-    return {
-      scenarioName: scenario.name,
-      frequency: scenario.frequency,
-      suitableItems: suitableItems.length,
-      coverageLevel,
-      coverageDescription: getCoverageDescription(coverageLevel),
-      gaps,
-      strengths,
-      categoryBreakdown: categoryAnalysis
-    };
-  });
-}
-
-function isItemSuitableForScenario(item, scenario) {
-  const scenarioName = scenario.name.toLowerCase();
-  const itemCategory = item.category?.toLowerCase() || '';
-  const itemSubcategory = item.subcategory?.toLowerCase() || '';
-  const itemStyle = item.style?.toLowerCase() || '';
-  
-  // Office Work / Professional scenarios
-  if (scenarioName.includes('office') || scenarioName.includes('work') || scenarioName.includes('professional')) {
-    return ['blazer', 'shirt', 'blouse', 'dress shirt', 'trousers', 'dress pants', 'dress', 'formal shoes', 'heels'].includes(itemSubcategory) ||
-           itemStyle.includes('formal') || itemStyle.includes('business');
-  }
-  
-  // Casual / Weekend scenarios
-  if (scenarioName.includes('casual') || scenarioName.includes('weekend')) {
-    return ['t-shirt', 'jeans', 'shorts', 'sneakers', 'casual dress'].includes(itemSubcategory) ||
-           itemStyle.includes('casual');
-  }
-  
-  // Dinner / Evening scenarios
-  if (scenarioName.includes('dinner') || scenarioName.includes('evening') || scenarioName.includes('date')) {
-    return ['dress', 'blouse', 'nice shirt', 'heels', 'dress shoes'].includes(itemSubcategory) ||
-           itemStyle.includes('elegant') || itemStyle.includes('dressy');
-  }
-  
-  // Exercise / Gym scenarios
-  if (scenarioName.includes('exercise') || scenarioName.includes('gym') || scenarioName.includes('workout')) {
-    return ['activewear', 'sportswear', 'sneakers', 'athletic'].some(term => 
-           itemSubcategory.includes(term) || itemStyle.includes(term));
-  }
-  
-  // Default: consider versatile pieces suitable for most scenarios
-  return ['jeans', 'shirt', 'sweater', 'cardigan', 'dress'].includes(itemSubcategory);
-}
-
-function analyzeCategoryBalance(items) {
-  const analysis = {
-    tops: items.filter(item => item.category === 'TOP').length,
-    bottoms: items.filter(item => item.category === 'BOTTOM').length,
-    dresses: items.filter(item => item.category === 'ONE_PIECE' && item.subcategory === 'dress').length,
-    outerwear: items.filter(item => item.category === 'OUTERWEAR').length,
-    footwear: items.filter(item => item.category === 'FOOTWEAR').length,
-    accessories: items.filter(item => item.category === 'ACCESSORY').length
-  };
-  analysis.total = items.length;
-  return analysis;
-}
-
-function calculateCoverageScore(categoryAnalysis, scenario) {
-  let score = 0;
-  const scenarioName = scenario.name.toLowerCase();
-  
-  // Base score from having any suitable items
-  if (categoryAnalysis.total === 0) return 0;
-  if (categoryAnalysis.total >= 1) score += 1;
-  if (categoryAnalysis.total >= 3) score += 1;
-  
-  // Bonus for category balance
-  const hasTopOrDress = categoryAnalysis.tops > 0 || categoryAnalysis.dresses > 0;
-  const hasBottoms = categoryAnalysis.bottoms > 0;
-  const hasFootwear = categoryAnalysis.footwear > 0;
-  
-  if (hasTopOrDress) score += 1;
-  if (hasBottoms || categoryAnalysis.dresses > 0) score += 1; // Dresses can replace bottoms
-  if (hasFootwear) score += 1;
-  
-  return Math.min(5, score);
-}
-
-function identifyGaps(categoryAnalysis, scenario) {
-  const gaps = [];
-  
-  if (categoryAnalysis.tops === 0 && categoryAnalysis.dresses === 0) {
-    gaps.push('suitable tops or dresses');
-  }
-  if (categoryAnalysis.bottoms === 0 && categoryAnalysis.dresses === 0) {
-    gaps.push('suitable bottoms');
-  }
-  if (categoryAnalysis.footwear === 0) {
-    gaps.push('appropriate footwear');
-  }
-  if (categoryAnalysis.outerwear === 0) {
-    gaps.push('layering pieces');
-  }
-  
-  return gaps;
-}
-
-function identifyStrengths(categoryAnalysis) {
-  const strengths = [];
-  
-  if (categoryAnalysis.tops >= 2) strengths.push('variety of tops');
-  if (categoryAnalysis.bottoms >= 2) strengths.push('bottom options');
-  if (categoryAnalysis.dresses >= 1) strengths.push('dress options');
-  if (categoryAnalysis.outerwear >= 1) strengths.push('layering pieces');
-  if (categoryAnalysis.footwear >= 2) strengths.push('footwear variety');
-  
-  return strengths;
-}
-
-function getCoverageDescription(level) {
-  const descriptions = {
-    0: 'No suitable items - significant gap',
-    1: 'Minimal coverage - major gaps',
-    2: 'Basic coverage - several gaps',
-    3: 'Good coverage - minor gaps',
-    4: 'Strong coverage - well equipped',
-    5: 'Excellent coverage - fully equipped'
-  };
-  return descriptions[level] || 'Unknown coverage level';
-}
 
 // Initialize Anthropic client
 const anthropic = new Anthropic({
@@ -215,182 +81,34 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Build a prompt for Claude
-    let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant with deep knowledge of both timeless style principles and current fashion relevance. ";
-    systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
-    systemPrompt += "considering the user's existing wardrobe, lifestyle, individual needs, and specific scenarios.";
+    // Build the system prompt using modular approach
+    let systemPrompt = buildSystemPrompt();
     
-    systemPrompt += "\n\n=== FASHION RELEVANCE GUIDELINES ===";
-    systemPrompt += "\nWhen making recommendations, always consider:";
-    systemPrompt += "\n• **Fashion currency**: Ensure pieces feel current and won't look obviously dated, regardless of whether they're classic, trendy, or avant-garde";
-    systemPrompt += "\n• **Modern fit standards**: Avoid recommending obviously outdated silhouettes that feel dated in today's fashion context";
-    systemPrompt += "\n• **Color relevance**: Consider whether color combinations feel fresh and current, not dated";
-    systemPrompt += "\n• **Styling evolution**: Account for how fashion norms have evolved (e.g., mixing casual/formal, layering techniques)";
-    systemPrompt += "\n• **Proportional awareness**: Focus on flattering, well-balanced proportions appropriate for current fashion sensibilities";
-    systemPrompt += "\n• **Fabric and finish quality**: Contemporary expectations for fabric weight, texture, and finishing";
+    // Add form data section
+    systemPrompt = addFormDataSection(systemPrompt, formData);
     
-    systemPrompt += "\n\n**Important**: Support the user's style exploration and preferences - whether they gravitate toward classic, trendy, minimalist, or extravagant pieces. Your role is to ensure their choices work well with their existing wardrobe and feel fashion-relevant, not to impose a particular aesthetic. Focus on helping them build a cohesive, wearable wardrobe that reflects their personal style while avoiding truly outdated elements.";
+    // Add scenarios section
+    systemPrompt = addScenariosSection(systemPrompt, req.body.scenarios);
     
-    systemPrompt += "\n\n=== VISUAL QUALITY INDICATORS ===";
-    systemPrompt += "\nFrom the image, you can only assess what's visually apparent. Flag any obvious concerns if visible:";
-    systemPrompt += "\n• **Visible construction issues**: Poor stitching, loose threads, uneven seams";
-    systemPrompt += "\n• **Fit problems**: Obvious pulling, bunching, or poor drape on the model/person";
-    systemPrompt += "\n• **Fabric appearance**: If fabric looks extremely thin, cheap, or poorly finished";
-    systemPrompt += "\n• **Hardware issues**: Visibly poor zippers, buttons, or closures";
-    systemPrompt += "\n\n**Important limitation**: You cannot assess true fabric quality, durability, or construction details that aren't visible in the photo. Never claim an item is \"high quality\" - only mention if you notice obvious visual red flags. When quality cannot be determined from the image, state this clearly.";
+    // Add climate section
+    systemPrompt = addClimateSection(systemPrompt, climateData);
     
-    systemPrompt += "\n\n=== MULTI-FUNCTIONALITY ASSESSMENT ===";
-    systemPrompt += "\nEvaluate how versatile this item is by considering:";
-    systemPrompt += "\n• **Styling versatility**: Can be dressed up/down, worn in multiple ways, layering potential";
-    systemPrompt += "\n• **Cross-scenario usage**: How many different occasions/scenarios it works for";
-    systemPrompt += "\n• **Formality range**: Works for casual, business casual, formal settings";
-    systemPrompt += "\n• **Seasonal adaptability**: Can transition between seasons with layering";
-    systemPrompt += "\n• **Color/pattern flexibility**: Pairs well with many other pieces in typical wardrobes";
-    systemPrompt += "\nHigher versatility = better cost-per-wear value and wardrobe efficiency.";
-    
-    // Include category and subcategory from formData if available
-    if (formData && (formData.category || formData.subcategory)) {
-      systemPrompt += "\n\nThe user has provided the following information about this item:";
-      
-      if (formData.category) {
-        systemPrompt += "\n- Category: " + formData.category;
-      }
-      
-      if (formData.subcategory) {
-        systemPrompt += "\n- Subcategory: " + formData.subcategory;
-      }
-      
-      if (formData.seasons && formData.seasons.length > 0) {
-        systemPrompt += "\n- Seasons: " + formData.seasons.join(", ");
-      }
-      
-      systemPrompt += "\n\nPlease consider this information when analyzing the item.";
-    }
-    
-    // Include user's scenarios if available
-    if (req.body.scenarios && req.body.scenarios.length > 0) {
-      systemPrompt += "\n\nThe user has provided the following scenarios where they need appropriate clothing:";
-      
-      req.body.scenarios.forEach((scenario, index) => {
-        systemPrompt += `\n${index + 1}. ${scenario.name}`;
-        if (scenario.type) systemPrompt += ` (Type: ${scenario.type})`;
-        if (scenario.frequency) systemPrompt += ` [${scenario.frequency}]`;
-        if (scenario.description) systemPrompt += `: ${scenario.description}`;
-      });
-      
-      systemPrompt += "\n\nAssess how well this item works for each scenario (excluding 'Staying at Home' for outerwear). Consider versatility across multiple scenarios and whether it fills specific gaps.";
-    }
-    
-    // Include user's local climate if available
-    if (climateData && climateData.localClimate) {
-      // Format the climate string to be more human-readable
-      let formattedClimate = climateData.localClimate
-        .replace(/-/g, ' ')  // Replace hyphens with spaces
-        .split(' ')          // Split into words
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))  // Capitalize each word
-        .join(' ');         // Join back with spaces
-        
-      systemPrompt += "\n\nImportant - Consider the user's local climate:\n";
-      systemPrompt += "- Local climate: " + formattedClimate + "\n";
-      
-      // Add guidance for climate considerations
-      systemPrompt += "- When making recommendations, consider what materials and styles are appropriate for this climate.\n";
-      systemPrompt += "- Mention any climate-specific considerations that might affect the longevity, utility, or appropriateness of the item.\n";
-    }
-    
-    // Include styling context (similar category/subcategory items for styling compatibility)
-    if (stylingContext && stylingContext.length > 0) {
-      systemPrompt += "\n\nFor styling context, here are similar items the user already owns in their wardrobe:\n";
-      
-      stylingContext.forEach((item, index) => {
-        systemPrompt += `${index + 1}. ${item.name} - ${item.category}`;
-        if (item.subcategory) systemPrompt += ` (${item.subcategory})`;
-        if (item.color) systemPrompt += ` - ${item.color}`;
-        
-        // Add detailed styling properties for better combination analysis
-        const details = [];
-        if (item.length) details.push(`length: ${item.length}`);
-        if (item.silhouette) details.push(`silhouette: ${item.silhouette}`);
-        if (item.rise) details.push(`rise: ${item.rise}`);
-        if (item.neckline) details.push(`neckline: ${item.neckline}`);
-        if (item.heel_height) details.push(`heel: ${item.heel_height}`);
-        if (item.boot_height) details.push(`boot height: ${item.boot_height}`);
-        if (item.material) details.push(`material: ${item.material}`);
-        if (item.fit) details.push(`fit: ${item.fit}`);
-        
-        if (details.length > 0) {
-          systemPrompt += ` [${details.join(', ')}]`;
-        }
-        
-        if (item.season && item.season.length > 0) {
-          systemPrompt += ` {${item.season.join(', ')}}`;
-        }
-        systemPrompt += "\n";
-      });
-      
-      systemPrompt += "\nEvaluate STYLING COMPATIBILITY by considering proportion balance (silhouettes, lengths, rise), coordination (necklines, material weights, formality levels), and specific combination opportunities or mismatches.";
-    }
+    // Add styling context section
+    systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
-    // Analyze scenario coverage with existing wardrobe
+    // Analyze scenario coverage and add section
+    let scenarioCoverage = null;
     if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
       const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
-      const scenarioCoverage = analyzeScenarioCoverage(req.body.scenarios, allContextItems);
-      
-      systemPrompt += "\n\n=== WARDROBE SCENARIO COVERAGE ANALYSIS ===";
-      systemPrompt += "\nBased on the user's existing wardrobe, here's how well each scenario is currently covered:\n";
-      
-      scenarioCoverage.forEach(coverage => {
-        systemPrompt += `\n${coverage.scenarioName} [${coverage.frequency || 'frequency not specified'}]:`;
-        systemPrompt += `\n- Coverage level: ${coverage.coverageLevel}/5 (${coverage.coverageDescription})`;
-        systemPrompt += `\n- Existing suitable items: ${coverage.suitableItems} pieces`;
-        if (coverage.gaps.length > 0) {
-          systemPrompt += `\n- Identified gaps: ${coverage.gaps.join(', ')}`;
-        }
-        if (coverage.strengths.length > 0) {
-          systemPrompt += `\n- Well-covered areas: ${coverage.strengths.join(', ')}`;
-        }
-      });
-      
-      systemPrompt += "\n\n**Purchase Decision:** Assess if this item fills genuine gaps or would be redundant. High-frequency scenarios with low coverage = valuable; well-covered scenarios = question the value. Consider cost-per-wear potential.";
+      scenarioCoverage = analyzeScenarioCoverage(req.body.scenarios, allContextItems);
+      systemPrompt = addScenarioCoverageSection(systemPrompt, scenarioCoverage);
     }
     
-    // Include gap analysis context (items from different categories/seasons for wardrobe completeness)
-    if (similarContext && similarContext.length > 0) {
-      systemPrompt += "\n\nFor gap analysis, here is a sample of the user's existing wardrobe across different categories:\n";
-      
-      const categorySummary = {};
-      similarContext.forEach(item => {
-        if (!categorySummary[item.category]) {
-          categorySummary[item.category] = [];
-        }
-        categorySummary[item.category].push(item);
-      });
-      
-      Object.keys(categorySummary).forEach(category => {
-        const items = categorySummary[category];
-        systemPrompt += `\n${category} (${items.length} item${items.length > 1 ? 's' : ''}):`;
-        items.slice(0, 3).forEach(item => { // Show max 3 items per category to avoid prompt bloat
-          systemPrompt += `\n- ${item.name}`;
-          if (item.color) systemPrompt += ` (${item.color})`;
-          if (item.season && item.season.length > 0) {
-            systemPrompt += ` [${item.season.join(', ')}]`;
-          }
-        });
-        if (items.length > 3) {
-          systemPrompt += `\n- ... and ${items.length - 3} more`;
-        }
-      });
-      
-      systemPrompt += "\n\nConsider wardrobe gaps this item might fill, outfit expansion opportunities, and whether complementary pieces exist to make it useful.";
-    }
+    // Add gap analysis section
+    systemPrompt = addGapAnalysisSection(systemPrompt, similarContext);
     
-    if (detectedTags) {
-      systemPrompt += "\n\nHere are tags that were automatically detected in the image: " + JSON.stringify(detectedTags);
-    }
-    
-    systemPrompt += "\n\nProvide a score from 1-10 on how versatile and valuable this item is for a wardrobe. ";
-    systemPrompt += "Format your response with three sections: ANALYSIS, SCORE, and FEEDBACK. ";
-    systemPrompt += "Keep your total response under 300 words.";
+    // Add final instructions and detected tags
+    systemPrompt = addFinalInstructions(systemPrompt, detectedTags);
 
     // Log the complete prompt for debugging
     console.log('==== FULL CLAUDE PROMPT ====');
