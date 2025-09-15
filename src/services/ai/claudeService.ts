@@ -257,16 +257,45 @@ export const claudeService = {
       
       if (wardrobeItems.length > 0 && formData) {
         console.log('[claudeService] Debug - formData:', formData);
+        console.log('[claudeService] Debug - detectedTags:', detectedTags);
         console.log('[claudeService] Debug - All wardrobe items:', wardrobeItems.map(item => ({ name: item.name, category: item.category, subcategory: item.subcategory })));
         
+        // Extract color from detectedTags if available
+        let detectedColor: string | undefined = undefined;
+        if (detectedTags) {
+          // Try to find color in detectedTags
+          const colorTags = ['color', 'primaryColor', 'dominantColor'].find(key => detectedTags[key]);
+          if (colorTags && typeof detectedTags[colorTags] === 'string') {
+            detectedColor = detectedTags[colorTags] as string;
+            console.log('[claudeService] Detected color from tags:', detectedColor);
+          }
+          
+          // Also try common color keywords in any tag values
+          const allTagValues = Object.values(detectedTags).join(' ').toLowerCase();
+          const commonColors = ['white', 'black', 'grey', 'gray', 'red', 'blue', 'green', 'yellow', 'pink', 'purple', 'brown', 'orange', 'beige', 'navy'];
+          const foundColor = commonColors.find(color => allTagValues.includes(color));
+          if (foundColor && !detectedColor) {
+            detectedColor = foundColor;
+            console.log('[claudeService] Found color in tag values:', detectedColor);
+          }
+        }
+        
+        // Enhanced formData with color information
+        const enhancedFormData = {
+          ...formData,
+          color: detectedColor
+        };
+        
+        console.log('[claudeService] Enhanced formData with color:', enhancedFormData);
+        
         // Filter for styling context using helper function
-        stylingContext = filterStylingContext(wardrobeItems, formData);
+        stylingContext = filterStylingContext(wardrobeItems, enhancedFormData);
         
         // Filter for gap analysis context using helper function
-        similarContext = filterSimilarContext(wardrobeItems, formData);
+        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData);
         
         // Filter for additional context using helper function
-        additionalContext = filterAdditionalContext(wardrobeItems, formData);
+        additionalContext = filterAdditionalContext(wardrobeItems, enhancedFormData);
         
         console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
         stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));

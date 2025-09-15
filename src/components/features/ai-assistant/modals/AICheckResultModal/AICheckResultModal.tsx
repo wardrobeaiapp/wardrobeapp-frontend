@@ -120,31 +120,59 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
         
         {/* Final Recommendation - Full width, before other details */}
         {finalRecommendation && (
-          <div style={{
-            marginBottom: '16px',
-            padding: '12px',
-            borderRadius: '8px',
-            backgroundColor: finalRecommendation.toLowerCase().includes('recommend') ? '#ecfdf5' : '#fef2f2',
-            border: `2px solid ${finalRecommendation.toLowerCase().includes('recommend') ? '#d1fae5' : '#fecaca'}`,
-            textAlign: 'center'
-          }}>
-            <div style={{
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              color: '#6b7280',
-              marginBottom: '4px'
-            }}>
-              Final Recommendation
-            </div>
-            <div style={{
-              fontSize: '1rem',
-              fontWeight: 'bold',
-              color: finalRecommendation.toLowerCase().includes('recommend') ? '#059669' : '#dc2626',
-              lineHeight: '1.4'
-            }}>
-              {finalRecommendation}
-            </div>
-          </div>
+          (() => {
+            const recommendation = finalRecommendation.toLowerCase();
+            const isRecommend = recommendation.startsWith('recommend');
+            const isSkip = recommendation.startsWith('skip');
+            const isMediumScore = score !== undefined && score >= 4 && score <= 7 && !isRecommend;
+            
+            let backgroundColor, borderColor, textColor;
+            
+            if (isRecommend) {
+              // Green for RECOMMEND
+              backgroundColor = '#ecfdf5';
+              borderColor = '#d1fae5';
+              textColor = '#059669';
+            } else if (isMediumScore) {
+              // Yellow for medium scores that aren't recommended
+              backgroundColor = '#fefce8';
+              borderColor = '#fde68a';
+              textColor = '#d97706';
+            } else {
+              // Red for SKIP or low scores
+              backgroundColor = '#fef2f2';
+              borderColor = '#fecaca';
+              textColor = '#dc2626';
+            }
+            
+            return (
+              <div style={{
+                marginBottom: '16px',
+                padding: '12px',
+                borderRadius: '8px',
+                backgroundColor,
+                border: `2px solid ${borderColor}`,
+                textAlign: 'center'
+              }}>
+                <div style={{
+                  fontSize: '0.9rem',
+                  fontWeight: '600',
+                  color: '#6b7280',
+                  marginBottom: '4px'
+                }}>
+                  Final Recommendation
+                </div>
+                <div style={{
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                  color: textColor,
+                  lineHeight: '1.4'
+                }}>
+                  {finalRecommendation}
+                </div>
+              </div>
+            );
+          })()
         )}
         
         <ItemDetails>
