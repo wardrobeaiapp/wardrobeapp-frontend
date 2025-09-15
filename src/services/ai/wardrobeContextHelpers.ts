@@ -2,6 +2,117 @@ import { ItemCategory } from '../../types';
 import { WardrobeItem } from '../../types/wardrobe';
 import { stylingRules } from './wardrobeContextRules';
 
+// Constants for commonly used category combinations
+const ONE_PIECE_DRESS_JUMPSUIT = ['dress', 'jumpsuit'];
+const ONE_PIECE_DRESS_ONLY = ['dress'];
+const ONE_PIECE_SKIRT = ['skirt'];
+const TOP_FORMAL_ITEMS = ['shirt', 'blouse', 'cardigan', 'blazer', 'sweater'];
+
+// Accessory styling context configuration
+const ACCESSORY_STYLING_CONFIG: Record<string, AccessoryConfig> = {
+  hat: {
+    categories: [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR]
+  },
+  scarf: {
+    categories: [ItemCategory.OUTERWEAR, ItemCategory.TOP],
+    onePiece: ONE_PIECE_DRESS_JUMPSUIT
+  },
+  belt: {
+    categories: [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM],
+    onePiece: ONE_PIECE_DRESS_JUMPSUIT,
+    tops: TOP_FORMAL_ITEMS
+  },
+  bag: {
+    categories: [ItemCategory.OUTERWEAR]
+  },
+  jewelry: {
+    categories: [ItemCategory.TOP],
+    onePiece: ONE_PIECE_DRESS_JUMPSUIT
+  },
+  watch: {
+    categories: [ItemCategory.TOP],
+    onePiece: ONE_PIECE_DRESS_JUMPSUIT
+  },
+  socks: {
+    categories: [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE]
+  },
+  tights: {
+    categories: [ItemCategory.FOOTWEAR],
+    onePiece: ONE_PIECE_DRESS_ONLY,
+    bottoms: ONE_PIECE_SKIRT
+  },
+  sunglasses: {
+    noContext: true
+  }
+};
+
+type AccessoryConfig = {
+  categories?: ItemCategory[];
+  onePiece?: string[];
+  tops?: string[];
+  bottoms?: string[];
+  noContext?: boolean;
+};
+
+// Helper functions for common matching patterns
+const checkSeasonMatch = (item: WardrobeItem, seasons?: string[]): boolean => {
+  return seasons?.some(season => item.season?.includes(season as any)) ?? true;
+};
+
+const checkCategoryMatch = (item: WardrobeItem, categories: ItemCategory[]): boolean => {
+  return categories.includes(item.category as ItemCategory);
+};
+
+const checkSubcategoryMatch = (item: WardrobeItem, subcategories: string[]): boolean => {
+  return subcategories.includes(item.subcategory?.toLowerCase() || '');
+};
+
+const checkRuleBasedMatches = (item: WardrobeItem, rules: any, mainCategories: ItemCategory[]) => {
+  const matchesMainCategories = checkCategoryMatch(item, mainCategories);
+  
+  const matchesTops = rules.tops && 
+    (item.category as string) === ItemCategory.TOP && 
+    checkSubcategoryMatch(item, rules.tops);
+  
+  const matchesAccessories = rules.accessories && 
+    (item.category as string) === ItemCategory.ACCESSORY && 
+    checkSubcategoryMatch(item, rules.accessories);
+  
+  return { matchesMainCategories, matchesTops, matchesAccessories };
+};
+
+const handleAccessoryCategory = (item: WardrobeItem, subcategory: string, formData: any): boolean => {
+  const config = ACCESSORY_STYLING_CONFIG[subcategory.toLowerCase()];
+  if (!config) return false;
+  
+  if (config.noContext) {
+    console.log(`[wardrobeContextHelpers] Debug - ${subcategory}: no styling context needed`);
+    return false;
+  }
+  
+  console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
+  
+  const matchesCategories = config.categories ? checkCategoryMatch(item, config.categories) : false;
+  
+  const matchesOnePiece = config.onePiece ? 
+    (item.category as string) === ItemCategory.ONE_PIECE && 
+    checkSubcategoryMatch(item, config.onePiece) : false;
+  
+  const matchesTops = config.tops ? 
+    (item.category as string) === ItemCategory.TOP && 
+    checkSubcategoryMatch(item, config.tops) : false;
+  
+  const matchesBottoms = config.bottoms ? 
+    (item.category as string) === ItemCategory.ONE_PIECE && 
+    checkSubcategoryMatch(item, config.bottoms) : false;
+  
+  const matchesSeason = checkSeasonMatch(item, formData.seasons);
+  
+  console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesOnePiece: ${matchesOnePiece}, matchesTops: ${matchesTops}, matchesBottoms: ${matchesBottoms}, matchesSeason: ${matchesSeason}`);
+  
+  return (matchesCategories || matchesOnePiece || matchesTops || matchesBottoms) && matchesSeason;
+};
+
 /**
  * Filters wardrobe items to find styling context based on form data
  */
@@ -10,263 +121,66 @@ export const filterStylingContext = (
   formData: { category?: string; subcategory?: string; seasons?: string[] }
 ): WardrobeItem[] => {
   return wardrobeItems.filter(item => {
-    // Common season matching logic
-    const matchesSeason = formData.seasons?.some(season => 
-      item.season?.includes(season as any)
-    ) ?? true; // If no seasons specified, include all
+    const matchesSeason = checkSeasonMatch(item, formData.seasons);
     
-    // Only process TOP category items with styling rules
-    if (formData.category === ItemCategory.TOP && formData.subcategory) {
+    // Handle ACCESSORY category with configuration
+    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory) {
+      return handleAccessoryCategory(item, formData.subcategory, formData);
+    }
+
+    // Handle OTHER category - no styling context needed
+    if (formData.category === ItemCategory.OTHER) {
+      console.log(`[wardrobeContextHelpers] Debug - OTHER category: no styling context needed`);
+      return false;
+    }
+    
+    // Handle rule-based categories (TOP, BOTTOM, ONE_PIECE, OUTERWEAR, FOOTWEAR)
+    if (formData.subcategory) {
       const subcategoryKey = formData.subcategory.toLowerCase();
       const rules = stylingRules[subcategoryKey];
       
       if (rules) {
         console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
         
-        // Always include main categories (bottoms, footwear, outerwear)
-        const matchesMainCategories = [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
+        // Define main categories based on form category
+        const mainCategories = getMainCategoriesForRuleBased(formData.category as ItemCategory);
+        const { matchesMainCategories, matchesTops, matchesAccessories } = checkRuleBasedMatches(item, rules, mainCategories);
         
-        // Check for matching accessories
-        const matchesAccessories = rules.accessories && 
+        // Special case for OUTERWEAR - include specific ONE_PIECE items
+        const matchesOnePiece = formData.category === ItemCategory.OUTERWEAR ? 
+          (item.category as string) === ItemCategory.ONE_PIECE && 
+          checkSubcategoryMatch(item, ONE_PIECE_DRESS_JUMPSUIT) : false;
+        
+        // Special case for FOOTWEAR - hardcoded socks check
+        const matchesFootwearAccessories = formData.category === ItemCategory.FOOTWEAR ? 
           (item.category as string) === ItemCategory.ACCESSORY && 
-          rules.accessories.includes(item.subcategory?.toLowerCase() || '');
+          checkSubcategoryMatch(item, ['socks']) : false;
         
-        // Check for matching tops
-        const matchesTops = rules.tops && 
-          (item.category as string) === ItemCategory.TOP && 
-          rules.tops.includes(item.subcategory?.toLowerCase() || '');
+        console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesTops: ${!!matchesTops}, matchesAccessories: ${!!matchesAccessories}, matchesOnePiece: ${matchesOnePiece}, matchesFootwearAccessories: ${matchesFootwearAccessories}, matchesSeason: ${matchesSeason}`);
         
-        console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesTops: ${!!matchesTops}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesMainCategories || matchesAccessories || matchesTops) && matchesSeason;
+        return (matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories) && matchesSeason;
       }
-    }
-
-    if (formData.category === ItemCategory.BOTTOM && formData.subcategory) {
-        const subcategoryKey = formData.subcategory.toLowerCase();
-        const rules = stylingRules[subcategoryKey];
-
-        if (rules) {
-            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-            
-            // Always include main categories (bottoms, footwear, outerwear)
-            const matchesMainCategories = [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-
-            const matchesTops = rules.tops && 
-              (item.category as string) === ItemCategory.TOP && 
-              rules.tops.includes(item.subcategory?.toLowerCase() || '');
-            
-            // Check for matching accessories
-            const matchesAccessories = rules.accessories && 
-              (item.category as string) === ItemCategory.ACCESSORY && 
-              rules.accessories.includes(item.subcategory?.toLowerCase() || '');
-            
-            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
-            
-            return (matchesMainCategories || matchesTops || matchesAccessories) && matchesSeason;
-        }
-        
-    }
-
-    if (formData.category === ItemCategory.ONE_PIECE && formData.subcategory) {
-        const subcategoryKey = formData.subcategory.toLowerCase();
-        const rules = stylingRules[subcategoryKey];
-
-        if (rules) {
-            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-            
-            // Always include main categories (bottoms, footwear, outerwear)
-            const matchesMainCategories = [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-
-            const matchesTops = rules.tops && 
-              (item.category as string) === ItemCategory.TOP && 
-              rules.tops.includes(item.subcategory?.toLowerCase() || '');
-            
-            // Check for matching accessories
-            const matchesAccessories = rules.accessories && 
-              (item.category as string) === ItemCategory.ACCESSORY && 
-              rules.accessories.includes(item.subcategory?.toLowerCase() || '');
-            
-            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
-            
-            return (matchesMainCategories || matchesTops || matchesAccessories) && matchesSeason;
-        }
-        
-    }
-
-    if (formData.category === ItemCategory.OUTERWEAR && formData.subcategory) {
-        const subcategoryKey = formData.subcategory.toLowerCase();
-        const rules = stylingRules[subcategoryKey];
-
-        if (rules) {
-            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-            
-            // Always include main categories (bottoms, footwear)
-            const matchesMainCategories = [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM].includes(item.category as ItemCategory);
-
-            // Only include specific ONE_PIECE items (dress and jumpsuit)
-            const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
-
-            const matchesTops = rules.tops && 
-              (item.category as string) === ItemCategory.TOP && 
-              rules.tops.includes(item.subcategory?.toLowerCase() || '');
-            
-            // Check for matching accessories
-            const matchesAccessories = rules.accessories && 
-              (item.category as string) === ItemCategory.ACCESSORY && 
-              rules.accessories.includes(item.subcategory?.toLowerCase() || '');
-            
-            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesOnePiece: ${matchesOnePiece}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
-            
-            return (matchesMainCategories || matchesOnePiece || matchesTops || matchesAccessories) && matchesSeason;
-        }
-        
-    }
-
-    if (formData.category === ItemCategory.FOOTWEAR && formData.subcategory) {
-        const subcategoryKey = formData.subcategory.toLowerCase();
-        const rules = stylingRules[subcategoryKey];
-
-        if (rules) {
-            console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-            
-            // Always include main categories (bottoms, footwear)
-            const matchesMainCategories = [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE].includes(item.category as ItemCategory);
-            
-            // Check for matching accessories
-            const matchesAccessories = (item.category as string) === ItemCategory.ACCESSORY && 
-            ['socks'].includes(item.subcategory?.toLowerCase() || '');
-            
-            console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesAccessories: ${!!matchesAccessories}, matchesSeason: ${matchesSeason}`);
-            
-            return (matchesMainCategories || matchesAccessories) && matchesSeason;
-        }
-        
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'hat') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return matchesCategories && matchesSeason;
-    }
-
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'scarf') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.OUTERWEAR, ItemCategory.TOP].includes(item.category as ItemCategory);
-
-        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesCategories || matchesOnePiece) && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'belt') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM].includes(item.category as ItemCategory);
-
-        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
-
-        const matchesTops = (item.category as string) === ItemCategory.TOP && 
-        ['shirt', 'blouse', 'cardigan', 'blazer', 'sweater'].includes(item.subcategory?.toLowerCase() || '');
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesCategories || matchesOnePiece || matchesTops) && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'bag') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.OUTERWEAR].includes(item.category as ItemCategory);
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return matchesCategories && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'jewelry') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.TOP].includes(item.category as ItemCategory);
-
-        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesCategories || matchesOnePiece) && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'watch') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.TOP].includes(item.category as ItemCategory);
-
-        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress', 'jumpsuit'].includes(item.subcategory?.toLowerCase() || '');
-        
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesCategories || matchesOnePiece) && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'socks') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE].includes(item.category as ItemCategory);
-
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return matchesCategories && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'tights') {
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
-        // For hat accessories, include bottoms and outerwear
-        const matchesCategories = [ItemCategory.FOOTWEAR].includes(item.category as ItemCategory);
-
-        const matchesOnePiece = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['dress'].includes(item.subcategory?.toLowerCase() || '');
-        
-        const matchesBottoms = (item.category as string) === ItemCategory.ONE_PIECE && 
-              ['skirt'].includes(item.subcategory?.toLowerCase() || '');
-
-        console.log(`[wardrobeContextHelpers] Debug - matchesCategories: ${matchesCategories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesCategories || matchesOnePiece || matchesBottoms) && matchesSeason;
-    }
-
-    if (formData.category === ItemCategory.ACCESSORY && formData.subcategory?.toLowerCase() === 'sunglasses') {
-        console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
-        return false; // No styling context for sunglasses
-    }
-
-    if (formData.category === ItemCategory.OTHER) {
-        console.log(`[wardrobeContextHelpers] Debug - Sunglasses: no styling context needed`);
-        return false; // No styling context for sunglasses
     }
     
     return false; // No styling rules for this category/subcategory
   });
+};
+
+const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] => {
+  switch (category) {
+    case ItemCategory.TOP:
+      return [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR];
+    case ItemCategory.BOTTOM:
+      return [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
+    case ItemCategory.ONE_PIECE:
+      return [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
+    case ItemCategory.OUTERWEAR:
+      return [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM];
+    case ItemCategory.FOOTWEAR:
+      return [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE];
+    default:
+      return [];
+  }
 };
 
 /**
