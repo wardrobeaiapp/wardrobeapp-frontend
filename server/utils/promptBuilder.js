@@ -119,7 +119,12 @@ function addStylingContextSection(systemPrompt, stylingContext) {
       systemPrompt += "\n";
     });
     
-    systemPrompt += "\nEvaluate STYLING COMPATIBILITY by considering proportion balance (silhouettes, lengths, rise), coordination (necklines, material weights, formality levels), and specific combination opportunities or mismatches.";
+    systemPrompt += "\n\n**CRITICAL DUPLICATE CHECK:** Before evaluating styling, scan the above items for EXACT or NEAR-EXACT duplicates of the new item. Look specifically for items with matching:";
+    systemPrompt += "\n- Same category AND color (e.g., 'black t-shirt' vs 'black t-shirt')";  
+    systemPrompt += "\n- Same subcategory AND color AND similar silhouette";
+    systemPrompt += "\n- Identical or very similar function and appearance";
+    systemPrompt += "\nIf you find duplicates, this is a CRITICAL CONCERN that should heavily impact your recommendation.";
+    systemPrompt += "\n\nThen evaluate STYLING COMPATIBILITY by considering proportion balance (silhouettes, lengths, rise), coordination (necklines, material weights, formality levels), and specific combination opportunities or mismatches.";
   }
   
   return systemPrompt;
@@ -187,27 +192,38 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   }
   
   systemPrompt += "\n\n=== REQUIRED FORMAT ===";
-  systemPrompt += "\nUse this exact structure with numbered lists:";
+  systemPrompt += "\nAnalyze THIS SPECIFIC ITEM and use this exact structure:";
   systemPrompt += "\n\nANALYSIS:";
   systemPrompt += "\nPROS:";
-  systemPrompt += "\n1. Versatile basic piece";
-  systemPrompt += "\n2. Good wardrobe coordination";
-  systemPrompt += "\n3. Multi-scenario functionality";
+  systemPrompt += "\n1. [Specific positive aspect about THIS item - color, fit, material, etc.]";
+  systemPrompt += "\n2. [How THIS item fills gaps in their wardrobe]";
+  systemPrompt += "\n3. [Specific styling opportunities with THIS item]";
   systemPrompt += "\nCONS:";
-  systemPrompt += "\n1. Potential wardrobe redundancy";
-  systemPrompt += "\n2. Limited styling variety";
+  systemPrompt += "\n1. [EXACT DUPLICATES: List any items you found that are nearly identical - same color, category, silhouette]";
+  systemPrompt += "\n2. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility]";
+  systemPrompt += "\n3. [Other specific concerns about this item]";
+  systemPrompt += "\n\nIMPORTANT: ";
+  systemPrompt += "\n- ONLY include bullet points that have actual issues to report";
+  systemPrompt += "\n- SKIP any bullet point if no issues exist (don't write 'none noted' or 'no issues found')";
+  systemPrompt += "\n- ONLY mention quality/fit issues IF you see obvious problems like poor stitching, loose threads, bad fit, cheap materials, or broken hardware";
   systemPrompt += "\nSUITABLE SCENARIOS:";
-  systemPrompt += "\n1. Office Work";
-  systemPrompt += "\n2. Light Outdoor Activities";
+  systemPrompt += "\n1. [Specific scenario name from their list]";
+  systemPrompt += "\n2. [Another specific scenario name]";
   systemPrompt += "\nCOMBINATION SUGGESTIONS:";
-  systemPrompt += "\n1. White trousers for professional look";
-  systemPrompt += "\n2. Blue jeans for casual styling";
-  systemPrompt += "\n3. Blazer for elevated outfits";
+  systemPrompt += "\n1. [Specific item from their wardrobe + styling tip]";
+  systemPrompt += "\n2. [Another specific combination idea]";
+  systemPrompt += "\n3. [Third specific styling suggestion]";
   systemPrompt += "\n\nSCORE: X/10";
-  systemPrompt += "\nScore reasoning here";
+  systemPrompt += "\nScore reasoning based on THIS item's value";
+  systemPrompt += "\n\nSCORING GUIDELINES:";
+  systemPrompt += "\n- EXACT DUPLICATES: If identical items exist, score should be 3/10 or lower";
+  systemPrompt += "\n- NEAR DUPLICATES: If very similar items exist, score should be 4-5/10";
+  systemPrompt += "\n- FILLS GAP: If item fills genuine wardrobe gap, score 7-9/10";
+  systemPrompt += "\n- HIGH VERSATILITY + NO DUPLICATES: Score 8-10/10";
   systemPrompt += "\n\nFEEDBACK:";
-  systemPrompt += "\nPurchase recommendation here";
-  systemPrompt += "\n\nIMPORTANT: Use numbered lists (1., 2., 3.) NOT paragraphs. Each point on separate line.";
+  systemPrompt += "\nSpecific recommendation for THIS item";
+  systemPrompt += "\n\nFINAL RECOMMENDATION: [One clear sentence stating: SKIP if critical issues exist (exact duplicates, poor quality), or RECOMMEND if item fills genuine gap and adds value]";
+  systemPrompt += "\n\nCRITICAL: Analyze the ACTUAL item in the image, not generic examples. Be specific about color, style, fit. Ensure pros and cons are consistent and logical for the same item.";
   
   return systemPrompt;
 }
