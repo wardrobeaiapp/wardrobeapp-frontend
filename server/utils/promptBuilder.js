@@ -189,12 +189,25 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n\n=== CRITICAL: RESPONSE FORMAT REQUIREMENTS ===";
   systemPrompt += "\nYou MUST format your response EXACTLY as shown below. Use these EXACT headers and structure:";
   systemPrompt += "\n\nANALYSIS:";
-  systemPrompt += "\n[Write your detailed analysis here covering fashion relevance, quality observations, versatility assessment, wardrobe compatibility, and scenario suitability]";
+  systemPrompt += "\nPROS:";
+  systemPrompt += "\n- [List positive aspects like versatility, quality, style, wardrobe gaps it fills]";
+  systemPrompt += "\n- [Each pro should be a separate bullet point]";
+  systemPrompt += "\n\nCONS:";
+  systemPrompt += "\n- [List negative aspects like redundancy, poor quality, limited use]";
+  systemPrompt += "\n- [Each con should be a separate bullet point]";
+  systemPrompt += "\n\nSUITABLE SCENARIOS:";
+  systemPrompt += "\n- [List specific scenarios from the user's list where this item would work well]";
+  systemPrompt += "\n- [Only include scenarios that are NOT already well-covered by existing wardrobe]";
+  systemPrompt += "\n- [Focus on scenarios where this item fills a gap or adds valuable versatility]";
+  systemPrompt += "\n\nCOMBINATION SUGGESTIONS:";
+  systemPrompt += "\n- [List specific items from the user's existing wardrobe that would pair well]";
+  systemPrompt += "\n- [Include styling tips for creating outfits with this item]";
+  systemPrompt += "\n- [Mention any missing pieces that would complete great outfits]";
   systemPrompt += "\n\nSCORE: X/10";
-  systemPrompt += "\n[Write brief justification for the score]";
+  systemPrompt += "\n[Brief justification for the score based on overall value]";
   systemPrompt += "\n\nFEEDBACK:";
-  systemPrompt += "\n[Write specific purchase recommendation, styling suggestions, or concerns]";
-  systemPrompt += "\n\nDO NOT write everything in one paragraph. DO NOT use ** formatting. Use the exact section headers shown above. Keep under 300 words total.";
+  systemPrompt += "\n[Write specific purchase recommendation and final thoughts]";
+  systemPrompt += "\n\nDO NOT write everything in one paragraph. DO NOT use ** formatting. Use the exact section headers shown above. Keep under 400 words total.";
   
   return systemPrompt;
 }
