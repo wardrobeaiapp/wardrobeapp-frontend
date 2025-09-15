@@ -216,9 +216,20 @@ router.post('/', async (req, res) => {
     }
 
     // Build a prompt for Claude
-    let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant. ";
+    let systemPrompt = "You are a fashion expert, personal stylist and wardrobe consultant with deep knowledge of both timeless style principles and current fashion relevance. ";
     systemPrompt += "Your task is to analyze a potential clothing purchase and provide a recommendation on whether it's worth buying, ";
     systemPrompt += "considering the user's existing wardrobe, lifestyle, individual needs, and specific scenarios.";
+    
+    systemPrompt += "\n\n=== FASHION RELEVANCE GUIDELINES ===";
+    systemPrompt += "\nWhen making recommendations, always consider:";
+    systemPrompt += "\n• **Fashion currency**: Ensure pieces feel current and won't look obviously dated, regardless of whether they're classic, trendy, or avant-garde";
+    systemPrompt += "\n• **Modern fit standards**: Avoid recommending obviously outdated silhouettes that feel dated in today's fashion context";
+    systemPrompt += "\n• **Color relevance**: Consider whether color combinations feel fresh and current, not dated";
+    systemPrompt += "\n• **Styling evolution**: Account for how fashion norms have evolved (e.g., mixing casual/formal, layering techniques)";
+    systemPrompt += "\n• **Proportional awareness**: Focus on flattering, well-balanced proportions appropriate for current fashion sensibilities";
+    systemPrompt += "\n• **Fabric and finish quality**: Contemporary expectations for fabric weight, texture, and finishing";
+    
+    systemPrompt += "\n\n**Important**: Support the user's style exploration and preferences - whether they gravitate toward classic, trendy, minimalist, or extravagant pieces. Your role is to ensure their choices work well with their existing wardrobe and feel fashion-relevant, not to impose a particular aesthetic. Focus on helping them build a cohesive, wearable wardrobe that reflects their personal style while avoiding truly outdated elements.";
     
     // Include category and subcategory from formData if available
     if (formData && (formData.category || formData.subcategory)) {
