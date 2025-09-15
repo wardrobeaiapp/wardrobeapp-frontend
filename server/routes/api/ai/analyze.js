@@ -239,6 +239,15 @@ router.post('/', async (req, res) => {
     systemPrompt += "\n• **Hardware issues**: Visibly poor zippers, buttons, or closures";
     systemPrompt += "\n\n**Important limitation**: You cannot assess true fabric quality, durability, or construction details that aren't visible in the photo. Never claim an item is \"high quality\" - only mention if you notice obvious visual red flags. When quality cannot be determined from the image, state this clearly.";
     
+    systemPrompt += "\n\n=== MULTI-FUNCTIONALITY ASSESSMENT ===";
+    systemPrompt += "\nEvaluate how versatile this item is by considering:";
+    systemPrompt += "\n• **Styling versatility**: Can be dressed up/down, worn in multiple ways, layering potential";
+    systemPrompt += "\n• **Cross-scenario usage**: How many different occasions/scenarios it works for";
+    systemPrompt += "\n• **Formality range**: Works for casual, business casual, formal settings";
+    systemPrompt += "\n• **Seasonal adaptability**: Can transition between seasons with layering";
+    systemPrompt += "\n• **Color/pattern flexibility**: Pairs well with many other pieces in typical wardrobes";
+    systemPrompt += "\nHigher versatility = better cost-per-wear value and wardrobe efficiency.";
+    
     // Include category and subcategory from formData if available
     if (formData && (formData.category || formData.subcategory)) {
       systemPrompt += "\n\nThe user has provided the following information about this item:";
@@ -269,15 +278,7 @@ router.post('/', async (req, res) => {
         if (scenario.description) systemPrompt += `: ${scenario.description}`;
       });
       
-      systemPrompt += "\n\nWhen analyzing this item, please consider:";
-      systemPrompt += "\n- For outerwear items: Evaluate how well they complement the user's outfits for different scenarios (excluding 'Staying at Home'), even if not worn during the scenario itself.";
-      systemPrompt += "\n- For 'Office Work': Consider how the item might be used for commuting to/from work";
-      systemPrompt += "\n- For each scenario (excluding 'Staying at Home' for outerwear), assess:";
-      systemPrompt += "\n  * If it's outerwear: How well it works with the clothing typically worn in that scenario";
-      systemPrompt += "\n  * If it's not outerwear: How appropriate it is for the scenario itself";
-      systemPrompt += "\n- How versatile the item is across multiple scenarios, considering both direct use and layering potential";
-      systemPrompt += "\n- If the item fills any gaps in the user's wardrobe for these specific scenarios";
-      systemPrompt += "\n\nImportant: For outerwear, completely skip any mention of 'Staying at Home' scenario in your analysis. Do not reference it at all when discussing outerwear items.";
+      systemPrompt += "\n\nAssess how well this item works for each scenario (excluding 'Staying at Home' for outerwear). Consider versatility across multiple scenarios and whether it fills specific gaps.";
     }
     
     // Include user's local climate if available
@@ -327,15 +328,7 @@ router.post('/', async (req, res) => {
         systemPrompt += "\n";
       });
       
-      systemPrompt += "\nWhen analyzing the new item, consider these STYLING COMPATIBILITY factors:";
-      systemPrompt += "\n- **Silhouette balance**: How different silhouettes work together (e.g., fitted top with wide-leg pants)";
-      systemPrompt += "\n- **Length proportions**: Proper hem relationships (e.g., cropped tops with high-waisted bottoms)";
-      systemPrompt += "\n- **Rise compatibility**: How trouser/skirt rise works with top length and tucking options";
-      systemPrompt += "\n- **Neckline coordination**: How necklines pair with accessories and layering pieces";
-      systemPrompt += "\n- **Material weight matching**: Lightweight vs heavy fabrics and seasonal appropriateness";
-      systemPrompt += "\n- **Heel height practicality**: How footwear heel heights affect outfit proportions and occasion suitability";
-      systemPrompt += "\n- **Overall style coherence**: Whether pieces create cohesive looks or clash in formality/aesthetic";
-      systemPrompt += "\n- Identify specific combination opportunities and warn against poor styling matches";
+      systemPrompt += "\nEvaluate STYLING COMPATIBILITY by considering proportion balance (silhouettes, lengths, rise), coordination (necklines, material weights, formality levels), and specific combination opportunities or mismatches.";
     }
 
     // Analyze scenario coverage with existing wardrobe
@@ -358,13 +351,7 @@ router.post('/', async (req, res) => {
         }
       });
       
-      systemPrompt += "\n\n=== PURCHASE DECISION GUIDANCE ===";
-      systemPrompt += "\nWhen evaluating this new item, critically assess:";
-      systemPrompt += "\n- Does this item fill a genuine gap in scenario coverage, or would it be redundant?";
-      systemPrompt += "\n- For high-frequency scenarios with low coverage: This item could be highly valuable";
-      systemPrompt += "\n- For well-covered scenarios: Question whether this purchase adds meaningful value";
-      systemPrompt += "\n- Consider the cost-per-wear potential based on scenario frequency and current gaps";
-      systemPrompt += "\n- Is the user building a complete wardrobe or just accumulating similar items?";
+      systemPrompt += "\n\n**Purchase Decision:** Assess if this item fills genuine gaps or would be redundant. High-frequency scenarios with low coverage = valuable; well-covered scenarios = question the value. Consider cost-per-wear potential.";
     }
     
     // Include gap analysis context (items from different categories/seasons for wardrobe completeness)
@@ -394,11 +381,7 @@ router.post('/', async (req, res) => {
         }
       });
       
-      systemPrompt += "\n\nWhen analyzing the new item, consider:";
-      systemPrompt += "\n- What gaps this item might fill in the user's wardrobe";
-      systemPrompt += "\n- How it expands their outfit possibilities across different categories";
-      systemPrompt += "\n- Whether the user has enough complementary pieces to make this item useful";
-      systemPrompt += "\n- Seasonal balance and coverage across the user's wardrobe";
+      systemPrompt += "\n\nConsider wardrobe gaps this item might fill, outfit expansion opportunities, and whether complementary pieces exist to make it useful.";
     }
     
     if (detectedTags) {
