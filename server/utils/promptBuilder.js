@@ -186,28 +186,28 @@ function addFinalInstructions(systemPrompt, detectedTags) {
     systemPrompt += "\n\nHere are tags that were automatically detected in the image: " + JSON.stringify(detectedTags);
   }
   
-  systemPrompt += "\n\n=== CRITICAL: RESPONSE FORMAT REQUIREMENTS ===";
-  systemPrompt += "\nYou MUST format your response EXACTLY as shown below. Use these EXACT headers and structure:";
+  systemPrompt += "\n\n=== REQUIRED FORMAT ===";
+  systemPrompt += "\nUse this exact structure with numbered lists:";
   systemPrompt += "\n\nANALYSIS:";
   systemPrompt += "\nPROS:";
-  systemPrompt += "\n- [List positive aspects like versatility, quality, style, wardrobe gaps it fills]";
-  systemPrompt += "\n- [Each pro should be a separate bullet point]";
-  systemPrompt += "\n\nCONS:";
-  systemPrompt += "\n- [List negative aspects like redundancy, poor quality, limited use]";
-  systemPrompt += "\n- [Each con should be a separate bullet point]";
-  systemPrompt += "\n\nSUITABLE SCENARIOS:";
-  systemPrompt += "\n- [List specific scenarios from the user's list where this item would work well]";
-  systemPrompt += "\n- [Only include scenarios that are NOT already well-covered by existing wardrobe]";
-  systemPrompt += "\n- [Focus on scenarios where this item fills a gap or adds valuable versatility]";
-  systemPrompt += "\n\nCOMBINATION SUGGESTIONS:";
-  systemPrompt += "\n- [List specific items from the user's existing wardrobe that would pair well]";
-  systemPrompt += "\n- [Include styling tips for creating outfits with this item]";
-  systemPrompt += "\n- [Mention any missing pieces that would complete great outfits]";
+  systemPrompt += "\n1. Versatile basic piece";
+  systemPrompt += "\n2. Good wardrobe coordination";
+  systemPrompt += "\n3. Multi-scenario functionality";
+  systemPrompt += "\nCONS:";
+  systemPrompt += "\n1. Potential wardrobe redundancy";
+  systemPrompt += "\n2. Limited styling variety";
+  systemPrompt += "\nSUITABLE SCENARIOS:";
+  systemPrompt += "\n1. Office Work";
+  systemPrompt += "\n2. Light Outdoor Activities";
+  systemPrompt += "\nCOMBINATION SUGGESTIONS:";
+  systemPrompt += "\n1. White trousers for professional look";
+  systemPrompt += "\n2. Blue jeans for casual styling";
+  systemPrompt += "\n3. Blazer for elevated outfits";
   systemPrompt += "\n\nSCORE: X/10";
-  systemPrompt += "\n[Brief justification for the score based on overall value]";
+  systemPrompt += "\nScore reasoning here";
   systemPrompt += "\n\nFEEDBACK:";
-  systemPrompt += "\n[Write specific purchase recommendation and final thoughts]";
-  systemPrompt += "\n\nDO NOT write everything in one paragraph. DO NOT use ** formatting. Use the exact section headers shown above. Keep under 400 words total.";
+  systemPrompt += "\nPurchase recommendation here";
+  systemPrompt += "\n\nIMPORTANT: Use numbered lists (1., 2., 3.) NOT paragraphs. Each point on separate line.";
   
   return systemPrompt;
 }

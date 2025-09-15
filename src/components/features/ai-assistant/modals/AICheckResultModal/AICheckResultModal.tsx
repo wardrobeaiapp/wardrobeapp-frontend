@@ -108,9 +108,13 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           </div>
         )}
         
-        <AnalysisText>
-          {analysisResult}
-        </AnalysisText>
+        <AnalysisText 
+          dangerouslySetInnerHTML={{
+            __html: analysisResult
+              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+              .replace(/\n/g, '<br />')
+          }}
+        />
         
         <ItemDetails>
           {/* Show error information if present */}

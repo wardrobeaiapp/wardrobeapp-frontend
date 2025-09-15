@@ -146,17 +146,121 @@ router.post('/', async (req, res) => {
     let analysisResponse = response.content[0].text;
     console.log('Claude response:', analysisResponse);
     
-    // Parse response to extract sections
+    // Parse and restructure response to extract sections
     let analysis = "";
     let score = 5.0;
     let feedback = "";
     
+    // Helper function to format structured analysis
+    function formatStructuredAnalysis(rawAnalysis) {
+      let formatted = "";
+      
+      // Extract PROS section
+      const prosMatch = rawAnalysis.match(/PROS:?\s*([\s\S]*?)(?=CONS:?|SUITABLE SCENARIOS:?|COMBINATION SUGGESTIONS:?|$)/i);
+      if (prosMatch && prosMatch[1]) {
+        const prosText = prosMatch[1].trim();
+        formatted += "**PROS:**\n";
+        // Look for numbered lists first (1. 2. 3.)
+        const numberedPoints = prosText.match(/\d+\.\s*([^0-9]+?)(?=\d+\.|$)/g);
+        if (numberedPoints && numberedPoints.length > 0) {
+          numberedPoints.forEach((point, index) => {
+            if (index < 3) {
+              const cleanPoint = point.replace(/^\d+\.\s*/, '').trim();
+              formatted += `✓ ${cleanPoint}\n`;
+            }
+          });
+        } else {
+          // Fallback: split by sentences for paragraph text
+          const prosPoints = prosText.split(/[.!]\s+/).filter(p => p.trim().length > 15);
+          prosPoints.forEach((point, index) => {
+            if (index < 3) {
+              formatted += `✓ ${point.trim().replace(/^[-•]\s*/, '')}\n`;
+            }
+          });
+        }
+        formatted += "\n";
+      }
+      
+      // Extract CONS section  
+      const consMatch = rawAnalysis.match(/CONS:?\s*([\s\S]*?)(?=SUITABLE SCENARIOS:?|COMBINATION SUGGESTIONS:?|$)/i);
+      if (consMatch && consMatch[1]) {
+        const consText = consMatch[1].trim();
+        formatted += "**CONS:**\n";
+        const numberedPoints = consText.match(/\d+\.\s*([^0-9]+?)(?=\d+\.|$)/g);
+        if (numberedPoints && numberedPoints.length > 0) {
+          numberedPoints.forEach((point, index) => {
+            if (index < 3) {
+              const cleanPoint = point.replace(/^\d+\.\s*/, '').trim();
+              formatted += `✗ ${cleanPoint}\n`;
+            }
+          });
+        } else {
+          const consPoints = consText.split(/[.!]\s+/).filter(p => p.trim().length > 15);
+          consPoints.forEach((point, index) => {
+            if (index < 3) {
+              formatted += `✗ ${point.trim().replace(/^[-•]\s*/, '')}\n`;
+            }
+          });
+        }
+        formatted += "\n";
+      }
+      
+      // Extract SUITABLE SCENARIOS section
+      const scenariosMatch = rawAnalysis.match(/SUITABLE SCENARIOS:?\s*([\s\S]*?)(?=COMBINATION SUGGESTIONS:?|$)/i);
+      if (scenariosMatch && scenariosMatch[1]) {
+        const scenariosText = scenariosMatch[1].trim();
+        formatted += "**SUITABLE SCENARIOS:**\n";
+        const numberedPoints = scenariosText.match(/\d+\.\s*([^0-9]+?)(?=\d+\.|$)/g);
+        if (numberedPoints && numberedPoints.length > 0) {
+          numberedPoints.forEach((point, index) => {
+            if (index < 3) {
+              const cleanPoint = point.replace(/^\d+\.\s*/, '').trim();
+              formatted += `🎯 ${cleanPoint}\n`;
+            }
+          });
+        } else {
+          const scenarioPoints = scenariosText.split(/[.!]\s+/).filter(p => p.trim().length > 10);
+          scenarioPoints.forEach((point, index) => {
+            if (index < 3) {
+              formatted += `🎯 ${point.trim().replace(/^[-•]\s*/, '')}\n`;
+            }
+          });
+        }
+        formatted += "\n";
+      }
+      
+      // Extract COMBINATION SUGGESTIONS section
+      const combinationsMatch = rawAnalysis.match(/COMBINATION SUGGESTIONS:?\s*([\s\S]*?)(?=$)/i);
+      if (combinationsMatch && combinationsMatch[1]) {
+        const combinationsText = combinationsMatch[1].trim();
+        formatted += "**COMBINATION SUGGESTIONS:**\n";
+        const numberedPoints = combinationsText.match(/\d+\.\s*([^0-9]+?)(?=\d+\.|$)/g);
+        if (numberedPoints && numberedPoints.length > 0) {
+          numberedPoints.forEach((point, index) => {
+            if (index < 3) {
+              const cleanPoint = point.replace(/^\d+\.\s*/, '').trim();
+              formatted += `👔 ${cleanPoint}\n`;
+            }
+          });
+        } else {
+          const combPoints = combinationsText.split(/[.!]\s+/).filter(p => p.trim().length > 15);
+          combPoints.forEach((point, index) => {
+            if (index < 3) {
+              formatted += `👔 ${point.trim().replace(/^[-•]\s*/, '')}\n`;
+            }
+          });
+        }
+      }
+      
+      return formatted || rawAnalysis; // Fallback to original if parsing fails
+    }
+    
     // Look for ANALYSIS section
     const analysisMatch = analysisResponse.match(/ANALYSIS:?\s*([\s\S]*?)(?=SCORE:?|$)/i);
     if (analysisMatch && analysisMatch[1]) {
-      analysis = analysisMatch[1].trim();
+      analysis = formatStructuredAnalysis(analysisMatch[1].trim());
     } else {
-      analysis = analysisResponse; // Use the full response if no sections found
+      analysis = formatStructuredAnalysis(analysisResponse); // Format the full response if no sections found
     }
     
     // Look for SCORE section
