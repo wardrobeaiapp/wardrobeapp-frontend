@@ -281,10 +281,11 @@ export const claudeService = {
           imageBase64,
           detectedTags,
           climateData,
-          scenarios: scenarios.length > 0 ? scenarios.map(({ id, name, description }) => ({
+          scenarios: scenarios.length > 0 ? scenarios.map(({ id, name, description, frequency }) => ({
             id,
             name,
-            description
+            description,
+            frequency
           })) : undefined,
           // Include form data if provided
           formData: formData ? {

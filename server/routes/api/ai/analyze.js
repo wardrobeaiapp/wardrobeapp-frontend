@@ -6,6 +6,7 @@ const router = express.Router();
 // Helper function to analyze scenario coverage with existing wardrobe
 function analyzeScenarioCoverage(scenarios, wardrobeItems) {
   return scenarios.map(scenario => {
+    console.log('Scenario:', scenario);
     // Get items that are suitable for this scenario
     const suitableItems = wardrobeItems.filter(item => {
       // Check if item is explicitly tagged for this scenario
