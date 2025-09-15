@@ -140,6 +140,7 @@ export const claudeService = {
     analysis: string;
     score: number;
     feedback: string;
+    finalRecommendation?: string;
     error?: string;
     details?: string;
   }> {
@@ -308,6 +309,7 @@ export const claudeService = {
           analysis: response.data.analysis || 'Error analyzing image.',
           score: response.data.score || 5.0,
           feedback: response.data.feedback || 'Could not process the image analysis.',
+          finalRecommendation: response.data.finalRecommendation,
           error: response.data.error,
           details: response.data.details
         };
@@ -317,7 +319,8 @@ export const claudeService = {
       return {
         analysis: response.data.analysis,
         score: response.data.score,
-        feedback: response.data.feedback
+        feedback: response.data.feedback,
+        finalRecommendation: response.data.finalRecommendation
       };
     } catch (error: any) {
       console.error('[claudeService] Error analyzing wardrobe item with Claude:', error);

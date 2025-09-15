@@ -150,6 +150,7 @@ router.post('/', async (req, res) => {
     let analysis = "";
     let score = 5.0;
     let feedback = "";
+    let finalRecommendation = "";
     
     // Helper function to format structured analysis
     function formatStructuredAnalysis(rawAnalysis) {
@@ -270,16 +271,25 @@ router.post('/', async (req, res) => {
     }
     
     // Look for FEEDBACK section
-    const feedbackMatch = analysisResponse.match(/FEEDBACK:?\s*([\s\S]*?)(?=$)/i);
+    const feedbackMatch = analysisResponse.match(/FEEDBACK:?\s*([\s\S]*?)(?=FINAL RECOMMENDATION:?|$)/i);
     if (feedbackMatch && feedbackMatch[1]) {
       feedback = feedbackMatch[1].trim();
     }
+    
+    // Look for FINAL RECOMMENDATION section
+    const finalRecommendationMatch = analysisResponse.match(/FINAL RECOMMENDATION:?\s*([\s\S]*?)(?=$)/i);
+    if (finalRecommendationMatch && finalRecommendationMatch[1]) {
+      finalRecommendation = finalRecommendationMatch[1].trim();
+    }
+    
+    console.log('FINAL RECOMMENDATION extracted:', finalRecommendation);
     
     // Send back the extracted information
     res.json({
       analysis,
       score,
-      feedback
+      feedback,
+      finalRecommendation
     });
   } catch (err) {
     console.error('Error in Claude analysis:', err);

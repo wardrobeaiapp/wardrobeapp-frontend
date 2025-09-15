@@ -61,6 +61,7 @@ const AIAssistantPage: React.FC = () => {
     itemCheckScore,
     itemCheckStatus,
     extractedTags,
+    finalRecommendation,
     errorType,
     errorDetails,
 
@@ -232,6 +233,7 @@ const AIAssistantPage: React.FC = () => {
           status={itemCheckStatus}
           imageUrl={imageLink}
           extractedTags={extractedTags}
+          finalRecommendation={finalRecommendation}
           onAddToWishlist={handleOpenWishlistModal}
           error={errorType}
           errorDetails={errorDetails}

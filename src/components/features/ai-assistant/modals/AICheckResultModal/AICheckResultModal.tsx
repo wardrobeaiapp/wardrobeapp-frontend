@@ -22,6 +22,7 @@ interface AICheckResultModalProps {
   onDecideLater?: () => void;
   error?: string; // Error type from Claude API
   errorDetails?: string; // Detailed error message
+  finalRecommendation?: string; // Final recommendation from Claude
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -36,7 +37,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   onSkip,
   onDecideLater,
   error,
-  errorDetails
+  errorDetails,
+  finalRecommendation
 }) => {
   // Tags are now logged in AICheckModal
   // We still display them here if passed from parent component
@@ -115,6 +117,35 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
               .replace(/\n/g, '<br />')
           }}
         />
+        
+        {/* Final Recommendation - Full width, before other details */}
+        {finalRecommendation && (
+          <div style={{
+            marginBottom: '16px',
+            padding: '12px',
+            borderRadius: '8px',
+            backgroundColor: finalRecommendation.toLowerCase().includes('recommend') ? '#ecfdf5' : '#fef2f2',
+            border: `2px solid ${finalRecommendation.toLowerCase().includes('recommend') ? '#d1fae5' : '#fecaca'}`,
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              color: '#6b7280',
+              marginBottom: '4px'
+            }}>
+              Final Recommendation
+            </div>
+            <div style={{
+              fontSize: '1rem',
+              fontWeight: 'bold',
+              color: finalRecommendation.toLowerCase().includes('recommend') ? '#059669' : '#dc2626',
+              lineHeight: '1.4'
+            }}>
+              {finalRecommendation}
+            </div>
+          </div>
+        )}
         
         <ItemDetails>
           {/* Show error information if present */}

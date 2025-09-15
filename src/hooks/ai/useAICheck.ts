@@ -14,6 +14,7 @@ export const useAICheck = () => {
   const [itemCheckScore, setItemCheckScore] = useState<number | undefined>();
   const [itemCheckStatus, setItemCheckStatus] = useState<WishlistStatus | undefined>();
   const [extractedTags, setExtractedTags] = useState<DetectedTags | null>(null);
+  const [finalRecommendation, setFinalRecommendation] = useState<string>('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
 
@@ -100,6 +101,7 @@ export const useAICheck = () => {
       setItemCheckScore(score);
       setItemCheckStatus(status);
       setExtractedTags(detectedTags);
+      setFinalRecommendation(response.finalRecommendation || '');
 
       return { analysisResult, score, status, detectedTags };
     } catch (err) {
@@ -121,6 +123,7 @@ export const useAICheck = () => {
     setItemCheckScore(undefined);
     setItemCheckStatus(undefined);
     setExtractedTags(null);
+    setFinalRecommendation('');
     setError('');
     setErrorType('');
     setErrorDetails('');
@@ -254,6 +257,7 @@ export const useAICheck = () => {
     itemCheckScore,
     itemCheckStatus,
     extractedTags,
+    finalRecommendation,
     errorType,
     errorDetails,
     
