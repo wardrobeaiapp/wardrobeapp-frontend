@@ -231,6 +231,14 @@ router.post('/', async (req, res) => {
     
     systemPrompt += "\n\n**Important**: Support the user's style exploration and preferences - whether they gravitate toward classic, trendy, minimalist, or extravagant pieces. Your role is to ensure their choices work well with their existing wardrobe and feel fashion-relevant, not to impose a particular aesthetic. Focus on helping them build a cohesive, wearable wardrobe that reflects their personal style while avoiding truly outdated elements.";
     
+    systemPrompt += "\n\n=== VISUAL QUALITY INDICATORS ===";
+    systemPrompt += "\nFrom the image, you can only assess what's visually apparent. Flag any obvious concerns if visible:";
+    systemPrompt += "\n• **Visible construction issues**: Poor stitching, loose threads, uneven seams";
+    systemPrompt += "\n• **Fit problems**: Obvious pulling, bunching, or poor drape on the model/person";
+    systemPrompt += "\n• **Fabric appearance**: If fabric looks extremely thin, cheap, or poorly finished";
+    systemPrompt += "\n• **Hardware issues**: Visibly poor zippers, buttons, or closures";
+    systemPrompt += "\n\n**Important limitation**: You cannot assess true fabric quality, durability, or construction details that aren't visible in the photo. Never claim an item is \"high quality\" - only mention if you notice obvious visual red flags. When quality cannot be determined from the image, state this clearly.";
+    
     // Include category and subcategory from formData if available
     if (formData && (formData.category || formData.subcategory)) {
       systemPrompt += "\n\nThe user has provided the following information about this item:";
