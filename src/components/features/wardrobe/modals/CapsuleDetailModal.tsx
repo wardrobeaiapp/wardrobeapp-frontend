@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Capsule, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
@@ -57,86 +57,103 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Use the capsuleItems hook to get the items in this capsule
+  // Get capsule items and loading state
   const { itemIds, loading } = useCapsuleItems(capsule.id);
+  const { user } = useSupabaseAuth();
   
-  // Find the actual wardrobe items using the IDs from the capsule_items join table
-  const capsuleItems = items.filter(item => itemIds.includes(item.id));
+  // Memoize derived state
+  const capsuleItems = useMemo(() => 
+    items.filter(item => itemIds.includes(item.id)),
+    [items, itemIds]
+  );
   
-  // For backward compatibility, also check the selectedItems array if itemIds is empty
-  const legacyItems = itemIds.length === 0 && capsule.selectedItems && capsule.selectedItems.length > 0 ? 
-    items.filter(item => capsule.selectedItems?.includes(item.id) || false) : 
-    [];
+  // Memoize legacy items for backward compatibility
+  const legacyItems = useMemo(() => 
+    (itemIds.length === 0 && capsule.selectedItems?.length) 
+      ? items.filter(item => capsule.selectedItems?.includes(item.id) || false) 
+      : [],
+    [itemIds.length, capsule.selectedItems, items]
+  );
   
-  // Combine both sources of items
-  const allCapsuleItems = [...capsuleItems, ...legacyItems.filter(item => 
-    !capsuleItems.some(ci => ci.id === item.id)
-  )];
+  // Memoize combined capsule items
+  const allCapsuleItems = useMemo(() => 
+    [...capsuleItems, ...legacyItems.filter(item => 
+      !capsuleItems.some(ci => ci.id === item.id)
+    )],
+    [capsuleItems, legacyItems]
+  );
   
   // Get scenarios array, defaulting to an empty array if not present
-  const scenarios = capsule.scenarios || [];
+  const scenarios = useMemo(() => capsule.scenarios || [], [capsule.scenarios]);
 
   // State for storing scenario names
   const [scenarioNames, setScenarioNames] = useState<string>('Not specified');
   
-  const { user } = useSupabaseAuth();
+  // Memoize the loadScenarioNames function
+  const loadScenarioNames = useCallback(async (currentScenarios: string[], currentUser: any) => {
+    if (currentScenarios.length === 0 || !currentUser) return;
+    
+    try {
+      const allScenarios = await fetchScenarios(currentUser.id);
+      
+      // Map scenario IDs to names
+      const names = currentScenarios
+        .map(scenarioId => allScenarios.find(s => s.id === scenarioId)?.name || scenarioId)
+        .filter(Boolean);
+      
+      if (names.length > 0) {
+        setScenarioNames(names.join(', '));
+      }
+    } catch (error) {
+      console.error('Error fetching scenario names:', error);
+      // Fallback to showing IDs if fetching fails
+      setScenarioNames(currentScenarios.join(', '));
+    }
+  }, []);
   
   // Fetch scenarios to map IDs to names
   useEffect(() => {
-    // Store scenarios in a local variable to use inside the effect
-    // This prevents dependency on the scenarios variable that might change on every render
-    const currentScenarios = [...scenarios];
-    
-    const loadScenarioNames = async () => {
-      if (currentScenarios && currentScenarios.length > 0 && user) {
-        try {
-          const allScenarios = await fetchScenarios(user.id);
-          
-          // Map scenario IDs to names
-          const names = currentScenarios.map(scenarioId => {
-            const scenario = allScenarios.find(s => s.id === scenarioId);
-            return scenario ? scenario.name : scenarioId;
-          }).filter(Boolean);
-          
-          if (names.length > 0) {
-            setScenarioNames(names.join(', '));
-          }
-        } catch (error) {
-          console.error('Error fetching scenario names:', error);
-          // Fallback to showing IDs if fetching fails
-          setScenarioNames(currentScenarios.join(', '));
-        }
-      }
-    };
-    
-    loadScenarioNames();
-    // Empty dependency array prevents re-running on every render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (scenarios.length > 0 && user) {
+      loadScenarioNames(scenarios, user);
+    }
+  }, [scenarios, user, loadScenarioNames]);
   
-  // Find the main item
-  const mainItemId = capsule.mainItemId || capsule.main_item_id;
-  const mainItem = mainItemId ? allCapsuleItems.find(item => item.id === mainItemId) : null;
+  // Memoize main item and other items
+  const mainItemId = useMemo(() => capsule.mainItemId || capsule.main_item_id, [capsule]);
   
-  // Filter out the main item from the regular items list
-  const otherItems = mainItem ? allCapsuleItems.filter(item => item.id !== mainItem.id) : allCapsuleItems;
+  const mainItem = useMemo(() => 
+    mainItemId ? allCapsuleItems.find(item => item.id === mainItemId) : null,
+    [mainItemId, allCapsuleItems]
+  );
+  
+  const otherItems = useMemo(() => 
+    mainItem ? allCapsuleItems.filter(item => item.id !== mainItem.id) : allCapsuleItems,
+    [mainItem, allCapsuleItems]
+  );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const actions: ModalAction[] = [
+  // Memoize callbacks
+  const handleEdit = useCallback(() => onEdit(capsule), [onEdit, capsule]);
+  const handleDeleteClick = useCallback(() => setShowDeleteConfirm(true), []);
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    (e.target as HTMLImageElement).style.display = 'none';
+  }, []);
+  
+  const actions = useMemo<ModalAction[]>(() => [
     {
       label: 'Edit',
-      onClick: () => onEdit(capsule),
-      variant: 'primary',
+      onClick: handleEdit,
+      variant: 'primary' as const,
       fullWidth: true
     },
     {
       label: 'Delete',
-      onClick: () => setShowDeleteConfirm(true),
-      variant: 'secondary',
+      onClick: handleDeleteClick,
+      variant: 'secondary' as const,
       fullWidth: true
     }
-  ];
+  ], [handleEdit, handleDeleteClick]);
 
   return (
     <Modal
@@ -168,9 +185,8 @@ const CapsuleDetailModal: React.FC<CapsuleDetailModalProps> = ({
                   <MainItemImage 
                     src={mainItem.imageUrl} 
                     alt={mainItem.name} 
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                    onError={handleImageError}
+                    loading="lazy"
                   />
                 ) : (
                   <MainItemPlaceholder>No Image</MainItemPlaceholder>
