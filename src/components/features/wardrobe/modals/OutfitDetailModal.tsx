@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Outfit, WardrobeItem } from '../../../../types';
 import { formatCategory } from '../../../../utils/textFormatting';
 import { Modal, ModalAction } from '../../../common/Modal';
@@ -26,84 +26,91 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
   onEdit,
   onDelete
 }) => {
-  // Find the actual wardrobe items using the IDs stored in the outfit
-  const outfitItems = items.filter(item => outfit.items.includes(item.id));
+  // Memoize derived state
+  const outfitItems = useMemo(() => 
+    items.filter(item => outfit.items.includes(item.id)),
+    [items, outfit.items]
+  );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [scenarioNames, setScenarioNames] = useState<string>('');
-  
+  const [scenarioNames, setScenarioNames] = useState<string>('Loading...');
   const { user } = useSupabaseAuth();
+  
+  // Memoize the scenario names loading function
+  const loadScenarioNames = useCallback(async (scenarios: string[] | undefined, currentUser: any) => {
+    if (!scenarios) {
+      setScenarioNames('No scenarios available');
+      return;
+    }
+    
+    if (scenarios.length === 0) {
+      setScenarioNames('No scenarios selected');
+      return;
+    }
+    
+    if (!currentUser) {
+      setScenarioNames(scenarios.join(', '));
+      return;
+    }
+    
+    try {
+      const allScenarios = await fetchScenarios(currentUser.id);
+      
+      const names = scenarios
+        .map(scenarioId => {
+          const scenario = allScenarios.find(s => s.id === scenarioId);
+          return scenario ? scenario.name : scenarioId;
+        })
+        .filter(Boolean);
+      
+      setScenarioNames(names.length > 0 ? names.join(', ') : 'Unknown scenarios');
+    } catch (error) {
+      console.error('Error fetching scenario names:', error);
+      setScenarioNames(`Error: ${scenarios.join(', ')}`);
+    }
+  }, []);
   
   // Fetch scenarios to map IDs to names
   useEffect(() => {
-    const loadScenarioNames = async () => {
-      console.log('[OutfitDetailModal] Loading scenario names for outfit', outfit.id, 'scenarios:', outfit.scenarios);
-      
-      if (!outfit.scenarios) {
-        console.log('[OutfitDetailModal] No scenarios array found');
-        setScenarioNames('No scenarios available');
-        return;
-      }
-      
-      if (outfit.scenarios.length === 0) {
-        console.log('[OutfitDetailModal] Scenarios array is empty');
-        setScenarioNames('No scenarios selected');
-        return;
-      }
-      
-      if (!user) {
-        console.log('[OutfitDetailModal] No user available to fetch scenarios');
-        // Just display the raw IDs if we can't fetch the names
-        setScenarioNames(outfit.scenarios.join(', '));
-        return;
-      }
-      
-      try {
-        console.log('[OutfitDetailModal] Fetching scenarios for user', user.id);
-        const allScenarios = await fetchScenarios(user.id);
-        console.log('[OutfitDetailModal] Fetched scenarios:', allScenarios);
-        
-        // Map scenario IDs to names
-        const names = outfit.scenarios.map(scenarioId => {
-          const scenario = allScenarios.find(s => s.id === scenarioId);
-          if (!scenario) {
-            console.warn(`[OutfitDetailModal] Could not find scenario name for ID ${scenarioId}`);
-          }
-          return scenario ? scenario.name : scenarioId;
-        }).filter(Boolean);
-        
-        if (names.length === 0) {
-          console.warn('[OutfitDetailModal] No scenario names could be mapped');
-          setScenarioNames('Unknown scenarios');
-          return;
-        }
-        
-        console.log('[OutfitDetailModal] Setting scenario names:', names);
-        setScenarioNames(names.join(', '));
-      } catch (error) {
-        console.error('[OutfitDetailModal] Error fetching scenario names:', error);
-        // Fallback to showing IDs if fetching fails
-        setScenarioNames(`Error: ${outfit.scenarios.join(', ')}`);
-      }
+    if (!outfit.scenarios) return;
+    
+    let isMounted = true;
+    
+    const loadData = async () => {
+      await loadScenarioNames(outfit.scenarios, user);
     };
     
-    loadScenarioNames();
-  }, [outfit.scenarios, outfit.id, user]);
-
-  const actions: ModalAction[] = [
+    if (isMounted) {
+      loadData();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [outfit.scenarios, user, loadScenarioNames]);
+  
+  // Memoize callbacks
+  const handleEdit = useCallback(() => onEdit(outfit), [onEdit, outfit]);
+  const handleDeleteClick = useCallback(() => setShowDeleteConfirm(true), []);
+  const handleImageError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    (e.target as HTMLImageElement).style.display = 'none';
+  }, []);
+  
+  // Memoize actions
+  const actions = useMemo<ModalAction[]>(() => [
     {
       label: 'Edit',
-      onClick: () => onEdit(outfit),
-      variant: 'primary',
+      onClick: handleEdit,
+      variant: 'primary' as const,
       fullWidth: true
     },
     {
       label: 'Delete',
-      onClick: () => setShowDeleteConfirm(true),
-      variant: 'secondary',
+      onClick: handleDeleteClick,
+      variant: 'secondary' as const,
       fullWidth: true
     }
-  ];
+  ], [handleEdit, handleDeleteClick]);
 
   return (
     <Modal
@@ -139,9 +146,8 @@ const OutfitDetailModal: React.FC<OutfitDetailModalProps> = ({
                       <ItemImage 
                         src={item.imageUrl} 
                         alt={item.name} 
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
+                        onError={handleImageError}
+                        loading="lazy"
                       />
                     ) : (
                       <PlaceholderImage>No Image</PlaceholderImage>
