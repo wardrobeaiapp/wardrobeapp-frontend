@@ -176,8 +176,16 @@ function addScenarioCoverageSection(systemPrompt, scenarioCoverage) {
 
 function addGapAnalysisSection(systemPrompt, similarContext) {
   if (similarContext && similarContext.length > 0) {
-    systemPrompt += "\n\n=== DUPLICATE CHECK - CRITICAL TASK ===";
-    systemPrompt += "\nHere are items from the SAME category and subcategory in your wardrobe. CHECK FOR DUPLICATES FIRST:\n";
+    systemPrompt += "\n\n=== DUPLICATE CHECK - MANDATORY TASK ===";
+    systemPrompt += "\nHere are items from the SAME category and subcategory in your wardrobe. YOU MUST CHECK FOR EXACT DUPLICATES:\n";
+    systemPrompt += "\n**MANDATORY DUPLICATE DETECTION - YOU MUST DO THIS:**";
+    systemPrompt += "\n1. Scan the list below for items with SAME COLOR + SAME SUBCATEGORY";
+    systemPrompt += "\n2. Count how many identical items exist (e.g., 2 black t-shirts, 3 white shirts)";
+    systemPrompt += "\n3. If duplicates exist → AUTOMATICALLY RECOMMEND SKIP";
+    systemPrompt += "\n4. Write in CONS: 'You already own [X] identical [color] [item type] - this is unnecessary duplication'";
+    systemPrompt += "\n5. Score MUST be 1-2/10 for any exact duplicates";
+    systemPrompt += "\n\n**EXAMPLE FROM YOUR DATA:**";
+    systemPrompt += "\nIf you see: 'Black T-shirt' AND 'Black T-shirt' → Write: 'You own 2 identical black t-shirts'\n";
     
     // Sort items to put most relevant duplicates first (same subcategory, same color)
     const sortedContext = [...similarContext].sort((a, b) => {
@@ -254,14 +262,15 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n2. [How THIS item fills gaps in their wardrobe]";
   systemPrompt += "\n3. [Specific styling opportunities with THIS item]";
   systemPrompt += "\n\n**CONS SECTION RULES:**";
-  systemPrompt += "\n• Only include CONS section if actual problems exist";
-  systemPrompt += "\n• DO NOT write about things that are NOT problems";
-  systemPrompt += "\n• DO NOT write 'no duplicates exist' - skip CONS entirely instead";
-  systemPrompt += "\n• If no duplicates + fills gap = NO CONS SECTION";
-  systemPrompt += "\n\nExample of what NOT to do:";
-  systemPrompt += "\nCONS: ✗ You do not own duplicates (WRONG - this is good!)";
-  systemPrompt += "\n\nCorrect approach when no problems exist:";
-  systemPrompt += "\n[Skip CONS section completely, go directly to SUITABLE SCENARIOS]";
+  systemPrompt += "\n• ALWAYS include CONS section if duplicates were found in the duplicate check above";
+  systemPrompt += "\n• If duplicates exist → MUST write about them in CONS (overrides skip rules)";
+  systemPrompt += "\n• Only skip CONS if NO duplicates AND no other genuine problems";
+  systemPrompt += "\n• DO NOT write 'no duplicates exist' - but DO write about duplicates that DO exist";
+  systemPrompt += "\n\n**EXAMPLES:**";
+  systemPrompt += "\nCONS: ✗ You do not own duplicates (WRONG - don't write about absence!)";
+  systemPrompt += "\nCONS: ✅ You already own 2 identical black t-shirts - this is wasteful duplication (CORRECT!)";
+  systemPrompt += "\n\n**When to skip CONS entirely:** Only when NO duplicates exist AND no other problems";
+  systemPrompt += "\n**When to include CONS:** When duplicates exist OR other genuine issues found";
   systemPrompt += "\n\nSUITABLE SCENARIOS:";
   systemPrompt += "\n**CRITICAL: Only list scenarios where the item is GENUINELY PRACTICAL. Do NOT list scenarios with disclaimers like 'not the most practical' or 'could work but...'**";
   systemPrompt += "\n**If you need to add qualifiers about practicality → DO NOT LIST THAT SCENARIO**";

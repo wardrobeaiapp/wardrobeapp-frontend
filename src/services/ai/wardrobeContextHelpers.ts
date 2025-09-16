@@ -216,15 +216,25 @@ export const filterSimilarContext = (
   
   const filtered = wardrobeItems.filter(item => {
     const matchesCategory = item.category === formData.category;
-    // For similarContext, we include the whole category (all footwear, all tops, etc.)
-    // Subcategory filtering is handled by AI for duplicate detection in the prompt
+    
+    // Special handling for footwear - include all footwear subcategories for broader duplicate detection
+    let matchesSubcategory;
+    if (formData.category?.toLowerCase() === 'footwear') {
+      matchesSubcategory = true; // Include all footwear types
+      console.log(`[wardrobeContextHelpers] FOOTWEAR: Including all footwear subcategories for broader duplicate detection`);
+    } else {
+      // For non-footwear, use subcategory matching for precise duplicate detection
+      matchesSubcategory = formData.subcategory ? 
+        item.subcategory?.toLowerCase() === formData.subcategory.toLowerCase() : true;
+    }
+    
     const matchesSeason = formData.seasons?.some(season => 
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all
     
-    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}, Subcategory: ${item.subcategory}`);
+    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}`);
     
-    const shouldInclude = matchesCategory && matchesSeason;
+    const shouldInclude = matchesCategory && matchesSubcategory && matchesSeason;
     
     return shouldInclude;
   });
