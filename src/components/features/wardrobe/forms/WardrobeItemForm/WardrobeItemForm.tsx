@@ -153,6 +153,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       pattern: formData.pattern,
       material: formData.material,
       brand: formData.brand,
+      silhouette: formData.silhouette,
       length: formData.length,
       neckline: formData.neckline,
       heelHeight: formData.heelHeight,
