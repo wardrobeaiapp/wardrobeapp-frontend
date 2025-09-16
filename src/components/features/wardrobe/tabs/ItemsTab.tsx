@@ -154,6 +154,7 @@ const ItemsTab = React.memo<ItemsTabProps>(({
             <ScenarioFilter
               value={scenarioFilter || 'all'}
               onChange={setScenarioFilter}
+              includeAllOption={true}
             />
           )}
       </FiltersContainer>
