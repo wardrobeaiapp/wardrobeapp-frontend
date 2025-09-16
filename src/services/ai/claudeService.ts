@@ -258,7 +258,14 @@ export const claudeService = {
       if (wardrobeItems.length > 0 && formData) {
         console.log('[claudeService] Debug - formData:', formData);
         console.log('[claudeService] Debug - detectedTags:', detectedTags);
-        console.log('[claudeService] Debug - All wardrobe items:', wardrobeItems.map(item => ({ name: item.name, category: item.category, subcategory: item.subcategory })));
+        console.log(`[claudeService] Debug - Total wardrobe items: ${wardrobeItems.length}`);
+        console.log('[claudeService] Debug - All wardrobe items:', wardrobeItems.map(item => ({ 
+          name: item.name, 
+          category: item.category, 
+          subcategory: item.subcategory,
+          seasons: item.season,
+          color: item.color
+        })));
         
         // Extract color from detectedTags if available
         let detectedColor: string | undefined = undefined;
@@ -300,6 +307,7 @@ export const claudeService = {
         console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
         stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));
         console.log(`[claudeService] Generated gap analysis context: ${similarContext.length} items`);
+        similarContext.forEach(item => console.log(`[claudeService] Similar context item: ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color} - SEASONS: [${item.season?.join(',') || 'NONE'}]`));
         console.log(`[claudeService] Generated additional context: ${additionalContext.length} items`);
         additionalContext.forEach(item => console.log(`[claudeService] Additional context item: ${item.name}`));
       }

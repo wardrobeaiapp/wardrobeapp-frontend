@@ -143,10 +143,12 @@ export const filterStylingContext = (
       const rules = stylingRules[subcategoryKey];
       
       if (rules) {
+        console.log(`[wardrobeContextHelpers] Debug - Found styling rules for '${subcategoryKey}':`, rules);
         console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
         
         // Define main categories based on form category
         const mainCategories = getMainCategoriesForRuleBased(formData.category as ItemCategory);
+        console.log(`[wardrobeContextHelpers] Debug - Main categories for ${formData.category}:`, mainCategories);
         const { matchesMainCategories, matchesTops, matchesAccessories } = checkRuleBasedMatches(item, rules, mainCategories);
         
         // Special case for OUTERWEAR - include specific ONE_PIECE items
@@ -162,6 +164,9 @@ export const filterStylingContext = (
         console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesTops: ${!!matchesTops}, matchesAccessories: ${!!matchesAccessories}, matchesOnePiece: ${matchesOnePiece}, matchesFootwearAccessories: ${matchesFootwearAccessories}, matchesSeason: ${matchesSeason}`);
         
         return (matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories) && matchesSeason;
+      } else {
+        console.log(`[wardrobeContextHelpers] Debug - NO styling rules found for subcategory '${subcategoryKey}'`);
+        return false;
       }
     }
     
@@ -202,6 +207,12 @@ export const filterSimilarContext = (
   formData: { category?: string; subcategory?: string; seasons?: string[]; color?: string }
 ): WardrobeItem[] => {
   console.log(`[wardrobeContextHelpers] FILTERING SIMILAR CONTEXT for category: ${formData.category}, subcategory: ${formData.subcategory}, color: ${formData.color}, seasons: ${formData.seasons?.join(',')}`);
+  console.log(`[wardrobeContextHelpers] Input: ${wardrobeItems.length} wardrobe items to filter`);
+  
+  if (wardrobeItems.length === 0) {
+    console.log(`[wardrobeContextHelpers] WARNING: No wardrobe items provided to filter!`);
+    return [];
+  }
   
   const filtered = wardrobeItems.filter(item => {
     const matchesCategory = item.category === formData.category;
@@ -211,7 +222,7 @@ export const filterSimilarContext = (
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all
     
-    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Color: ${item.color}`);
+    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}`);
     
     const shouldInclude = matchesCategory && matchesSubcategory && matchesSeason;
     

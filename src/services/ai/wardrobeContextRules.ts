@@ -99,4 +99,32 @@ export const stylingRules: Record<string, {
     accessories: ['bag'],
     tops: ['t-shirt', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt',]
   },
+  // Footwear styling rules
+  'heels': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
+  'flats': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
+  'sandals': {
+    accessories: ['bag', 'jewelry', 'sunglasses', 'hat'],
+  },
+  'boots': {
+    accessories: ['bag', 'scarf', 'hat'],
+  },
+  'sneakers': {
+    accessories: ['bag', 'hat', 'sunglasses'],
+  },
+  'loafers': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
+  'pumps': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
+  'wedges': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
+  'mules': {
+    accessories: ['bag', 'jewelry', 'watch'],
+  },
 };

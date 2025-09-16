@@ -245,6 +245,14 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n2. [WASTEFUL SPENDING: Explain why this purchase is unnecessary, but NEVER cite different colored items as reasons]";
   systemPrompt += "\n3. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility - but don't contradict what you said in PROS]";
   systemPrompt += "\n4. [OTHER CONCERNS: Any other reasons to avoid this purchase, excluding different colored items]";
+  systemPrompt += "\n\nSUITABLE SCENARIOS:";
+  systemPrompt += "\n1. [Scenario where this item would work well]";
+  systemPrompt += "\n2. [Another scenario where it would be useful]";
+  systemPrompt += "\n3. [Third scenario or occasion]";
+  systemPrompt += "\nCOMBINATION SUGGESTIONS:";
+  systemPrompt += "\n1. [Specific item from their wardrobe + styling tip]";
+  systemPrompt += "\n2. [Another specific combination idea]";
+  systemPrompt += "\n3. [Third specific styling suggestion]";
   systemPrompt += "\n\nIMPORTANT: ";
   systemPrompt += "\n- ONLY include bullet points that have actual issues to report";
   systemPrompt += "\n- SKIP any bullet point if no issues exist (don't write 'none noted' or 'no issues found')";
