@@ -45,55 +45,53 @@ const AssociationItem = styled.li`
   font-size: 14px;
 `;
 
-
 const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  item
+  isOpen = false,
+  onClose = () => {},
+  onConfirm = () => {},
+  item,
 }) => {
+  // State hooks must be called at the top level
   const [associatedOutfits, setAssociatedOutfits] = useState<Outfit[]>([]);
   const [associatedCapsules, setAssociatedCapsules] = useState<Capsule[]>([]);
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   useEffect(() => {
-    const fetchAssociations = async () => {
-      if (item?.id) {
-        setIsLoading(true);
-        try {
-          // Get outfit IDs that contain this item
-          const outfitIds = await getItemOutfits(item.id);
-          
-          // Get the full outfit objects for these IDs
-          const outfits = await fetchOutfits();
-          const associatedOutfits = outfits.filter(outfit => outfitIds.includes(outfit.id));
-          
-          // Get capsule IDs that contain this item
-          const capsuleIds = await capsuleItemsService.getItemCapsules(item.id);
-          
-          // Get the full capsule objects for these IDs
-          const capsules = await fetchCapsules();
-          const associatedCapsules = capsules.filter((capsule: Capsule) => capsuleIds.includes(capsule.id));
-          
-          // Check if the item is in the wishlist
-          const isInWishlist = item.wishlist || false;
-          
-          setAssociatedOutfits(associatedOutfits);
-          setAssociatedCapsules(associatedCapsules);
-          setIsInWishlist(isInWishlist);
-          
-          console.log('Associated capsules:', associatedCapsules);
-        } catch (error) {
-          console.error('Error fetching item associations:', error);
-        } finally {
-          setIsLoading(false);
-        }
+    const fetchAssociations = async (currentItem: WardrobeItem) => {
+      if (!currentItem?.id) return;
+      
+      setIsLoading(true);
+      try {
+        // Get outfit IDs that contain this item
+        const outfitIds = await getItemOutfits(currentItem.id);
+        
+        // Get the full outfit objects for these IDs
+        const outfits = await fetchOutfits();
+        const associatedOutfits = outfits.filter(outfit => outfitIds.includes(outfit.id));
+        
+        // Get capsule IDs that contain this item
+        const capsuleIds = await capsuleItemsService.getItemCapsules(currentItem.id);
+        
+        // Get the full capsule objects for these IDs
+        const capsules = await fetchCapsules();
+        const associatedCapsules = capsules.filter((capsule: Capsule) => capsuleIds.includes(capsule.id));
+        
+        // Check if the item is in the wishlist
+        const isInWishlist = currentItem.wishlist || false;
+        
+        setAssociatedOutfits(associatedOutfits);
+        setAssociatedCapsules(associatedCapsules);
+        setIsInWishlist(isInWishlist);
+      } catch (error) {
+        console.error('Error fetching item associations:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     if (isOpen && item) {
-      fetchAssociations();
+      fetchAssociations(item);
     } else {
       setAssociatedOutfits([]);
       setAssociatedCapsules([]);
@@ -101,8 +99,7 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
     }
   }, [isOpen, item]);
 
-  if (!isOpen || !item) return null;
-
+  // Calculate derived state
   const hasOutfitAssociations = associatedOutfits.length > 0;
   const hasCapsuleAssociations = associatedCapsules.length > 0;
   const hasAssociations = hasOutfitAssociations || hasCapsuleAssociations || isInWishlist;
@@ -112,21 +109,24 @@ const DeleteItemConfirmModal: React.FC<DeleteItemConfirmModalProps> = ({
       label: 'Cancel',
       onClick: onClose,
       variant: 'secondary',
-      fullWidth: true
     },
     {
       label: 'Delete',
       onClick: onConfirm,
       variant: 'danger',
-      fullWidth: true
-    }
+    },
   ];
+
+  // Early return if not open or no item
+  if (!isOpen || !item) {
+    return null;
+  }
 
   return (
     <Modal
-      isOpen={isOpen}
+      isOpen={true}
       onClose={onClose}
-      title="Confirm Delete"
+      title={`Delete ${capitalizeFirstLetter(item.category)}`}
       actions={actions}
       size="md"
     >

@@ -215,20 +215,22 @@ const AIAssistantPage: React.FC = () => {
         )}
       </PageContainer>
 
-      {/* Wishlist Selection Modal */}
-      <WishlistSelectionModal
-        isOpen={isWishlistModalOpen}
-        onClose={handleCloseWishlistModal}
-        items={items}
-        onSelectItem={handleSelectWishlistItem}
-      />
+      {/* Wishlist Selection Modal - Only render when open */}
+      {isWishlistModalOpen && (
+        <WishlistSelectionModal
+          isOpen={true}
+          onClose={handleCloseWishlistModal}
+          items={items}
+          onSelectItem={handleSelectWishlistItem}
+        />
+      )}
 
       {/* AI Check Result Modal - Only render when needed */}
-      {(isCheckResultModalOpen || itemCheckResponse) && (
+      {isCheckResultModalOpen && itemCheckResponse && (
         <AICheckResultModal
-          isOpen={isCheckResultModalOpen}
+          isOpen={true}
           onClose={handleCloseCheckResultModal}
-          analysisResult={itemCheckResponse || ''}
+          analysisResult={itemCheckResponse}
           score={itemCheckScore}
           status={itemCheckStatus}
           imageUrl={imageLink}
@@ -242,19 +244,21 @@ const AIAssistantPage: React.FC = () => {
         />
       )}
 
-      {/* Recommendation Modal */}
-      <RecommendationModal
-        isOpen={isRecommendationModalOpen}
-        onClose={handleCloseRecommendationModal}
-        recommendation={recommendationText}
-        onSave={handleSaveRecommendation}
-        onSkip={handleSkipRecommendation}
-      />
+      {/* Recommendation Modal - Only render when open */}
+      {isRecommendationModalOpen && recommendationText && (
+        <RecommendationModal
+          isOpen={true}
+          onClose={handleCloseRecommendationModal}
+          recommendation={recommendationText}
+          onSave={handleSaveRecommendation}
+          onSkip={handleSkipRecommendation}
+        />
+      )}
 
-      {/* History Detail Modal */}
-      {selectedHistoryItem && (
+      {/* History Detail Modal - Only render when there's a selected item and modal is open */}
+      {isHistoryDetailModalOpen && selectedHistoryItem && (
         <HistoryDetailModal
-          isOpen={isHistoryDetailModalOpen}
+          isOpen={true}
           onClose={handleCloseHistoryDetailModal}
           item={selectedHistoryItem}
           onMoveToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}

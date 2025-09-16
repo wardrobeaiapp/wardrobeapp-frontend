@@ -145,35 +145,41 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
         isEditing={true}
       />
 
-      {/* ItemViewModal */}
-      <ItemViewModal
-        isOpen={isViewItemModalOpen}
-        onClose={() => setIsViewItemModalOpen(false)}
-        item={selectedItem}
-        onEdit={handleEditItem}
-        onDelete={handleDeleteItem}
-      />
+      {/* ItemViewModal - Only render when both modal is open and we have an item */}
+      {isViewItemModalOpen && selectedItem && (
+        <ItemViewModal
+          isOpen={isViewItemModalOpen}
+          onClose={() => setIsViewItemModalOpen(false)}
+          item={selectedItem}
+          onEdit={handleEditItem}
+          onDelete={handleDeleteItem}
+        />
+      )}
 
       {/* Outfit Modals */}
-      <OutfitFormModal
-        isOpen={isAddOutfitModalOpen}
-        onClose={() => setIsAddOutfitModalOpen(false)}
-        onSubmit={handleAddOutfit}
-        availableItems={items}
-        isEditing={false}
-      />
+      {isAddOutfitModalOpen && (
+        <OutfitFormModal
+          isOpen={isAddOutfitModalOpen}
+          onClose={() => setIsAddOutfitModalOpen(false)}
+          onSubmit={handleAddOutfit}
+          availableItems={items}
+          isEditing={false}
+        />
+      )}
 
-      <OutfitFormModal
-        isOpen={isEditOutfitModalOpen && !!currentOutfit}
-        onClose={() => {
-          setIsEditOutfitModalOpen(false);
-          setCurrentOutfitId(null);
-        }}
-        onSubmit={handleEditOutfitSubmit}
-        initialOutfit={currentOutfit}
-        availableItems={items}
-        isEditing={true}
-      />
+      {isEditOutfitModalOpen && currentOutfit && (
+        <OutfitFormModal
+          isOpen={isEditOutfitModalOpen}
+          onClose={() => {
+            setIsEditOutfitModalOpen(false);
+            setCurrentOutfitId(null);
+          }}
+          onSubmit={handleEditOutfitSubmit}
+          initialOutfit={currentOutfit}
+          availableItems={items}
+          isEditing={true}
+        />
+      )}
 
       {isViewOutfitModalOpen && selectedOutfit && (
         <OutfitDetailModal
@@ -190,22 +196,29 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
       )}
 
       {/* Capsule Modals */}
-      <CapsuleFormModal
-        isOpen={isAddCapsuleModalOpen}
-        onClose={() => setIsAddCapsuleModalOpen(false)}
-        onSubmit={handleAddCapsule}
-        availableItems={items}
-        isEditing={false}
-      />
+      {isAddCapsuleModalOpen && (
+        <CapsuleFormModal
+          isOpen={isAddCapsuleModalOpen}
+          onClose={() => setIsAddCapsuleModalOpen(false)}
+          onSubmit={handleAddCapsule}
+          availableItems={items}
+          isEditing={false}
+        />
+      )}
 
-      <CapsuleFormModal
-        isOpen={isEditCapsuleModalOpen && !!selectedCapsule}
-        onClose={() => setIsEditCapsuleModalOpen(false)}
-        onSubmit={handleEditCapsuleSubmit}
-        editCapsule={selectedCapsule}
-        availableItems={items}
-        isEditing={true}
-      />
+      {isEditCapsuleModalOpen && selectedCapsule && (
+        <CapsuleFormModal
+          isOpen={isEditCapsuleModalOpen}
+          onClose={() => {
+            setIsEditCapsuleModalOpen(false);
+            setSelectedCapsule(undefined);
+          }}
+          onSubmit={handleEditCapsuleSubmit}
+          editCapsule={selectedCapsule}
+          availableItems={items}
+          isEditing={true}
+        />
+      )}
 
       {isViewCapsuleModalOpen && selectedCapsule && (
         <CapsuleDetailModal
@@ -222,13 +235,15 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
       )}
 
 
-      {/* Delete Confirmation Modal */}
-      <DeleteItemConfirmModal
-        isOpen={isDeleteConfirmModalOpen}
-        onClose={() => setIsDeleteConfirmModalOpen(false)}
-        onConfirm={confirmDeleteItem}
-        item={itemToDelete}
-      />
+      {/* Delete Confirmation Modal - Only render when open and we have an item to delete */}
+      {isDeleteConfirmModalOpen && itemToDelete && (
+        <DeleteItemConfirmModal
+          isOpen={true}
+          onClose={() => setIsDeleteConfirmModalOpen(false)}
+          onConfirm={confirmDeleteItem}
+          item={itemToDelete}
+        />
+      )}
     </>
   );
 };

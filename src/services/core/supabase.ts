@@ -18,7 +18,7 @@ export const getSupabase = () => {
   if (!supabaseInstance) {
     console.log('🔄 Initializing Supabase client...');
     
-    // Initialize with enhanced configuration
+    // Initialize with production-optimized configuration
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: true,
@@ -26,7 +26,7 @@ export const getSupabase = () => {
         autoRefreshToken: true,
         detectSessionInUrl: true,
         flowType: 'pkce',
-        debug: process.env.NODE_ENV === 'development'
+        debug: false // Disable debug logging
       },
       global: {
         headers: {
