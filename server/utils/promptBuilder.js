@@ -228,6 +228,13 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   
   systemPrompt += "\n\n=== REQUIRED FORMAT ===";
   systemPrompt += "\nAnalyze THIS SPECIFIC ITEM and use this exact structure:";
+  systemPrompt += "\n\n**CRITICAL CONSISTENCY RULES:**";
+  systemPrompt += "\n- DO NOT contradict yourself between PROS and CONS";
+  systemPrompt += "\n- If you describe a feature as positive in PROS, do NOT criticize the same feature in CONS";
+  systemPrompt += "\n- Example: If you say 'classic button-down silhouette' in PROS, don't say 'loose oversized silhouette' in CONS";
+  systemPrompt += "\n- Analyze the item once and be consistent throughout";
+  systemPrompt += "\n- Focus CONS on genuine issues: duplicates, limited versatility, poor quality, or climate mismatch";
+  
   systemPrompt += "\n\nANALYSIS:";
   systemPrompt += "\nPROS:";
   systemPrompt += "\n1. [Specific positive aspect about THIS item - color, fit, material, etc.]";
@@ -236,19 +243,12 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\nCONS:";
   systemPrompt += "\n1. [EXACT DUPLICATES ONLY: Only mention items that are the SAME color AND same subcategory. Different colors are NOT duplicates. Example: 'You already own [exact item name] in the same black color which is an unnecessary duplicate']";
   systemPrompt += "\n2. [WASTEFUL SPENDING: Explain why this purchase is unnecessary, but NEVER cite different colored items as reasons]";
-  systemPrompt += "\n3. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility]";
+  systemPrompt += "\n3. [FUNCTIONAL LIMITATIONS: Specific design restrictions or limited versatility - but don't contradict what you said in PROS]";
   systemPrompt += "\n4. [OTHER CONCERNS: Any other reasons to avoid this purchase, excluding different colored items]";
   systemPrompt += "\n\nIMPORTANT: ";
   systemPrompt += "\n- ONLY include bullet points that have actual issues to report";
   systemPrompt += "\n- SKIP any bullet point if no issues exist (don't write 'none noted' or 'no issues found')";
   systemPrompt += "\n- ONLY mention quality/fit issues IF you see obvious problems like poor stitching, loose threads, bad fit, cheap materials, or broken hardware";
-  systemPrompt += "\nSUITABLE SCENARIOS:";
-  systemPrompt += "\n1. [Specific scenario name from their list]";
-  systemPrompt += "\n2. [Another specific scenario name]";
-  systemPrompt += "\nCOMBINATION SUGGESTIONS:";
-  systemPrompt += "\n1. [Specific item from their wardrobe + styling tip]";
-  systemPrompt += "\n2. [Another specific combination idea]";
-  systemPrompt += "\n3. [Third specific styling suggestion]";
   systemPrompt += "\n\nSCORE: X/10";
   systemPrompt += "\nScore reasoning based on THIS item's value";
   systemPrompt += "\n\nSCORING GUIDELINES (BE STRICT):";
