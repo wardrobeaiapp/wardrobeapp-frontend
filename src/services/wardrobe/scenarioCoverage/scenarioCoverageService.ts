@@ -23,13 +23,14 @@ export class ScenarioCoverageService {
   public async updateScenarioCoverage(
     userId: string,
     items: WardrobeItem[],
-    scenarios: Scenario[]
+    scenarios: Scenario[],
+    season: string = 'all' // Add season parameter with default value 'all'
   ): Promise<void> {
     try {
       console.log('🟦 SCENARIO COVERAGE - Starting coverage update');
       
       // Calculate coverage
-      const coverageResults = await calculateScenarioCoverage(userId, items, scenarios);
+      const coverageResults = await calculateScenarioCoverage(userId, items, scenarios, season);
       
       // Save to database
       await saveScenarioCoverage(userId, coverageResults);
@@ -48,10 +49,11 @@ export class ScenarioCoverageService {
     userId: string,
     items: WardrobeItem[],
     scenarios: Scenario[],
-    newItem: WardrobeItem
+    addedItem: WardrobeItem,
+    season: string = 'all'
   ): Promise<void> {
-    console.log('🟦 SCENARIO COVERAGE - Handling item added:', newItem.name);
-    await this.updateScenarioCoverage(userId, items, scenarios);
+    console.log(' SCENARIO COVERAGE - Handling item added:', addedItem.name);
+    await this.updateScenarioCoverage(userId, items, scenarios, season);
   }
 
   /**
@@ -62,10 +64,11 @@ export class ScenarioCoverageService {
     items: WardrobeItem[],
     scenarios: Scenario[],
     oldItem: WardrobeItem,
-    newItem: WardrobeItem
+    updatedItem: WardrobeItem,
+    season: string = 'all'
   ): Promise<void> {
-    console.log('🟦 SCENARIO COVERAGE - Handling item updated:', newItem.name);
-    await this.updateScenarioCoverage(userId, items, scenarios);
+    console.log(' SCENARIO COVERAGE - Handling item updated:', updatedItem.name);
+    await this.updateScenarioCoverage(userId, items, scenarios, season);
   }
 
   /**
@@ -75,9 +78,10 @@ export class ScenarioCoverageService {
     userId: string,
     items: WardrobeItem[],
     scenarios: Scenario[],
-    deletedItem: WardrobeItem
+    deletedItem: WardrobeItem,
+    season: string = 'all'
   ): Promise<void> {
-    console.log('🟦 SCENARIO COVERAGE - Handling item deleted:', deletedItem.name);
-    await this.updateScenarioCoverage(userId, items, scenarios);
+    console.log(' SCENARIO COVERAGE - Handling item deleted:', deletedItem.name);
+    await this.updateScenarioCoverage(userId, items, scenarios, season);
   }
 }

@@ -17,6 +17,7 @@ export const saveScenarioCoverage = async (
     user_id: userId,
     scenario_id: result.scenarioId,
     scenario_name: result.scenarioName,
+    season: result.season || 'all', // Ensure season is included, default to 'all'
     total_items: result.totalItems,
     matched_items: result.matchedItems,
     coverage_percent: result.overallCoverage,
@@ -28,7 +29,7 @@ export const saveScenarioCoverage = async (
     console.log('🟦 SCENARIO COVERAGE - Attempting to upsert records:', records);
     const { data, error } = await supabase
       .from(COVERAGE_TABLE)
-      .upsert(records, { onConflict: 'user_id,scenario_id' })
+      .upsert(records, { onConflict: 'user_id,scenario_id,season' })
       .select();
 
     if (error) {
@@ -75,6 +76,7 @@ export const getScenarioCoverage = async (userId: string): Promise<ScenarioCover
   return (data || []).map((row: any) => ({
     scenarioId: row.scenario_id,
     scenarioName: row.scenario_name,
+    season: row.season || 'all', // Default to 'all' for backward compatibility
     totalItems: row.total_items,
     matchedItems: row.matched_items,
     overallCoverage: row.coverage_percent,

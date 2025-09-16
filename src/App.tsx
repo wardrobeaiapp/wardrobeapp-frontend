@@ -8,7 +8,6 @@ import HomePage from './pages/HomePage';
 import AIAssistantPage from './pages/AIAssistantPage';
 import CalendarPage from './pages/CalendarPage';
 import ProfilePage from './pages/ProfilePage';
-import { DatabaseTest } from './components/Debug/DatabaseTest'; // Add this line
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -155,9 +154,6 @@ const AppFooter: React.FC = () => {
 };
 
 function App() {
-  // Show debug component in development or when ?debug=true is in the URL
-  const showDebug = process.env.NODE_ENV === 'development' || window.location.search.includes('debug=true');
-
   return (
     <Router>
       <ThemeProvider>
@@ -165,7 +161,6 @@ function App() {
           <WardrobeProvider>
             <GlobalStyle />
             <AppContainer>
-              {showDebug && <DatabaseTest />}
               <Main>
                 <Routes>
                   {/* Welcome page - initial landing page */}

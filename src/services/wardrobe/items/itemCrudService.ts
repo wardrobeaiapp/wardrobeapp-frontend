@@ -179,7 +179,8 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
       const scenarios = await getScenariosForUser(userId);
       
       console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for added item:', createdItem.name);
-      await triggerItemAddedCoverage(userId, items, scenarios, createdItem);
+      const season = createdItem.season?.[0] || 'all';
+      await triggerItemAddedCoverage(userId, items, scenarios, createdItem, season);
     } catch (error) {
       console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
     }
@@ -238,7 +239,8 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
         const scenarios = await getScenariosForUser(userId);
         
         console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for updated item:', updatedItem.name);
-        await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem);
+        const season = updatedItem.season?.[0] || 'all';
+        await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, season);
       } catch (error) {
         console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
       }
@@ -274,7 +276,8 @@ export const deleteWardrobeItem = async (id: string): Promise<void> => {
       const scenarios = await getScenariosForUser(userId);
       
       console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for deleted item:', deletedItem.name);
-      await triggerItemDeletedCoverage(userId, items, scenarios, deletedItem);
+      const season = deletedItem.season?.[0] || 'all';
+      await triggerItemDeletedCoverage(userId, items, scenarios, deletedItem, season);
     } catch (error) {
       console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
     }

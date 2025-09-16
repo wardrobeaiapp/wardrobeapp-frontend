@@ -10,6 +10,7 @@ export type CategoryCoverage = {
 export type ScenarioCoverage = {
   scenarioId: string;
   scenarioName: string;
+  season: string;  // Added season field
   totalItems: number;
   matchedItems: number;
   overallCoverage: number;
@@ -23,7 +24,8 @@ export type ScenarioCoverage = {
 export const calculateScenarioCoverage = async (
   userId: string,
   items: WardrobeItem[],
-  scenarios: Scenario[]
+  scenarios: Scenario[],
+  season: string = 'all' // Add season parameter with default value 'all'
 ): Promise<ScenarioCoverage[]> => {
   console.log('🟦 SCENARIO COVERAGE - Calculating coverage for', items.length, 'items and', scenarios.length, 'scenarios');
   
@@ -66,6 +68,7 @@ export const calculateScenarioCoverage = async (
     return {
       scenarioId: scenario.id,
       scenarioName: scenario.name,
+      season,
       totalItems,
       matchedItems,
       overallCoverage,
