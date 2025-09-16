@@ -8,6 +8,7 @@ import HomePage from './pages/HomePage';
 import AIAssistantPage from './pages/AIAssistantPage';
 import CalendarPage from './pages/CalendarPage';
 import ProfilePage from './pages/ProfilePage';
+import { DatabaseTest } from './components/Debug/DatabaseTest'; // Add this line
 
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -154,6 +155,9 @@ const AppFooter: React.FC = () => {
 };
 
 function App() {
+  // Show debug component in development or when ?debug=true is in the URL
+  const showDebug = process.env.NODE_ENV === 'development' || window.location.search.includes('debug=true');
+
   return (
     <Router>
       <ThemeProvider>
@@ -161,41 +165,40 @@ function App() {
           <WardrobeProvider>
             <GlobalStyle />
             <AppContainer>
-            {/* Navbar removed - now using shared Header component in each page */}
-            
-            <Main>
-              <Routes>
-                {/* Welcome page - initial landing page */}
-                <Route path="/welcome" element={<WelcomePage />} />
-                
-                {/* Public routes */}
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
-                
-                {/* Onboarding route - requires auth but not onboarding */}
-                <Route path="/onboarding" element={<OnboardingPage />} />
-                
-                {/* Protected routes - require auth and completed onboarding */}
-                <Route path="/" element={<ProtectedRoute element={<HomePage />} />} />
-                <Route path="/ai-assistant" element={<ProtectedRoute element={<AIAssistantPage />} />} />
-                <Route path="/calendar" element={<ProtectedRoute element={<CalendarPage />} />} />
-                <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
-                
-                {/* Test routes for debugging */}
-                <Route path="/test-image" element={<TestImageUpload />} />
-                
-                {/* Redirect any unknown routes */}
-                <Route path="*" element={<RedirectRoute />} />
-              </Routes>
-            </Main>
-            
-            {/* Sticky Footer */}
-            <AppFooter />
-          </AppContainer>
-        </WardrobeProvider>
-      </SupabaseAuthProvider>
-    </ThemeProvider>
-  </Router>
+              {showDebug && <DatabaseTest />}
+              <Main>
+                <Routes>
+                  {/* Welcome page - initial landing page */}
+                  <Route path="/welcome" element={<WelcomePage />} />
+                  
+                  {/* Public routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  
+                  {/* Onboarding route - requires auth but not onboarding */}
+                  <Route path="/onboarding" element={<OnboardingPage />} />
+                  
+                  {/* Protected routes - require auth and completed onboarding */}
+                  <Route path="/" element={<ProtectedRoute element={<HomePage />} />} />
+                  <Route path="/ai-assistant" element={<ProtectedRoute element={<AIAssistantPage />} />} />
+                  <Route path="/calendar" element={<ProtectedRoute element={<CalendarPage />} />} />
+                  <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
+                  
+                  {/* Test routes for debugging */}
+                  <Route path="/test-image" element={<TestImageUpload />} />
+                  
+                  {/* Redirect any unknown routes */}
+                  <Route path="*" element={<RedirectRoute />} />
+                </Routes>
+              </Main>
+              
+              {/* Sticky Footer */}
+              <AppFooter />
+            </AppContainer>
+          </WardrobeProvider>
+        </SupabaseAuthProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 

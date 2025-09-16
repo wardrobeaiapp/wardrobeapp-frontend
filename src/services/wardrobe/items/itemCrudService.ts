@@ -1,5 +1,5 @@
 import { supabase } from '../../../services/core';
-import { WardrobeItem, WishlistStatus, Season } from '../../../types';
+import { WardrobeItem, WishlistStatus, Season, Scenario } from '../../../types';
 import { removeItemFromAllOutfits } from '../outfits';
 import { 
   TABLE_NAME, 
@@ -10,6 +10,26 @@ import {
   getCurrentUserId
 } from './itemBaseService';
 import { replaceItemScenarios, getItemScenarios, getBatchItemScenarios } from './itemRelationsService';
+import { 
+  triggerItemAddedCoverage,
+  triggerItemUpdatedCoverage,
+  triggerItemDeletedCoverage
+} from '../scenarioCoverage';
+
+// Helper function to get scenarios for a user
+async function getScenariosForUser(userId: string): Promise<Scenario[]> {
+  const { data: scenarios, error } = await supabase
+    .from('scenarios')
+    .select('*')
+    .eq('user_id', userId) as { data: Scenario[] | null, error: any };
+    
+  if (error) {
+    console.error('Error fetching scenarios:', error);
+    return [];
+  }
+  
+  return scenarios || [];
+}
 
 /**
  * Fetches all wardrobe items for a user
@@ -152,6 +172,19 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
     createdItem.scenarios = [];
   }
   
+  // Trigger scenario coverage recalculation after item is added
+  if (createdItem && userId) {
+    try {
+      const items = await getWardrobeItems(userId);
+      const scenarios = await getScenariosForUser(userId);
+      
+      console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for added item:', createdItem.name);
+      await triggerItemAddedCoverage(userId, items, scenarios, createdItem);
+    } catch (error) {
+      console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
+    }
+  }
+  
   return createdItem;
 };
 
@@ -185,12 +218,31 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
   // Get the updated item
   const updatedItem = convertToWardrobeItem(data[0]) as WardrobeItem;
   
+  // Get the old item for comparison before updating scenarios
+  const oldItem = await getWardrobeItem(id);
+  
   // If scenarios were provided, update them in the join table
   if (scenarios !== undefined) {
     await replaceItemScenarios(id, scenarios || []);
     
     // Add scenarios back to the returned item object
     updatedItem.scenarios = scenarios || [];
+  }
+  
+  // Trigger scenario coverage recalculation after item is updated
+  if (oldItem && updatedItem) {
+    const userId = await getCurrentUserId();
+    if (userId) {
+      try {
+        const items = await getWardrobeItems(userId);
+        const scenarios = await getScenariosForUser(userId);
+        
+        console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for updated item:', updatedItem.name);
+        await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem);
+      } catch (error) {
+        console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
+      }
+    }
   }
   
   return updatedItem;
@@ -201,6 +253,10 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
  * @param id Item ID to delete
  */
 export const deleteWardrobeItem = async (id: string): Promise<void> => {
+  // Get the item before deleting it for scenario coverage calculation
+  const deletedItem = await getWardrobeItem(id);
+  const userId = await getCurrentUserId();
+  
   // First, remove this item from all outfits
   await removeItemFromAllOutfits(id);
   
@@ -210,6 +266,19 @@ export const deleteWardrobeItem = async (id: string): Promise<void> => {
     .eq('id', id);
 
   handleSupabaseError(error, 'deleting wardrobe item');
+  
+  // Trigger scenario coverage recalculation after item is deleted
+  if (deletedItem && userId) {
+    try {
+      const items = await getWardrobeItems(userId);
+      const scenarios = await getScenariosForUser(userId);
+      
+      console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for deleted item:', deletedItem.name);
+      await triggerItemDeletedCoverage(userId, items, scenarios, deletedItem);
+    } catch (error) {
+      console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
+    }
+  }
 };
 
 /**

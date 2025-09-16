@@ -683,7 +683,7 @@ app.post('/api/extract-fashion-tags', async (req, res) => {
 
 // Register routes
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/wardrobe-items', require('./routes/wardrobeItems'));
+app.use('/api/wardrobe-items', require('./routes/api/wardrobe/items'));
 app.use('/api/outfits', require('./routes/outfits'));
 app.use('/api/capsules', require('./routes/capsules'));
 app.use('/api/migrate-data', require('./routes/dataMigration'));

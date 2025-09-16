@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../../../middleware/auth');
 
+console.log('🔴 TRYING TO IMPORT scenarioCoverageTriggers...');
+const { onItemAdded, onItemUpdated, onItemDeleted } = require('../../../utils/scenarioCoverageTriggers');
+console.log('🟢 SUCCESS: scenarioCoverageTriggers imported:', { onItemAdded, onItemUpdated, onItemDeleted });
+
 // @route   GET /api/wardrobe-items
 // @desc    Get all wardrobe items for user
 // @access  Private
@@ -39,6 +43,11 @@ router.post('/', auth, async (req, res) => {
     // Add item to in-memory store
     global.inMemoryWardrobeItems.push(newItem);
 
+    // Trigger scenario coverage recalculation (async, don't block response)
+    onItemAdded(req.user.id, newItem).catch(error => {
+      console.error('Failed to update scenario coverage after item addition:', error);
+    });
+
     res.json(newItem);
   } catch (err) {
     console.error(err.message);
@@ -63,6 +72,9 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
+    // Store old item for coverage recalculation
+    const oldItem = { ...global.inMemoryWardrobeItems[itemIndex] };
+
     // Update item
     const updatedItem = {
       ...global.inMemoryWardrobeItems[itemIndex],
@@ -75,6 +87,19 @@ router.put('/:id', auth, async (req, res) => {
     };
 
     global.inMemoryWardrobeItems[itemIndex] = updatedItem;
+
+    // Trigger scenario coverage recalculation (async, don't block response)
+    console.log('🔵 ABOUT TO CALL onItemUpdated with:', {
+      userId: req.user.id,
+      oldItemName: oldItem.name,
+      newItemName: updatedItem.name,
+      oldOccasion: oldItem.occasion,
+      newOccasion: updatedItem.occasion
+    });
+    
+    onItemUpdated(req.user.id, oldItem, updatedItem).catch(error => {
+      console.error('Failed to update scenario coverage after item update:', error);
+    });
 
     res.json(updatedItem);
   } catch (err) {
@@ -99,8 +124,16 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
 
+    // Store deleted item for coverage recalculation
+    const deletedItem = { ...global.inMemoryWardrobeItems[itemIndex] };
+
     // Remove item
     global.inMemoryWardrobeItems.splice(itemIndex, 1);
+
+    // Trigger scenario coverage recalculation (async, don't block response)
+    onItemDeleted(req.user.id, deletedItem).catch(error => {
+      console.error('Failed to update scenario coverage after item deletion:', error);
+    });
 
     res.json({ message: 'Item removed' });
   } catch (err) {

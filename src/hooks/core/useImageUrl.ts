@@ -133,8 +133,14 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
       const newExpiry = new Date(Date.now() + (604800 * 1000)); // 7 days from now
       deferToIdle(async () => {
         try {
-          await updateItemImageUrl(item.id, freshUrl, newExpiry);
-          console.log('[useImageUrl] Generated and cached fresh URL for image, expires:', newExpiry);
+          // Only update database for items with proper UUIDs (not temporary IDs)
+          const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(item.id);
+          if (isValidUUID) {
+            await updateItemImageUrl(item.id, freshUrl, newExpiry);
+            console.log('[useImageUrl] Generated and cached fresh URL for image, expires:', newExpiry);
+          } else {
+            console.log('[useImageUrl] Skipping database update for temporary item ID:', item.id);
+          }
         } catch (updateError) {
           console.error('[useImageUrl] Failed to update image URL in database:', updateError);
         }

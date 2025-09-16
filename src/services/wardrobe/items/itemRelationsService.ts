@@ -103,6 +103,12 @@ export const addScenariosToItem = async (itemId: string, scenarioIds: string[]):
     }));
     
     console.log('[itemService] Adding scenarios for item:', itemId, 'Scenarios:', scenarioIds);
+    console.log('🟦 SCENARIO COVERAGE - About to insert into wardrobe_item_scenarios table:', {
+      itemId,
+      scenarioIds,
+      userId,
+      recordCount: scenarioRecords.length
+    });
     
     // Insert into the join table
     // Note: Using upsert to avoid conflicts if records already exist
@@ -112,9 +118,15 @@ export const addScenariosToItem = async (itemId: string, scenarioIds: string[]):
     
     if (error) {
       console.error('[itemService] Error adding scenarios:', error);
+      console.error('🔴 SCENARIO COVERAGE - Failed to insert into wardrobe_item_scenarios:', error);
       return handleError('adding scenarios to item', error);
     } else {
       console.log('[itemService] Successfully added scenarios for item:', itemId);
+      console.log('🟢 SCENARIO COVERAGE - Successfully inserted into wardrobe_item_scenarios table:', {
+        itemId,
+        scenarioCount: scenarioIds.length,
+        scenarios: scenarioIds
+      });
     }
   } catch (error) {
     console.error('[itemService] Exception adding scenarios:', error);
@@ -156,6 +168,8 @@ export const replaceItemScenarios = async (itemId: string, scenarioIds: string[]
       return;
     }
     
+    console.log('🟦 SCENARIO COVERAGE - About to delete existing scenarios from wardrobe_item_scenarios for item:', itemId);
+    
     // First remove all existing scenarios for this item
     const { error: deleteError } = await supabase
       .from(WARDROBE_ITEM_SCENARIOS_TABLE)
@@ -164,17 +178,24 @@ export const replaceItemScenarios = async (itemId: string, scenarioIds: string[]
       
     if (deleteError) {
       console.error('[itemService] Error removing existing scenarios:', deleteError);
+      console.error('🔴 SCENARIO COVERAGE - Failed to delete from wardrobe_item_scenarios:', deleteError);
       return handleError('removing item scenarios', deleteError);
     }
     
     console.log('[itemService] Successfully removed existing scenarios for item:', itemId);
+    console.log('🟢 SCENARIO COVERAGE - Successfully deleted existing scenarios from wardrobe_item_scenarios for item:', itemId);
     
     // Then add the new scenarios if there are any
     if (scenarioIds.length > 0) {
       console.log('[itemService] Adding', scenarioIds.length, 'new scenarios to item:', itemId);
+      console.log('🟦 SCENARIO COVERAGE - About to add new scenarios to wardrobe_item_scenarios:', {
+        itemId,
+        newScenarios: scenarioIds
+      });
       await addScenariosToItem(itemId, scenarioIds);
     } else {
       console.log('[itemService] No new scenarios to add for item:', itemId);
+      console.log('🟨 SCENARIO COVERAGE - No scenarios to add for item:', itemId);
     }
   } catch (error) {
     console.error('[itemService] Exception replacing scenarios:', error);

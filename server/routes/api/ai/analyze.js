@@ -2,6 +2,7 @@ const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { formatStylePreferencesForPrompt } = require('../../../utils/stylePreferencesUtils');
 const { analyzeScenarioCoverage } = require('../../../utils/scenarioAnalysis');
+const { analyzeWardrobeForPrompt, generateStructuredPrompt } = require('../../../utils/simpleOutfitAnalysis');
 const {
   buildSystemPrompt,
   addFormDataSection,
@@ -96,18 +97,19 @@ router.post('/', async (req, res) => {
     // Add styling context section
     systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
-    // Analyze scenario coverage and add section
-    let scenarioCoverage = null;
+    // NEW: Simple wardrobe analysis instead of complex scenario coverage
+    let wardrobeAnalysis = null;
     if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
       const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
-      // Pass form data seasons to analyze only seasonal-appropriate coverage
-      const targetSeasons = req.body.formData?.seasons || null;
-      scenarioCoverage = analyzeScenarioCoverage(req.body.scenarios, allContextItems, targetSeasons);
-      systemPrompt = addScenarioCoverageSection(systemPrompt, scenarioCoverage);
+      wardrobeAnalysis = analyzeWardrobeForPrompt(req.body.formData, allContextItems, req.body.scenarios);
+      
+      // Add structured analysis to prompt
+      systemPrompt += generateStructuredPrompt(wardrobeAnalysis);
+    } else if (similarContext && similarContext.length > 0) {
+      // Fallback: duplicate check only when no scenarios
+      const duplicateCheck = analyzeWardrobeForPrompt(req.body.formData, similarContext, []);
+      systemPrompt += `\n\nDUPLICATE CHECK: ${duplicateCheck.duplicateCheck.message}`;
     }
-    
-    // Add gap analysis section
-    systemPrompt = addGapAnalysisSection(systemPrompt, similarContext);
     
     // Add final instructions and detected tags
     systemPrompt = addFinalInstructions(systemPrompt, detectedTags);

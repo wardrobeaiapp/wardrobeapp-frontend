@@ -232,26 +232,13 @@ function isItemSuitableForScenario(item, scenario) {
   return ['jeans', 'shirt', 'sweater', 'cardigan', 'dress'].includes(itemSubcategory);
 }
 
-// Database helper functions (to be implemented)
-async function getUserWardrobeItems(userId) {
-  // TODO: Implement database query to get user's wardrobe items
-  throw new Error('getUserWardrobeItems not implemented');
-}
-
-async function getUserScenarios(userId) {
-  // TODO: Implement database query to get user's scenarios
-  throw new Error('getUserScenarios not implemented');
-}
-
-async function storeScenarioCoverage(userId, coverageResults) {
-  // TODO: Implement database storage for scenario coverage
-  throw new Error('storeScenarioCoverage not implemented');
-}
-
-async function getStoredScenarioCoverage(userId, seasons) {
-  // TODO: Implement database query for stored coverage
-  throw new Error('getStoredScenarioCoverage not implemented');
-}
+// Import database helper functions
+const {
+  getUserWardrobeItems,
+  getUserScenarios,
+  storeScenarioCoverage,
+  getStoredScenarioCoverage
+} = require('./scenarioCoverageDatabase');
 
 module.exports = {
   calculateOutfitCombinations,

@@ -13,8 +13,9 @@ async function onItemAdded(userId, newItem) {
     const affectedSeasons = newItem.season && newItem.season.length > 0 ? 
       newItem.season : ['spring', 'summer', 'fall', 'winter'];
     
-    const affectedScenarios = newItem.scenarios && newItem.scenarios.length > 0 ?
-      newItem.scenarios : null; // null = recalculate all scenarios
+    // API uses 'occasion' field for scenarios
+    const scenarios = newItem.scenarios || newItem.occasion || [];
+    const affectedScenarios = scenarios.length > 0 ? scenarios : null; // null = recalculate all scenarios
     
     console.log(`Recalculating for seasons: ${affectedSeasons.join(', ')}`);
     if (affectedScenarios) {
@@ -34,7 +35,7 @@ async function onItemAdded(userId, newItem) {
  * Trigger recalculation when a wardrobe item is updated
  */
 async function onItemUpdated(userId, oldItem, newItem) {
-  console.log(`Item updated trigger for user ${userId}:`, newItem.name);
+  console.log('🟡 onItemUpdated FUNCTION CALLED!!! userId:', userId, 'item:', newItem.name);
   
   try {
     // Determine if changes affect scenario coverage
@@ -50,9 +51,9 @@ async function onItemUpdated(userId, oldItem, newItem) {
     const newSeasons = newItem.season || [];
     const affectedSeasons = [...new Set([...oldSeasons, ...newSeasons])];
     
-    // Get all affected scenarios (old + new)
-    const oldScenarios = oldItem.scenarios || [];
-    const newScenarios = newItem.scenarios || [];
+    // Get all affected scenarios (old + new) - API uses 'occasion' field
+    const oldScenarios = oldItem.scenarios || oldItem.occasion || [];
+    const newScenarios = newItem.scenarios || newItem.occasion || [];
     const affectedScenarios = [...new Set([...oldScenarios, ...newScenarios])];
     
     console.log(`Recalculating for seasons: ${affectedSeasons.join(', ')}`);
@@ -79,8 +80,9 @@ async function onItemDeleted(userId, deletedItem) {
     const affectedSeasons = deletedItem.season && deletedItem.season.length > 0 ? 
       deletedItem.season : ['spring', 'summer', 'fall', 'winter'];
     
-    const affectedScenarios = deletedItem.scenarios && deletedItem.scenarios.length > 0 ?
-      deletedItem.scenarios : null; // null = recalculate all scenarios
+    // API uses 'occasion' field for scenarios
+    const scenarios = deletedItem.scenarios || deletedItem.occasion || [];
+    const affectedScenarios = scenarios.length > 0 ? scenarios : null; // null = recalculate all scenarios
     
     console.log(`Recalculating for seasons: ${affectedSeasons.join(', ')}`);
     if (affectedScenarios) {
@@ -123,6 +125,7 @@ function itemChangesAffectCoverage(oldItem, newItem) {
     'subcategory', 
     'season',
     'scenarios',
+    'occasion', // API uses 'occasion' for scenarios
     'style'
   ];
   

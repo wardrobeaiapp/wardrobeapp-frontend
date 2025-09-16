@@ -112,40 +112,23 @@ export const uploadImageBlob = async (
 };
 
 /**
- * Saves an uploaded image to storage and ensures proper permissions
+ * Saves an uploaded image to storage and returns the public URL
  * @param filePath The path where the file was uploaded
- * @param blob The image Blob (needed for permission updates)
+ * @param blob The image Blob (not used but kept for API compatibility)
  * @returns Promise that resolves to the public URL of the saved image
  */
 export const saveImageToStorage = async (filePath: string, blob: Blob): Promise<string> => {
   try {
-    console.log('Saving image with permissions...', { filePath });
+    console.log('Getting public URL for saved image...', { filePath });
     
-    // Get public URL
+    // Get public URL - no permission updates needed since file is already uploaded with correct permissions
     const publicUrl = getPublicUrl(filePath);
     console.log('Generated public URL:', publicUrl);
     
-    // Update file permissions
-    try {
-      const { error: updateError } = await supabase.storage
-        .from('wardrobe-images')
-        .update(filePath, blob, {
-          cacheControl: '3600',
-          upsert: true,
-          contentType: blob.type || 'image/jpeg'
-        });
-      
-      if (updateError) {
-        console.warn('Warning: Could not update file permissions:', updateError);
-      }
-    } catch (updateError) {
-      console.warn('Warning: Error updating file permissions:', updateError);
-    }
-    
-    console.log('Image saved successfully with permissions');
+    console.log('Image saved successfully');
     return publicUrl;
   } catch (error) {
-    console.error('Error saving image to storage:', error);
+    console.error('Error getting public URL for saved image:', error);
     throw error;
   }
 };

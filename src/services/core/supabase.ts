@@ -16,17 +16,36 @@ let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
 export const getSupabase = () => {
   if (!supabaseInstance) {
-    // Removed logging for performance
-    // Configure with persistent storage options to maintain session across page reloads
+    console.log('🔄 Initializing Supabase client...');
+    
+    // Initialize with enhanced configuration
     supabaseInstance = createClient(supabaseUrl, supabaseKey, {
       auth: {
         persistSession: true,
         storage: localStorage,
         autoRefreshToken: true,
-        detectSessionInUrl: true
+        detectSessionInUrl: true,
+        flowType: 'pkce',
+        debug: process.env.NODE_ENV === 'development'
+      },
+      global: {
+        headers: {
+          'X-Client-Info': 'wardrobe-app/1.0'
+        }
       }
     });
+
+    // Add auth state change listener for debugging
+    supabaseInstance.auth.onAuthStateChange((event, session) => {
+      console.log('🔐 Auth state changed:', event, session);
+    });
   }
+  
+  // Get current session for debugging
+  supabaseInstance.auth.getSession().then(({ data: { session } }) => {
+    console.log('🔍 Current session:', session ? 'Authenticated' : 'Not authenticated');
+  });
+  
   return supabaseInstance;
 };
 
