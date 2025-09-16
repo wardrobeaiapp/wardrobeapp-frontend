@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Outfit, Capsule, WardrobeItem } from '../../../../types';
 import { TabType } from '../../../../hooks/home/useTabState';
 import { ItemFormModal, OutfitFormModal, CapsuleFormModal } from '.';
@@ -53,6 +53,15 @@ interface HomePageModalsProps {
   setSelectedCapsule: (capsule: Capsule | undefined) => void;
   setSelectedOutfit: (outfit: Outfit | null) => void;
 }
+
+// Memoize modal components to prevent unnecessary re-renders
+const MemoizedItemFormModal = React.memo(ItemFormModal);
+const MemoizedOutfitFormModal = React.memo(OutfitFormModal);
+const MemoizedCapsuleFormModal = React.memo(CapsuleFormModal);
+const MemoizedItemViewModal = React.memo(ItemViewModal);
+const MemoizedOutfitDetailModal = React.memo(OutfitDetailModal);
+const MemoizedCapsuleDetailModal = React.memo(CapsuleDetailModal);
+const MemoizedDeleteItemConfirmModal = React.memo(DeleteItemConfirmModal);
 
 const HomePageModals: React.FC<HomePageModalsProps> = ({
   // Modal state
@@ -124,125 +133,156 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
     setIsViewItemModalOpen,
   } = modalState;
 
-  // Debug logging removed for performance
+  // Memoize callbacks to prevent unnecessary re-renders
+  const closeAddModal = useCallback(() => setIsAddModalOpen(false), [setIsAddModalOpen]);
+  const closeEditModal = useCallback(() => setIsEditModalOpen(false), [setIsEditModalOpen]);
+  const closeAddOutfitModal = useCallback(() => setIsAddOutfitModalOpen(false), [setIsAddOutfitModalOpen]);
+  const closeEditOutfitModal = useCallback(() => {
+    setIsEditOutfitModalOpen(false);
+    setCurrentOutfitId(null);
+  }, [setIsEditOutfitModalOpen, setCurrentOutfitId]);
+  const closeViewOutfitModal = useCallback(() => {
+    setIsViewOutfitModalOpen(false);
+    setSelectedOutfit(null);
+  }, [setIsViewOutfitModalOpen, setSelectedOutfit]);
+  const closeViewCapsuleModal = useCallback(() => {
+    setIsViewCapsuleModalOpen(false);
+    setSelectedCapsule(undefined);
+  }, [setIsViewCapsuleModalOpen, setSelectedCapsule]);
+  const closeEditCapsuleModal = useCallback(() => {
+    setIsEditCapsuleModalOpen(false);
+    setSelectedCapsule(undefined);
+  }, [setIsEditCapsuleModalOpen, setSelectedCapsule]);
+  const closeAddCapsuleModal = useCallback(() => setIsAddCapsuleModalOpen(false), [setIsAddCapsuleModalOpen]);
+  const closeViewItemModal = useCallback(() => setIsViewItemModalOpen(false), [setIsViewItemModalOpen]);
+  const closeDeleteConfirmModal = useCallback(() => setIsDeleteConfirmModalOpen(false), [setIsDeleteConfirmModalOpen]);
+
+  // Memoize modal props that don't need to be recreated on every render
+  const itemFormModalProps = useMemo(() => ({
+    isOpen: isAddModalOpen,
+    onClose: closeAddModal,
+    onSubmit: handleSubmitAdd,
+    isEditing: false,
+    defaultWishlist: activeTab === 'wishlist'
+  }), [isAddModalOpen, closeAddModal, handleSubmitAdd, activeTab]);
+
+  const editItemFormModalProps = useMemo(() => ({
+    isOpen: isEditModalOpen && !!currentItem,
+    onClose: closeEditModal,
+    onSubmit: handleSubmitEdit,
+    initialItem: currentItem,
+    isEditing: true
+  }), [isEditModalOpen, closeEditModal, handleSubmitEdit, currentItem]);
+
+  const viewItemModalProps = useMemo(() => ({
+    isOpen: isViewItemModalOpen && !!selectedItem,
+    onClose: closeViewItemModal,
+    item: selectedItem!,
+    onEdit: handleEditItem,
+    onDelete: handleDeleteItem
+  }), [isViewItemModalOpen, closeViewItemModal, selectedItem, handleEditItem, handleDeleteItem]);
+
+
+  // Memoize modal props for better performance
+  const outfitFormModalProps = useMemo(() => ({
+    availableItems: items,
+    isEditing: false,
+    onSubmit: handleAddOutfit,
+    onClose: closeAddOutfitModal,
+    isOpen: isAddOutfitModalOpen
+  }), [items, handleAddOutfit, closeAddOutfitModal, isAddOutfitModalOpen]);
+
+  const editOutfitFormModalProps = useMemo(() => ({
+    isOpen: isEditOutfitModalOpen && !!currentOutfit,
+    onClose: closeEditOutfitModal,
+    onSubmit: handleEditOutfitSubmit,
+    initialOutfit: currentOutfit!,
+    availableItems: items,
+    isEditing: true
+  }), [isEditOutfitModalOpen, currentOutfit, closeEditOutfitModal, handleEditOutfitSubmit, items]);
+
+  const outfitDetailModalProps = useMemo(() => ({
+    isOpen: isViewOutfitModalOpen && !!selectedOutfit,
+    onClose: closeViewOutfitModal,
+    outfit: selectedOutfit!,
+    items,
+    onEdit: handleEditOutfit,
+    onDelete: handleDeleteOutfit
+  }), [isViewOutfitModalOpen, selectedOutfit, closeViewOutfitModal, items, handleEditOutfit, handleDeleteOutfit]);
+
+  const capsuleFormModalProps = useMemo(() => ({
+    isOpen: isAddCapsuleModalOpen,
+    onClose: closeAddCapsuleModal,
+    onSubmit: handleAddCapsule,
+    availableItems: items,
+    isEditing: false
+  }), [isAddCapsuleModalOpen, closeAddCapsuleModal, handleAddCapsule, items]);
+
+  const editCapsuleFormModalProps = useMemo(() => ({
+    isOpen: isEditCapsuleModalOpen && !!selectedCapsule,
+    onClose: closeEditCapsuleModal,
+    onSubmit: handleEditCapsuleSubmit,
+    editCapsule: selectedCapsule!,
+    availableItems: items,
+    isEditing: true
+  }), [isEditCapsuleModalOpen, selectedCapsule, closeEditCapsuleModal, handleEditCapsuleSubmit, items]);
+
+  const capsuleDetailModalProps = useMemo(() => ({
+    isOpen: isViewCapsuleModalOpen && !!selectedCapsule,
+    onClose: closeViewCapsuleModal,
+    capsule: selectedCapsule!,
+    items,
+    onEdit: handleEditCapsule,
+    onDelete: handleDeleteCapsule
+  }), [isViewCapsuleModalOpen, selectedCapsule, closeViewCapsuleModal, items, handleEditCapsule, handleDeleteCapsule]);
+
+  const deleteConfirmModalProps = useMemo(() => ({
+    isOpen: isDeleteConfirmModalOpen && !!itemToDelete,
+    onClose: closeDeleteConfirmModal,
+    onConfirm: confirmDeleteItem,
+    item: itemToDelete!
+  }), [isDeleteConfirmModalOpen, itemToDelete, closeDeleteConfirmModal, confirmDeleteItem]);
 
   return (
     <>
       {/* Item Modals */}
-      <ItemFormModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSubmit={handleSubmitAdd}
-        isEditing={false}
-        defaultWishlist={activeTab === 'wishlist'}
-      />
-
-      <ItemFormModal
-        isOpen={isEditModalOpen && !!currentItem}
-        onClose={() => setIsEditModalOpen(false)}
-        onSubmit={handleSubmitEdit}
-        initialItem={currentItem}
-        isEditing={true}
-      />
-
-      {/* ItemViewModal - Only render when both modal is open and we have an item */}
-      {isViewItemModalOpen && selectedItem && (
-        <ItemViewModal
-          isOpen={isViewItemModalOpen}
-          onClose={() => setIsViewItemModalOpen(false)}
-          item={selectedItem}
-          onEdit={handleEditItem}
-          onDelete={handleDeleteItem}
-        />
+      <MemoizedItemFormModal {...itemFormModalProps} />
+      <MemoizedItemFormModal {...editItemFormModalProps} />
+      
+      {/* ItemViewModal */}
+      {viewItemModalProps.isOpen && (
+        <MemoizedItemViewModal {...viewItemModalProps} />
       )}
 
       {/* Outfit Modals */}
-      {isAddOutfitModalOpen && (
-        <OutfitFormModal
-          isOpen={isAddOutfitModalOpen}
-          onClose={() => setIsAddOutfitModalOpen(false)}
-          onSubmit={handleAddOutfit}
-          availableItems={items}
-          isEditing={false}
-        />
+      {outfitFormModalProps.isOpen && (
+        <MemoizedOutfitFormModal {...outfitFormModalProps} />
       )}
-
-      {isEditOutfitModalOpen && currentOutfit && (
-        <OutfitFormModal
-          isOpen={isEditOutfitModalOpen}
-          onClose={() => {
-            setIsEditOutfitModalOpen(false);
-            setCurrentOutfitId(null);
-          }}
-          onSubmit={handleEditOutfitSubmit}
-          initialOutfit={currentOutfit}
-          availableItems={items}
-          isEditing={true}
-        />
+      
+      {editOutfitFormModalProps.isOpen && (
+        <MemoizedOutfitFormModal {...editOutfitFormModalProps} />
       )}
-
-      {isViewOutfitModalOpen && selectedOutfit && (
-        <OutfitDetailModal
-          isOpen={isViewOutfitModalOpen}
-          outfit={selectedOutfit}
-          items={items}
-          onClose={() => {
-            setIsViewOutfitModalOpen(false);
-            setSelectedOutfit(null);
-          }}
-          onEdit={handleEditOutfit}
-          onDelete={handleDeleteOutfit}
-        />
+      
+      {outfitDetailModalProps.isOpen && (
+        <MemoizedOutfitDetailModal {...outfitDetailModalProps} />
       )}
 
       {/* Capsule Modals */}
-      {isAddCapsuleModalOpen && (
-        <CapsuleFormModal
-          isOpen={isAddCapsuleModalOpen}
-          onClose={() => setIsAddCapsuleModalOpen(false)}
-          onSubmit={handleAddCapsule}
-          availableItems={items}
-          isEditing={false}
-        />
+      {capsuleFormModalProps.isOpen && (
+        <MemoizedCapsuleFormModal {...capsuleFormModalProps} />
+      )}
+      
+      {editCapsuleFormModalProps.isOpen && (
+        <MemoizedCapsuleFormModal {...editCapsuleFormModalProps} />
+      )}
+      
+      {capsuleDetailModalProps.isOpen && (
+        <MemoizedCapsuleDetailModal {...capsuleDetailModalProps} />
       )}
 
-      {isEditCapsuleModalOpen && selectedCapsule && (
-        <CapsuleFormModal
-          isOpen={isEditCapsuleModalOpen}
-          onClose={() => {
-            setIsEditCapsuleModalOpen(false);
-            setSelectedCapsule(undefined);
-          }}
-          onSubmit={handleEditCapsuleSubmit}
-          editCapsule={selectedCapsule}
-          availableItems={items}
-          isEditing={true}
-        />
-      )}
-
-      {isViewCapsuleModalOpen && selectedCapsule && (
-        <CapsuleDetailModal
-          isOpen={isViewCapsuleModalOpen}
-          capsule={selectedCapsule}
-          items={items}
-          onClose={() => {
-            setIsViewCapsuleModalOpen(false);
-            setSelectedCapsule(undefined);
-          }}
-          onEdit={handleEditCapsule}
-          onDelete={handleDeleteCapsule}
-        />
-      )}
-
-
-      {/* Delete Confirmation Modal - Only render when open and we have an item to delete */}
-      {isDeleteConfirmModalOpen && itemToDelete && (
-        <DeleteItemConfirmModal
-          isOpen={true}
-          onClose={() => setIsDeleteConfirmModalOpen(false)}
-          onConfirm={confirmDeleteItem}
-          item={itemToDelete}
-        />
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmModalProps.isOpen && (
+        <MemoizedDeleteItemConfirmModal {...deleteConfirmModalProps} />
       )}
     </>
   );
