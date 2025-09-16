@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { WardrobeItem } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import { Modal, ModalAction } from '../../../common/Modal';
@@ -85,38 +85,10 @@ interface ItemViewModalProps {
 }
 
 const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, onEdit, onDelete }) => {
-  console.log('[ItemViewModal] Rendering with props:', { isOpen, item: item ? `${item.id} (${item.name})` : 'undefined' });
   const { updateItem } = useWardrobe();
   
-  // If no item is provided, don't render anything
-  if (!item) {
-    console.log('[ItemViewModal] Not rendering - item is undefined');
-    return null;
-  }
-  
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Never';
-    return new Date(dateString).toLocaleDateString();
-  };
-  
-  const handleEdit = () => {
-    onEdit(item.id);
-    onClose();
-  };
-  
-  const handleDelete = () => {
-    onDelete(item.id);
-    onClose();
-  };
-  
-  const handleMoveToWardrobe = () => {
-    // Update the item to move it from wishlist to wardrobe
-    updateItem(item.id, { wishlist: false });
-    onClose();
-  };
-  
-  // Function to get the full image URL (prepend API_URL for relative paths)
-  const getFullImageUrl = (url?: string) => {
+  // Memoize the image URL processing
+  const getFullImageUrl = useCallback((url?: string): string => {
     if (!url) return '';
     
     // Handle data URLs (base64 images)
@@ -132,8 +104,6 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
     // Handle relative URLs from the server
     if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
       const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-      // Use relative path for API URLs to leverage proxy in development
-      // and absolute paths in production
       const apiBaseUrl = process.env.REACT_APP_API_URL || '';
       const baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
       return `${baseUrl}${normalizedUrl}`;
@@ -145,34 +115,74 @@ const ItemViewModal: React.FC<ItemViewModalProps> = ({ isOpen, onClose, item, on
     }
     
     return url;
+  }, []);
+  
+  // Memoize the image URL to prevent recalculation on every render
+  const imageUrl = useMemo(() => 
+    item?.imageUrl ? getFullImageUrl(item.imageUrl) : ''
+  , [item?.imageUrl, getFullImageUrl]);
+  
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleDateString();
   };
   
-  const imageUrl = item.imageUrl ? getFullImageUrl(item.imageUrl) : '';
+  const handleEdit = useCallback(() => {
+    if (!item) return;
+    onEdit(item.id);
+  }, [item, onEdit]);
   
-  // Build modal actions
-  const wishlistAction = item.wishlist ? [{
-    label: 'Move to Wardrobe',
-    onClick: handleMoveToWardrobe,
-    variant: 'secondary' as const,
-    fullWidth: true,
-  } as ModalAction] : [];
+  const handleDelete = useCallback(() => {
+    if (!item) return;
+    onDelete(item.id);
+    onClose();
+  }, [item, onDelete, onClose]);
   
-  const actions: ModalAction[] = [
-    {
-      label: 'Edit',
-      onClick: handleEdit,
-      variant: 'primary' as const,
-      fullWidth: true
-    },
-    ...wishlistAction,
-    {
+  const handleMoveToWardrobe = useCallback(() => {
+    if (!item) return;
+    // Update the item to move it from wishlist to wardrobe
+    updateItem(item.id, { wishlist: false });
+    onClose();
+  }, [item, updateItem, onClose]);
+  
+  // Memoize actions to prevent recreation on every render
+  const actions = useMemo(() => {
+    if (!item) return [];
+    
+    const baseActions: ModalAction[] = [
+      {
+        label: 'Edit',
+        onClick: handleEdit,
+        variant: 'primary' as const,
+        fullWidth: true
+      }
+    ];
+    
+    if (item.wishlist) {
+      baseActions.push({
+        label: 'Move to Wardrobe',
+        onClick: handleMoveToWardrobe,
+        variant: 'secondary' as const,
+        fullWidth: true,
+      });
+    }
+    
+    baseActions.push({
       label: 'Delete',
       onClick: handleDelete,
       variant: 'secondary' as const,
       fullWidth: true,
       outlined: true
-    },
-  ];
+    });
+    
+    return baseActions;
+  }, [item, handleEdit, handleDelete, handleMoveToWardrobe]);
+  
+  // If no item is provided, don't render anything
+  if (!item) {
+    return null;
+  }
+  
 
   return (
     <Modal
