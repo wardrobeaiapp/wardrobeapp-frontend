@@ -216,15 +216,15 @@ export const filterSimilarContext = (
   
   const filtered = wardrobeItems.filter(item => {
     const matchesCategory = item.category === formData.category;
-    const matchesSubcategory = formData.subcategory ? 
-      item.subcategory?.toLowerCase() === formData.subcategory.toLowerCase() : true;
+    // For similarContext, we include the whole category (all footwear, all tops, etc.)
+    // Subcategory filtering is handled by AI for duplicate detection in the prompt
     const matchesSeason = formData.seasons?.some(season => 
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all
     
-    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}`);
+    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}, Subcategory: ${item.subcategory}`);
     
-    const shouldInclude = matchesCategory && matchesSubcategory && matchesSeason;
+    const shouldInclude = matchesCategory && matchesSeason;
     
     return shouldInclude;
   });
