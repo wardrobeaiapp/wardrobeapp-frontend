@@ -100,7 +100,9 @@ router.post('/', async (req, res) => {
     let scenarioCoverage = null;
     if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
       const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
-      scenarioCoverage = analyzeScenarioCoverage(req.body.scenarios, allContextItems);
+      // Pass form data seasons to analyze only seasonal-appropriate coverage
+      const targetSeasons = req.body.formData?.seasons || null;
+      scenarioCoverage = analyzeScenarioCoverage(req.body.scenarios, allContextItems, targetSeasons);
       systemPrompt = addScenarioCoverageSection(systemPrompt, scenarioCoverage);
     }
     

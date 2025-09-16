@@ -1,10 +1,12 @@
 // Helper functions for analyzing scenario coverage with existing wardrobe
 
-function analyzeScenarioCoverage(scenarios, wardrobeItems) {
+function analyzeScenarioCoverage(scenarios, wardrobeItems, targetSeasons = null) {
   return scenarios.map(scenario => {
     console.log('Scenario:', scenario);
+    console.log('Target seasons for analysis:', targetSeasons);
+    
     // Get items that are suitable for this scenario
-    const suitableItems = wardrobeItems.filter(item => {
+    let suitableItems = wardrobeItems.filter(item => {
       // Check if item is explicitly tagged for this scenario
       if (item.scenarios && item.scenarios.includes(scenario.name)) {
         return true;
@@ -13,6 +15,18 @@ function analyzeScenarioCoverage(scenarios, wardrobeItems) {
       // Auto-detect suitability based on scenario type and item characteristics
       return isItemSuitableForScenario(item, scenario);
     });
+    
+    // Filter by season if target seasons are specified
+    if (targetSeasons && targetSeasons.length > 0) {
+      suitableItems = suitableItems.filter(item => {
+        // Include item if it has matching seasons or no season data
+        return !item.season || item.season.length === 0 || 
+               targetSeasons.some(targetSeason => 
+                 item.season.includes(targetSeason)
+               );
+      });
+      console.log(`Filtered to ${suitableItems.length} seasonal items for seasons: ${targetSeasons.join(', ')}`);
+    }
 
     // Analyze coverage by category
     const categoryAnalysis = analyzeCategoryBalance(suitableItems);
