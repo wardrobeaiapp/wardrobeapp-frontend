@@ -1,4 +1,4 @@
-import { WardrobeItem, Scenario } from '../../../types';
+import { WardrobeItem, Scenario, Season } from '../../../types';
 import { calculateScenarioCoverage } from './coverageCalculator';
 import { saveScenarioCoverage } from './coverageStorage';
 
@@ -24,7 +24,7 @@ export class ScenarioCoverageService {
     userId: string,
     items: WardrobeItem[],
     scenarios: Scenario[],
-    season: string = 'all' // Add season parameter with default value 'all'
+    season: Season // Now requires a specific season
   ): Promise<void> {
     try {
       console.log('🟦 SCENARIO COVERAGE - Starting coverage update');
@@ -49,10 +49,10 @@ export class ScenarioCoverageService {
     userId: string,
     items: WardrobeItem[],
     scenarios: Scenario[],
-    addedItem: WardrobeItem,
-    season: string = 'all'
+    newItem: WardrobeItem,
+    season: Season
   ): Promise<void> {
-    console.log(' SCENARIO COVERAGE - Handling item added:', addedItem.name);
+    console.log(' SCENARIO COVERAGE - Handling item added:', newItem.name);
     await this.updateScenarioCoverage(userId, items, scenarios, season);
   }
 
@@ -64,10 +64,10 @@ export class ScenarioCoverageService {
     items: WardrobeItem[],
     scenarios: Scenario[],
     oldItem: WardrobeItem,
-    updatedItem: WardrobeItem,
-    season: string = 'all'
+    newItem: WardrobeItem,
+    season: Season
   ): Promise<void> {
-    console.log(' SCENARIO COVERAGE - Handling item updated:', updatedItem.name);
+    console.log(' SCENARIO COVERAGE - Handling item updated:', newItem.name);
     await this.updateScenarioCoverage(userId, items, scenarios, season);
   }
 
@@ -79,7 +79,7 @@ export class ScenarioCoverageService {
     items: WardrobeItem[],
     scenarios: Scenario[],
     deletedItem: WardrobeItem,
-    season: string = 'all'
+    season: Season
   ): Promise<void> {
     console.log(' SCENARIO COVERAGE - Handling item deleted:', deletedItem.name);
     await this.updateScenarioCoverage(userId, items, scenarios, season);

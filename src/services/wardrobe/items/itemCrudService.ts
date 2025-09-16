@@ -1,5 +1,8 @@
+// External imports
 import { supabase } from '../../../services/core';
 import { WardrobeItem, WishlistStatus, Season, Scenario } from '../../../types';
+
+// Internal imports
 import { removeItemFromAllOutfits } from '../outfits';
 import { 
   TABLE_NAME, 
@@ -15,6 +18,11 @@ import {
   triggerItemUpdatedCoverage,
   triggerItemDeletedCoverage
 } from '../scenarioCoverage';
+
+// Type guard for Season
+const isSeason = (value: any): value is Season => {
+  return ['spring', 'summer', 'fall', 'winter'].includes(value);
+};
 
 // Helper function to get scenarios for a user
 async function getScenariosForUser(userId: string): Promise<Scenario[]> {
@@ -239,8 +247,21 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
         const scenarios = await getScenariosForUser(userId);
         
         console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for updated item:', updatedItem.name);
-        const season = updatedItem.season?.[0] || 'all';
-        await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, season);
+        
+        // Only process actual seasons, no more 'all' season
+        const seasonsToUpdate = updatedItem.season?.length 
+          ? updatedItem.season 
+          : ['spring', 'summer', 'fall', 'winter'];
+        
+        // Trigger coverage update for each season
+        for (const season of seasonsToUpdate) {
+          if (isSeason(season)) {
+            console.log(`🟦 SCENARIO COVERAGE - Updating coverage for season: ${season}`);
+            await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, season);
+          } else {
+            console.warn(`⚠️  Skipping invalid season: ${season}`);
+          }
+        }
       } catch (error) {
         console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
       }

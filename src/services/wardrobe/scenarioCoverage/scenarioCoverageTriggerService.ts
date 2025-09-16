@@ -3,7 +3,7 @@
  * This is now a lightweight wrapper around the new frontend calculation service
  */
 
-import { WardrobeItem, Scenario } from '../../../types';
+import { WardrobeItem, Scenario, Season } from '../../../types';
 import { ScenarioCoverageService } from './scenarioCoverageService';
 
 const scenarioCoverageService = ScenarioCoverageService.getInstance();
@@ -16,7 +16,7 @@ export const triggerItemAddedCoverage = async (
   items: WardrobeItem[],
   scenarios: Scenario[],
   newItem: WardrobeItem,
-  season: string = 'all'
+  season: Season
 ): Promise<void> => {
   try {
     console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for added item:', newItem.name);
@@ -36,7 +36,7 @@ export const triggerItemUpdatedCoverage = async (
   scenarios: Scenario[],
   oldItem: WardrobeItem, 
   newItem: WardrobeItem,
-  season: string = 'all'
+  season: Season
 ): Promise<void> => {
   try {
     console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for updated item:', newItem.name);
@@ -55,7 +55,7 @@ export const triggerItemDeletedCoverage = async (
   items: WardrobeItem[],
   scenarios: Scenario[],
   deletedItem: WardrobeItem,
-  season: string = 'all'
+  season: Season
 ): Promise<void> => {
   try {
     console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for deleted item:', deletedItem.name);

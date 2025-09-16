@@ -1,4 +1,4 @@
-import { WardrobeItem, Scenario } from '../../../types';
+import { WardrobeItem, Scenario, Season } from '../../../types';
 
 export type CategoryCoverage = {
   category: string;
@@ -25,7 +25,7 @@ export const calculateScenarioCoverage = async (
   userId: string,
   items: WardrobeItem[],
   scenarios: Scenario[],
-  season: string = 'all' // Add season parameter with default value 'all'
+  season: Season // Now requires a specific season, no more 'all'
 ): Promise<ScenarioCoverage[]> => {
   console.log('🟦 SCENARIO COVERAGE - Calculating coverage for', items.length, 'items and', scenarios.length, 'scenarios');
   
@@ -40,21 +40,39 @@ export const calculateScenarioCoverage = async (
 
   // Calculate coverage for each scenario
   const coverageResults = scenarios.map(scenario => {
-    const scenarioItems = items.filter(item => 
-      item.scenarios?.includes(scenario.id)
-    );
+    // Filter items by both scenario and season
+    const scenarioItems = items.filter(item => {
+      const matchesScenario = item.scenarios?.includes(scenario.id) || false;
+      const matchesSeason = 
+        !item.season || 
+        item.season.length === 0 || 
+        item.season.includes(season);
+      return matchesScenario && matchesSeason;
+    });
 
     const categoryCoverage = Object.entries(itemsByCategory).map(([category, categoryItems]) => {
-      const matchedItems = categoryItems.filter(item => 
-        item.scenarios?.includes(scenario.id)
-      );
+      // Filter category items by season
+      const seasonFilteredItems = categoryItems.filter(item => {
+        return !item.season || 
+               item.season.length === 0 || 
+               item.season.includes(season);
+      });
+
+      // Then, filter by scenario within the season-filtered items
+      const matchedItems = seasonFilteredItems.filter(item => {
+        return item.scenarios?.includes(scenario.id) || false;
+      });
+      
+      // Calculate coverage based on season-filtered items, not all items in category
+      const totalInSeason = seasonFilteredItems.length;
+      const matchedCount = matchedItems.length;
       
       return {
         category,
-        total: categoryItems.length,
-        matched: matchedItems.length,
-        coverage: categoryItems.length > 0 
-          ? Math.round((matchedItems.length / categoryItems.length) * 100) 
+        total: totalInSeason,
+        matched: matchedCount,
+        coverage: totalInSeason > 0 
+          ? Math.round((matchedCount / totalInSeason) * 100) 
           : 0
       };
     });
