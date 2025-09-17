@@ -36,7 +36,7 @@ export type CategoryCoverage = {
   gapCount: number;
   isCritical: boolean;
   isBottleneck: boolean;
-  priorityLevel: number; // 1-5, 1=critical
+  priorityLevel: number; // 1-5, 1=critical, 5=nice-to-have (accessories)
   categoryRecommendations: string[];
   separatesFocusedTarget: number;
   dressFocusedTarget: number;
