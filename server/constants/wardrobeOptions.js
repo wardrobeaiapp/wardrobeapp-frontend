@@ -3,11 +3,9 @@
 
 // Master color options - must match src/constants/wardrobeOptions.ts exactly
 const COLOR_OPTIONS = [
-  'Black', 'White', 'Grey', 'Navy', 'Blue', 'Light Blue', 'Turquoise', 'Teal',
-  'Green', 'Olive', 'Lime', 'Yellow', 'Gold', 'Orange', 'Rust', 'Brown',
-  'Beige', 'Cream', 'Ivory', 'Pink', 'Light Pink', 'Hot Pink', 'Red',
-  'Burgundy', 'Maroon', 'Purple', 'Lavender', 'Silver', 'Multicolor', 
-  'Floral', 'Patterned'
+  'Black', 'White', 'Grey', 'Navy', 'Blue', 'Light Blue', 'Turquoise',
+  'Green', 'Yellow', 'Gold', 'Orange', 'Brown', 'Beige', 'Cream', 'Pink', 
+  'Red', 'Burgundy', 'Purple', 'Silver', 'Multicolor', 'Patterned'
 ];
 
 const STYLE_OPTIONS = ['Casual', 'Elegant', 'Special', 'Sport'];
@@ -25,15 +23,15 @@ const SILHOUETTE_OPTIONS = {
 // Color families for duplicate detection
 const COLOR_FAMILIES = {
   blacks: ['Black', 'Grey'],
-  whites: ['White', 'Cream', 'Ivory', 'Beige'],
-  blues: ['Navy', 'Blue', 'Light Blue', 'Turquoise', 'Teal'],
-  greens: ['Green', 'Olive', 'Lime'],
+  whites: ['White', 'Cream', 'Beige'],
+  blues: ['Navy', 'Blue', 'Light Blue', 'Turquoise'],
+  greens: ['Green'],
   yellows: ['Yellow', 'Gold'],
-  oranges: ['Orange', 'Rust'],
-  browns: ['Brown'], // Note: Tan removed
-  pinks: ['Pink', 'Light Pink', 'Hot Pink'],
-  reds: ['Red', 'Burgundy', 'Maroon'],
-  purples: ['Purple', 'Lavender']
+  oranges: ['Orange'],
+  browns: ['Brown'],
+  pinks: ['Pink'],
+  reds: ['Red', 'Burgundy'],
+  purples: ['Purple']
 };
 
 // Silhouette families for duplicate detection

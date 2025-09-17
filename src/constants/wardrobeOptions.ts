@@ -23,15 +23,15 @@ export const SILHOUETTE_OPTIONS = {
 // Color families for duplicate detection - based on master COLOR_OPTIONS
 export const COLOR_FAMILIES = {
   blacks: ['Black', 'Grey'],
-  whites: ['White', 'Cream', 'Ivory', 'Beige'],
-  blues: ['Navy', 'Blue', 'Light Blue', 'Turquoise', 'Teal'],
-  greens: ['Green', 'Olive', 'Lime'],
+  whites: ['White', 'Cream', 'Beige'],
+  blues: ['Navy', 'Blue', 'Light Blue', 'Turquoise'],
+  greens: ['Green'],
   yellows: ['Yellow', 'Gold'],
-  oranges: ['Orange', 'Rust'],
-  browns: ['Brown'], // Note: Tan removed as per user's changes
-  pinks: ['Pink', 'Light Pink', 'Hot Pink'],
-  reds: ['Red', 'Burgundy', 'Maroon'],
-  purples: ['Purple', 'Lavender']
+  oranges: ['Orange'],
+  browns: ['Brown'],
+  pinks: ['Pink'],
+  reds: ['Red', 'Burgundy'],
+  purples: ['Purple']
 } as const;
 
 // Silhouette families for duplicate detection

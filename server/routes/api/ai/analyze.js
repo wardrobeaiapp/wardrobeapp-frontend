@@ -1,7 +1,5 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
-const { formatStylePreferencesForPrompt } = require('../../../utils/stylePreferencesUtils');
-const { analyzeScenarioCoverage } = require('../../../utils/scenarioAnalysis');
 const { analyzeWardrobeForPrompt, generateStructuredPrompt } = require('../../../utils/simpleOutfitAnalysis');
 const {
   buildSystemPrompt,
@@ -9,10 +7,15 @@ const {
   addScenariosSection,
   addClimateSection,
   addStylingContextSection,
-  addScenarioCoverageSection,
-  addGapAnalysisSection,
   addFinalInstructions
 } = require('../../../utils/promptBuilder');
+
+// Import duplicate detection utilities
+const {
+  analyzeDuplicatesForAI,
+  generateExtractionPrompt,
+  parseExtractionResponse
+} = require('../../../utils/duplicateDetectionUtils');
 const router = express.Router();
 
 // Initialize Anthropic client
@@ -97,18 +100,107 @@ router.post('/', async (req, res) => {
     // Add styling context section
     systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
-    // NEW: Simple wardrobe analysis instead of complex scenario coverage
+    // === ENHANCED DUPLICATE DETECTION ===
+    let duplicateAnalysis = null;
     let wardrobeAnalysis = null;
-    if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
-      const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
-      wardrobeAnalysis = analyzeWardrobeForPrompt(req.body.formData, allContextItems, req.body.scenarios);
+    
+    // Step 1: Extract structured attributes from image
+    if (formData && formData.category && (similarContext || additionalContext)) {
+      console.log('=== STEP 1: AI Attribute Extraction ===');
       
-      // Add structured analysis to prompt
-      systemPrompt += generateStructuredPrompt(wardrobeAnalysis);
-    } else if (similarContext && similarContext.length > 0) {
-      // Fallback: duplicate check only when no scenarios
-      const duplicateCheck = analyzeWardrobeForPrompt(req.body.formData, similarContext, []);
-      systemPrompt += `\n\nDUPLICATE CHECK: ${duplicateCheck.duplicateCheck.message}`;
+      try {
+        const extractionPrompt = generateExtractionPrompt(formData.category);
+        
+        const extractionResponse = await anthropic.messages.create({
+          model: "claude-3-haiku-20240307",
+          max_tokens: 200,
+          temperature: 0.2, // Lower temperature for consistent extraction
+          system: `You are a precise fashion attribute extractor. Extract ONLY the requested attributes using the exact options provided.`,
+          messages: [{
+            role: "user",
+            content: [
+              {
+                type: "image",
+                source: {
+                  type: "base64",
+                  media_type: "image/jpeg",
+                  data: base64Data
+                }
+              },
+              {
+                type: "text",
+                text: extractionPrompt
+              }
+            ]
+          }]
+        });
+
+        const extractedAttributes = parseExtractionResponse(extractionResponse.content[0].text);
+        console.log('Extracted attributes:', extractedAttributes);
+
+        // Step 2: Run algorithmic duplicate analysis
+        if (extractedAttributes) {
+          console.log('=== STEP 2: Algorithmic Duplicate Analysis ===');
+          
+          const enrichedItemData = {
+            category: formData.category,
+            subcategory: formData.subcategory,
+            color: extractedAttributes.color,
+            silhouette: extractedAttributes.silhouette,
+            style: extractedAttributes.style,
+            seasons: formData.seasons
+          };
+
+          const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
+          duplicateAnalysis = analyzeDuplicatesForAI(enrichedItemData, allContextItems);
+          
+          console.log('Duplicate analysis result:', JSON.stringify(duplicateAnalysis, null, 2));
+          
+          // Add structured duplicate analysis to prompt
+          systemPrompt += `\n\n=== ALGORITHMIC DUPLICATE ANALYSIS ===`;
+          systemPrompt += `\nThe following analysis was performed using deterministic algorithms:\n`;
+          
+          systemPrompt += `\nDETECTED ATTRIBUTES:`;
+          systemPrompt += `\n- Color: ${extractedAttributes.color}`;
+          systemPrompt += `\n- Silhouette: ${extractedAttributes.silhouette || 'N/A'}`;
+          systemPrompt += `\n- Style: ${extractedAttributes.style}`;
+          
+          systemPrompt += `\nDUPLICATE ANALYSIS:`;
+          if (duplicateAnalysis.duplicate_analysis.found) {
+            systemPrompt += `\n- DUPLICATES FOUND: ${duplicateAnalysis.duplicate_analysis.count} similar items`;
+            systemPrompt += `\n- Items: ${duplicateAnalysis.duplicate_analysis.items.join(', ')}`;
+            systemPrompt += `\n- Severity: ${duplicateAnalysis.duplicate_analysis.severity}`;
+          } else {
+            systemPrompt += `\n- NO DUPLICATES: No similar items detected`;
+          }
+          
+          systemPrompt += `\nVARIETY IMPACT:`;
+          systemPrompt += `\n- ${duplicateAnalysis.variety_impact.message}`;
+          systemPrompt += `\n- Color dominance risk: ${duplicateAnalysis.variety_impact.would_dominate ? 'YES' : 'NO'}`;
+          
+          systemPrompt += `\nALGORITHMIC RECOMMENDATION: ${duplicateAnalysis.recommendation}`;
+          
+          systemPrompt += `\n\nIMPORTANT: Base your recommendation on these factual findings. If duplicates were found, score should be 1-3/10. If no duplicates and fills gaps, score 6-8/10.`;
+        }
+        
+      } catch (extractionError) {
+        console.error('Attribute extraction failed:', extractionError);
+        // Fallback to original analysis if extraction fails
+      }
+    }
+    
+    // Fallback: Original wardrobe analysis if extraction failed or no context
+    if (!duplicateAnalysis && (req.body.scenarios?.length > 0 || similarContext?.length > 0)) {
+      console.log('=== FALLBACK: Using original wardrobe analysis ===');
+      
+      if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
+        const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
+        wardrobeAnalysis = analyzeWardrobeForPrompt(req.body.formData, allContextItems, req.body.scenarios);
+        systemPrompt += generateStructuredPrompt(wardrobeAnalysis);
+      } else if (similarContext && similarContext.length > 0) {
+        const duplicateCheck = analyzeWardrobeForPrompt(req.body.formData, similarContext, []);
+        systemPrompt += `\n\nDUPLICATE CHECK: ${duplicateCheck.duplicateCheck.message}`;
+      }
     }
     
     // Add final instructions and detected tags
@@ -288,13 +380,34 @@ router.post('/', async (req, res) => {
     
     console.log('FINAL RECOMMENDATION extracted:', finalRecommendation);
     
-    // Send back the extracted information
-    res.json({
+    // Enhanced response with duplicate detection data
+    const responseData = {
       analysis,
       score,
       feedback,
       finalRecommendation
-    });
+    };
+    
+    // Add duplicate detection transparency data if available
+    if (duplicateAnalysis) {
+      responseData.duplicate_detection = {
+        analysis_method: 'enhanced_algorithmic',
+        duplicate_analysis: duplicateAnalysis,
+        message: 'Analysis used deterministic duplicate detection algorithms for consistency.'
+      };
+    } else if (wardrobeAnalysis) {
+      responseData.duplicate_detection = {
+        analysis_method: 'fallback_simple',
+        message: 'Analysis used fallback method due to attribute extraction failure.'
+      };
+    }
+    
+    console.log('=== FINAL RESPONSE ===');
+    console.log('Analysis method:', responseData.duplicate_detection?.analysis_method || 'none');
+    console.log('Score:', score);
+    console.log('====================');
+    
+    res.json(responseData);
   } catch (err) {
     console.error('Error in Claude analysis:', err);
     res.status(500).json({ 
