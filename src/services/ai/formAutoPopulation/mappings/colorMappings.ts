@@ -1,32 +1,7 @@
 /**
- * Standard color options for wardrobe items
+ * Import standard color options from single source of truth
  */
-export const COLOR_OPTIONS = [
-  'Black',
-  'White',
-  'Gray',
-  'Beige',
-  'Brown',
-  'Navy',
-  'Blue',
-  'Light Blue',
-  'Teal',
-  'Green',
-  'Olive',
-  'Yellow',
-  'Gold',
-  'Orange',
-  'Rust',
-  'Red',
-  'Burgundy',
-  'Pink',
-  'Purple',
-  'Lavender',
-  'Silver',
-  'Multicolor',
-  'Print',
-  'Other'
-];
+import { COLOR_OPTIONS } from '../../../../constants/wardrobeOptions';
 
 /**
  * Mapping of color keywords to standard color options
@@ -233,7 +208,7 @@ const COLOR_KEYWORD_MAPPING: Record<string, string> = {
  * @returns Array of color options
  */
 export function getColorOptions(): string[] {
-  return COLOR_OPTIONS;
+  return [...COLOR_OPTIONS];
 }
 
 /**
@@ -269,5 +244,5 @@ export function mapColorKeyword(keyword: string): string {
  */
 export function isValidColor(color: string): boolean {
   if (!color) return false;
-  return COLOR_OPTIONS.some(option => option.toLowerCase() === color.toLowerCase());
+  return COLOR_OPTIONS.some((option: string) => option.toLowerCase() === color.toLowerCase());
 }

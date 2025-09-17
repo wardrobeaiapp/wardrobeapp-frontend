@@ -1,6 +1,7 @@
 import { Logger } from '../utils/logger';
 import { ExtractionHelpers } from '../utils/extractionHelpers';
 import { mapColorKeyword } from '../mappings/colorMappings';
+import { COLOR_EXTRACTION_TERMS } from '../../../../constants/wardrobeOptions';
 
 /**
  * Responsible for extracting color information from detected tags
@@ -48,15 +49,11 @@ export class ColorExtractor {
     const allTags = ExtractionHelpers.combineTags(tags.fashion_tags, tags.general_tags);
     this.logger.debug('[ColorExtractor] Checking combined tags for color information:', allTags);
     
-    // Common color terms that might appear in general tags
-    const colorTerms = [
-      'black', 'white', 'blue', 'red', 'green', 'yellow', 'orange', 'purple', 'pink',
-      'brown', 'gray', 'grey', 'beige', 'navy', 'teal', 'maroon', 'tan', 'olive', 'gold',
-      'silver', 'burgundy'
-    ];
+    // Use shared color terms for consistency
+    const colorTerms = [...COLOR_EXTRACTION_TERMS];
     
     // Find tags that contain color terms
-    const colorTags = allTags.filter(tag => {
+    const colorTags = allTags.filter((tag: string) => {
       const normalizedTag = ExtractionHelpers.normalizeString(tag);
       return colorTerms.some(color => normalizedTag.includes(color));
     });

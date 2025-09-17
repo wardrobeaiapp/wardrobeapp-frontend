@@ -1,4 +1,5 @@
 import { ItemCategory, Season } from '../../../../../../types';
+import { COLOR_OPTIONS } from '../../../../../../constants/wardrobeOptions';
 
 // Subcategory options based on category
 export const getSubcategoryOptions = (category: ItemCategory | ''): string[] => {
@@ -225,13 +226,7 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
 
 // Get color options for all items
 export const getColorOptions = (): string[] => {
-  return [
-    'Black', 'White', 'Grey', 'Navy', 'Blue', 'Light Blue', 'Turquoise', 'Teal',
-    'Green', 'Olive', 'Lime', 'Yellow', 'Gold', 'Orange', 'Rust', 'Brown',
-    'Tan', 'Beige', 'Cream', 'Ivory', 'Pink', 'Light Pink', 'Hot Pink', 'Red',
-    'Burgundy', 'Maroon', 'Purple', 'Lavender', 'Silver', 'Multicolor', 
-    'Floral', 'Patterned'
-  ];
+  return [...COLOR_OPTIONS];
 };
 
 // Get pattern options for all items
