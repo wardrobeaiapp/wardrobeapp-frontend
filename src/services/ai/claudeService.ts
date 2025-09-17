@@ -320,24 +320,44 @@ export const claudeService = {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user?.id && formData?.category && formData?.seasons && formData.seasons.length > 0 && scenarios.length > 0) {
-          console.log(`[claudeService] Calculating scenario coverage for ${formData.category} in ${formData.seasons.join(',')}`);
+          console.log(`[claudeService] Calculating scenario coverage for ${formData.category} in ALL seasons: ${formData.seasons.join(',')}`);
           
           try {
             const { getCategoryCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
             
-            // Get coverage for the target category and primary season
-            scenarioCoverage = await getCategoryCoverageForAI(
-              user.id,
-              formData.category as ItemCategory,
-              formData.seasons[0] as Season, // Use primary season
-              scenarios,
-              wardrobeItems
+            // Get coverage for ALL selected seasons, not just the first one
+            const allCoveragePromises = formData.seasons.map(season => 
+              getCategoryCoverageForAI(
+                user.id,
+                formData.category as ItemCategory,
+                season as Season,
+                scenarios,
+                wardrobeItems
+              )
             );
             
-            console.log(`[claudeService] Generated scenario coverage: ${scenarioCoverage.length} scenarios`);
-            scenarioCoverage.forEach(coverage => {
-              console.log(`[claudeService] Coverage: ${coverage.scenarioName} - ${(coverage as any).coveragePercent || (coverage as any).coveragePercentage || 0}%`);
+            const allSeasonsCoverage = await Promise.all(allCoveragePromises);
+            
+            // Flatten and combine coverage from all seasons
+            scenarioCoverage = allSeasonsCoverage.flat();
+            
+            console.log(`[claudeService] Generated scenario coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
+            
+            // Group by scenario and show coverage per season
+            const coverageByScenario = scenarioCoverage.reduce((acc: Record<string, any[]>, coverage) => {
+              const key = coverage.scenarioName;
+              if (!acc[key]) acc[key] = [];
+              acc[key].push(coverage);
+              return acc;
+            }, {});
+            
+            Object.entries(coverageByScenario).forEach(([scenarioName, coverages]) => {
+              const seasonCoverages = (coverages as any[]).map(c => 
+                `${c.season}: ${(c as any).coveragePercent || (c as any).coveragePercentage || 0}%`
+              ).join(', ');
+              console.log(`[claudeService] Coverage: ${scenarioName} - [${seasonCoverages}]`);
             });
+            
           } catch (coverageError) {
             console.error('[claudeService] Failed to calculate scenario coverage:', coverageError);
             // Continue without scenario coverage

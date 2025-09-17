@@ -118,25 +118,107 @@ router.post('/', async (req, res) => {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Using frontend-provided data ===');
       console.log('Frontend scenario coverage analysis:', scenarioCoverage);
       
-      // Transform CategoryCoverage data to expected format
-      const transformedCoverage = scenarioCoverage.map(coverage => ({
-        scenarioName: coverage.scenarioName,
-        frequency: coverage.scenarioFrequency || 'unknown',
-        coverageLevel: coverage.coveragePercent >= 80 ? 5 : 
-                      coverage.coveragePercent >= 60 ? 4 :
-                      coverage.coveragePercent >= 40 ? 3 :
-                      coverage.coveragePercent >= 20 ? 2 : 1,
-        coverageDescription: getCoverageDescription(coverage.coveragePercent),
-        suitableItems: coverage.currentItems || 0,
-        gaps: coverage.gapCount > 0 ? coverage.categoryRecommendations : [],
-        strengths: coverage.coveragePercent >= 60 ? ['Good coverage'] : []
-      }));
+      // Analyze seasonal gaps for targeted recommendations
+      const seasonalGaps = [];
+      const itemSeasons = formData?.seasons || [];
       
-      // Add scenario coverage to prompt using transformed data
-      systemPrompt = addScenarioCoverageSection(systemPrompt, transformedCoverage, req.body.scenarios);
+      // Group coverage by scenario and identify gaps
+      const coverageByScenario = {};
+      scenarioCoverage.forEach(coverage => {
+        const key = coverage.scenarioName;
+        if (!coverageByScenario[key]) {
+          coverageByScenario[key] = [];
+        }
+        coverageByScenario[key].push(coverage);
+      });
       
-      // Add gap analysis using transformed coverage data  
-      systemPrompt = addGapAnalysisSection(systemPrompt, transformedCoverage, formData);
+      // Helper function to check if item type is appropriate for scenario
+      function isItemAppropriateForScenario(itemCategory, itemSubcategory, scenarioName) {
+        const scenario = scenarioName.toLowerCase();
+        const category = itemCategory?.toLowerCase();
+        const subcategory = itemSubcategory?.toLowerCase();
+        
+        // Define inappropriate combinations
+        const inappropriateCombos = {
+          'light outdoor activities': ['heels', 'dress shoes', 'formal shoes'],
+          'staying at home': ['heels', 'dress shoes', 'formal shoes'],
+          'exercise': ['heels', 'dress shoes', 'formal shoes'],
+          'sports': ['heels', 'dress shoes', 'formal shoes'],
+          'hiking': ['heels', 'dress shoes', 'formal shoes'],
+          'gym': ['heels', 'dress shoes', 'formal shoes']
+        };
+        
+        // Check if this combination is inappropriate
+        const inappropriate = inappropriateCombos[scenario];
+        if (inappropriate) {
+          const isInappropriate = inappropriate.some(badType => 
+            subcategory?.includes(badType) || category?.includes(badType)
+          );
+          return !isInappropriate;
+        }
+        
+        return true; // Default to appropriate if not in inappropriate list
+      }
+      
+      // Identify specific seasonal gaps
+      Object.entries(coverageByScenario).forEach(([scenarioName, coverages]) => {
+        coverages.forEach(coverage => {
+          // Check if this season has a gap AND the item is suitable for this season
+          const hasGap = coverage.coveragePercent < 60; // Less than 60% = gap
+          const itemSuitableForSeason = itemSeasons.includes(coverage.season);
+          const itemAppropriateForScenario = isItemAppropriateForScenario(
+            formData?.category, 
+            formData?.subcategory, 
+            scenarioName
+          );
+          
+          console.log(`🔍 Gap Analysis: ${scenarioName} ${coverage.season}`);
+          console.log(`   Coverage: ${coverage.coveragePercent}%, HasGap: ${hasGap} (< 60%), SeasonMatch: ${itemSuitableForSeason}, ScenarioAppropriate: ${itemAppropriateForScenario}`);
+          console.log(`   Item seasons: [${itemSeasons.join(', ')}], Coverage season: ${coverage.season}`);
+          
+          if (hasGap && itemSuitableForSeason && itemAppropriateForScenario) {
+            console.log(`✅ Adding relevant gap: ${scenarioName} ${coverage.season} (${coverage.coveragePercent}%)`);
+            seasonalGaps.push({
+              scenario: scenarioName,
+              season: coverage.season,
+              currentCoverage: coverage.coveragePercent,
+              frequency: coverage.scenarioFrequency,
+              currentItems: coverage.currentItems,
+              category: coverage.category
+            });
+          } else {
+            const reason = !hasGap ? 'no gap' : 
+                          !itemSuitableForSeason ? 'season mismatch' : 
+                          !itemAppropriateForScenario ? 'inappropriate for scenario' : 'unknown';
+            console.log(`❌ Not adding gap: ${scenarioName} ${coverage.season} (${reason})`);
+          }
+        });
+      });
+      
+      // Add seasonal gap analysis to prompt
+      console.log(`📊 Final Seasonal Gaps Detected: ${seasonalGaps.length}`);
+      seasonalGaps.forEach(gap => {
+        console.log(`   - ${gap.scenario} ${gap.season}: ${gap.currentCoverage}%`);
+      });
+      
+      if (seasonalGaps.length > 0) {
+        systemPrompt += `\n\n=== SEASONAL GAP ANALYSIS ===`;
+        systemPrompt += `\nThis item could potentially fill the following seasonal gaps:\n`;
+        
+        seasonalGaps.forEach(gap => {
+          systemPrompt += `\n• ${gap.scenario} (${gap.frequency}) in ${gap.season}:`;
+          systemPrompt += `\n  - Current coverage: ${gap.currentCoverage}% (${gap.currentItems} items)`;
+          systemPrompt += `\n  - Gap severity: ${gap.currentCoverage < 20 ? 'CRITICAL' : gap.currentCoverage < 40 ? 'HIGH' : 'MODERATE'}`;
+        });
+        
+        systemPrompt += `\n\n**TARGETED RECOMMENDATION INSTRUCTION:**`;
+        systemPrompt += `\nIn your FINAL RECOMMENDATION, specifically mention ONLY the seasonal gaps listed above.`;
+        systemPrompt += `\nDO NOT mention seasons that are not listed as gaps above.`;
+        systemPrompt += `\nThe gaps to mention are: ${seasonalGaps.map(g => `${g.scenario} in ${g.season}`).join(', ')}.`;
+        systemPrompt += `\nDO NOT add any other seasons beyond what is listed here.`;
+        systemPrompt += `\nExample: "This item would be particularly valuable for your ${seasonalGaps.map(g => `${g.scenario} in ${g.season}`).join(', ')} wardrobe gap${seasonalGaps.length > 1 ? 's' : ''}."`;
+        systemPrompt += `\nBe specific about ONLY the identified gaps and their coverage levels.`;
+      }
     } else if (userId && formData?.seasons) {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Using production system fallback ===');
       
@@ -249,8 +331,13 @@ router.post('/', async (req, res) => {
     
     // Use ONLY the new structured analyses - no old fallback logic
     
-    // Add final instructions and detected tags
-    systemPrompt = addFinalInstructions(systemPrompt, detectedTags);
+    // Add final instructions
+    systemPrompt = addFinalInstructions(systemPrompt);
+    
+    // Debug: Log the full prompt being sent to AI (truncated for readability)
+    console.log('=== FULL PROMPT TO AI (last 1000 chars) ===');
+    console.log(systemPrompt.slice(-1000));
+    console.log('=== END PROMPT ===');
 
     // Log the complete prompt for debugging
     console.log('==== FULL CLAUDE PROMPT ====');
