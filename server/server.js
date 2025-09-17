@@ -135,31 +135,8 @@ const anthropic = new Anthropic({
 });
 
 
-// JWT already imported at the top of the file
-
-// Custom auth middleware for in-memory user store
-const auth = (req, res, next) => {
-  // Get token from header
-  const token = req.header('x-auth-token');
-  console.log('Auth middleware checking token');
-
-  // Check if no token
-  if (!token) {
-    console.log('No token provided');
-    return res.status(401).json({ message: 'No token, authorization denied' });
-  }
-
-  // Verify token
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'devjwtsecret');
-    req.user = decoded.user;
-    console.log('Token verified for user ID:', req.user.id);
-    next();
-  } catch (err) {
-    console.error('Token verification failed:', err.message);
-    res.status(401).json({ message: 'Token is not valid' });
-  }
-};
+// Import auth middleware
+const auth = require('./middleware/auth');
 
 // Auth Routes
 
