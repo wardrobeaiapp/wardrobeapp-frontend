@@ -4,10 +4,7 @@
  */
 
 import { WardrobeItem, Scenario, Season, ItemCategory } from '../../../types';
-import { ScenarioCoverageService } from './scenarioCoverageService';
-import { updateCategoryCoverage, updateAllCategoriesForScenario } from './categoryBasedCoverageService';
-
-const scenarioCoverageService = ScenarioCoverageService.getInstance();
+import { updateCategoryCoverage } from './categoryBasedCoverageService';
 
 /**
  * Trigger scenario coverage recalculation when an item is added
@@ -23,8 +20,8 @@ export const triggerItemAddedCoverage = async (
   try {
     console.log('🟦 CATEGORY COVERAGE - Triggering efficient coverage for added item:', newItem.name);
     
-    // Update old system for backward compatibility
-    await scenarioCoverageService.onItemAdded(userId, items, scenarios, newItem, season);
+    // Update old system for backward compatibility (DISABLED - using category-based system now)
+    // await scenarioCoverageService.onItemAdded(userId, items, scenarios, newItem, season);
     
     // Update new category-based system - only affected scenarios and category
     if (newItem.category && newItem.scenarios?.length) {
@@ -68,8 +65,8 @@ export const triggerItemUpdatedCoverage = async (
   try {
     console.log('🟦 CATEGORY COVERAGE - Triggering efficient category-based coverage for updated item:', newItem.name);
     
-    // Update old coverage system (for backward compatibility)
-    await scenarioCoverageService.onItemUpdated(userId, items, scenarios, oldItem, newItem, season);
+    // Update old coverage system (DISABLED - using category-based system now)
+    // await scenarioCoverageService.onItemUpdated(userId, items, scenarios, oldItem, newItem, season);
     
     // Get affected categories and scenarios
     const affectedCategories = new Set<ItemCategory>();
@@ -116,6 +113,7 @@ export const triggerItemUpdatedCoverage = async (
 
 /**
  * Trigger scenario coverage recalculation when an item is deleted
+ * Uses efficient category-based approach - only updates affected category
  */
 export const triggerItemDeletedCoverage = async (
   userId: string,
@@ -125,10 +123,34 @@ export const triggerItemDeletedCoverage = async (
   season: Season
 ): Promise<void> => {
   try {
-    console.log('🟦 SCENARIO COVERAGE - Triggering coverage calculation for deleted item:', deletedItem.name);
-    await scenarioCoverageService.onItemDeleted(userId, items, scenarios, deletedItem, season);
-    console.log('🟢 SCENARIO COVERAGE - Successfully calculated coverage for deleted item');
+    console.log('🟦 CATEGORY COVERAGE - Triggering efficient coverage for deleted item:', deletedItem.name);
+    
+    // Update old system (DISABLED - using category-based system now)
+    // await scenarioCoverageService.onItemDeleted(userId, items, scenarios, deletedItem, season);
+    
+    // Update new category-based system - only affected scenarios and category
+    if (deletedItem.category && deletedItem.scenarios?.length) {
+      const updatePromises = deletedItem.scenarios.map(scenarioId => {
+        const scenario = scenarios.find(s => s.id === scenarioId);
+        if (!scenario) return Promise.resolve();
+        
+        console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${deletedItem.category}`);
+        return updateCategoryCoverage(
+          userId,
+          scenario.id,
+          scenario.name,
+          scenario.frequency || '',
+          season,
+          deletedItem.category!,
+          items // Note: items array should already exclude the deleted item
+        );
+      });
+      
+      await Promise.all(updatePromises);
+    }
+    
+    console.log('🟢 CATEGORY COVERAGE - Successfully calculated coverage for deleted item');
   } catch (error) {
-    console.error('🔴 SCENARIO COVERAGE - Failed to calculate coverage for deleted item:', error);
+    console.error('🔴 CATEGORY COVERAGE - Failed to calculate coverage for deleted item:', error);
   }
 };

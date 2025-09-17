@@ -1,6 +1,9 @@
 import { WardrobeItem, Scenario, Season, ItemCategory } from '../../../types';
 import { supabase } from '../../core';
 
+// Season constants using enum values  
+const ALL_SEASONS: Season[] = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+
 // Simplified category needs calculation for the new normalized approach
 type CategoryNeed = {
   min: number;
@@ -175,12 +178,101 @@ export const updateAllCategoriesForScenario = async (
 };
 
 /**
- * Get category coverage for AI prompts - super efficient targeted query
+ * Initialize coverage for a new scenario (called when user creates scenario)
+ * Creates coverage rows for current season + critical categories only
+ */
+export const initializeNewScenarioCoverage = async (
+  userId: string,
+  scenario: Scenario,
+  currentSeason: Season,
+  items: WardrobeItem[]
+): Promise<void> => {
+  console.log(`🟦 INIT SCENARIO - Creating coverage for new scenario: ${scenario.name}`);
+  
+  // Initialize current season for all categories (for immediate AI insights)
+  const categories: ItemCategory[] = [
+    ItemCategory.TOP, 
+    ItemCategory.BOTTOM, 
+    ItemCategory.ONE_PIECE, 
+    ItemCategory.OUTERWEAR, 
+    ItemCategory.FOOTWEAR, 
+    ItemCategory.ACCESSORY,
+    ItemCategory.OTHER
+  ];
+
+  const initPromises = categories.map(category => 
+    updateCategoryCoverage(
+      userId,
+      scenario.id,
+      scenario.name,
+      scenario.frequency || '',
+      currentSeason,
+      category,
+      items
+    )
+  );
+
+  await Promise.all(initPromises);
+  
+  console.log(`🟢 INIT SCENARIO - Created ${categories.length} coverage entries for ${scenario.name}/${currentSeason}`);
+};
+
+/**
+ * Initialize complete coverage matrix for a user (useful for new users or data rebuilds)
+ */
+export const initializeCompleteCoverageMatrix = async (
+  userId: string,
+  scenarios: Scenario[],
+  items: WardrobeItem[]
+): Promise<void> => {
+  console.log('🟦 INIT COVERAGE - Creating complete coverage matrix for user');
+  
+  const seasons = ALL_SEASONS;
+  const categories: ItemCategory[] = [
+    ItemCategory.TOP, 
+    ItemCategory.BOTTOM, 
+    ItemCategory.ONE_PIECE, 
+    ItemCategory.OUTERWEAR, 
+    ItemCategory.FOOTWEAR, 
+    ItemCategory.ACCESSORY,
+    ItemCategory.OTHER
+  ];
+
+  const initPromises: Promise<void>[] = [];
+
+  for (const scenario of scenarios) {
+    for (const season of seasons) {
+      for (const category of categories) {
+        initPromises.push(
+          updateCategoryCoverage(
+            userId,
+            scenario.id,
+            scenario.name,
+            scenario.frequency || '',
+            season,
+            category,
+            items
+          )
+        );
+      }
+    }
+  }
+
+  await Promise.all(initPromises);
+  
+  const totalCombinations = scenarios.length * seasons.length * categories.length;
+  console.log(`🟢 INIT COVERAGE - Initialized ${totalCombinations} coverage combinations for user`);
+};
+
+/**
+ * Get category coverage for AI prompts - calculates missing combinations on-demand
  */
 export const getCategoryCoverageForAI = async (
   userId: string,
   category: ItemCategory,
-  season?: Season
+  season?: Season,
+  scenarios?: Scenario[],
+  items?: WardrobeItem[]
 ): Promise<CategoryCoverage[]> => {
   console.log(`🟦 AI QUERY - Fetching ${category} coverage for user ${userId}`);
 
@@ -194,14 +286,56 @@ export const getCategoryCoverageForAI = async (
     query = query.eq('season', season);
   }
 
-  const { data, error } = await query.order('priority_level', { ascending: true });
+  const { data: existingData, error } = await query.order('priority_level', { ascending: true });
 
   if (error) {
     console.error('🔴 Failed to fetch category coverage for AI:', error);
     throw error;
   }
 
-  return (data || []).map(mapDatabaseRowToCategoryCoverage);
+  const existingCoverage = (existingData || []).map(mapDatabaseRowToCategoryCoverage);
+
+  // If we have scenarios and items available, check for missing combinations and calculate them
+  if (scenarios && items) {
+    const seasonsToCheck = season ? [season] : ALL_SEASONS;
+    const existingKeys = new Set(
+      existingCoverage.map(c => `${c.scenarioId}_${c.season}`)
+    );
+
+    const missingCombinations: CategoryCoverage[] = [];
+
+    for (const scenario of scenarios) {
+      for (const seasonToCheck of seasonsToCheck) {
+        const key = `${scenario.id}_${seasonToCheck}`;
+        
+        if (!existingKeys.has(key)) {
+          console.log(`🔄 AI QUERY - Computing missing coverage: ${scenario.name}/${seasonToCheck}/${category}`);
+          
+          // Calculate missing coverage on-demand
+          const missingCoverage = await calculateCategoryCoverage(
+            userId,
+            scenario.id,
+            scenario.name,
+            scenario.frequency || '',
+            seasonToCheck as Season,
+            category,
+            items
+          );
+          
+          missingCombinations.push(missingCoverage);
+          
+          // Optionally save to database for future queries (cache it)
+          await saveCategoryCoverage(missingCoverage);
+        }
+      }
+    }
+
+    // Combine existing and calculated data
+    const allCoverage = [...existingCoverage, ...missingCombinations];
+    return allCoverage.sort((a, b) => a.priorityLevel - b.priorityLevel);
+  }
+
+  return existingCoverage;
 };
 
 /**
