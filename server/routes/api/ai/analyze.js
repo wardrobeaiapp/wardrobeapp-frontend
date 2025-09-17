@@ -1,12 +1,15 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const { analyzeWardrobeForPrompt, generateStructuredPrompt } = require('../../../utils/simpleOutfitAnalysis');
+const { getScenarioCoverageForAnalysis } = require('../../../utils/scenarioCoverageCalculator');
 const {
   buildSystemPrompt,
   addFormDataSection,
   addScenariosSection,
   addClimateSection,
   addStylingContextSection,
+  addScenarioCoverageSection,
+  addGapAnalysisSection,
   addFinalInstructions
 } = require('../../../utils/promptBuilder');
 
@@ -16,6 +19,15 @@ const {
   generateExtractionPrompt,
   parseExtractionResponse
 } = require('../../../utils/duplicateDetectionUtils');
+
+// Helper function to get coverage description
+function getCoverageDescription(percentage) {
+  if (percentage >= 80) return 'Excellent coverage';
+  if (percentage >= 60) return 'Good coverage';
+  if (percentage >= 40) return 'Moderate coverage';
+  if (percentage >= 20) return 'Limited coverage';
+  return 'Very limited coverage';
+}
 const router = express.Router();
 
 // Initialize Anthropic client
@@ -28,7 +40,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userId } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -40,6 +52,7 @@ router.post('/', async (req, res) => {
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
+    console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} scenarios` : 'none');
     console.log('===================');
     
     // Log that we received user data
@@ -100,9 +113,54 @@ router.post('/', async (req, res) => {
     // Add styling context section
     systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
+    // === SCENARIO COVERAGE ANALYSIS ===
+    if (scenarioCoverage && scenarioCoverage.length > 0) {
+      console.log('=== SCENARIO COVERAGE ANALYSIS - Using frontend-provided data ===');
+      console.log('Frontend scenario coverage analysis:', scenarioCoverage);
+      
+      // Transform CategoryCoverage data to expected format
+      const transformedCoverage = scenarioCoverage.map(coverage => ({
+        scenarioName: coverage.scenarioName,
+        frequency: coverage.scenarioFrequency || 'unknown',
+        coverageLevel: coverage.coveragePercent >= 80 ? 5 : 
+                      coverage.coveragePercent >= 60 ? 4 :
+                      coverage.coveragePercent >= 40 ? 3 :
+                      coverage.coveragePercent >= 20 ? 2 : 1,
+        coverageDescription: getCoverageDescription(coverage.coveragePercent),
+        suitableItems: coverage.currentItems || 0,
+        gaps: coverage.gapCount > 0 ? coverage.categoryRecommendations : [],
+        strengths: coverage.coveragePercent >= 60 ? ['Good coverage'] : []
+      }));
+      
+      // Add scenario coverage to prompt using transformed data
+      systemPrompt = addScenarioCoverageSection(systemPrompt, transformedCoverage, req.body.scenarios);
+      
+      // Add gap analysis using transformed coverage data  
+      systemPrompt = addGapAnalysisSection(systemPrompt, transformedCoverage, formData);
+    } else if (userId && formData?.seasons) {
+      console.log('=== SCENARIO COVERAGE ANALYSIS - Using production system fallback ===');
+      
+      const targetSeasons = formData.seasons;
+      
+      try {
+        const dbScenarioCoverage = await getScenarioCoverageForAnalysis(userId, targetSeasons);
+        console.log('Production scenario coverage analysis:', dbScenarioCoverage);
+        
+        // Add scenario coverage to prompt using your production data
+        systemPrompt = addScenarioCoverageSection(systemPrompt, dbScenarioCoverage, req.body.scenarios);
+        
+        // Add gap analysis using production coverage data
+        systemPrompt = addGapAnalysisSection(systemPrompt, dbScenarioCoverage, formData);
+      } catch (error) {
+        console.error('Failed to get scenario coverage from production system:', error);
+        // Continue without scenario coverage if it fails
+      }
+    } else {
+      console.log('=== SCENARIO COVERAGE ANALYSIS - Skipped (no data provided) ===');
+    }
+
     // === ENHANCED DUPLICATE DETECTION ===
     let duplicateAnalysis = null;
-    let wardrobeAnalysis = null;
     
     // Step 1: Extract structured attributes from image
     if (formData && formData.category && (similarContext || additionalContext)) {
@@ -189,19 +247,7 @@ router.post('/', async (req, res) => {
       }
     }
     
-    // Fallback: Original wardrobe analysis if extraction failed or no context
-    if (!duplicateAnalysis && (req.body.scenarios?.length > 0 || similarContext?.length > 0)) {
-      console.log('=== FALLBACK: Using original wardrobe analysis ===');
-      
-      if (req.body.scenarios && req.body.scenarios.length > 0 && (similarContext || additionalContext)) {
-        const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
-        wardrobeAnalysis = analyzeWardrobeForPrompt(req.body.formData, allContextItems, req.body.scenarios);
-        systemPrompt += generateStructuredPrompt(wardrobeAnalysis);
-      } else if (similarContext && similarContext.length > 0) {
-        const duplicateCheck = analyzeWardrobeForPrompt(req.body.formData, similarContext, []);
-        systemPrompt += `\n\nDUPLICATE CHECK: ${duplicateCheck.duplicateCheck.message}`;
-      }
-    }
+    // Use ONLY the new structured analyses - no old fallback logic
     
     // Add final instructions and detected tags
     systemPrompt = addFinalInstructions(systemPrompt, detectedTags);
@@ -388,22 +434,30 @@ router.post('/', async (req, res) => {
       finalRecommendation
     };
     
-    // Add duplicate detection transparency data if available
+    // Add analysis transparency data
     if (duplicateAnalysis) {
-      responseData.duplicate_detection = {
-        analysis_method: 'enhanced_algorithmic',
-        duplicate_analysis: duplicateAnalysis,
-        message: 'Analysis used deterministic duplicate detection algorithms for consistency.'
+      responseData.analysis_data = {
+        duplicate_detection: {
+          method: 'enhanced_algorithmic',
+          data: duplicateAnalysis,
+          message: 'Used deterministic duplicate detection algorithms for consistency.'
+        }
       };
-    } else if (wardrobeAnalysis) {
-      responseData.duplicate_detection = {
-        analysis_method: 'fallback_simple',
-        message: 'Analysis used fallback method due to attribute extraction failure.'
+    }
+    
+    if (scenarioCoverage) {
+      if (!responseData.analysis_data) responseData.analysis_data = {};
+      responseData.analysis_data.scenario_coverage = {
+        method: 'coverage_analysis',
+        data: scenarioCoverage,
+        has_gaps: scenarioCoverage.some(scenario => scenario.coverageLevel <= 2),
+        message: 'Analyzed wardrobe gaps across all scenarios.'
       };
     }
     
     console.log('=== FINAL RESPONSE ===');
-    console.log('Analysis method:', responseData.duplicate_detection?.analysis_method || 'none');
+    console.log('Duplicate detection:', duplicateAnalysis ? 'enabled' : 'disabled');
+    console.log('Scenario coverage:', scenarioCoverage ? 'enabled' : 'disabled');
     console.log('Score:', score);
     console.log('====================');
     

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { DetectedTags, WardrobeItem } from '../../types/wardrobe';
+import { WardrobeItem, ItemCategory, Season } from '../../types';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
 import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
 import { getClimateData } from '../profile/climateService';
@@ -136,7 +136,7 @@ export const claudeService = {
    * @param detectedTags - Optional object with tags detected from the image
    * @returns Promise with analysis, score, and feedback
    */
-  async analyzeWardrobeItem(imageBase64: string, detectedTags?: DetectedTags, formData?: { category?: string; subcategory?: string; seasons?: string[] }): Promise<{
+  async analyzeWardrobeItem(imageBase64: string, detectedTags?: any, formData?: { category?: string; subcategory?: string; seasons?: string[] }): Promise<{
     analysis: string;
     score: number;
     feedback: string;
@@ -296,13 +296,13 @@ export const claudeService = {
         console.log('[claudeService] Enhanced formData with color:', enhancedFormData);
         
         // Filter for styling context using helper function
-        stylingContext = filterStylingContext(wardrobeItems, enhancedFormData);
+        stylingContext = filterStylingContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
         
         // Filter for gap analysis context using helper function
-        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData);
+        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
         
         // Filter for additional context using helper function
-        additionalContext = filterAdditionalContext(wardrobeItems, enhancedFormData);
+        additionalContext = filterAdditionalContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
         
         console.log(`[claudeService] Generated styling context: ${stylingContext.length} items`);
         stylingContext.forEach(item => console.log(`[claudeService] Styling context item: ${item.name}`));
@@ -310,6 +310,42 @@ export const claudeService = {
         similarContext.forEach(item => console.log(`[claudeService] Similar context item: ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color} - SEASONS: [${item.season?.join(',') || 'NONE'}]`));
         console.log(`[claudeService] Generated additional context: ${additionalContext.length} items`);
         additionalContext.forEach(item => console.log(`[claudeService] Additional context item: ${item.name}`));
+      }
+
+      // Calculate scenario coverage for the target category and season
+      let scenarioCoverage = null;
+      
+      try {
+        // Get the current authenticated user for scenario coverage
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user?.id && formData?.category && formData?.seasons && formData.seasons.length > 0 && scenarios.length > 0) {
+          console.log(`[claudeService] Calculating scenario coverage for ${formData.category} in ${formData.seasons.join(',')}`);
+          
+          try {
+            const { getCategoryCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
+            
+            // Get coverage for the target category and primary season
+            scenarioCoverage = await getCategoryCoverageForAI(
+              user.id,
+              formData.category as ItemCategory,
+              formData.seasons[0] as Season, // Use primary season
+              scenarios,
+              wardrobeItems
+            );
+            
+            console.log(`[claudeService] Generated scenario coverage: ${scenarioCoverage.length} scenarios`);
+            scenarioCoverage.forEach(coverage => {
+              console.log(`[claudeService] Coverage: ${coverage.scenarioName} - ${(coverage as any).coveragePercent || (coverage as any).coveragePercentage || 0}%`);
+            });
+          } catch (coverageError) {
+            console.error('[claudeService] Failed to calculate scenario coverage:', coverageError);
+            // Continue without scenario coverage
+          }
+        }
+      } catch (authError) {
+        console.error('[claudeService] Failed to get user for scenario coverage:', authError);
+        // Continue without scenario coverage
       }
       
       // Call our backend endpoint instead of Claude API directly (avoids CORS issues)
@@ -334,7 +370,9 @@ export const claudeService = {
           // Include wardrobe context for enhanced analysis
           stylingContext: stylingContext.length > 0 ? stylingContext : undefined,
           similarContext: similarContext.length > 0 ? similarContext : undefined,
-          additionalContext: additionalContext.length > 0 ? additionalContext : undefined
+          additionalContext: additionalContext.length > 0 ? additionalContext : undefined,
+          // Include scenario coverage data calculated in frontend
+          scenarioCoverage: scenarioCoverage || undefined
         }
       );
 
