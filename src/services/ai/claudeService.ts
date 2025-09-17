@@ -1,28 +1,13 @@
 import axios from 'axios';
-import { WardrobeItem, ItemCategory, Season } from '../../types';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
-import { Outfit, ClaudeResponse as BaseClaudeResponse } from '../../types';
 import { getClimateData } from '../profile/climateService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
 import { getWardrobeItems } from '../wardrobe/items';
 import { filterStylingContext, filterSimilarContext, filterAdditionalContext } from './wardrobeContextHelpers';
-
-// Import the Scenario type from scenarios service
+import { WardrobeItem, ItemCategory, Season, Outfit } from '../../types';
 import type { Scenario } from '../scenarios/types';
-
-// Extend the base ClaudeResponse to include outfits
-interface ClaudeResponse extends BaseClaudeResponse {
-  outfits?: Outfit[];
-  error?: string;
-  details?: string;
-}
-
-interface StyleAdviceResponse {
-  styleAdvice: string;
-  error?: string;
-  details?: string;
-}
+import type { ClaudeResponse, StyleAdviceResponse, WardrobeItemAnalysis } from './types';
 
 
 // Backend API URL - point to the actual backend server
@@ -136,14 +121,11 @@ export const claudeService = {
    * @param detectedTags - Optional object with tags detected from the image
    * @returns Promise with analysis, score, and feedback
    */
-  async analyzeWardrobeItem(imageBase64: string, detectedTags?: any, formData?: { category?: string; subcategory?: string; seasons?: string[] }): Promise<{
-    analysis: string;
-    score: number;
-    feedback: string;
-    finalRecommendation?: string;
-    error?: string;
-    details?: string;
-  }> {
+  async analyzeWardrobeItem(
+    imageBase64: string, 
+    detectedTags?: any, 
+    formData?: { category?: string; subcategory?: string; seasons?: string[] }
+  ): Promise<WardrobeItemAnalysis> {
     try {
 
       // Validate image data before sending to server
