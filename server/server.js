@@ -135,15 +135,6 @@ const anthropic = new Anthropic({
 });
 
 
-// Define Routes
-app.use('/api/users', require('./routes/users'));
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/profile', require('./routes/profile'));
-app.use('/api/wardrobe-items', require('./routes/wardrobeItems'));
-app.use('/api/outfits', require('./routes/outfits'));
-app.use('/api/capsules', require('./routes/capsules'));
-app.use('/api/migrate-data', require('./routes/dataMigration'));
-
 // JWT already imported at the top of the file
 
 // Custom auth middleware for in-memory user store
