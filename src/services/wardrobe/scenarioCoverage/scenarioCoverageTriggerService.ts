@@ -4,7 +4,7 @@
  */
 
 import { WardrobeItem, Scenario, Season, ItemCategory } from '../../../types';
-import { updateCategoryCoverage } from './categoryBasedCoverageService';
+import { updateCategoryCoverage } from './category';
 
 /**
  * Trigger scenario coverage recalculation when an item is added

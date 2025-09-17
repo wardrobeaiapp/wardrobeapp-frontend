@@ -1,6 +1,6 @@
 // Re-export types and functions from active modules
 export * from './frequencyBasedNeedsCalculator';
-export * from './categoryBasedCoverageService';
+export * from './category';
 
 // Export the trigger functions
 export { 
