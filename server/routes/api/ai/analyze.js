@@ -1,6 +1,5 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
-const { analyzeWardrobeForPrompt, generateStructuredPrompt } = require('../../../utils/simpleOutfitAnalysis');
 const { getScenarioCoverageForAnalysis } = require('../../../utils/scenarioCoverageCalculator');
 const {
   buildSystemPrompt,
@@ -20,14 +19,6 @@ const {
   parseExtractionResponse
 } = require('../../../utils/duplicateDetectionUtils');
 
-// Helper function to get coverage description
-function getCoverageDescription(percentage) {
-  if (percentage >= 80) return 'Excellent coverage';
-  if (percentage >= 60) return 'Good coverage';
-  if (percentage >= 40) return 'Moderate coverage';
-  if (percentage >= 20) return 'Limited coverage';
-  return 'Very limited coverage';
-}
 const router = express.Router();
 
 // Initialize Anthropic client
