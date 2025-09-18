@@ -93,7 +93,9 @@ export const useItemManagement = ({
       const newItem = await addItem(item, file);
       if (newItem) {
         if (setActiveTab) {
-          setActiveTab('items');
+          // Set the active tab based on whether the item was added to wishlist
+          const targetTab = item.wishlist ? 'wishlist' : 'items';
+          setActiveTab(targetTab);
         }
       }
     } catch (error) {

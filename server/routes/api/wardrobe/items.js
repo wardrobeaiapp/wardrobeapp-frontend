@@ -25,20 +25,61 @@ router.get('/', auth, async (req, res) => {
 // @access  Private
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, category, color, season, occasion, image } = req.body;
+    console.log('[API] POST /api/wardrobe-items received:', req.body);
     
-    // Create a simple item object
+    const { 
+      name, 
+      category, 
+      subcategory, 
+      color, 
+      pattern,
+      material,
+      brand,
+      silhouette,
+      length,
+      sleeves,
+      style,
+      rise,
+      neckline,
+      heelHeight,
+      bootHeight,
+      type,
+      season, 
+      scenarios,
+      wishlist,
+      imageUrl,
+      tags
+    } = req.body;
+    
+    // Create a comprehensive item object
     const newItem = {
       id: Date.now().toString(),
       userId: req.user.id,
       name,
       category,
+      subcategory,
       color,
+      pattern,
+      material,
+      brand,
+      silhouette,
+      length,
+      sleeves,
+      style,
+      rise,
+      neckline,
+      heelHeight,
+      bootHeight,
+      type,
       season: season || [],
-      occasion: occasion || [],
-      image,
+      scenarios: scenarios || [],
+      wishlist: wishlist === true || wishlist === 'true', // Handle boolean conversion
+      imageUrl,
+      tags: tags || {},
       dateAdded: new Date().toISOString()
     };
+
+    console.log('[API] Creating item with wishlist:', newItem.wishlist);
 
     // Add item to in-memory store
     global.inMemoryWardrobeItems.push(newItem);

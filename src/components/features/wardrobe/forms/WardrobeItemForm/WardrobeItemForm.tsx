@@ -163,6 +163,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       imageUrl: finalImageUrl, // Add image URL to the item
       scenarios: formData.scenarios, // Add scenarios field
       season: formData.seasons, // Make sure seasons are also included
+      wishlist: formData.isWishlistItem, // Map isWishlistItem to wishlist for server compatibility
       tags: tags // Save as JSON object
     } as WardrobeItem;
   };
