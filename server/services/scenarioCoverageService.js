@@ -10,6 +10,35 @@ const {
 class ScenarioCoverageService {
 
   /**
+   * Filter scenario coverage data to include only essential fields for AI analysis
+   * @param {Array} scenarioCoverage - Full scenario coverage data
+   * @returns {Array} Filtered scenario coverage data with only essential fields
+   */
+  filterScenarioCoverageData(scenarioCoverage) {
+    if (!scenarioCoverage || !Array.isArray(scenarioCoverage)) {
+      return [];
+    }
+
+    const filteredData = scenarioCoverage.map(coverage => ({
+      scenarioName: coverage.scenarioName,
+      scenarioFrequency: coverage.scenarioFrequency,
+      season: coverage.season,
+      category: coverage.category,
+      currentItems: coverage.currentItems,
+      coveragePercent: coverage.coveragePercent,
+      gapCount: coverage.gapCount,
+      isCritical: coverage.isCritical,
+      categoryRecommendations: coverage.categoryRecommendations
+    }));
+
+    console.log(`📊 Scenario coverage data filtered: ${scenarioCoverage.length} items → essential fields only`);
+    console.log('Original fields per item:', Object.keys(scenarioCoverage[0] || {}));
+    console.log('Filtered fields per item:', Object.keys(filteredData[0] || {}));
+    
+    return filteredData;
+  }
+
+  /**
    * Analyze scenario coverage using provided data or database fallback
    * @param {Array} scenarioCoverage - Frontend provided scenario coverage data
    * @param {Object} formData - Form data including seasons, category, subcategory
@@ -20,7 +49,9 @@ class ScenarioCoverageService {
   async analyze(scenarioCoverage, formData, userId, scenarios) {
     if (scenarioCoverage && scenarioCoverage.length > 0) {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Using frontend-provided data ===');
-      return this.analyzeFrontendData(scenarioCoverage, formData);
+      // Filter the data to include only essential fields before analysis
+      const filteredCoverage = this.filterScenarioCoverageData(scenarioCoverage);
+      return this.analyzeFrontendData(filteredCoverage, formData);
     } else if (userId && formData?.seasons) {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Using production system fallback ===');
       return this.analyzeFromDatabase(userId, formData, scenarios);
