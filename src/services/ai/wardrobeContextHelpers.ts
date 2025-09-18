@@ -124,6 +124,11 @@ export const filterStylingContext = (
   console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
   
   const filtered = wardrobeItems.filter(item => {
+    // Exclude wishlist items from styling context
+    if (item.wishlist === true) {
+      return false;
+    }
+    
     const matchesSeason = checkSeasonMatch(item, formData.seasons);
     
     // Handle ACCESSORY category with configuration
@@ -215,6 +220,11 @@ export const filterSimilarContext = (
   }
   
   const filtered = wardrobeItems.filter(item => {
+    // Exclude wishlist items from similar context (duplicate detection)
+    if (item.wishlist === true) {
+      return false;
+    }
+    
     const matchesCategory = item.category === formData.category;
     
     // Special handling for footwear - include all footwear subcategories for broader duplicate detection
@@ -276,6 +286,11 @@ export const filterAdditionalContext = (
   formData: { category?: string; seasons?: string[] }
 ): WardrobeItem[] => {
   return wardrobeItems.filter(item => {
+    // Exclude wishlist items from additional context
+    if (item.wishlist === true) {
+      return false;
+    }
+    
     const matchesSeason = formData.seasons?.some(season => 
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all

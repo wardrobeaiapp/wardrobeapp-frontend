@@ -191,47 +191,72 @@ export const wardrobeAnalysisService = {
         // Get the current authenticated user for scenario coverage
         const { data: { user } } = await supabase.auth.getUser();
         
-        if (user?.id && formData?.category && formData?.seasons && formData.seasons.length > 0 && scenarios.length > 0) {
-          console.log(`[wardrobeAnalysisService] Calculating scenario coverage for ${formData.category} in ALL seasons: ${formData.seasons.join(',')}`);
+        if (user?.id && formData?.category && formData?.seasons && formData.seasons.length > 0) {
+          console.log(`[wardrobeAnalysisService] Calculating coverage for ${formData.category} in seasons: ${formData.seasons.join(',')}`);
           
           try {
-            const { getCategoryCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
+            // Check if this is outerwear - use different logic
+            const isOuterwear = formData.category.toLowerCase() === 'outerwear';
             
-            // Get coverage for ALL selected seasons, not just the first one
-            const allCoveragePromises = formData.seasons.map(season => 
-              getCategoryCoverageForAI(
-                user.id,
-                formData.category as ItemCategory,
-                season as Season,
-                scenarios,
-                wardrobeItems
-              )
-            );
-            
-            const allSeasonsCoverage = await Promise.all(allCoveragePromises);
-            
-            // Flatten and combine coverage from all seasons
-            scenarioCoverage = allSeasonsCoverage.flat();
-            
-            console.log(`[wardrobeAnalysisService] Generated scenario coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
-            
-            // Group by scenario and show coverage per season
-            const coverageByScenario = scenarioCoverage.reduce((acc: Record<string, any[]>, coverage) => {
-              const key = coverage.scenarioName;
-              if (!acc[key]) acc[key] = [];
-              acc[key].push(coverage);
-              return acc;
-            }, {});
-            
-            Object.entries(coverageByScenario).forEach(([scenarioName, coverages]) => {
-              const seasonCoverages = (coverages as any[]).map(c => 
-                `${c.season}: ${(c as any).coveragePercent || (c as any).coveragePercentage || 0}%`
-              ).join(', ');
-              console.log(`[wardrobeAnalysisService] Coverage: ${scenarioName} - [${seasonCoverages}]`);
-            });
+            if (isOuterwear) {
+              // For outerwear, fetch only seasonal coverage (not scenario-specific)
+              console.log(`[wardrobeAnalysisService] Using SEASONAL coverage for outerwear`);
+              const { getOuterwearSeasonalCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
+              
+              // Get seasonal coverage for ALL selected seasons
+              const allCoveragePromises = formData.seasons.map(season => 
+                getOuterwearSeasonalCoverageForAI(user.id, season as Season)
+              );
+              
+              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
+              scenarioCoverage = allSeasonsCoverage.flat();
+              
+              console.log(`[wardrobeAnalysisService] Generated SEASONAL outerwear coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
+              
+              // Log seasonal coverage
+              scenarioCoverage.forEach((coverage: any) => {
+                console.log(`[wardrobeAnalysisService] Seasonal Coverage: ${coverage.scenarioName} - ${coverage.season}: ${coverage.coveragePercent}%`);
+              });
+              
+            } else if (scenarios.length > 0) {
+              // For regular items, use scenario-specific coverage
+              console.log(`[wardrobeAnalysisService] Using SCENARIO coverage for regular items`);
+              const { getCategoryCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
+              
+              // Get coverage for ALL selected seasons, not just the first one
+              const allCoveragePromises = formData.seasons.map(season => 
+                getCategoryCoverageForAI(
+                  user.id,
+                  formData.category as ItemCategory,
+                  season as Season,
+                  scenarios,
+                  wardrobeItems
+                )
+              );
+              
+              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
+              scenarioCoverage = allSeasonsCoverage.flat();
+              
+              console.log(`[wardrobeAnalysisService] Generated scenario coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
+              
+              // Group by scenario and show coverage per season
+              const coverageByScenario = scenarioCoverage.reduce((acc: Record<string, any[]>, coverage) => {
+                const key = coverage.scenarioName;
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(coverage);
+                return acc;
+              }, {});
+              
+              Object.entries(coverageByScenario).forEach(([scenarioName, coverages]) => {
+                const seasonCoverages = (coverages as any[]).map(c => 
+                  `${c.season}: ${(c as any).coveragePercent || (c as any).coveragePercentage || 0}%`
+                ).join(', ');
+                console.log(`[wardrobeAnalysisService] Coverage: ${scenarioName} - [${seasonCoverages}]`);
+              });
+            }
             
           } catch (coverageError) {
-            console.error('[wardrobeAnalysisService] Failed to calculate scenario coverage:', coverageError);
+            console.error('[wardrobeAnalysisService] Failed to calculate coverage:', coverageError);
             // Continue without scenario coverage
           }
         }
