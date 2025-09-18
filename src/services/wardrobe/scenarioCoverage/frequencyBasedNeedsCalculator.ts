@@ -63,42 +63,59 @@ export type FrequencyBasedNeed = {
 };
 
 /**
- * Parse frequency text and calculate uses per season
+ * Get the duration in months for a specific season
  */
-const parseFrequencyToSeasonalUse = (frequency: string): number => {
+const getSeasonDurationInMonths = (season: Season): number => {
+  switch (season) {
+    case Season.SUMMER:
+    case Season.WINTER:
+      return 3; // Individual seasons are ~3 months
+    case Season.TRANSITIONAL:
+      return 6; // Spring/fall combined is ~6 months (Mar-May + Sep-Nov)
+    default:
+      return 3; // Default fallback
+  }
+};
+
+/**
+ * Parse frequency text and calculate uses per season (season-aware)
+ */
+const parseFrequencyToSeasonalUse = (frequency: string, season: Season): number => {
   if (!frequency) return 0;
   
   const freq = frequency.toLowerCase();
+  const seasonMonths = getSeasonDurationInMonths(season);
+  const seasonDays = seasonMonths * 30; // Approximate days per season
   
   // Parse patterns like "5 times per week", "twice per month", "daily", etc.
   if (freq.includes('daily') || freq.includes('every day')) {
-    return 90; // ~3 months per season * 30 days
+    return seasonDays; // Adjusted for season duration
   }
   
   if (freq.includes('per week') || freq.includes('weekly')) {
     const match = freq.match(/(\d+)\s*times?\s*per\s*week/);
     if (match) {
       const timesPerWeek = parseInt(match[1]);
-      return timesPerWeek * 13; // ~13 weeks per season
+      const weeksPerSeason = Math.round(seasonMonths * 4.33); // ~4.33 weeks per month
+      return timesPerWeek * weeksPerSeason;
     }
     
     // Handle "weekly", "twice per week", etc.
-    if (freq.includes('twice')) return 2 * 13;
-    if (freq.includes('once')) return 1 * 13;
-    if (freq.includes('weekly')) return 1 * 13;
+    const weeksPerSeason = Math.round(seasonMonths * 4.33);
+    if (freq.includes('twice')) return 2 * weeksPerSeason;
+    if (freq.includes('weekly')) return weeksPerSeason;
   }
   
   if (freq.includes('per month') || freq.includes('monthly')) {
     const match = freq.match(/(\d+)\s*times?\s*per\s*month/);
     if (match) {
       const timesPerMonth = parseInt(match[1]);
-      return timesPerMonth * 3; // ~3 months per season
+      return timesPerMonth * seasonMonths; // Adjusted for season duration
     }
     
     // Handle "monthly", "twice per month", etc.
-    if (freq.includes('twice')) return 2 * 3;
-    if (freq.includes('once')) return 1 * 3;
-    if (freq.includes('monthly')) return 1 * 3;
+    if (freq.includes('twice')) return 2 * seasonMonths;
+    if (freq.includes('monthly')) return seasonMonths;
   }
   
   if (freq.includes('rarely') || freq.includes('seldom')) {
@@ -211,8 +228,8 @@ export const calculateFrequencyBasedNeeds = async (
   for (const scenario of scenarios) {
     console.log(`🟦 FREQUENCY NEEDS - Processing: ${scenario.name} (${scenario.frequency})`);
     
-    // Parse frequency to get seasonal usage
-    const usesPerSeason = parseFrequencyToSeasonalUse(scenario.frequency || '');
+    // Parse frequency to get seasonal usage (now season-aware)
+    const usesPerSeason = parseFrequencyToSeasonalUse(scenario.frequency || '', season);
     const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
     const { categoryNeeds, outfitStrategies } = calculateFlexibleCategoryNeeds(outfitsNeeded);
     
