@@ -33,6 +33,29 @@ export type CategoryCoverage = {
   neededItemsMax: number;
   coveragePercent: number;
   gapCount: number;
+  /**
+   * Gap type classification based on current items vs. min/ideal/max thresholds:
+   * 
+   * - 'critical': 0 items OR below minimum threshold
+   *   → Urgent action needed, category is blocking outfit creation
+   *   → Message: "Urgent: Add immediately"
+   * 
+   * - 'improvement': Between minimum and ideal threshold  
+   *   → Good foundation exists, but more variety would help
+   *   → Message: "Consider adding for better variety"
+   * 
+   * - 'expansion': Between ideal and maximum threshold
+   *   → Well-covered category with room for strategic growth
+   *   → Message: "Well-covered, room for growth" 
+   * 
+   * - 'satisfied': At maximum threshold exactly
+   *   → Perfect amount, focus energy elsewhere
+   *   → Message: "Perfect! Focus elsewhere"
+   * 
+   * - 'oversaturated': Above maximum threshold
+   *   → Too many items, consider decluttering
+   *   → Message: "Consider decluttering"
+   */
   gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
   isCritical: boolean;
   priorityLevel: number; // 1-5, 1=critical, 5=nice-to-have (accessories)

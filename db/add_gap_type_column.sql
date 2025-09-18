@@ -1,13 +1,14 @@
 -- Add gap_type column and remove deprecated category_recommendations column
 
--- Add the new gap_type column with a default value
+-- Add gap_type column with constraint for valid values
+-- Gap type meanings:
+--   critical: 0 items OR below minimum → "Urgent: Add immediately"
+--   improvement: Between min and ideal → "Consider adding for better variety"  
+--   expansion: Between ideal and max → "Well-covered, room for growth"
+--   satisfied: At maximum exactly → "Perfect! Focus elsewhere"
+--   oversaturated: Above maximum → "Consider decluttering"
 ALTER TABLE scenario_coverage_by_category 
-ADD COLUMN gap_type TEXT DEFAULT 'improvement';
-
--- Create a check constraint to ensure valid values
-ALTER TABLE scenario_coverage_by_category 
-ADD CONSTRAINT scenario_coverage_gap_type_check 
-CHECK (gap_type IN ('critical', 'improvement', 'expansion', 'satisfied', 'oversaturated'));
+ADD COLUMN gap_type TEXT CHECK (gap_type IN ('critical', 'improvement', 'expansion', 'satisfied', 'oversaturated'));
 
 -- Update existing records based on current logic
 UPDATE scenario_coverage_by_category 

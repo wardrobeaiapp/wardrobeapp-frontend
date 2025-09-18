@@ -304,7 +304,9 @@ export const calculateCategoryCoverage = async (
     ? Math.min(100, Math.round((currentItems / categoryNeed.ideal) * 100))
     : 100;
 
-  // Enhanced gap calculation logic
+  // Enhanced 5-tier gap calculation logic
+  // Replaces old simple logic: gapCount = max(0, ideal - current)
+  // New logic provides nuanced guidance for over-ideal scenarios
   let gapCount: number;
   let gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
   
