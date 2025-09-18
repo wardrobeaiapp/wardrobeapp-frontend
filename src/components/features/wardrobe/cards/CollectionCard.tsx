@@ -40,8 +40,13 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
       <CollectionName>{data.name}</CollectionName>
       
       <TagsContainer>
-        {seasons.map((season) => (
-          <SeasonTag key={season} season={season} />
+        {seasons.flatMap((season) => 
+          // Split 'spring/fall' into separate tags for display
+          season === 'spring/fall' 
+            ? ['spring', 'fall'] 
+            : [season]
+        ).map((displaySeason) => (
+          <SeasonTag key={displaySeason} season={displaySeason} />
         ))}
       </TagsContainer>
       

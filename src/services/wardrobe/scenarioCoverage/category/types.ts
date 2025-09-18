@@ -1,7 +1,7 @@
 import { Season, ItemCategory } from '../../../../types';
 
 // Season constants using enum values  
-export const ALL_SEASONS: Season[] = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+export const ALL_SEASONS: Season[] = [Season.SUMMER, Season.WINTER, Season.TRANSITIONAL];
 
 // Category needs calculation types
 export type CategoryNeed = {

@@ -61,8 +61,13 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         <ItemName>{item.name}</ItemName>
         {item.season && item.season.length > 0 && (
           <TagsContainer>
-            {item.season.map((season) => (
-              <SeasonTag key={season} season={season} />
+            {item.season.flatMap((season) => 
+              // Split 'spring/fall' into separate tags for display
+              season === 'spring/fall' 
+                ? ['spring', 'fall'] 
+                : [season]
+            ).map((displaySeason) => (
+              <SeasonTag key={displaySeason} season={displaySeason} />
             ))}
           </TagsContainer>
         )}

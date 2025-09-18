@@ -53,10 +53,9 @@ export enum ItemCategory {
 }
 
 export enum Season {
-  SPRING = 'spring',
   SUMMER = 'summer',
-  FALL = 'fall',
-  WINTER = 'winter'
+  WINTER = 'winter',
+  TRANSITIONAL = 'spring/fall' // Combined spring/fall - mild weather, layering pieces
 }
 
 export interface Outfit {

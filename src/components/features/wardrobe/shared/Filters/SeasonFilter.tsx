@@ -49,5 +49,10 @@ export const SeasonFilter: React.FC<SeasonFilterProps> = ({
 };
 
 function formatSeasonForDisplay(season: string): string {
+  // Handle special case for 'spring/fall' - capitalize both words
+  if (season === 'spring/fall') {
+    return 'Spring/Fall';
+  }
+  // Handle other seasons normally
   return season.charAt(0).toUpperCase() + season.slice(1).toLowerCase();
 }

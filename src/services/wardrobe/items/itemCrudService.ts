@@ -130,7 +130,7 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
   // Ensure season field always has a value to satisfy the not-null constraint
   if (!itemToAdd.season || !Array.isArray(itemToAdd.season) || itemToAdd.season.length === 0) {
     // Default to all seasons if not specified
-    itemToAdd.season = [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+    itemToAdd.season = [Season.SUMMER, Season.WINTER, Season.TRANSITIONAL];
   }
   
   // Extract scenarios before creating item (they're stored in a join table)

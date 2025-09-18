@@ -47,23 +47,20 @@ export const formatCategoryName = (category: ItemCategory): string => {
 
 // Available seasons
 export const AVAILABLE_SEASONS = [
-  Season.SPRING, 
   Season.SUMMER, 
-  Season.FALL, 
-  Season.WINTER
+  Season.WINTER,
+  Season.TRANSITIONAL
 ] as const;
 
 // Get season display name
 export const getSeasonDisplayName = (season: Season): string => {
   switch (season) {
-    case Season.SPRING:
-      return 'Spring';
     case Season.SUMMER:
       return 'Summer';
-    case Season.FALL:
-      return 'Fall';
     case Season.WINTER:
       return 'Winter';
+    case Season.TRANSITIONAL:
+      return 'Spring/Fall';
     default:
       return season;
   }

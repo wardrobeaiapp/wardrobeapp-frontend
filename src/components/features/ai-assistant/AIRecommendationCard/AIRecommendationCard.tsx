@@ -67,10 +67,9 @@ const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
               style={{ width: '100%' }}
             >
               <option value="all">All Seasons</option>
-              <option value={Season.SPRING}>Spring</option>
               <option value={Season.SUMMER}>Summer</option>
-              <option value={Season.FALL}>Fall</option>
               <option value={Season.WINTER}>Winter</option>
+              <option value={Season.TRANSITIONAL}>Spring/Fall</option>
             </FormSelect>
           </FormField>
           

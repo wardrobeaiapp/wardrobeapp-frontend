@@ -3,18 +3,18 @@ import { ExtractionHelpers } from '../utils/extractionHelpers';
 
 // Mapping of season keywords to Season enum values
 const SEASON_KEYWORD_MAPPING: Record<string, Season> = {
-  // Spring
-  'spring': Season.SPRING,
-  'springtime': Season.SPRING,
-  'light': Season.SPRING,
-  'pastel': Season.SPRING,
-  'rainy': Season.SPRING,
-  'floral': Season.SPRING,
-  'breezy': Season.SPRING,
-  'mild': Season.SPRING,
-  'april': Season.SPRING,
-  'may': Season.SPRING,
-  'march': Season.SPRING,
+  // Transitional (Spring/Fall combined)
+  'spring': Season.TRANSITIONAL,
+  'springtime': Season.TRANSITIONAL,
+  'light': Season.TRANSITIONAL,
+  'pastel': Season.TRANSITIONAL,
+  'rainy': Season.TRANSITIONAL,
+  'floral': Season.TRANSITIONAL,
+  'breezy': Season.TRANSITIONAL,
+  'mild': Season.TRANSITIONAL,
+  'april': Season.TRANSITIONAL,
+  'may': Season.TRANSITIONAL,
+  'march': Season.TRANSITIONAL,
   
   // Summer
   'summer': Season.SUMMER,
@@ -30,21 +30,23 @@ const SEASON_KEYWORD_MAPPING: Record<string, Season> = {
   'july': Season.SUMMER,
   'august': Season.SUMMER,
   
-  // Fall/Autumn
-  'fall': Season.FALL,
-  'autumn': Season.FALL,
-  'harvest': Season.FALL,
-  'rustic': Season.FALL,
-  'earth tone': Season.FALL,
-  'rust': Season.FALL,
-  'orange': Season.FALL,
-  'burgundy': Season.FALL,
-  'brown': Season.FALL,
-  'khaki': Season.FALL,
-  'olive': Season.FALL,
-  'september': Season.FALL,
-  'october': Season.FALL,
-  'november': Season.FALL,
+  // Fall/Autumn (now part of Transitional)
+  'fall': Season.TRANSITIONAL,
+  'autumn': Season.TRANSITIONAL,
+  'harvest': Season.TRANSITIONAL,
+  'rustic': Season.TRANSITIONAL,
+  'earth tone': Season.TRANSITIONAL,
+  'rust': Season.TRANSITIONAL,
+  'orange': Season.TRANSITIONAL,
+  'burgundy': Season.TRANSITIONAL,
+  'brown': Season.TRANSITIONAL,
+  'khaki': Season.TRANSITIONAL,
+  'olive': Season.TRANSITIONAL,
+  'september': Season.TRANSITIONAL,
+  'october': Season.TRANSITIONAL,
+  'november': Season.TRANSITIONAL,
+  'layering': Season.TRANSITIONAL,
+  'transitional': Season.TRANSITIONAL,
   
   // Winter
   'winter': Season.WINTER,
@@ -67,7 +69,7 @@ const SEASON_KEYWORD_MAPPING: Record<string, Season> = {
  * @returns Array of all Season enum values
  */
 export function getAllSeasons(): Season[] {
-  return [Season.SPRING, Season.SUMMER, Season.FALL, Season.WINTER];
+  return [Season.SUMMER, Season.WINTER, Season.TRANSITIONAL];
 }
 
 /**
@@ -102,14 +104,12 @@ export function mapSeasonKeyword(keyword: string): Season | undefined {
  */
 export function getSeasonDisplayName(season: Season): string {
   switch (season) {
-    case Season.SPRING:
-      return 'Spring';
     case Season.SUMMER:
       return 'Summer';
-    case Season.FALL:
-      return 'Fall';
     case Season.WINTER:
       return 'Winter';
+    case Season.TRANSITIONAL:
+      return 'Spring/Fall';
     default:
       return 'Unknown';
   }
