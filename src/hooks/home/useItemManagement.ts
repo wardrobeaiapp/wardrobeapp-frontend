@@ -110,13 +110,23 @@ export const useItemManagement = ({
       return;
     }
 
+    // Close the view item modal immediately for better UX
+    if (modalState?.setIsViewItemModalOpen) {
+      console.log('[useItemManagement] Closing view item modal immediately');
+      modalState.setIsViewItemModalOpen(false);
+      // Clear the selected item state to ensure clean modal state
+      setSelectedItem(undefined);
+    }
+
     try {
       await updateItem(currentItemId, updates);
     } catch (error) {
       console.error('Error updating item:', error);
+      // If there's an error, we could optionally reopen the modal
+      // but for now we'll let the error be handled by the form
       throw error;
     }
-  }, [currentItemId, updateItem]);
+  }, [currentItemId, updateItem, modalState, setSelectedItem]);
 
   return {
     // State
