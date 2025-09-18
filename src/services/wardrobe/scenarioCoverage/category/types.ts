@@ -25,7 +25,6 @@ export type CategoryCoverage = {
   userId: string;
   scenarioId: string;
   scenarioName: string;
-  scenarioFrequency: string;
   season: Season;
   category: ItemCategory;
   currentItems: number;
@@ -34,12 +33,8 @@ export type CategoryCoverage = {
   neededItemsMax: number;
   coveragePercent: number;
   gapCount: number;
+  gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
   isCritical: boolean;
-  isBottleneck: boolean;
   priorityLevel: number; // 1-5, 1=critical, 5=nice-to-have (accessories)
-  categoryRecommendations: string[];
-  separatesFocusedTarget: number;
-  dressFocusedTarget: number;
-  balancedTarget: number;
   lastUpdated: string;
 };

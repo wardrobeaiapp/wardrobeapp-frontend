@@ -56,7 +56,6 @@ export const getCategoryCoverageForAI = async (
             userId,
             scenario.id,
             scenario.name,
-            scenario.frequency || '',
             seasonToCheck as Season,
             category,
             items

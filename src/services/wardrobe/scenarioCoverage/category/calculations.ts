@@ -50,41 +50,6 @@ function determinePriorityLevel(
   return 4; // Low priority / satisfied
 }
 
-function generateCategoryRecommendations(
-  category: ItemCategory,
-  currentItems: number,
-  categoryNeed: any,
-  scenarioName: string,
-  isCritical: boolean
-): string[] {
-  const recommendations: string[] = [];
-
-  // Special handling for accessories
-  if (category === ItemCategory.ACCESSORY) {
-    if (currentItems === 0) {
-      recommendations.push(`💎 Optional: Add some accessories to enhance your ${scenarioName} outfits - belts, jewelry, or bags can add personal flair`);
-    } else if (currentItems < categoryNeed.ideal) {
-      recommendations.push(`✨ Style tip: Consider adding variety to your ${scenarioName} accessories - mix different types like scarves, jewelry, or belts`);
-    } else {
-      recommendations.push(`💫 Perfect! You have great accessory variety for ${scenarioName} - focus on mixing and matching for different looks`);
-    }
-    return recommendations;
-  }
-
-  // Regular categories
-  if (isCritical) {
-    const categoryName = category === ItemCategory.ONE_PIECE ? 'dresses' : category;
-    recommendations.push(`🚨 Critical: Add ${categoryName} for ${scenarioName} - you can't create any outfits without them`);
-  } else if (currentItems < categoryNeed.min) {
-    recommendations.push(`Add ${categoryNeed.min - currentItems} more ${category} to reach minimum for ${scenarioName}`);
-  } else if (currentItems < categoryNeed.ideal) {
-    recommendations.push(`Consider ${categoryNeed.ideal - currentItems} more ${category} for optimal ${scenarioName} variety`);
-  } else {
-    recommendations.push(`✅ Your ${category} collection for ${scenarioName} is well-covered`);
-  }
-
-  return recommendations;
-}
 
 /**
  * Calculate category needs based on outfit requirements
@@ -187,11 +152,11 @@ async function calculateAccessorySubcategoryCoverage(
   userId: string,
   scenarioId: string,
   scenarioName: string,
-  scenarioFrequency: string,
   season: Season,
   categoryItems: WardrobeItem[]
 ): Promise<CategoryCoverage> {
-  const usesPerSeason = parseFrequencyToSeasonalUse(scenarioFrequency);
+  // Use a default frequency calculation for accessories (less frequency-dependent)
+  const usesPerSeason = 5; // Default seasonal usage for accessories
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
   const subcategoryLimits = getAccessorySubcategoryLimits(outfitsNeeded);
   
@@ -264,21 +229,12 @@ async function calculateAccessorySubcategoryCoverage(
     ? Math.min(100, Math.round((totalCurrent / totalIdeal) * 100))
     : 100;
     
-  // Combine recommendations from all subcategories
-  const combinedRecommendations = subcategoryAnalysis
-    .filter(analysis => analysis.current < analysis.ideal)
-    .slice(0, 3) // Top 3 priorities
-    .map(analysis => analysis.recommendations[0]);
-    
-  if (combinedRecommendations.length === 0) {
-    combinedRecommendations.push(`💫 Perfect! Your accessory variety for ${scenarioName} is excellent across all categories`);
-  }
+  // Note: Recommendations now generated dynamically based on gapType instead of storing in database
 
   return {
     userId,
     scenarioId,
     scenarioName,
-    scenarioFrequency,
     season,
     category: ItemCategory.ACCESSORY,
     currentItems: totalCurrent,
@@ -287,13 +243,9 @@ async function calculateAccessorySubcategoryCoverage(
     neededItemsMax: Object.values(subcategoryLimits).reduce((sum, limits) => sum + limits.max, 0),
     coveragePercent: overallCoverage,
     gapCount: Math.max(0, totalIdeal - totalCurrent),
+    gapType: totalCurrent >= totalIdeal ? 'satisfied' : 'improvement',
     isCritical: false, // Never critical
-    isBottleneck: false,
     priorityLevel: totalCurrent === 0 ? 4 : 5, // Low to very low priority
-    categoryRecommendations: combinedRecommendations,
-    separatesFocusedTarget: 0,
-    dressFocusedTarget: 0,
-    balancedTarget: 0,
     lastUpdated: new Date().toISOString()
   };
 }
@@ -305,7 +257,6 @@ export const calculateCategoryCoverage = async (
   userId: string,
   scenarioId: string,
   scenarioName: string,
-  scenarioFrequency: string,
   season: Season,
   category: ItemCategory,
   items: WardrobeItem[]
@@ -327,12 +278,12 @@ export const calculateCategoryCoverage = async (
   // Special handling for accessories - analyze by subcategory
   if (category === ItemCategory.ACCESSORY) {
     return calculateAccessorySubcategoryCoverage(
-      userId, scenarioId, scenarioName, scenarioFrequency, season, categoryItems
+      userId, scenarioId, scenarioName, season, categoryItems
     );
   }
 
-  // Calculate needs for this category
-  const usesPerSeason = parseFrequencyToSeasonalUse(scenarioFrequency);
+  // Calculate needs for this category using default frequency
+  const usesPerSeason = 5; // Default seasonal usage (frequency is now managed elsewhere)
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
   const categoryNeeds = calculateCategoryNeeds(outfitsNeeded);
 
@@ -343,27 +294,45 @@ export const calculateCategoryCoverage = async (
     ? Math.min(100, Math.round((currentItems / categoryNeed.ideal) * 100))
     : 100;
 
-  const gapCount = Math.max(0, categoryNeed.ideal - currentItems);
+  // Enhanced gap calculation logic
+  let gapCount: number;
+  let gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
+  
+  if (currentItems === 0) {
+    // No items at all - critical gap
+    gapCount = categoryNeed.ideal;
+    gapType = 'critical';
+  } else if (currentItems < categoryNeed.min) {
+    // Below minimum - critical gap to reach min
+    gapCount = categoryNeed.min - currentItems;
+    gapType = 'critical';
+  } else if (currentItems < categoryNeed.ideal) {
+    // Between min and ideal - improvement gap
+    gapCount = categoryNeed.ideal - currentItems;
+    gapType = 'improvement';
+  } else if (currentItems < categoryNeed.max) {
+    // Between ideal and max - expansion opportunity
+    gapCount = categoryNeed.max - currentItems;
+    gapType = 'expansion';
+  } else if (currentItems === categoryNeed.max) {
+    // At maximum - satisfied, no gap
+    gapCount = 0;
+    gapType = 'satisfied';
+  } else {
+    // Over maximum - oversaturated
+    gapCount = 0;
+    gapType = 'oversaturated';
+  }
   const isCritical = currentItems === 0 && 
                      [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.FOOTWEAR].includes(category);
   
   // Determine priority level
   const priorityLevel = determinePriorityLevel(category, currentItems, gapCount, isCritical);
 
-  // Generate category-specific recommendations
-  const categoryRecommendations = generateCategoryRecommendations(
-    category, 
-    currentItems, 
-    categoryNeed, 
-    scenarioName,
-    isCritical
-  );
-
   const coverage: CategoryCoverage = {
     userId,
     scenarioId,
     scenarioName,
-    scenarioFrequency,
     season,
     category,
     currentItems,
@@ -372,13 +341,9 @@ export const calculateCategoryCoverage = async (
     neededItemsMax: categoryNeed.max,
     coveragePercent,
     gapCount,
+    gapType,
     isCritical,
-    isBottleneck: false, // Will be determined when comparing across categories
     priorityLevel,
-    categoryRecommendations,
-    separatesFocusedTarget: 0, // Simplified for now
-    dressFocusedTarget: 0, // Simplified for now  
-    balancedTarget: 0, // Simplified for now
     lastUpdated: new Date().toISOString()
   };
 
