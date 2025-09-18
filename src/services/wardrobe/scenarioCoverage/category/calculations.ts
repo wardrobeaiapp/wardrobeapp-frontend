@@ -152,6 +152,7 @@ async function calculateAccessorySubcategoryCoverage(
   userId: string,
   scenarioId: string,
   scenarioName: string,
+  scenarioFrequency: string,
   season: Season,
   categoryItems: WardrobeItem[]
 ): Promise<CategoryCoverage> {
@@ -257,6 +258,7 @@ export const calculateCategoryCoverage = async (
   userId: string,
   scenarioId: string,
   scenarioName: string,
+  scenarioFrequency: string,
   season: Season,
   category: ItemCategory,
   items: WardrobeItem[]
@@ -278,12 +280,20 @@ export const calculateCategoryCoverage = async (
   // Special handling for accessories - analyze by subcategory
   if (category === ItemCategory.ACCESSORY) {
     return calculateAccessorySubcategoryCoverage(
-      userId, scenarioId, scenarioName, season, categoryItems
+      userId, scenarioId, scenarioName, scenarioFrequency, season, categoryItems
     );
   }
 
-  // Calculate needs for this category using default frequency
-  const usesPerSeason = 5; // Default seasonal usage (frequency is now managed elsewhere)
+  // Calculate needs for this category
+  let usesPerSeason: number;
+  if (category === ItemCategory.OUTERWEAR) {
+    // Outerwear needs are based on weather/seasons, not scenario frequency
+    usesPerSeason = 5; // Default for outerwear
+  } else {
+    // For other categories, use frequency-based calculations
+    usesPerSeason = parseFrequencyToSeasonalUse(scenarioFrequency);
+  }
+  
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
   const categoryNeeds = calculateCategoryNeeds(outfitsNeeded);
 

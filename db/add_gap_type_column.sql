@@ -43,7 +43,7 @@ ORDER BY
 -- category_recommendations: Now generated dynamically based on gap_type
 -- target columns: Were never implemented, always stored as 0
 -- is_bottleneck: Logic was never implemented, always false
--- scenario_frequency: Duplicates data from scenarios table
+-- scenario_frequency: Duplicates data from scenarios table (frequency still used in calculations, just not stored redundantly)
 ALTER TABLE scenario_coverage_by_category 
 DROP COLUMN IF EXISTS category_recommendations,
 DROP COLUMN IF EXISTS separates_focused_target,
