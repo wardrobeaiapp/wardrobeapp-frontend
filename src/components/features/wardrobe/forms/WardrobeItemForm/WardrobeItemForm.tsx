@@ -5,6 +5,7 @@ import { useWardrobeItemForm } from './hooks/useWardrobeItemForm';
 import { useImageHandling } from './hooks/useImageHandling';
 import { useBackgroundRemoval } from './hooks/useBackgroundRemoval';
 import { FormContainer } from '../../shared/styles/form.styles';
+import { LoadingSpinner, FormSectionLoading } from './WardrobeItemForm.styles';
 
 // Lazy load heavy form components to prevent blocking modal opening
 const ImageUploadSection = lazy(() => import('./components/ImageUploadSection').then(module => ({ default: module.ImageUploadSection })));
@@ -27,6 +28,30 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   onCancel
 }) => {
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
+  const [loadedComponents, setLoadedComponents] = useState<Set<string>>(new Set());
+  
+  // Progressive loading: load components one by one after initial render
+  React.useEffect(() => {
+    const loadComponents = async () => {
+      // Load image upload first
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setLoadedComponents(prev => new Set([...prev, 'image']));
+      
+      // Then basic info
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setLoadedComponents(prev => new Set([...prev, 'basic']));
+      
+      // Then details
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setLoadedComponents(prev => new Set([...prev, 'details']));
+      
+      // Finally actions
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setLoadedComponents(prev => new Set([...prev, 'actions']));
+    };
+    
+    loadComponents();
+  }, []);
   const { processDetectedTags } = useTagProcessing();
   
   const formState = useWardrobeItemForm({
@@ -198,11 +223,20 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     }
   };
 
+  // Helper to render placeholder for components that haven't loaded yet
+  const renderPlaceholder = (text: string) => (
+    <FormSectionLoading>
+      <LoadingSpinner />
+      {text}
+    </FormSectionLoading>
+  );
+
   return (
     <FormContainer>
       <form onSubmit={handleSubmit}>
-        <Suspense fallback={<div>Loading...</div>}>
-          <ImageUploadSection
+        {loadedComponents.has('image') ? (
+          <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading image upload...</FormSectionLoading>}>
+            <ImageUploadSection
             previewImage={previewImage}
             selectedFile={selectedFile}
             onDrop={(e: React.DragEvent) => handleDrop(e, formState.setImageUrl)}
@@ -214,11 +248,12 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
             isLoadingUrl={isDownloadingImage}
             isImageFromUrl={isImageFromUrl}
-            error={formState.errors.imageUrl || ''}
-          />
-        </Suspense>
+              error={formState.errors.imageUrl || ''}
+            />
+          </Suspense>
+        ) : renderPlaceholder('Loading image upload...')}
 
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading background removal...</FormSectionLoading>}>
           <BackgroundRemovalPreview
             isOpen={backgroundRemoval.showPreview}
             originalImage={backgroundRemoval.originalImage || ''}
@@ -230,8 +265,9 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
           />
         </Suspense>
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <BasicInfoFields
+        {loadedComponents.has('basic') ? (
+          <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading basic info...</FormSectionLoading>}>
+            <BasicInfoFields
             name={formState.name}
             onNameChange={formState.setName}
             category={formState.category}
@@ -241,11 +277,13 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             color={formState.color}
             onColorChange={formState.setColor}
             errors={formState.errors}
-          />
-        </Suspense>
+            />
+          </Suspense>
+        ) : renderPlaceholder('Loading basic info...')}
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <DetailsFields
+        {loadedComponents.has('details') ? (
+          <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading details...</FormSectionLoading>}>
+            <DetailsFields
             material={formState.material}
             onMaterialChange={formState.setMaterial}
             brand={formState.brand}
@@ -281,16 +319,19 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             category={formState.category}
             subcategory={formState.subcategory}
             errors={formState.errors}
-          />
-        </Suspense>
+            />
+          </Suspense>
+        ) : renderPlaceholder('Loading details...')}
 
-        <Suspense fallback={<div>Loading...</div>}>
-          <FormActions
-            onCancel={onCancel}
-            isSubmitting={formState.isSubmitting}
-            isDownloadingImage={isDownloadingImage}
-          />
-        </Suspense>
+        {loadedComponents.has('actions') ? (
+          <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading actions...</FormSectionLoading>}>
+            <FormActions
+              onCancel={onCancel}
+              isSubmitting={formState.isSubmitting}
+              isDownloadingImage={isDownloadingImage}
+            />
+          </Suspense>
+        ) : renderPlaceholder('Loading actions...')}
       </form>
     </FormContainer>
   );

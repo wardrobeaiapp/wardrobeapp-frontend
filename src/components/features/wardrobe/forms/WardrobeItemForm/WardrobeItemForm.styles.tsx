@@ -56,6 +56,35 @@ export const FileInfo = styled.p`
   margin: 0;
 `;
 
+// Loading Styles
+export const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid ${formTokens.colors.background.secondary};
+  border-top: 2px solid ${formTokens.colors.primary};
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: ${formTokens.spacing.sm};
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+export const FormSectionLoading = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: ${formTokens.spacing.lg};
+  color: ${formTokens.colors.textMuted};
+  font-size: ${formTokens.typography.fontSizes.sm};
+  background: ${formTokens.colors.background.secondary};
+  border-radius: ${formTokens.borderRadius.md};
+  margin: ${formTokens.spacing.sm} 0;
+`;
+
 // Button Container and Buttons
 export { ButtonContainer } from '../../shared/styles/form.styles';
 
