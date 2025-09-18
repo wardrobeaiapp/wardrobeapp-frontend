@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { WardrobeItem } from '../../types';
 
 interface UseAIModalsProps {
-  onItemSelect?: (imageUrl: string) => void;
+  onItemSelect?: (imageUrl: string, selectedItem?: WardrobeItem) => void;
 }
 
 export const useAIModals = ({ onItemSelect }: UseAIModalsProps = {}) => {
@@ -39,7 +39,7 @@ export const useAIModals = ({ onItemSelect }: UseAIModalsProps = {}) => {
     try {
       // If it's already a base64 image, use it directly
       if (imageUrl.startsWith('data:image')) {
-        onItemSelect(imageUrl);
+        onItemSelect(imageUrl, item);
         return;
       }
       
@@ -54,20 +54,20 @@ export const useAIModals = ({ onItemSelect }: UseAIModalsProps = {}) => {
       
       reader.onloadend = () => {
         const base64data = reader.result as string;
-        onItemSelect(base64data);
+        onItemSelect(base64data, item);
       };
       
       reader.onerror = () => {
         console.error('Error converting image to base64');
         // Fallback to original URL if conversion fails
-        onItemSelect(imageUrl);
+        onItemSelect(imageUrl, item);
       };
       
       reader.readAsDataURL(blob);
     } catch (error) {
       console.error('Error processing wishlist item image:', error);
       // Fallback to original URL if there's an error
-      onItemSelect(imageUrl);
+      onItemSelect(imageUrl, item);
     }
   }, [onItemSelect]);
 

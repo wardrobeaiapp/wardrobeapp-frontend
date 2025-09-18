@@ -70,6 +70,7 @@ interface AICheckCardProps {
   isFileUpload?: boolean;
   uploadedFile?: File | null;
   onProcessedImageChange?: (processedImageUrl: string, processedImageBlob: Blob) => void;
+  isWishlistItem?: boolean;
 }
 
 const AICheckCard: React.FC<AICheckCardProps> = ({
@@ -83,7 +84,8 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
   itemCheckResponse,
   isFileUpload = false,
   uploadedFile = null,
-  onProcessedImageChange
+  onProcessedImageChange,
+  isWishlistItem = false
 }) => {
   // Use the background removal hook
   const {

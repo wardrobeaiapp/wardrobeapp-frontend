@@ -25,6 +25,7 @@ import { CardsContainer } from './AIAssistantPage.styles';
 const AIAssistantPage: React.FC = () => {
   const { items } = useWardrobe();
   const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
+  const [selectedWishlistItem, setSelectedWishlistItem] = useState<import('../types').WardrobeItem | null>(null);
 
   // Modal hooks - Must be declared before they're used in other handlers
   const {
@@ -43,9 +44,11 @@ const AIAssistantPage: React.FC = () => {
     handleSaveRecommendation,
     handleSkipRecommendation,
   } = useAIModals({
-    onItemSelect: (imageUrl) => {
+    onItemSelect: (imageUrl, selectedItem) => {
       // Update image link when an item is selected from wishlist
       setImageLink(imageUrl);
+      // Store the selected wishlist item data
+      setSelectedWishlistItem(selectedItem || null);
     }
   });
 
@@ -76,9 +79,30 @@ const AIAssistantPage: React.FC = () => {
 
   // Handlers for the AI Check feature
   const handleCheckItem = async () => {
-    if (imageLink || uploadedFile) {
+    // If we have a selected wishlist item, skip the modal and use the item's data directly
+    if (selectedWishlistItem && (imageLink || uploadedFile)) {
+      console.log('Processing wishlist item with pre-filled data:', selectedWishlistItem);
+      
+      // Create form data from the wishlist item
+      const formData = {
+        category: selectedWishlistItem.category as string,
+        subcategory: selectedWishlistItem.subcategory || '',
+        seasons: (selectedWishlistItem.season || []).map(s => s as string)
+      };
+      
+      console.log('Bypassing AI Check Settings modal for wishlist item. Using data:', formData);
+      
+      // Call the AI check directly with the wishlist item data
+      const result = await handleCheckItemRaw(formData);
+      if (result) {
+        // Open the result modal if analysis was successful
+        handleOpenCheckResultModal();
+      }
+    } else if (imageLink || uploadedFile) {
+      // For regular uploads/URLs, show the settings modal
       setIsAICheckModalOpen(true);
     } else {
+      // No image provided
       const result = await handleCheckItemRaw();
       if (result) {
         // Open the result modal if analysis was successful
@@ -89,6 +113,8 @@ const AIAssistantPage: React.FC = () => {
 
   const handleApplyAICheck = async (data: { category: string; subcategory: string; seasons: string[] }) => {
     setIsAICheckModalOpen(false);
+    // Clear selected wishlist item since we're using manual form data
+    setSelectedWishlistItem(null);
     // Pass the form data to the AI check function
     const result = await handleCheckItemRaw(data);
     if (result) {
@@ -101,6 +127,8 @@ const AIAssistantPage: React.FC = () => {
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       handleFileUploadRaw(event.target.files[0]);
+      // Clear selected wishlist item when user uploads a new file
+      setSelectedWishlistItem(null);
     }
   };
 
@@ -173,7 +201,11 @@ const AIAssistantPage: React.FC = () => {
             <CardsContainer>
               <AICheckCard
                 imageLink={imageLink}
-                onImageLinkChange={setImageLink}
+                onImageLinkChange={(value) => {
+                  setImageLink(value);
+                  // Clear selected wishlist item when user manually enters a URL
+                  setSelectedWishlistItem(null);
+                }}
                 onFileUpload={handleFileUpload}
                 onCheckItem={handleCheckItem}
                 onOpenWishlistModal={handleOpenWishlistModal}
@@ -183,6 +215,7 @@ const AIAssistantPage: React.FC = () => {
                 isFileUpload={isFileUpload}
                 uploadedFile={uploadedFile}
                 onProcessedImageChange={handleProcessedImageChange}
+                isWishlistItem={!!selectedWishlistItem}
               />
               <AICheckModal
                 isOpen={isAICheckModalOpen}
