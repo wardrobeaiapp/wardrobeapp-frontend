@@ -23,6 +23,31 @@ DELETE FROM scenario_coverage_by_category
 WHERE category = 'accessory' 
 AND subcategory IS NULL;
 
+-- Step 2.5: Remove SEASONAL records for NON-SEASONAL subcategories
+-- Non-seasonal subcategories should ONLY have 'all_seasons' records, not seasonal ones
+DELETE FROM scenario_coverage_by_category 
+WHERE category = 'accessory' 
+AND subcategory IN ('Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses')
+AND season != 'all_seasons';
+
+-- Step 2.6: Clean up duplicate non-seasonal accessory records  
+-- Remove duplicate "all_seasons" records for non-seasonal subcategories
+-- Keep only one record per user/subcategory for non-seasonal accessories
+DELETE FROM scenario_coverage_by_category 
+WHERE id IN (
+    SELECT id FROM (
+        SELECT id,
+               ROW_NUMBER() OVER (
+                   PARTITION BY user_id, category, subcategory 
+                   ORDER BY last_updated DESC
+               ) as rn
+        FROM scenario_coverage_by_category
+        WHERE category = 'accessory' 
+        AND season = 'all_seasons'
+        AND subcategory IN ('Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses')
+    ) t WHERE rn > 1
+);
+
 -- Step 3: Verify the cleanup worked
 SELECT 
     'REMAINING ACCESSORY RECORDS:' as info,

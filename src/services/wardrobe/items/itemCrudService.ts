@@ -253,13 +253,23 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
           ? updatedItem.season 
           : ['summer', 'winter', 'spring/fall'];
         
-        // Trigger coverage update for each season
-        for (const season of seasonsToUpdate) {
-          if (isSeason(season)) {
-            console.log(`🟦 SCENARIO COVERAGE - Updating coverage for season: ${season}`);
-            await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, season);
-          } else {
-            console.warn(`⚠️  Skipping invalid season: ${season}`);
+        // Special handling for accessories to avoid duplicate non-seasonal subcategory records
+        if (updatedItem.category === 'accessory') {
+          // For accessories, only trigger once (not per season) to handle both seasonal and non-seasonal subcategories properly
+          console.log(`🟦 SCENARIO COVERAGE - Updating accessory coverage (all subcategories)`);
+          const representativeSeason = seasonsToUpdate[0]; // Use first season as representative
+          if (isSeason(representativeSeason)) {
+            await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, representativeSeason as Season);
+          }
+        } else {
+          // For non-accessories, trigger coverage update for each season
+          for (const season of seasonsToUpdate) {
+            if (isSeason(season)) {
+              console.log(`🟦 SCENARIO COVERAGE - Updating coverage for season: ${season}`);
+              await triggerItemUpdatedCoverage(userId, items, scenarios, oldItem, updatedItem, season);
+            } else {
+              console.warn(`⚠️  Skipping invalid season: ${season}`);
+            }
           }
         }
       } catch (error) {

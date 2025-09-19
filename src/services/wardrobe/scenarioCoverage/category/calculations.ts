@@ -157,6 +157,13 @@ function getAccessorySubcategory(item: WardrobeItem): string {
 }
 
 /**
+ * Define which accessory subcategories are seasonal vs non-seasonal
+ */
+const SEASONAL_ACCESSORY_SUBCATEGORIES = ['Scarf', 'Hat', 'Tights', 'Socks'];
+const NON_SEASONAL_ACCESSORY_SUBCATEGORIES = ['Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses'];
+const ALL_SEASONS_VALUE = 'all_seasons' as Season; // Special season value for non-seasonal accessories
+
+/**
  * Calculate accessory coverage by creating separate records for each subcategory
  */
 async function calculateAccessorySubcategoryCoverage(
@@ -185,7 +192,23 @@ async function calculateAccessorySubcategoryCoverage(
   const coverageRecords: CategoryCoverage[] = [];
   
   for (const [subcatName, limits] of Object.entries(subcategoryLimits)) {
-    const currentCount = subcategoryGroups[subcatName]?.length || 0;
+    // Determine if this subcategory is seasonal or non-seasonal
+    const isSeasonal = SEASONAL_ACCESSORY_SUBCATEGORIES.includes(subcatName);
+    const recordSeason = isSeasonal ? season : ALL_SEASONS_VALUE; // Use special value for "all seasons"
+    const displaySeason = isSeasonal ? season : 'all seasons';
+    
+    // For seasonal subcategories, filter items by season
+    // For non-seasonal subcategories, use all items of that subcategory
+    let subcategoryItems: WardrobeItem[];
+    if (isSeasonal) {
+      subcategoryItems = subcategoryGroups[subcatName]?.filter(item => 
+        !item.season || item.season.length === 0 || item.season.includes(season)
+      ) || [];
+    } else {
+      subcategoryItems = subcategoryGroups[subcatName] || [];
+    }
+    
+    const currentCount = subcategoryItems.length;
     const coverage = limits.ideal > 0 
       ? Math.min(100, Math.round((currentCount / limits.ideal) * 100))
       : 100;
@@ -209,10 +232,10 @@ async function calculateAccessorySubcategoryCoverage(
     const coverageRecord: CategoryCoverage = {
       userId,
       scenarioId,
-      scenarioName,
-      season,
+      scenarioName: isSeasonal ? scenarioName : 'All scenarios', // Keep consistent
+      season: recordSeason, // null for non-seasonal, actual season for seasonal
       category: ItemCategory.ACCESSORY,
-      subcategory: subcatName, // This is the key addition!
+      subcategory: subcatName,
       currentItems: currentCount,
       neededItemsMin: 0, // Accessories are always optional
       neededItemsIdeal: limits.ideal,
@@ -225,7 +248,7 @@ async function calculateAccessorySubcategoryCoverage(
       lastUpdated: new Date().toISOString()
     };
     
-    console.log(`🟦 ACCESSORY SUBCATEGORY - ${subcatName}: ${currentCount}/${limits.ideal} (${coverage}%)`);
+    console.log(`🟦 ACCESSORY SUBCATEGORY - ${subcatName} (${displaySeason}): ${currentCount}/${limits.ideal} (${coverage}%)`);
     coverageRecords.push(coverageRecord);
   }
   

@@ -25,7 +25,7 @@ export type CategoryCoverage = {
   userId: string;
   scenarioId: string | null;
   scenarioName: string;
-  season: Season;
+  season: Season; // Note: for non-seasonal accessories, we'll use a special value
   category: ItemCategory;
   subcategory?: string | null; // Only used for accessories
   currentItems: number;
