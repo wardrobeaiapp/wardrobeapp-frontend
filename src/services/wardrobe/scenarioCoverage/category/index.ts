@@ -12,7 +12,7 @@ export { getCategoryCoverageForAI, getCriticalCoverageGaps } from './queries';
  */
 export const updateCategoryCoverage = async (
   userId: string,
-  scenarioId: string,
+  scenarioId: string | null,
   scenarioName: string,
   scenarioFrequency: string,
   season: Season,

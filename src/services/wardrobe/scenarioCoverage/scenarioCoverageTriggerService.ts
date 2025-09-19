@@ -24,24 +24,46 @@ export const triggerItemAddedCoverage = async (
     // await scenarioCoverageService.onItemAdded(userId, items, scenarios, newItem, season);
     
     // Update new category-based system - only affected scenarios and category
-    if (newItem.category && newItem.scenarios?.length) {
-      const updatePromises = newItem.scenarios.map(scenarioId => {
-        const scenario = scenarios.find(s => s.id === scenarioId);
-        if (!scenario) return Promise.resolve();
-        
-        console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${newItem.category}`);
-        return updateCategoryCoverage(
-          userId,
-          scenario.id,
-          scenario.name,
-          scenario.frequency || '',
-          season,
-          newItem.category!,
-          items
-        );
-      });
+    if (newItem.category) {
+      const updatePromises: Promise<void>[] = [];
       
-      await Promise.all(updatePromises);
+      // Special handling: Outerwear and Accessories are scenario-agnostic 
+      if (newItem.category === ItemCategory.OUTERWEAR || newItem.category === ItemCategory.ACCESSORY) {
+        console.log(`🟦 CATEGORY COVERAGE - Updating ${newItem.category} (scenario-agnostic) for ${season}`);
+        updatePromises.push(
+          updateCategoryCoverage(
+            userId,
+            null, // Use null for scenario-agnostic categories
+            'All scenarios',
+            '', // No frequency for scenario-agnostic categories
+            season,
+            newItem.category,
+            items
+          )
+        );
+      } else if (newItem.scenarios?.length) {
+        // For regular categories, update each assigned scenario
+        const scenarioPromises = newItem.scenarios.map(scenarioId => {
+          const scenario = scenarios.find(s => s.id === scenarioId);
+          if (!scenario) return Promise.resolve();
+          
+          console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${newItem.category}`);
+          return updateCategoryCoverage(
+            userId,
+            scenario.id,
+            scenario.name,
+            scenario.frequency || '',
+            season,
+            newItem.category!,
+            items
+          );
+        });
+        updatePromises.push(...scenarioPromises);
+      }
+      
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+      }
     }
     
     console.log('🟢 CATEGORY COVERAGE - Successfully calculated coverage for added item');
@@ -83,23 +105,40 @@ export const triggerItemUpdatedCoverage = async (
     // Update only affected category/scenario combinations
     const updatePromises: Promise<void>[] = [];
     
-    for (const scenarioId of affectedScenarios) {
-      const scenario = scenarios.find(s => s.id === scenarioId);
-      if (!scenario) continue;
-      
-      for (const category of affectedCategories) {
-        console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${category}`);
+    for (const category of affectedCategories) {
+      // Special handling: Outerwear and Accessories are scenario-agnostic
+      if (category === ItemCategory.OUTERWEAR || category === ItemCategory.ACCESSORY) {
+        console.log(`🟦 CATEGORY COVERAGE - Updating ${category} (scenario-agnostic) for ${season}`);
         updatePromises.push(
           updateCategoryCoverage(
             userId,
-            scenario.id,
-            scenario.name,
-            scenario.frequency || '',
+            null, // Use null for scenario-agnostic categories
+            'All scenarios',
+            '', // No frequency for scenario-agnostic categories
             season,
             category,
             items
           )
         );
+      } else {
+        // For regular categories, update each affected scenario
+        for (const scenarioId of affectedScenarios) {
+          const scenario = scenarios.find(s => s.id === scenarioId);
+          if (!scenario) continue;
+          
+          console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${category}`);
+          updatePromises.push(
+            updateCategoryCoverage(
+              userId,
+              scenario.id,
+              scenario.name,
+              scenario.frequency || '',
+              season,
+              category,
+              items
+            )
+          );
+        }
       }
     }
     
@@ -129,24 +168,46 @@ export const triggerItemDeletedCoverage = async (
     // await scenarioCoverageService.onItemDeleted(userId, items, scenarios, deletedItem, season);
     
     // Update new category-based system - only affected scenarios and category
-    if (deletedItem.category && deletedItem.scenarios?.length) {
-      const updatePromises = deletedItem.scenarios.map(scenarioId => {
-        const scenario = scenarios.find(s => s.id === scenarioId);
-        if (!scenario) return Promise.resolve();
-        
-        console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${deletedItem.category}`);
-        return updateCategoryCoverage(
-          userId,
-          scenario.id,
-          scenario.name,
-          scenario.frequency || '',
-          season,
-          deletedItem.category!,
-          items // Note: items array should already exclude the deleted item
-        );
-      });
+    if (deletedItem.category) {
+      const updatePromises: Promise<void>[] = [];
       
-      await Promise.all(updatePromises);
+      // Special handling: Outerwear and Accessories are scenario-agnostic
+      if (deletedItem.category === ItemCategory.OUTERWEAR || deletedItem.category === ItemCategory.ACCESSORY) {
+        console.log(`🟦 CATEGORY COVERAGE - Updating ${deletedItem.category} (scenario-agnostic) for ${season}`);
+        updatePromises.push(
+          updateCategoryCoverage(
+            userId,
+            null, // Use null for scenario-agnostic categories
+            'All scenarios',
+            '', // No frequency for scenario-agnostic categories
+            season,
+            deletedItem.category,
+            items // Note: items array should already exclude the deleted item
+          )
+        );
+      } else if (deletedItem.scenarios?.length) {
+        // For regular categories, update each assigned scenario
+        const scenarioPromises = deletedItem.scenarios.map(scenarioId => {
+          const scenario = scenarios.find(s => s.id === scenarioId);
+          if (!scenario) return Promise.resolve();
+          
+          console.log(`🟦 CATEGORY COVERAGE - Updating ${scenario.name}/${season}/${deletedItem.category}`);
+          return updateCategoryCoverage(
+            userId,
+            scenario.id,
+            scenario.name,
+            scenario.frequency || '',
+            season,
+            deletedItem.category!,
+            items // Note: items array should already exclude the deleted item
+          );
+        });
+        updatePromises.push(...scenarioPromises);
+      }
+      
+      if (updatePromises.length > 0) {
+        await Promise.all(updatePromises);
+      }
     }
     
     console.log('🟢 CATEGORY COVERAGE - Successfully calculated coverage for deleted item');

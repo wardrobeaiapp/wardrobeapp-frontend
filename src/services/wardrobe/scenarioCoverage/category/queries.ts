@@ -89,8 +89,8 @@ export const getOuterwearSeasonalCoverageForAI = async (
   userId: string,
   season?: Season
 ): Promise<CategoryCoverage[]> => {
-  console.log(`🧥 AI QUERY - Fetching outerwear seasonal coverage for user ${userId}${season ? ` for ${season}` : ''}`);
-
+  console.log(`🟦 AI QUERY - Getting SEASONAL outerwear coverage for user ${userId} (season: ${season || 'all'})`);
+  
   let query = supabase
     .from('scenario_coverage_by_category')
     .select('*')
@@ -102,23 +102,56 @@ export const getOuterwearSeasonalCoverageForAI = async (
     query = query.eq('season', season);
   }
 
-  const { data, error } = await query.order('season');
+  const { data, error } = await query;
 
   if (error) {
-    console.error('🔴 Failed to fetch outerwear seasonal coverage for AI:', error);
-    throw error;
+    console.error('🔴 AI QUERY - Error fetching SEASONAL outerwear coverage:', error);
+    return [];
   }
 
-  const coverageData = (data || []).map(mapDatabaseRowToCategoryCoverage);
+  const coverage = (data || []).map(mapDatabaseRowToCategoryCoverage);
+  console.log(`🟢 AI QUERY - Retrieved ${coverage.length} SEASONAL outerwear coverage entries`);
   
-  console.log(`🧥 Found ${coverageData.length} seasonal outerwear coverage entries`);
-  coverageData.forEach(coverage => {
-    console.log(`   - ${coverage.season}: ${coverage.currentItems}/${coverage.neededItemsIdeal} items (${coverage.coveragePercent}%)`);
-  });
-
-  return coverageData;
+  return coverage;
 };
 
+/**
+ * Get seasonal accessory coverage (non-scenario-specific) for AI analysis
+ * This fetches only "All scenarios" seasonal accessory data
+ */
+export const getAccessorySeasonalCoverageForAI = async (
+  userId: string,
+  season?: Season
+): Promise<CategoryCoverage[]> => {
+  console.log(`🟦 AI QUERY - Getting SEASONAL accessory coverage for user ${userId} (season: ${season || 'all'})`);
+  
+  let query = supabase
+    .from('scenario_coverage_by_category')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('category', 'accessory')
+    .eq('scenario_name', 'All scenarios'); // Only fetch "All scenarios" seasonal data
+
+  if (season) {
+    query = query.eq('season', season);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('🔴 AI QUERY - Error fetching SEASONAL accessory coverage:', error);
+    return [];
+  }
+
+  const coverage = (data || []).map(mapDatabaseRowToCategoryCoverage);
+  console.log(`🟢 AI QUERY - Retrieved ${coverage.length} SEASONAL accessory coverage entries`);
+  
+  return coverage;
+};
+
+/**
+ * Get critical gaps across all categories - for dashboard/alerts
+ */
 export const getCriticalCoverageGaps = async (userId: string): Promise<CategoryCoverage[]> => {
   const { data, error } = await supabase
     .from('scenario_coverage_by_category')

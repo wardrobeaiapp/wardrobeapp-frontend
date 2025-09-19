@@ -21,7 +21,7 @@ import {
 
 // Type guard for Season
 const isSeason = (value: any): value is Season => {
-  return ['spring', 'summer', 'fall', 'winter'].includes(value);
+  return ['summer', 'winter', 'spring/fall'].includes(value);
 };
 
 // Helper function to get scenarios for a user
@@ -251,7 +251,7 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
         // Only process actual seasons, no more 'all' season
         const seasonsToUpdate = updatedItem.season?.length 
           ? updatedItem.season 
-          : ['spring', 'summer', 'fall', 'winter'];
+          : ['summer', 'winter', 'spring/fall'];
         
         // Trigger coverage update for each season
         for (const season of seasonsToUpdate) {

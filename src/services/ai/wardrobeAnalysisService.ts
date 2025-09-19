@@ -206,8 +206,9 @@ export const wardrobeAnalysisService = {
           console.log(`[wardrobeAnalysisService] Calculating coverage for ${formData.category} in seasons: ${formData.seasons.join(',')}`);
           
           try {
-            // Check if this is outerwear - use different logic
+            // Check if this is outerwear or accessory - use different logic (scenario-agnostic)
             const isOuterwear = formData.category.toLowerCase() === 'outerwear';
+            const isAccessory = formData.category.toLowerCase() === 'accessory';
             
             if (isOuterwear) {
               // For outerwear, fetch only seasonal coverage (not scenario-specific)
@@ -225,6 +226,26 @@ export const wardrobeAnalysisService = {
               console.log(`[wardrobeAnalysisService] Generated SEASONAL outerwear coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
               
               // Log seasonal coverage
+              scenarioCoverage.forEach((coverage: any) => {
+                console.log(`[wardrobeAnalysisService] Seasonal Coverage: ${coverage.scenarioName} - ${coverage.season}: ${coverage.coveragePercent}%`);
+              });
+              
+            } else if (isAccessory) {
+              // For accessories, fetch only seasonal coverage (not scenario-specific)
+              console.log(`[wardrobeAnalysisService] Using SEASONAL coverage for accessories`);
+              const { getAccessorySeasonalCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
+              
+              // Get seasonal coverage for ALL selected seasons
+              const allCoveragePromises = formData.seasons.map(season => 
+                getAccessorySeasonalCoverageForAI(user.id, season as Season)
+              );
+              
+              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
+              scenarioCoverage = allSeasonsCoverage.flat();
+              
+              console.log(`[wardrobeAnalysisService] Generated SEASONAL accessory coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
+              
+              // Log seasonal coverage  
               scenarioCoverage.forEach((coverage: any) => {
                 console.log(`[wardrobeAnalysisService] Seasonal Coverage: ${coverage.scenarioName} - ${coverage.season}: ${coverage.coveragePercent}%`);
               });

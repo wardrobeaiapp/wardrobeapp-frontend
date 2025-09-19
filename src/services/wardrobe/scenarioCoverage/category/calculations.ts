@@ -130,18 +130,29 @@ function getAccessorySubcategoryLimits(outfitsNeeded: number) {
 }
 
 /**
- * Get accessory subcategory - simplified since subcategory field is reliable
+ * Get accessory subcategory - map specific bag types to generic 'Bag' for coverage calculation
  */
 function getAccessorySubcategory(item: WardrobeItem): string {
   const validSubcategories = ['Hat', 'Scarf', 'Belt', 'Bag', 'Jewelry', 'Sunglasses', 'Watch', 'Socks', 'Tights'];
+  const bagTypes = ['Handbag', 'Backpack', 'Tote', 'Clutch', 'Wallet', 'Purse'];
   
-  // Use subcategory field directly if it's valid
-  if (item.subcategory && validSubcategories.includes(item.subcategory)) {
+  if (!item.subcategory) {
+    console.warn(`⚠️ Accessory item "${item.name}" has missing subcategory. Defaulting to Jewelry.`);
+    return 'Jewelry';
+  }
+  
+  // Map specific bag types to generic 'Bag' for coverage calculation
+  if (bagTypes.includes(item.subcategory)) {
+    return 'Bag';
+  }
+  
+  // Use subcategory field directly if it's in our valid list
+  if (validSubcategories.includes(item.subcategory)) {
     return item.subcategory;
   }
   
-  // Fallback to Jewelry for any edge cases (shouldn't happen with proper data)
-  console.warn(`⚠️ Accessory item "${item.name}" has invalid/missing subcategory: "${item.subcategory}". Defaulting to Jewelry.`);
+  // Fallback to Jewelry for unrecognized subcategories
+  console.warn(`⚠️ Accessory item "${item.name}" has invalid subcategory: "${item.subcategory}". Defaulting to Jewelry.`);
   return 'Jewelry';
 }
 
@@ -150,7 +161,7 @@ function getAccessorySubcategory(item: WardrobeItem): string {
  */
 async function calculateAccessorySubcategoryCoverage(
   userId: string,
-  scenarioId: string,
+  scenarioId: string | null,
   scenarioName: string,
   scenarioFrequency: string,
   season: Season,
@@ -256,7 +267,7 @@ async function calculateAccessorySubcategoryCoverage(
  */
 export const calculateCategoryCoverage = async (
   userId: string,
-  scenarioId: string,
+  scenarioId: string | null,
   scenarioName: string,
   scenarioFrequency: string,
   season: Season,
@@ -265,19 +276,27 @@ export const calculateCategoryCoverage = async (
 ): Promise<CategoryCoverage> => {
   console.log(`🟦 CATEGORY COVERAGE - Calculating for ${scenarioName}/${season}/${category}`);
 
-  // Filter items for this specific category, scenario, and season
+  // Filter items for this specific category and season
+  // Special handling: Outerwear and Accessories are scenario-agnostic
   const categoryItems = items.filter(item => {
     const matchesCategory = item.category === category;
-    const matchesScenario = item.scenarios?.includes(scenarioId) || false;
     const matchesSeason = !item.season || 
                          item.season.length === 0 || 
                          item.season.includes(season);
-    return matchesCategory && matchesScenario && matchesSeason;
+    
+    if (category === ItemCategory.OUTERWEAR || category === ItemCategory.ACCESSORY) {
+      // Outerwear and Accessories: ignore scenario filtering (universal across scenarios)
+      return matchesCategory && matchesSeason;
+    } else {
+      // Other categories: filter by scenario
+      const matchesScenario = scenarioId ? (item.scenarios?.includes(scenarioId) || false) : false;
+      return matchesCategory && matchesScenario && matchesSeason;
+    }
   });
 
   const currentItems = categoryItems.length;
 
-  // Special handling for accessories - analyze by subcategory
+  // Special handling for accessories - analyze by subcategory (scenario-agnostic like outerwear)
   if (category === ItemCategory.ACCESSORY) {
     return calculateAccessorySubcategoryCoverage(
       userId, scenarioId, scenarioName, scenarioFrequency, season, categoryItems

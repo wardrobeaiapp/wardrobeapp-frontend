@@ -23,7 +23,7 @@ export type CategoryNeeds = {
 // Main category coverage data structure
 export type CategoryCoverage = {
   userId: string;
-  scenarioId: string;
+  scenarioId: string | null;
   scenarioName: string;
   season: Season;
   category: ItemCategory;
