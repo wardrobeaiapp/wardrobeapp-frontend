@@ -14,6 +14,11 @@ export const getCategoryCoverageForAI = async (
   scenarios?: Scenario[],
   items?: WardrobeItem[]
 ): Promise<CategoryCoverage[]> => {
+  // Accessories should use getAccessorySeasonalCoverageForAI instead
+  if (category === ItemCategory.ACCESSORY) {
+    throw new Error('Accessories should use getAccessorySeasonalCoverageForAI instead of getCategoryCoverageForAI');
+  }
+  
   console.log(`🟦 AI QUERY - Fetching ${category} coverage for user ${userId}`);
 
   let query = supabase
@@ -60,7 +65,7 @@ export const getCategoryCoverageForAI = async (
             seasonToCheck as Season,
             category,
             items
-          );
+          ) as CategoryCoverage; // Non-accessory categories return single coverage
           
           missingCombinations.push(missingCoverage);
           

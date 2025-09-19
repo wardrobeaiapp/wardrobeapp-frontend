@@ -11,6 +11,7 @@ export async function saveCategoryCoverage(coverage: CategoryCoverage): Promise<
     scenario_name: coverage.scenarioName,
     season: coverage.season,
     category: coverage.category,
+    subcategory: coverage.subcategory || null,
     current_items: coverage.currentItems,
     needed_items_min: coverage.neededItemsMin,
     needed_items_ideal: coverage.neededItemsIdeal,
@@ -25,7 +26,7 @@ export async function saveCategoryCoverage(coverage: CategoryCoverage): Promise<
 
   const { error } = await supabase
     .from('scenario_coverage_by_category')
-    .upsert(record, { onConflict: 'user_id,scenario_id,season,category' });
+    .upsert(record, { onConflict: 'user_id,scenario_id,season,category,subcategory' });
 
   if (error) {
     console.error('🔴 Failed to save category coverage:', error);
@@ -43,6 +44,7 @@ export function mapDatabaseRowToCategoryCoverage(row: any): CategoryCoverage {
     scenarioName: row.scenario_name,
     season: row.season,
     category: row.category,
+    subcategory: row.subcategory,
     currentItems: row.current_items,
     neededItemsMin: row.needed_items_min,
     neededItemsIdeal: row.needed_items_ideal,

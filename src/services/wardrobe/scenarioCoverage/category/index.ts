@@ -1,5 +1,5 @@
 import { WardrobeItem, Scenario, Season, ItemCategory } from '../../../../types';
-import { ALL_SEASONS } from './types';
+import { ALL_SEASONS, CategoryCoverage } from './types';
 import { calculateCategoryCoverage } from './calculations';
 import { saveCategoryCoverage } from './database';
 
@@ -19,11 +19,20 @@ export const updateCategoryCoverage = async (
   category: ItemCategory,
   items: WardrobeItem[]
 ): Promise<void> => {
-  const coverage = await calculateCategoryCoverage(
+  const coverageResult = await calculateCategoryCoverage(
     userId, scenarioId, scenarioName, scenarioFrequency, season, category, items
   );
-
-  await saveCategoryCoverage(coverage);
+  
+  // Handle both single coverage and array of coverages
+  if (Array.isArray(coverageResult)) {
+    // Accessories - array of subcategory coverage records
+    for (const coverage of coverageResult) {
+      await saveCategoryCoverage(coverage);
+    }
+  } else {
+    // Regular categories - single coverage record
+    await saveCategoryCoverage(coverageResult);
+  }
 };
 
 /**

@@ -27,6 +27,7 @@ export type CategoryCoverage = {
   scenarioName: string;
   season: Season;
   category: ItemCategory;
+  subcategory?: string | null; // Only used for accessories
   currentItems: number;
   neededItemsMin: number;
   neededItemsIdeal: number;

@@ -157,7 +157,7 @@ function getAccessorySubcategory(item: WardrobeItem): string {
 }
 
 /**
- * Calculate accessory coverage by analyzing subcategories separately
+ * Calculate accessory coverage by creating separate records for each subcategory
  */
 async function calculateAccessorySubcategoryCoverage(
   userId: string,
@@ -166,8 +166,9 @@ async function calculateAccessorySubcategoryCoverage(
   scenarioFrequency: string,
   season: Season,
   categoryItems: WardrobeItem[]
-): Promise<CategoryCoverage> {
-  // Use a default frequency calculation for accessories (less frequency-dependent)
+): Promise<CategoryCoverage[]> {
+  console.log(`🟦 ACCESSORY SUBCATEGORY - Creating separate coverage records for each subcategory`);
+  
   const usesPerSeason = 5; // Default seasonal usage for accessories
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
   const subcategoryLimits = getAccessorySubcategoryLimits(outfitsNeeded);
@@ -180,17 +181,8 @@ async function calculateAccessorySubcategoryCoverage(
     subcategoryGroups[subcat].push(item);
   }
   
-  // Analyze each subcategory
-  const subcategoryAnalysis: Array<{
-    name: string;
-    current: number;
-    ideal: number;
-    coverage: number;
-    recommendations: string[];
-  }> = [];
-  
-  let totalIdeal = 0;
-  let totalCurrent = 0;
+  // Create separate coverage record for each subcategory
+  const coverageRecords: CategoryCoverage[] = [];
   
   for (const [subcatName, limits] of Object.entries(subcategoryLimits)) {
     const currentCount = subcategoryGroups[subcatName]?.length || 0;
@@ -198,68 +190,46 @@ async function calculateAccessorySubcategoryCoverage(
       ? Math.min(100, Math.round((currentCount / limits.ideal) * 100))
       : 100;
     
-    totalIdeal += limits.ideal;
-    totalCurrent += currentCount;
+    // Calculate gap information
+    const gapCount = Math.max(0, limits.ideal - currentCount);
+    let gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
     
-    // Generate subcategory-specific recommendations
-    const recommendations: string[] = [];
-    const displayName = subcatName.toLowerCase(); // Convert "Bag" -> "bag" for display
-    
-    // Special handling for jewelry - encourage when minimal, celebrate when abundant
-    if (subcatName === 'Jewelry') {
-      if (currentCount === 0) {
-        recommendations.push(`💎 Consider adding jewelry to refresh and personalize your ${scenarioName} outfits - even a few pieces can transform your looks`);
-      } else if (currentCount <= 2) {
-        recommendations.push(`✨ A bit more jewelry could add variety to your ${scenarioName} style - mix metals, textures, or colors for different moods`);
-      } else {
-        // No gaps mentioned - just positive acknowledgment
-        recommendations.push(`💫 Your jewelry collection adds beautiful personal touches to your ${scenarioName} outfits`);
-      }
+    if (currentCount === 0) {
+      gapType = 'improvement'; // Accessories are never critical
+    } else if (currentCount < limits.ideal) {
+      gapType = 'improvement';
+    } else if (currentCount < limits.max) {
+      gapType = 'expansion';
+    } else if (currentCount === limits.max) {
+      gapType = 'satisfied';
     } else {
-      // Regular subcategories
-      if (currentCount === 0) {
-        recommendations.push(`💎 Consider adding ${displayName}${displayName.endsWith('s') ? '' : 's'} to enhance your ${scenarioName} style`);
-      } else if (currentCount < limits.ideal) {
-        const needed = limits.ideal - currentCount;
-        recommendations.push(`✨ Your ${displayName} collection could use ${needed} more piece${needed > 1 ? 's' : ''} for variety`);
-      } else {
-        recommendations.push(`💫 Great ${displayName} variety for ${scenarioName}!`);
-      }
+      gapType = 'oversaturated';
     }
     
-    subcategoryAnalysis.push({
-      name: subcatName,
-      current: currentCount,
-      ideal: limits.ideal,
-      coverage,
-      recommendations
-    });
+    const coverageRecord: CategoryCoverage = {
+      userId,
+      scenarioId,
+      scenarioName,
+      season,
+      category: ItemCategory.ACCESSORY,
+      subcategory: subcatName, // This is the key addition!
+      currentItems: currentCount,
+      neededItemsMin: 0, // Accessories are always optional
+      neededItemsIdeal: limits.ideal,
+      neededItemsMax: limits.max,
+      coveragePercent: coverage,
+      gapCount,
+      gapType,
+      isCritical: false, // Accessories are never critical
+      priorityLevel: currentCount === 0 ? 4 : 5, // Low to very low priority
+      lastUpdated: new Date().toISOString()
+    };
+    
+    console.log(`🟦 ACCESSORY SUBCATEGORY - ${subcatName}: ${currentCount}/${limits.ideal} (${coverage}%)`);
+    coverageRecords.push(coverageRecord);
   }
   
-  // Overall accessory coverage
-  const overallCoverage = totalIdeal > 0 
-    ? Math.min(100, Math.round((totalCurrent / totalIdeal) * 100))
-    : 100;
-    
-  // Note: Recommendations now generated dynamically based on gapType instead of storing in database
-
-  return {
-    userId,
-    scenarioId,
-    scenarioName,
-    season,
-    category: ItemCategory.ACCESSORY,
-    currentItems: totalCurrent,
-    neededItemsMin: 0, // Always optional
-    neededItemsIdeal: totalIdeal,
-    neededItemsMax: Object.values(subcategoryLimits).reduce((sum, limits) => sum + limits.max, 0),
-    coveragePercent: overallCoverage,
-    gapCount: Math.max(0, totalIdeal - totalCurrent),
-    gapType: totalCurrent >= totalIdeal ? 'satisfied' : 'improvement',
-    isCritical: false, // Never critical
-    priorityLevel: totalCurrent === 0 ? 4 : 5, // Low to very low priority
-    lastUpdated: new Date().toISOString()
-  };
+  return coverageRecords;
 }
 
 /**
@@ -273,7 +243,7 @@ export const calculateCategoryCoverage = async (
   season: Season,
   category: ItemCategory,
   items: WardrobeItem[]
-): Promise<CategoryCoverage> => {
+): Promise<CategoryCoverage | CategoryCoverage[]> => {
   console.log(`🟦 CATEGORY COVERAGE - Calculating for ${scenarioName}/${season}/${category}`);
 
   // Filter items for this specific category and season
