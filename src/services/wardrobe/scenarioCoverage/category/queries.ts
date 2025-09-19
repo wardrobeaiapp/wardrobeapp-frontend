@@ -22,7 +22,7 @@ export const getCategoryCoverageForAI = async (
   console.log(`🟦 AI QUERY - Fetching ${category} coverage for user ${userId}`);
 
   let query = supabase
-    .from('scenario_coverage_by_category')
+    .from('wardrobe_coverage')
     .select('*')
     .eq('user_id', userId)
     .eq('category', category);
@@ -97,7 +97,7 @@ export const getOuterwearSeasonalCoverageForAI = async (
   console.log(`🟦 AI QUERY - Getting SEASONAL outerwear coverage for user ${userId} (season: ${season || 'all'})`);
   
   let query = supabase
-    .from('scenario_coverage_by_category')
+    .from('wardrobe_coverage')
     .select('*')
     .eq('user_id', userId)
     .eq('category', 'outerwear')
@@ -131,7 +131,7 @@ export const getAccessorySeasonalCoverageForAI = async (
   console.log(`🟦 AI QUERY - Getting SEASONAL accessory coverage for user ${userId} (season: ${season || 'all'})`);
   
   let query = supabase
-    .from('scenario_coverage_by_category')
+    .from('wardrobe_coverage')
     .select('*')
     .eq('user_id', userId)
     .eq('category', 'accessory')
@@ -159,7 +159,7 @@ export const getAccessorySeasonalCoverageForAI = async (
  */
 export const getCriticalCoverageGaps = async (userId: string): Promise<CategoryCoverage[]> => {
   const { data, error } = await supabase
-    .from('scenario_coverage_by_category')
+    .from('wardrobe_coverage')
     .select('*')
     .eq('user_id', userId)
     .eq('is_critical', true)

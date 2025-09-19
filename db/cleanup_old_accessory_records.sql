@@ -12,20 +12,20 @@ SELECT
     current_items,
     coverage_percent,
     last_updated
-FROM scenario_coverage_by_category 
+FROM wardrobe_coverage 
 WHERE category = 'accessory' 
 AND subcategory IS NULL
 ORDER BY user_id, season;
 
 -- Step 2: Delete old accessory records without subcategory
 -- The new calculation logic will create proper subcategory-specific records
-DELETE FROM scenario_coverage_by_category 
+DELETE FROM wardrobe_coverage 
 WHERE category = 'accessory' 
 AND subcategory IS NULL;
 
 -- Step 2.5: Remove SEASONAL records for NON-SEASONAL subcategories
 -- Non-seasonal subcategories should ONLY have 'all_seasons' records, not seasonal ones
-DELETE FROM scenario_coverage_by_category 
+DELETE FROM wardrobe_coverage 
 WHERE category = 'accessory' 
 AND subcategory IN ('Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses')
 AND season != 'all_seasons';
@@ -33,7 +33,7 @@ AND season != 'all_seasons';
 -- Step 2.6: Clean up duplicate non-seasonal accessory records  
 -- Remove duplicate "all_seasons" records for non-seasonal subcategories
 -- Keep only one record per user/subcategory for non-seasonal accessories
-DELETE FROM scenario_coverage_by_category 
+DELETE FROM wardrobe_coverage 
 WHERE id IN (
     SELECT id FROM (
         SELECT id,
@@ -41,7 +41,7 @@ WHERE id IN (
                    PARTITION BY user_id, category, subcategory 
                    ORDER BY last_updated DESC
                ) as rn
-        FROM scenario_coverage_by_category
+        FROM wardrobe_coverage
         WHERE category = 'accessory' 
         AND season = 'all_seasons'
         AND subcategory IN ('Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses')
@@ -54,7 +54,7 @@ SELECT
     COUNT(*) as total_accessory_records,
     COUNT(CASE WHEN subcategory IS NULL THEN 1 END) as null_subcategory_records,
     COUNT(CASE WHEN subcategory IS NOT NULL THEN 1 END) as with_subcategory_records
-FROM scenario_coverage_by_category 
+FROM wardrobe_coverage 
 WHERE category = 'accessory';
 
 -- Step 4: Show breakdown by subcategory
@@ -64,7 +64,7 @@ SELECT
     COUNT(*) as record_count,
     AVG(current_items) as avg_items,
     AVG(coverage_percent) as avg_coverage
-FROM scenario_coverage_by_category 
+FROM wardrobe_coverage 
 WHERE category = 'accessory' 
 AND subcategory IS NOT NULL
 GROUP BY subcategory

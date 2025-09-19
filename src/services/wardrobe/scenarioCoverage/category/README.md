@@ -49,10 +49,10 @@ const criticalGaps = await getCriticalCoverageGaps(userId);
 ## Database Schema
 
 ```sql
-scenario_coverage_by_category (
-  user_id, scenario_id, season, category,  -- Primary key
+wardrobe_coverage (
+  user_id, scenario_id, season, category, subcategory,  -- Primary key
   current_items, needed_items_ideal, coverage_percent,
-  is_critical, is_bottleneck, priority_level,
+  is_critical, priority_level, gap_type,
   category_recommendations, last_updated
 )
 ```
