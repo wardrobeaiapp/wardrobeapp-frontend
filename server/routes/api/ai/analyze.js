@@ -6,6 +6,7 @@ const {
   addScenariosSection,
   addClimateSection,
   addStylingContextSection,
+  addUserGoalsSection,
   addFinalInstructions
 } = require('../../../utils/promptBuilder');
 
@@ -27,7 +28,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userId } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userGoals, userId } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -40,6 +41,7 @@ router.post('/', async (req, res) => {
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} scenarios` : 'none');
+    console.log('userGoals:', userGoals || 'none');
     console.log('===================');
     
     // Log that we received user data
@@ -70,6 +72,9 @@ router.post('/', async (req, res) => {
     
     // Add climate section
     systemPrompt = addClimateSection(systemPrompt, climateData);
+    
+    // Add user goals section
+    systemPrompt = addUserGoalsSection(systemPrompt, userGoals);
     
     // Add styling context section
     systemPrompt = addStylingContextSection(systemPrompt, stylingContext);

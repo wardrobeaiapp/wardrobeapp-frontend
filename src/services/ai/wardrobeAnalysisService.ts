@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { compressImageToMaxSize } from '../../utils/imageUtils';
 import { getClimateData } from '../profile/climateService';
+import { getWardrobeGoalsData } from '../profile/wardrobeGoalsService';
 import { supabase } from '../core/supabase';
 import { getScenariosForUser } from '../scenarios/scenariosService';
 import { getWardrobeItems } from '../wardrobe/items';
@@ -91,6 +92,7 @@ export const wardrobeAnalysisService = {
       
       // Get current user from Supabase and their preferences
       let climateData = null;
+      let userGoals: string[] = [];
       let scenarios: Scenario[] = [];
       let wardrobeItems: WardrobeItem[] = [];
       
@@ -104,6 +106,15 @@ export const wardrobeAnalysisService = {
             // Fetch climate data
             climateData = await getClimateData(user.id);
             console.log('[wardrobeAnalysisService] Climate data loaded successfully:', climateData);
+            
+            // Fetch user's wardrobe goals
+            try {
+              const wardrobeGoalsData = await getWardrobeGoalsData(user.id);
+              userGoals = wardrobeGoalsData?.wardrobeGoals || [];
+              console.log('[wardrobeAnalysisService] User wardrobe goals loaded:', userGoals);
+            } catch (goalsError) {
+              console.error('[wardrobeAnalysisService] Error fetching wardrobe goals:', goalsError);
+            }
             
             // Fetch user's scenarios using the scenarios service
             try {
@@ -289,7 +300,9 @@ export const wardrobeAnalysisService = {
           similarContext: similarContext.length > 0 ? similarContext : undefined,
           additionalContext: additionalContext.length > 0 ? additionalContext : undefined,
           // Include scenario coverage data calculated in frontend
-          scenarioCoverage: scenarioCoverage || undefined
+          scenarioCoverage: scenarioCoverage || undefined,
+          // Include user's wardrobe goals for personalized recommendations
+          userGoals: userGoals.length > 0 ? userGoals : undefined
         }
       );
 

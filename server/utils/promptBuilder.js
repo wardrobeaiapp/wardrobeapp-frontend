@@ -311,6 +311,51 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   return systemPrompt;
 }
 
+function addUserGoalsSection(systemPrompt, userGoals) {
+  if (userGoals && userGoals.length > 0) {
+    systemPrompt += `\n\n=== USER'S WARDROBE GOALS ===`;
+    systemPrompt += `\nThe user has indicated these wardrobe goals: ${userGoals.join(', ')}`;
+    systemPrompt += `\n\nTailor your recommendations based on their goals:`;
+    
+    if (userGoals.includes('buy-less-shop-more-intentionally') || userGoals.includes('save-money')) {
+      systemPrompt += `\n• Be more conservative with recommendations - focus only on genuine gaps`;
+      systemPrompt += `\n• Emphasize cost-per-wear and necessity`;
+      systemPrompt += `\n• Suggest skipping items unless they're truly essential`;
+    }
+    
+    if (userGoals.includes('build-a-capsule-wardrobe')) {
+      systemPrompt += `\n• Focus on versatile, timeless pieces that work across scenarios`;
+      systemPrompt += `\n• Emphasize quality and multi-functionality`;
+      systemPrompt += `\n• Be selective - fewer, better pieces`;
+    }
+    
+    if (userGoals.includes('declutter-downsize')) {
+      systemPrompt += `\n• Be very strict about recommending purchases`;
+      systemPrompt += `\n• Suggest the user may already have enough in this category`;
+      systemPrompt += `\n• Focus on whether they can declutter existing items instead`;
+    }
+    
+    if (userGoals.includes('define-or-upgrade-my-personal-style') || userGoals.includes('experiment-or-try-something-new')) {
+      systemPrompt += `\n• Be more open to style-forward or unique pieces`;
+      systemPrompt += `\n• Consider how this item could elevate or diversify their style`;
+      systemPrompt += `\n• Balance experimentation with practicality`;
+    }
+    
+    if (userGoals.includes('make-getting-dressed-easier-faster')) {
+      systemPrompt += `\n• Focus on versatile basics that work with many outfits`;
+      systemPrompt += `\n• Consider how this simplifies outfit creation`;
+      systemPrompt += `\n• Value pieces that reduce decision fatigue`;
+    }
+    
+    if (userGoals.includes('optimize-my-wardrobe')) {
+      systemPrompt += `\n• Balance all factors - gaps, duplicates, versatility, and quality`;
+      systemPrompt += `\n• Focus on wardrobe efficiency and strategic additions`;
+    }
+  }
+  
+  return systemPrompt;
+}
+
 module.exports = {
   buildSystemPrompt,
   addFormDataSection,
@@ -319,5 +364,6 @@ module.exports = {
   addStylingContextSection,
   addScenarioCoverageSection,
   addGapAnalysisSection,
+  addUserGoalsSection,
   addFinalInstructions
 };
