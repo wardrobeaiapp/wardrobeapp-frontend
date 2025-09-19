@@ -1,95 +1,65 @@
-const { getScenarioCoverageForAnalysis } = require('../utils/scenarioCoverageCalculator');
-const { addScenarioCoverageSection, addGapAnalysisSection } = require('../utils/promptBuilder');
 const { generateOuterwearPromptSection, generateRegularPromptSection } = require('../utils/promptGenerationHelpers');
-const { calculateGapSeverity, calculateCoveragePercent, hasGap, createGapData, logGapAnalysis } = require('../utils/gapAnalysisHelpers');
-const { SEASONAL_OUTERWEAR_TARGETS, GAP_THRESHOLDS, INAPPROPRIATE_SCENARIO_COMBOS, ESSENTIAL_COVERAGE_FIELDS } = require('../constants/scenarioCoverageConstants');
+const {calculateCoveragePercent, hasGap, createGapData, logGapAnalysis } = require('../utils/gapAnalysisHelpers');
+const { analyzeAccessoryGaps, generateAccessoryPromptSection } = require('../utils/accessoryAnalysisHelpers');
+const { analyzeFromDatabase, processFrontendCoverageData, validateCoverageData } = require('../utils/databaseAnalysisHelpers');
+const { SEASONAL_OUTERWEAR_TARGETS, GAP_THRESHOLDS, INAPPROPRIATE_SCENARIO_COMBOS } = require('../constants/scenarioCoverageConstants');
 
 /**
  * Refactored service for analyzing scenario coverage and identifying wardrobe gaps
  */
 class ScenarioCoverageService {
 
-  /**
-   * Filter scenario coverage data to include only essential fields for AI analysis
-   */
-  filterScenarioCoverageData(scenarioCoverage) {
-    if (!scenarioCoverage || !Array.isArray(scenarioCoverage)) return [];
-
-    const filteredData = scenarioCoverage.map(coverage => {
-      const filtered = {};
-      ESSENTIAL_COVERAGE_FIELDS.forEach(field => {
-        if (coverage[field] !== undefined) filtered[field] = coverage[field];
-      });
-      return filtered;
-    });
-
-    console.log(`📊 Scenario coverage data filtered: ${scenarioCoverage.length} items → essential fields only`);
-    return filteredData;
-  }
 
   /**
    * Main analysis entry point
    */
   async analyze(scenarioCoverage, formData, userId, scenarios) {
+    // Validate input data
+    if (scenarioCoverage) {
+      validateCoverageData(scenarioCoverage, 'frontend');
+    }
+
     if (scenarioCoverage && scenarioCoverage.length > 0) {
-      console.log('=== SCENARIO COVERAGE ANALYSIS - Using frontend-provided data ===');
-      const filteredCoverage = this.filterScenarioCoverageData(scenarioCoverage);
-      return this.analyzeFrontendData(filteredCoverage, formData);
+      // Use frontend-provided data
+      return processFrontendCoverageData(
+        scenarioCoverage, 
+        formData,
+        (coverage, data) => this.identifySeasonalGaps(coverage, data),
+        (gaps) => this.generatePromptSection(gaps)
+      );
     } else if (userId && formData?.seasons) {
-      console.log('=== SCENARIO COVERAGE ANALYSIS - Using production system fallback ===');
-      return this.analyzeFromDatabase(userId, formData, scenarios);
+      // Use database fallback
+      return analyzeFromDatabase(
+        userId, 
+        formData, 
+        scenarios,
+        (coverage, data) => this.identifySeasonalGaps(coverage, data),
+        (gaps) => this.generatePromptSection(gaps)
+      );
     } else {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Skipped (no data provided) ===');
-      return { promptSection: '', gaps: [] };
+      return { promptSection: '', gaps: [], method: 'skipped' };
     }
   }
 
-  /**
-   * Analyze using frontend data
-   */
-  analyzeFrontendData(scenarioCoverage, formData) {
-    const seasonalGaps = this.identifySeasonalGaps(scenarioCoverage, formData);
-    const promptSection = this.generatePromptSection(seasonalGaps);
-    
-    return { 
-      promptSection, 
-      gaps: seasonalGaps,
-      method: 'frontend'
-    };
-  }
 
-  /**
-   * Analyze using database fallback
-   */
-  async analyzeFromDatabase(userId, formData, scenarios) {
-    try {
-      const dbScenarioCoverage = await getScenarioCoverageForAnalysis(userId, formData.seasons);
-      let promptSection = addScenarioCoverageSection('', dbScenarioCoverage, scenarios);
-      promptSection += addGapAnalysisSection('', dbScenarioCoverage, formData);
-      
-      return { 
-        promptSection, 
-        gaps: [], 
-        method: 'database'
-      };
-    } catch (error) {
-      console.error('Failed to get scenario coverage from production system:', error);
-      return { promptSection: '', gaps: [], method: 'failed' };
-    }
-  }
 
   /**
    * Identify seasonal gaps (routes to appropriate analyzer)
    */
   identifySeasonalGaps(scenarioCoverage, formData) {
     const itemSeasons = formData?.seasons || [];
-    const isOuterwear = formData?.category?.toLowerCase() === 'outerwear';
+    const category = formData?.category?.toLowerCase();
+    const isOuterwear = category === 'outerwear';
+    const isAccessory = category === 'accessory';
     
-    console.log(`🔍 Gap Analysis for ${isOuterwear ? 'OUTERWEAR' : 'NON-OUTERWEAR'} item`);
+    console.log(`🔍 Gap Analysis for ${category.toUpperCase()} item`);
     console.log(`   Item seasons: [${itemSeasons.join(', ')}], Category: ${formData?.category}`);
     
     if (isOuterwear) {
       return this.analyzeOuterwearGaps(scenarioCoverage, itemSeasons);
+    } else if (isAccessory) {
+      return analyzeAccessoryGaps(scenarioCoverage, formData, itemSeasons);
     } else {
       return this.analyzeRegularItemGaps(scenarioCoverage, formData, itemSeasons);
     }
@@ -133,6 +103,7 @@ class ScenarioCoverageService {
     return seasonalGaps;
   }
 
+
   /**
    * Analyze regular item gaps (scenario-based)
    */
@@ -169,13 +140,17 @@ class ScenarioCoverageService {
     if (seasonalGaps.length === 0) return '';
     
     const isOuterwearAnalysis = seasonalGaps.some(gap => gap.isOuterwearGap);
+    const isAccessoryAnalysis = seasonalGaps.some(gap => gap.category === 'accessory' || gap.subcategory);
     
     if (isOuterwearAnalysis) {
       return generateOuterwearPromptSection(seasonalGaps);
+    } else if (isAccessoryAnalysis) {
+      return generateAccessoryPromptSection(seasonalGaps);
     } else {
       return generateRegularPromptSection(seasonalGaps);
     }
   }
+
 
   // === HELPER METHODS ===
 
