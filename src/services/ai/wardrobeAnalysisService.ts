@@ -14,6 +14,42 @@ import type { WardrobeItemAnalysis } from './types';
 const API_URL = 'http://localhost:5000/api';
 
 /**
+ * Filter pre-filled data to only include descriptive fields relevant for AI analysis
+ * Excludes metadata fields like imageUrl, id, userId, timestamps, etc.
+ */
+const filterPreFilledData = (preFilledData: WardrobeItem) => {
+  const filtered: Partial<WardrobeItem> = {};
+  
+  // Include only descriptive fields that AI can verify from the image
+  if (preFilledData.name) filtered.name = preFilledData.name;
+  if (preFilledData.category) filtered.category = preFilledData.category;
+  if (preFilledData.subcategory) filtered.subcategory = preFilledData.subcategory;
+  if (preFilledData.color) filtered.color = preFilledData.color;
+  if (preFilledData.style) filtered.style = preFilledData.style;
+  if (preFilledData.silhouette) filtered.silhouette = preFilledData.silhouette;
+  if (preFilledData.material) filtered.material = preFilledData.material;
+  if (preFilledData.pattern) filtered.pattern = preFilledData.pattern;
+  if (preFilledData.length) filtered.length = preFilledData.length;
+  if (preFilledData.sleeves) filtered.sleeves = preFilledData.sleeves;
+  if (preFilledData.rise) filtered.rise = preFilledData.rise;
+  if (preFilledData.neckline) filtered.neckline = preFilledData.neckline;
+  if (preFilledData.heelHeight) filtered.heelHeight = preFilledData.heelHeight;
+  if (preFilledData.bootHeight) filtered.bootHeight = preFilledData.bootHeight;
+  if (preFilledData.brand) filtered.brand = preFilledData.brand;
+  if (preFilledData.size) filtered.size = preFilledData.size;
+  if (preFilledData.season) filtered.season = preFilledData.season;
+  
+  // Explicitly exclude metadata fields:
+  // - imageUrl: AI already has the image
+  // - id, userId: Not descriptive of the item
+  // - dateAdded, imageExpiry: Timestamps irrelevant for analysis
+  // - wishlist: Not about the item itself
+  // - tags: Complex object, not needed for basic verification
+  
+  return filtered;
+};
+
+/**
  * Service for handling wardrobe item analysis operations
  */
 export const wardrobeAnalysisService = {
@@ -22,12 +58,14 @@ export const wardrobeAnalysisService = {
    * @param imageBase64 - Base64 encoded image data (with data URI prefix)
    * @param detectedTags - Optional object with tags detected from the image
    * @param formData - Optional form data with category, subcategory, and seasons
+   * @param preFilledData - Optional pre-filled data from wishlist item
    * @returns Promise with analysis, score, and feedback
    */
   async analyzeWardrobeItem(
     imageBase64: string, 
     detectedTags?: any, 
-    formData?: { category?: string; subcategory?: string; seasons?: string[] }
+    formData?: { category?: string; subcategory?: string; seasons?: string[] },
+    preFilledData?: WardrobeItem
   ): Promise<WardrobeItemAnalysis> {
     try {
       // Validate image data before sending to server
@@ -45,6 +83,12 @@ export const wardrobeAnalysisService = {
       // Check if image data is too small (likely invalid)
       console.log('[wardrobeAnalysisService] Image data length:', imageBase64.length, 'starts with:', imageBase64.substring(0, 50));
       console.log('[wardrobeAnalysisService] Form data:', formData);
+      
+      if (preFilledData) {
+        console.log('[wardrobeAnalysisService] Original pre-filled data:', preFilledData);
+        const filtered = filterPreFilledData(preFilledData);
+        console.log('[wardrobeAnalysisService] Filtered pre-filled data:', filtered);
+      }
       
       if (imageBase64.length < 50) {
         console.error('[wardrobeAnalysisService] Image data too small to be valid');
@@ -323,7 +367,9 @@ export const wardrobeAnalysisService = {
           // Include scenario coverage data calculated in frontend
           scenarioCoverage: scenarioCoverage || undefined,
           // Include user's wardrobe goals for personalized recommendations
-          userGoals: userGoals.length > 0 ? userGoals : undefined
+          userGoals: userGoals.length > 0 ? userGoals : undefined,
+          // Include pre-filled data from wishlist item if available (filtered to exclude metadata)
+          preFilledData: preFilledData ? filterPreFilledData(preFilledData) : undefined
         }
       );
 

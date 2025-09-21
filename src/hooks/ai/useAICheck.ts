@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { claudeService } from '../../services/ai/claudeService';
 import { DetectedTags } from '../../services/ai/formAutoPopulation/types';
-import { WishlistStatus } from '../../types';
+import { WishlistStatus, WardrobeItem } from '../../types';
 import { detectImageTags, extractTopTags } from '../../services/ai/ximilarService';
 
 export const useAICheck = () => {
@@ -31,7 +31,7 @@ export const useAICheck = () => {
     setImageLink(base64Image);
   };
 
-  const checkItem = async (formData?: { category: string; subcategory: string; seasons: string[] }) => {
+  const checkItem = async (formData?: { category: string; subcategory: string; seasons: string[] }, preFilledData?: WardrobeItem) => {
     if (!imageLink.trim()) {
       setError('Please provide an image link to check.');
       return null;
@@ -86,7 +86,7 @@ export const useAICheck = () => {
       }
 
       // Call Claude API for analysis
-      const response = await claudeService.analyzeWardrobeItem(base64Image, detectedTags || undefined, formData);
+      const response = await claudeService.analyzeWardrobeItem(base64Image, detectedTags || undefined, formData, preFilledData);
       analysisResult = response.analysis;
       score = response.score || 0;
       

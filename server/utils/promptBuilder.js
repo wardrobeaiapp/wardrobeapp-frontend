@@ -37,8 +37,46 @@ function buildSystemPrompt() {
   return systemPrompt;
 }
 
-function addFormDataSection(systemPrompt, formData) {
-  if (formData && (formData.category || formData.subcategory)) {
+function addFormDataSection(systemPrompt, formData, preFilledData) {
+  if (preFilledData) {
+    // Handle wishlist items with pre-filled data
+    systemPrompt += "\n\n=== WISHLIST ITEM - VERIFY/CONFIRM EXISTING DATA ===";
+    systemPrompt += "\nThis item was selected from the user's wishlist and already has information filled in.";
+    systemPrompt += "\nYour job is to CONFIRM if these details are accurate or CORRECT them based on what you see in the image:";
+    
+    // Only include descriptive fields that the AI can verify from the image
+    // Exclude metadata like imageUrl, id, userId, dateAdded, imageExpiry, etc.
+    if (preFilledData.name) systemPrompt += `\n- Name: ${preFilledData.name}`;
+    if (preFilledData.category) systemPrompt += `\n- Category: ${preFilledData.category}`;
+    if (preFilledData.subcategory) systemPrompt += `\n- Subcategory: ${preFilledData.subcategory}`;
+    if (preFilledData.color) systemPrompt += `\n- Color: ${preFilledData.color}`;
+    if (preFilledData.style || preFilledData.silhouette) systemPrompt += `\n- Style: ${preFilledData.style || preFilledData.silhouette}`;
+    if (preFilledData.fit) systemPrompt += `\n- Fit: ${preFilledData.fit}`;
+    if (preFilledData.material) systemPrompt += `\n- Material: ${preFilledData.material}`;
+    if (preFilledData.pattern) systemPrompt += `\n- Pattern: ${preFilledData.pattern}`;
+    if (preFilledData.length) systemPrompt += `\n- Length: ${preFilledData.length}`;
+    if (preFilledData.sleeves) systemPrompt += `\n- Sleeves: ${preFilledData.sleeves}`;
+    if (preFilledData.rise) systemPrompt += `\n- Rise: ${preFilledData.rise}`;
+    if (preFilledData.neckline) systemPrompt += `\n- Neckline: ${preFilledData.neckline}`;
+    if (preFilledData.heelHeight) systemPrompt += `\n- Heel Height: ${preFilledData.heelHeight}`;
+    if (preFilledData.bootHeight) systemPrompt += `\n- Boot Height: ${preFilledData.bootHeight}`;
+    if (preFilledData.brand) systemPrompt += `\n- Brand: ${preFilledData.brand}`;
+    if (preFilledData.size) systemPrompt += `\n- Size: ${preFilledData.size}`;
+    if (preFilledData.season && preFilledData.season.length > 0) {
+      systemPrompt += `\n- Seasons: ${preFilledData.season.join(", ")}`;
+    }
+    
+    // Note: Explicitly NOT including metadata fields like:
+    // - imageUrl (AI already has the image)
+    // - id, userId (not descriptive of the item)
+    // - dateAdded, imageExpiry (timestamps irrelevant for analysis)
+    // - wishlist status (not about the item itself)
+    
+    systemPrompt += "\n\nSince this data already exists, focus your analysis on validation and any corrections needed.";
+    systemPrompt += "\nIf the pre-filled data is mostly accurate, you can reference it in your analysis.";
+    
+  } else if (formData && (formData.category || formData.subcategory)) {
+    // Handle regular items with basic form data
     systemPrompt += "\n\nThe user has provided the following information about this item:";
     
     if (formData.category) {

@@ -93,7 +93,7 @@ const AIAssistantPage: React.FC = () => {
       console.log('Bypassing AI Check Settings modal for wishlist item. Using data:', formData);
       
       // Call the AI check directly with the wishlist item data
-      const result = await handleCheckItemRaw(formData);
+      const result = await handleCheckItemRaw(formData, selectedWishlistItem);
       if (result) {
         // Open the result modal if analysis was successful
         handleOpenCheckResultModal();

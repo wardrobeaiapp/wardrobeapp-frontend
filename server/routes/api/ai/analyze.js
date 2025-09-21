@@ -28,7 +28,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userGoals, userId } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userGoals, userId, preFilledData } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -42,6 +42,7 @@ router.post('/', async (req, res) => {
     console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} scenarios` : 'none');
     console.log('userGoals:', userGoals || 'none');
+    console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
     console.log('===================');
     
     // Log that we received user data
@@ -64,8 +65,8 @@ router.post('/', async (req, res) => {
     // Build the system prompt using modular approach
     let systemPrompt = buildSystemPrompt();
     
-    // Add form data section
-    systemPrompt = addFormDataSection(systemPrompt, formData);
+    // Add form data section (with pre-filled data support)
+    systemPrompt = addFormDataSection(systemPrompt, formData, preFilledData);
     
     // Add scenarios section
     systemPrompt = addScenariosSection(systemPrompt, req.body.scenarios);
