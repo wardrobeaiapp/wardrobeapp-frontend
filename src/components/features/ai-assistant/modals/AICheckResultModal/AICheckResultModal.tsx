@@ -5,7 +5,18 @@ import { Modal, ModalAction } from '../../../../common/Modal';
 import {
   ItemDetails,
 } from '../../../wardrobe/modals/ItemViewModal.styles';
-import { AnalysisText } from './AICheckResultModal.styles';
+import { 
+  AnalysisText, 
+  RecommendationBox, 
+  RecommendationLabel, 
+  RecommendationText,
+  ImageContainer,
+  PreviewImage,
+  ErrorLabel,
+  ErrorValue,
+  ErrorDetails,
+  ScoreValue
+} from './AICheckResultModal.styles';
 import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 
@@ -89,25 +100,12 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       size="md"
     >
         {imageUrl && (
-          <div style={{ 
-            marginBottom: '16px', 
-            textAlign: 'center',
-            padding: '8px'
-          }}>
-            <img 
+          <ImageContainer>
+            <PreviewImage 
               src={imageUrl} 
               alt="Analyzed item" 
-              style={{ 
-                maxWidth: '100%', 
-                maxHeight: '240px', 
-                objectFit: 'contain',
-                borderRadius: '8px',
-                background: '#f3f4f6',
-                backgroundSize: '20px 20px',
-                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-              }} 
             />
-          </div>
+          </ImageContainer>
         )}
         
         <AnalysisText 
@@ -119,90 +117,54 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
         />
         
         {/* Final Recommendation - Full width, before other details */}
-        {finalRecommendation && (
-          (() => {
-            const recommendation = finalRecommendation.toLowerCase();
-            const isRecommend = recommendation.startsWith('recommend');
-            const isSkip = recommendation.startsWith('skip');
-            const isMediumScore = score !== undefined && score >= 4 && score <= 7 && !isRecommend;
-            
-            let backgroundColor, borderColor, textColor;
-            
-            if (isRecommend) {
-              // Green for RECOMMEND
-              backgroundColor = '#ecfdf5';
-              borderColor = '#d1fae5';
-              textColor = '#059669';
-            } else if (isMediumScore) {
-              // Yellow for medium scores that aren't recommended
-              backgroundColor = '#fefce8';
-              borderColor = '#fde68a';
-              textColor = '#d97706';
-            } else {
-              // Red for SKIP or low scores
-              backgroundColor = '#fef2f2';
-              borderColor = '#fecaca';
-              textColor = '#dc2626';
-            }
-            
-            return (
-              <div style={{
-                marginBottom: '16px',
-                padding: '12px',
-                borderRadius: '8px',
-                backgroundColor,
-                border: `2px solid ${borderColor}`,
-                textAlign: 'center'
-              }}>
-                <div style={{
-                  fontSize: '0.9rem',
-                  fontWeight: '600',
-                  color: '#6b7280',
-                  marginBottom: '4px'
-                }}>
-                  Final Recommendation
-                </div>
-                <div style={{
-                  fontSize: '1rem',
-                  fontWeight: 'bold',
-                  color: textColor,
-                  lineHeight: '1.4'
-                }}>
-                  {finalRecommendation}
-                </div>
-              </div>
-            );
-          })()
-        )}
+        {finalRecommendation && (() => {
+          const recommendation = finalRecommendation.toLowerCase();
+          const isRecommend = recommendation.startsWith('recommend');
+          const isMediumScore = score !== undefined && score >= 4 && score <= 8 && !isRecommend;
+          
+          return (
+            <RecommendationBox
+              $isRecommend={isRecommend}
+              $isMediumScore={isMediumScore}
+            >
+              <RecommendationLabel>
+                Final Recommendation
+              </RecommendationLabel>
+              <RecommendationText>
+                {finalRecommendation}
+              </RecommendationText>
+            </RecommendationBox>
+          );
+        })()}
         
         <ItemDetails>
           {/* Show error information if present */}
           {error && (
             <DetailRow>
-              <DetailLabel style={{ color: '#e11d48' }}>Error:</DetailLabel>
-              <DetailValue style={{ color: '#e11d48' }}>
+              <ErrorLabel>Error:</ErrorLabel>
+              <ErrorValue>
                 {error.replace(/_/g, ' ')}
-              </DetailValue>
+              </ErrorValue>
             </DetailRow>
           )}
           
           {/* Show error details if present */}
           {errorDetails && (
             <DetailRow>
-              <DetailLabel style={{ color: '#e11d48' }}>Details:</DetailLabel>
-              <DetailValue style={{ color: '#e11d48', fontSize: '0.9rem' }}>
+              <ErrorLabel>Details:</ErrorLabel>
+              <ErrorDetails>
                 {errorDetails}
-              </DetailValue>
+              </ErrorDetails>
             </DetailRow>
           )}
           
           {score !== undefined && (
             <DetailRow>
               <DetailLabel>Score:</DetailLabel>
-              <DetailValue style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <ScoreValue>
                 <FaStar size={14} color="#f59e0b" />
                 {score}/10
-              </DetailValue>
+              </ScoreValue>
             </DetailRow>
           )}
           

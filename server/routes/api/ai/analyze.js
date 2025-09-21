@@ -101,6 +101,9 @@ router.post('/', async (req, res) => {
       );
       systemPrompt += promptSection;
     }
+
+    // Note: Gap analysis is handled by the scenario coverage service above
+    // No need for duplicate analysis here
     
     // Add final instructions
     systemPrompt = addFinalInstructions(systemPrompt);

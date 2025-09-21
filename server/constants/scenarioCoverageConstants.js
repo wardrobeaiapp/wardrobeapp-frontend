@@ -2,12 +2,12 @@
  * Constants for scenario coverage analysis
  */
 
-// Seasonal outerwear targets
+// Seasonal outerwear targets - Realistic for different seasons
 const SEASONAL_OUTERWEAR_TARGETS = {
   'summer': { min: 1, ideal: 2, max: 3 },           // Light cardigan, light jacket
-  'winter': { min: 1, ideal: 2, max: 3 },           // Heavy coat/parka, maybe one backup
-  'spring/fall': { min: 2, ideal: 3, max: 4 },      // Need variety: light jacket, medium coat, rain jacket
-  'default': { min: 1, ideal: 1, max: 2 }
+  'winter': { min: 2, ideal: 3, max: 4 },           // Heavy coat, warm jacket, maybe backup
+  'spring/fall': { min: 3, ideal: 4, max: 5 },      // Need variety: light jacket, medium coat, rain jacket, blazer
+  'default': { min: 2, ideal: 3, max: 4 }           // Fallback - more realistic
 };
 
 // Gap analysis thresholds

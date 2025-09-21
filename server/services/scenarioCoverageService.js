@@ -1,5 +1,5 @@
 const { generateOuterwearPromptSection, generateRegularPromptSection } = require('../utils/promptGenerationHelpers');
-const {calculateCoveragePercent, hasGap, createGapData, logGapAnalysis } = require('../utils/gapAnalysisHelpers');
+const {calculateCoveragePercent, hasGap, calculateGapType, getBaseScoreFromGapType, createGapData, logGapAnalysis } = require('../utils/gapAnalysisHelpers');
 const { analyzeAccessoryGaps, generateAccessoryPromptSection } = require('../utils/accessoryAnalysisHelpers');
 const { analyzeFromDatabase, processFrontendCoverageData, validateCoverageData } = require('../utils/databaseAnalysisHelpers');
 const { SEASONAL_OUTERWEAR_TARGETS, GAP_THRESHOLDS, INAPPROPRIATE_SCENARIO_COMBOS } = require('../constants/scenarioCoverageConstants');
@@ -69,7 +69,7 @@ class ScenarioCoverageService {
    * Analyze outerwear gaps (season-based)
    */
   analyzeOuterwearGaps(scenarioCoverage, itemSeasons) {
-    const seasonalGaps = [];
+    const seasonalAnalysis = [];
     const seasonalData = this.extractSeasonalOuterwearData(scenarioCoverage);
     
     console.log('📊 Seasonal Outerwear Data:', seasonalData);
@@ -78,14 +78,13 @@ class ScenarioCoverageService {
       const seasonData = seasonalData[itemSeason];
       
       if (seasonData) {
-        const gapInfo = this.processSeasonData(seasonData, itemSeason);
-        if (gapInfo.hasGap) {
-          seasonalGaps.push(createGapData({ ...gapInfo, isOuterwear: true }));
-        }
+        const seasonInfo = this.processSeasonData(seasonData, itemSeason);
+        // Always add seasonal info for outerwear - gaps AND oversaturated cases need scoring
+        seasonalAnalysis.push(createGapData({ ...seasonInfo, isOuterwear: true }));
       } else {
         // No data - use fallback targets
         const fallbackTarget = SEASONAL_OUTERWEAR_TARGETS[itemSeason] || SEASONAL_OUTERWEAR_TARGETS.default;
-        seasonalGaps.push(createGapData({
+        seasonalAnalysis.push(createGapData({
           season: itemSeason,
           currentItems: 0,
           targetMin: fallbackTarget.min,
@@ -94,13 +93,16 @@ class ScenarioCoverageService {
           coveragePercent: 0,
           scenarios: ['All scenarios'],
           isOuterwear: true,
-          isCritical: true
+          isCritical: true,
+          hasGap: true,
+          gapType: 'critical',
+          baseScore: 10
         }));
       }
     });
     
-    this.logFinalGaps('Outerwear', seasonalGaps);
-    return seasonalGaps;
+    console.log(`📊 Final Outerwear Seasonal Analysis: ${seasonalAnalysis.length}`);
+    return seasonalAnalysis;
   }
 
 
@@ -176,13 +178,18 @@ class ScenarioCoverageService {
 
   processSeasonData(seasonData, itemSeason) {
     const coveragePercent = calculateCoveragePercent(seasonData.currentItems, seasonData.targetIdeal);
-    const hasGapResult = hasGap(seasonData.currentItems, seasonData.targetMin);
+    const hasGapResult = hasGap(seasonData.currentItems, seasonData.targetMin, seasonData.targetMax);
+    const gapType = calculateGapType(seasonData.currentItems, seasonData.targetMin, seasonData.targetIdeal, seasonData.targetMax);
+    const baseScore = getBaseScoreFromGapType(gapType);
     
     logGapAnalysis('outerwear', itemSeason, null, {
       currentItems: seasonData.currentItems,
       targetMin: seasonData.targetMin,
       targetIdeal: seasonData.targetIdeal,
+      targetMax: seasonData.targetMax,
       hasGap: hasGapResult,
+      gapType,
+      baseScore,
       coveragePercent
     });
     
@@ -194,7 +201,9 @@ class ScenarioCoverageService {
       targetMax: seasonData.targetMax,
       coveragePercent,
       scenarios: seasonData.scenarios,
-      hasGap: hasGapResult
+      hasGap: hasGapResult,
+      gapType,
+      baseScore
     };
   }
 
