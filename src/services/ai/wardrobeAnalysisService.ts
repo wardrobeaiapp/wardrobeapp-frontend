@@ -1,13 +1,9 @@
 import axios from 'axios';
-import { compressImageToMaxSize } from '../../utils/imageUtils';
-import { getClimateData } from '../profile/climateService';
-import { getWardrobeGoalsData } from '../profile/wardrobeGoalsService';
-import { supabase } from '../core/supabase';
-import { getScenariosForUser } from '../scenarios/scenariosService';
-import { getWardrobeItems } from '../wardrobe/items';
 import { filterStylingContext, filterSimilarContext, filterAdditionalContext } from './wardrobeContextHelpers';
-import { WardrobeItem, ItemCategory, Season } from '../../types';
-import type { Scenario } from '../scenarios/types';
+import { getUserAnalysisData } from './analysis/userDataService';
+import { generateScenarioCoverage } from './analysis/coverageService';
+import { processImageForAnalysis } from './analysis/imageProcessingService';
+import { WardrobeItem } from '../../types';
 import type { WardrobeItemAnalysis } from './types';
 
 // Backend API URL - point to the actual backend server
@@ -68,20 +64,6 @@ export const wardrobeAnalysisService = {
     preFilledData?: WardrobeItem
   ): Promise<WardrobeItemAnalysis> {
     try {
-      // Validate image data before sending to server
-      if (!imageBase64) {
-        console.error('[wardrobeAnalysisService] No image data provided');
-        return {
-          analysis: 'Error: No image data provided.',
-          score: 5.0,
-          feedback: 'Please upload an image to analyze.',
-          error: 'missing_image',
-          details: 'No image data was provided for analysis.'
-        };
-      }
-
-      // Check if image data is too small (likely invalid)
-      console.log('[wardrobeAnalysisService] Image data length:', imageBase64.length, 'starts with:', imageBase64.substring(0, 50));
       console.log('[wardrobeAnalysisService] Form data:', formData);
       
       if (preFilledData) {
@@ -90,102 +72,24 @@ export const wardrobeAnalysisService = {
         console.log('[wardrobeAnalysisService] Filtered pre-filled data:', filtered);
       }
       
-      if (imageBase64.length < 50) {
-        console.error('[wardrobeAnalysisService] Image data too small to be valid');
+      // Process and validate image using dedicated service
+      const imageResult = await processImageForAnalysis(imageBase64);
+      if (imageResult.error) {
         return {
-          analysis: 'Error: The provided image data appears incomplete.',
+          analysis: imageResult.error === 'missing_image' ? 'Error: No image data provided.' : 'Error: The provided image data appears incomplete.',
           score: 5.0,
-          feedback: 'Please try uploading the image again with a complete file.',
-          error: 'invalid_image',
-          details: 'The provided image data is too small to be valid.'
+          feedback: imageResult.error === 'missing_image' ? 'Please upload an image to analyze.' : 'Please try uploading the image again with a complete file.',
+          error: imageResult.error,
+          details: imageResult.details
         };
       }
       
-      // More aggressive image size handling with tiered approach
-      const originalSize = imageBase64.length;
-      console.log(`[wardrobeAnalysisService] Original image size: ${originalSize} bytes`);
-      
-      try {
-        // Tier 1: Images over 4MB - very aggressive compression needed
-        if (originalSize > 4000000) {
-          console.log('[wardrobeAnalysisService] Very large image detected (>4MB), applying maximum compression');
-          imageBase64 = await compressImageToMaxSize(imageBase64, 800000);
-        }
-        // Tier 2: Images between 1-4MB - standard compression
-        else if (originalSize > 1000000) {
-          console.log('[wardrobeAnalysisService] Large image detected (>1MB), applying standard compression');
-          imageBase64 = await compressImageToMaxSize(imageBase64, 900000);
-        }
-        // Tier 3: Images between 800KB-1MB - light compression
-        else if (originalSize > 800000) {
-          console.log('[wardrobeAnalysisService] Medium image detected (>800KB), applying light compression');
-          imageBase64 = await compressImageToMaxSize(imageBase64, 750000);
-        }
-
-        console.log(`[wardrobeAnalysisService] Compression result: ${originalSize} → ${imageBase64.length} bytes (${Math.round(imageBase64.length/originalSize*100)}%)`);
-      } catch (resizeError) {
-        console.error('[wardrobeAnalysisService] Error compressing image:', resizeError);
-        // If compression fails and image is too large, use simple truncation as last resort
-        if (imageBase64.length > 1500000) {
-          console.warn('[wardrobeAnalysisService] Compression failed, using fallback truncation');
-          imageBase64 = imageBase64.substring(0, 1000000);
-        }
-      }
-
+      imageBase64 = imageResult.processedImage;
       console.log('[wardrobeAnalysisService] Sending image to backend for analysis');
       
-      // Get current user from Supabase and their preferences
-      let climateData = null;
-      let userGoals: string[] = [];
-      let scenarios: Scenario[] = [];
-      let wardrobeItems: WardrobeItem[] = [];
-      
-      try {
-        // Get the current authenticated user
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        // Fetch user data if user is logged in
-        if (user?.id) {
-          try {            
-            // Fetch climate data
-            climateData = await getClimateData(user.id);
-            console.log('[wardrobeAnalysisService] Climate data loaded successfully:', climateData);
-            
-            // Fetch user's wardrobe goals
-            try {
-              const wardrobeGoalsData = await getWardrobeGoalsData(user.id);
-              userGoals = wardrobeGoalsData?.wardrobeGoals || [];
-              console.log('[wardrobeAnalysisService] User wardrobe goals loaded:', userGoals);
-            } catch (goalsError) {
-              console.error('[wardrobeAnalysisService] Error fetching wardrobe goals:', goalsError);
-            }
-            
-            // Fetch user's scenarios using the scenarios service
-            try {
-              scenarios = await getScenariosForUser(user.id);
-              console.log(`[wardrobeAnalysisService] Loaded ${scenarios.length} scenarios`);
-            } catch (scenariosError) {
-              console.error('[wardrobeAnalysisService] Error fetching scenarios:', scenariosError);
-            }
-            
-            // Fetch user's wardrobe items for context
-            try {
-              wardrobeItems = await getWardrobeItems(user.id);
-              console.log(`[wardrobeAnalysisService] Loaded ${wardrobeItems.length} wardrobe items for context`);
-            } catch (wardrobeError) {
-              console.error('[wardrobeAnalysisService] Error fetching wardrobe items:', wardrobeError);
-            }
-          } catch (dataError) {
-            console.error('[wardrobeAnalysisService] Error loading user data:', dataError);
-            // Continue without preferences/climate/scenarios if there's an error
-          }
-        } else {
-          console.log('[wardrobeAnalysisService] No authenticated user found, proceeding without user data');
-        }
-      } catch (authError) {
-        console.error('[wardrobeAnalysisService] Error getting authenticated user:', authError);
-        // Continue without user data if there's an auth error
-      }
+      // Get all user data using dedicated service
+      const userData = await getUserAnalysisData();
+      const { user, climateData, userGoals, scenarios, wardrobeItems } = userData;
       
       // Generate styling and gap analysis context
       let stylingContext: WardrobeItem[] = [];
@@ -239,107 +143,10 @@ export const wardrobeAnalysisService = {
         console.log(`[wardrobeAnalysisService] Generated additional context: ${additionalContext.length} items`);
       }
 
-      // Calculate scenario coverage for the target category and season
-      let scenarioCoverage = null;
-      
-      try {
-        // Get the current authenticated user for scenario coverage
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (user?.id && formData?.category && formData?.seasons && formData.seasons.length > 0) {
-          console.log(`[wardrobeAnalysisService] Calculating coverage for ${formData.category} in seasons: ${formData.seasons.join(',')}`);
-          
-          try {
-            // Check if this is outerwear or accessory - use different logic (scenario-agnostic)
-            const isOuterwear = formData.category.toLowerCase() === 'outerwear';
-            const isAccessory = formData.category.toLowerCase() === 'accessory';
-            
-            if (isOuterwear) {
-              // For outerwear, fetch only seasonal coverage (not scenario-specific)
-              console.log(`[wardrobeAnalysisService] Using SEASONAL coverage for outerwear`);
-              const { getOuterwearSeasonalCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
-              
-              // Get seasonal coverage for ALL selected seasons
-              const allCoveragePromises = formData.seasons.map(season => 
-                getOuterwearSeasonalCoverageForAI(user.id, season as Season)
-              );
-              
-              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
-              scenarioCoverage = allSeasonsCoverage.flat();
-              
-              console.log(`[wardrobeAnalysisService] Generated SEASONAL outerwear coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
-              
-              // Log seasonal coverage
-              scenarioCoverage.forEach((coverage: any) => {
-                console.log(`[wardrobeAnalysisService] Seasonal Coverage: ${coverage.scenarioName} - ${coverage.season}: ${coverage.coveragePercent}%`);
-              });
-              
-            } else if (isAccessory) {
-              // For accessories, fetch only seasonal coverage (not scenario-specific)
-              console.log(`[wardrobeAnalysisService] Using SEASONAL coverage for accessories`);
-              const { getAccessorySeasonalCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
-              
-              // Get seasonal coverage for ALL selected seasons
-              const allCoveragePromises = formData.seasons.map(season => 
-                getAccessorySeasonalCoverageForAI(user.id, season as Season)
-              );
-              
-              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
-              scenarioCoverage = allSeasonsCoverage.flat();
-              
-              console.log(`[wardrobeAnalysisService] Generated SEASONAL accessory coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
-              
-              // Log seasonal coverage  
-              scenarioCoverage.forEach((coverage: any) => {
-                console.log(`[wardrobeAnalysisService] Seasonal Coverage: ${coverage.scenarioName} - ${coverage.season}: ${coverage.coveragePercent}%`);
-              });
-              
-            } else if (scenarios.length > 0) {
-              // For regular items, use scenario-specific coverage
-              console.log(`[wardrobeAnalysisService] Using SCENARIO coverage for regular items`);
-              const { getCategoryCoverageForAI } = await import('../wardrobe/scenarioCoverage/category/queries');
-              
-              // Get coverage for ALL selected seasons, not just the first one
-              const allCoveragePromises = formData.seasons.map(season => 
-                getCategoryCoverageForAI(
-                  user.id,
-                  formData.category as ItemCategory,
-                  season as Season,
-                  scenarios,
-                  wardrobeItems
-                )
-              );
-              
-              const allSeasonsCoverage = await Promise.all(allCoveragePromises);
-              scenarioCoverage = allSeasonsCoverage.flat();
-              
-              console.log(`[wardrobeAnalysisService] Generated scenario coverage for ${formData.seasons.length} seasons: ${scenarioCoverage.length} total coverage entries`);
-              
-              // Group by scenario and show coverage per season
-              const coverageByScenario = scenarioCoverage.reduce((acc: Record<string, any[]>, coverage) => {
-                const key = coverage.scenarioName;
-                if (!acc[key]) acc[key] = [];
-                acc[key].push(coverage);
-                return acc;
-              }, {});
-              
-              Object.entries(coverageByScenario).forEach(([scenarioName, coverages]) => {
-                const seasonCoverages = (coverages as any[]).map(c => 
-                  `${c.season}: ${(c as any).coveragePercent || (c as any).coveragePercentage || 0}%`
-                ).join(', ');
-                console.log(`[wardrobeAnalysisService] Coverage: ${scenarioName} - [${seasonCoverages}]`);
-              });
-            }
-            
-          } catch (coverageError) {
-            console.error('[wardrobeAnalysisService] Failed to calculate coverage:', coverageError);
-            // Continue without scenario coverage
-          }
-        }
-      } catch (authError) {
-        console.error('[wardrobeAnalysisService] Failed to get user for scenario coverage:', authError);
-        // Continue without scenario coverage
-      }
+      // Generate scenario coverage using dedicated service
+      const scenarioCoverage = user?.id && formData ? 
+        await generateScenarioCoverage(user.id, formData, scenarios, wardrobeItems) : 
+        null;
       
       // Call our backend endpoint for analysis
       const response = await axios.post(
