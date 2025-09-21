@@ -73,6 +73,11 @@ function generateAccessoryPromptSection(gaps) {
   });
 
   prompt += '\nConsider how this accessory fits within your existing subcategory coverage when providing recommendations.\n';
+  
+  // Add mandatory scoring instructions
+  const { generateMandatoryScoring } = require('./promptGenerationHelpers');
+  prompt += generateMandatoryScoring();
+  
   return prompt;
 }
 

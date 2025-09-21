@@ -89,21 +89,14 @@ function generateOuterwearInstructions(seasonalGaps) {
       case 'oversaturated':
         instructions += `\n- GAP TYPE: OVERSATURATED - User has ${gap.currentItems} items (above maximum ${gap.targetMax})`;
         instructions += `\n- MANDATORY SCORE: 3 - DO NOT buy more items. User needs to declutter, not add more.`;
-        instructions += `\n- RECOMMENDATION: Skip this item. Suggest decluttering existing items instead.`;
+        instructions += `\n- RECOMMENDATION: Skip this item.`;
         break;
       default:
         instructions += `\n- GAP TYPE: ${gap.gapType} - Current items: ${gap.currentItems}`;
     }
   });
   
-  instructions += `\n\n**CRITICAL SCORING INSTRUCTION:**`;
-  instructions += `\nYour final score MUST be exactly the Base Score shown above. DO NOT adjust for other factors.`;
-  instructions += `\nIf gap type is 'oversaturated' (Base Score: 3), your final score MUST be 3.`;
-  instructions += `\nIf gap type is 'satisfied' (Base Score: 6), your final score MUST be 6.`;
-  instructions += `\nIf gap type is 'expansion' (Base Score: 8), your final score MUST be 8.`;
-  instructions += `\nIf gap type is 'improvement' (Base Score: 9), your final score MUST be 9.`;
-  instructions += `\nIf gap type is 'critical' (Base Score: 10), your final score MUST be 10.`;
-  instructions += `\nDO NOT consider quality, style, or duplicates. Use ONLY the Base Score from gap analysis.`;
+  instructions += generateMandatoryScoring();
   
   return instructions;
 }
@@ -120,11 +113,37 @@ function generateRegularInstructions(seasonalGaps) {
   instructions += `\nExample: "This item would be particularly valuable for your ${seasonalGaps.map(g => `${g.scenario} in ${g.season}`).join(', ')} wardrobe gap${seasonalGaps.length > 1 ? 's' : ''}."`;
   instructions += `\nBe specific about ONLY the identified gaps and their coverage levels.`;
   
+  instructions += generateMandatoryScoring();
+  
+  return instructions;
+}
+
+/**
+ * Generate universal mandatory scoring instructions
+ */
+function generateMandatoryScoring() {
+  let instructions = `\n\n**🚨 CRITICAL SCORING INSTRUCTION:**`;
+  instructions += `\nYour final score MUST be based ONLY on the gap analysis above. DO NOT adjust for other factors.`;
+  instructions += `\n\n**If Base Score is provided (outerwear/accessories):**`;
+  instructions += `\n- If gap type is 'oversaturated' (Base Score: 3), your final score MUST be 3.`;
+  instructions += `\n- If gap type is 'satisfied' (Base Score: 6), your final score MUST be 6.`;
+  instructions += `\n- If gap type is 'expansion' (Base Score: 8), your final score MUST be 8.`;
+  instructions += `\n- If gap type is 'improvement' (Base Score: 9), your final score MUST be 9.`;
+  instructions += `\n- If gap type is 'critical' (Base Score: 10), your final score MUST be 10.`;
+  instructions += `\n\n**If only Coverage % is provided (regular items):**`;
+  instructions += `\n- Coverage 0-20%: Score MUST be 10 (critical gap)`;
+  instructions += `\n- Coverage 21-50%: Score MUST be 9 (improvement needed)`;
+  instructions += `\n- Coverage 51-80%: Score MUST be 8 (expansion opportunity)`;
+  instructions += `\n- Coverage 81-100%: Score MUST be 6 (satisfied)`;
+  instructions += `\n- Coverage >100%: Score MUST be 3 (oversaturated)`;
+  instructions += `\n\nDO NOT consider quality, style, or duplicates. Use ONLY the gap analysis data.`;
+  
   return instructions;
 }
 
 module.exports = {
   generateOuterwearPromptSection,
   generateRegularPromptSection,
+  generateMandatoryScoring,
   calculateSeverity
 };
