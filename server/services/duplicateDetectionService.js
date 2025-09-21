@@ -142,7 +142,7 @@ class DuplicateDetectionService {
     
     promptSection += `\nALGORITHMIC RECOMMENDATION: ${duplicateAnalysis.recommendation}`;
     
-    promptSection += `\n\nIMPORTANT: Base your recommendation on these factual findings. If duplicates were found, score should be 1-3/10. If no duplicates and fills gaps, score 6-8/10.`;
+    promptSection += `\n\n🚫 CRITICAL INSTRUCTION: Use ONLY the duplicate analysis above. Do NOT assume or mention any items that aren't explicitly listed. Do NOT make up items like "burgundy cardigan" or "black leather jacket" - only reference items actually found by the algorithm. If no duplicates were found, say so clearly. Your job is to interpret the algorithmic findings, not to guess what items might exist.`;
     
     return promptSection;
   }
