@@ -6,7 +6,6 @@ const {
   addScenariosSection,
   addClimateSection,
   addStylingContextSection,
-  addUserGoalsSection,
   addFinalInstructions
 } = require('../../../utils/promptBuilder');
 
@@ -74,15 +73,12 @@ router.post('/', async (req, res) => {
     // Add climate section
     systemPrompt = addClimateSection(systemPrompt, climateData);
     
-    // Add user goals section
-    systemPrompt = addUserGoalsSection(systemPrompt, userGoals);
-    
     // Add styling context section
     systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
     // === SCENARIO COVERAGE ANALYSIS ===
     const coverageAnalysis = await scenarioCoverageService.analyze(
-      scenarioCoverage, formData, userId, req.body.scenarios
+      scenarioCoverage, formData, userId, req.body.scenarios, userGoals
     );
     
     if (coverageAnalysis.promptSection) {

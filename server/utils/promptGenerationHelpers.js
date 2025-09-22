@@ -5,33 +5,22 @@
 /**
  * Generate outerwear-specific prompt section
  */
-function generateOuterwearPromptSection(seasonalGaps) {
+function generateOuterwearPromptSection(seasonalGaps, userGoals = []) {
   let promptSection = `\n\n=== OUTERWEAR SEASONAL ANALYSIS ===`;
-  promptSection += `\nThis outerwear item could help fill the following seasonal needs:\n`;
+  promptSection += `\nAnalyzing ${seasonalGaps.length} seasonal outerwear need(s):\n`;
   
   seasonalGaps.forEach(gap => {
-    const severity = calculateSeverity(gap.currentItems, gap.coveragePercent);
-    
-    promptSection += `\n• ${gap.season} season outerwear:`;
-    promptSection += `\n  - Current: ${gap.currentItems} items (Min: ${gap.targetMin}, Ideal: ${gap.targetIdeal}, Max: ${gap.targetMax})`;
-    promptSection += `\n  - Coverage: ${gap.coveragePercent.toFixed(1)}%`;
-    promptSection += `\n  - Gap Type: ${gap.gapType || 'unknown'}`;
-    promptSection += `\n  - Base Score: ${gap.baseScore || 'N/A'} (critical=10, improvement=9, expansion=8, satisfied=6, oversaturated=3)`;
-    promptSection += `\n  - Gap severity (legacy): ${severity}`;
-    
-    if (gap.scenarios && gap.scenarios.length > 0) {
-      promptSection += `\n  - Used across scenarios: ${gap.scenarios.join(', ')}`;
-    }
+    promptSection += `\n• ${gap.season} season: ${gap.gapType} (${gap.currentItems}/${gap.targetIdeal} items, ${gap.coveragePercent}% coverage)`;
   });
-  
-  promptSection += generateOuterwearInstructions(seasonalGaps);
+
+  promptSection += generateOuterwearInstructions(seasonalGaps, userGoals);
   return promptSection;
 }
 
 /**
  * Generate regular item prompt section
  */
-function generateRegularPromptSection(seasonalGaps) {
+function generateRegularPromptSection(seasonalGaps, userGoals = []) {
   let promptSection = `\n\n=== SEASONAL GAP ANALYSIS ===`;
   promptSection += `\nThis item could potentially fill the following seasonal gaps:\n`;
   
@@ -43,7 +32,7 @@ function generateRegularPromptSection(seasonalGaps) {
     promptSection += `\n  - Gap severity: ${severity}`;
   });
   
-  promptSection += generateRegularInstructions(seasonalGaps);
+  promptSection += generateRegularInstructions(seasonalGaps, userGoals);
   return promptSection;
 }
 
@@ -61,7 +50,7 @@ function calculateSeverity(currentItems, coveragePercent) {
 /**
  * Generate outerwear-specific instructions
  */
-function generateOuterwearInstructions(seasonalGaps) {
+function generateOuterwearInstructions(seasonalGaps, userGoals = []) {
   let instructions = `\n\n**OUTERWEAR RECOMMENDATION INSTRUCTION:**`;
   instructions += `\nThis is an OUTERWEAR item that can be worn across multiple scenarios.`;
   instructions += `\nFocus on SEASONAL NEEDS and GAP TYPE rather than specific scenarios.`;
@@ -96,7 +85,7 @@ function generateOuterwearInstructions(seasonalGaps) {
     }
   });
   
-  instructions += generateMandatoryScoring();
+  instructions += generateMandatoryScoring(userGoals);
   
   return instructions;
 }
@@ -104,7 +93,7 @@ function generateOuterwearInstructions(seasonalGaps) {
 /**
  * Generate regular item instructions
  */
-function generateRegularInstructions(seasonalGaps) {
+function generateRegularInstructions(seasonalGaps, userGoals = []) {
   let instructions = `\n\n**TARGETED RECOMMENDATION INSTRUCTION:**`;
   instructions += `\nIn your FINAL RECOMMENDATION, specifically mention ONLY the seasonal gaps listed above.`;
   instructions += `\nDO NOT mention seasons that are not listed as gaps above.`;
@@ -113,30 +102,71 @@ function generateRegularInstructions(seasonalGaps) {
   instructions += `\nExample: "This item would be particularly valuable for your ${seasonalGaps.map(g => `${g.scenario} in ${g.season}`).join(', ')} wardrobe gap${seasonalGaps.length > 1 ? 's' : ''}."`;
   instructions += `\nBe specific about ONLY the identified gaps and their coverage levels.`;
   
-  instructions += generateMandatoryScoring();
+  instructions += generateMandatoryScoring(userGoals);
   
   return instructions;
 }
 
 /**
- * Generate universal mandatory scoring instructions
+ * Generate universal mandatory scoring instructions with user goal adjustments
  */
-function generateMandatoryScoring() {
+function generateMandatoryScoring(userGoals = []) {
+  // Check if user has conservative/minimalist goals
+  const conservativeGoalIds = [
+    'buy-less-shop-more-intentionally',
+    'declutter-downsize', 
+    'save-money'
+  ];
+  
+  const hasConservativeGoals = userGoals.some(goal => 
+    conservativeGoalIds.includes(goal.toLowerCase()) ||
+    goal.toLowerCase().includes('minimalist') ||
+    goal.toLowerCase().includes('buy less') ||
+    goal.toLowerCase().includes('declutter')
+  );
+  
+  // Debug logging
+  console.log(`🎯 User Goals Check:`, userGoals);
+  console.log(`🎯 Conservative Goals Detected:`, hasConservativeGoals);
+  
   let instructions = `\n\n**🚨 CRITICAL SCORING INSTRUCTION:**`;
   instructions += `\nYour final score MUST be based ONLY on the gap analysis above. DO NOT adjust for other factors.`;
-  instructions += `\n\n**If Base Score is provided (outerwear/accessories):**`;
-  instructions += `\n- If gap type is 'oversaturated' (Base Score: 3), your final score MUST be 3.`;
-  instructions += `\n- If gap type is 'satisfied' (Base Score: 6), your final score MUST be 6.`;
-  instructions += `\n- If gap type is 'expansion' (Base Score: 8), your final score MUST be 8.`;
-  instructions += `\n- If gap type is 'improvement' (Base Score: 9), your final score MUST be 9.`;
-  instructions += `\n- If gap type is 'critical' (Base Score: 10), your final score MUST be 10.`;
-  instructions += `\n\n**If only Coverage % is provided (regular items):**`;
-  instructions += `\n- Coverage 0-20%: Score MUST be 10 (critical gap)`;
-  instructions += `\n- Coverage 21-50%: Score MUST be 9 (improvement needed)`;
-  instructions += `\n- Coverage 51-80%: Score MUST be 8 (expansion opportunity)`;
-  instructions += `\n- Coverage 81-100%: Score MUST be 6 (satisfied)`;
-  instructions += `\n- Coverage >100%: Score MUST be 3 (oversaturated)`;
-  instructions += `\n\nDO NOT consider quality, style, or duplicates. Use ONLY the gap analysis data.`;
+  
+  if (hasConservativeGoals) {
+    instructions += `\n\n**⚠️ USER HAS CONSERVATIVE GOALS:** User wants to buy less, build capsule wardrobe, declutter, or save money.`;
+    instructions += `\nBe MORE STRICT with scoring - recommend skipping items earlier than usual.`;
+    
+    instructions += `\n\n**CONSERVATIVE SCORING (Gap Type System):**`;
+    instructions += `\n- If gap type is 'oversaturated': Score MUST be 2 (definitely skip)`;
+    instructions += `\n- If gap type is 'satisfied': Score MUST be 4 (skip - you have enough)`;
+    instructions += `\n- If gap type is 'expansion': Score MUST be 6 (probably skip unless very special)`;
+    instructions += `\n- If gap type is 'improvement': Score MUST be 9`;
+    instructions += `\n- If gap type is 'critical': Score MUST be 10`;
+    
+    instructions += `\n\n**CONSERVATIVE SCORING (Coverage % System):**`;
+    instructions += `\n- Coverage 0-20%: Score MUST be 10`;
+    instructions += `\n- Coverage 21-50%: Score MUST be 9`;
+    instructions += `\n- Coverage 51-80%: Score MUST be 6 (probably skip)`;
+    instructions += `\n- Coverage 81-100%: Score MUST be 4 (skip - you have enough)`;
+    instructions += `\n- Coverage >100%: Score MUST be 2 (definitely skip)`;
+    
+  } else {
+    instructions += `\n\n**STANDARD SCORING (Gap Type System):**`;
+    instructions += `\n- If gap type is 'oversaturated': Score MUST be 3`;
+    instructions += `\n- If gap type is 'satisfied': Score MUST be 6`;
+    instructions += `\n- If gap type is 'expansion': Score MUST be 8`;
+    instructions += `\n- If gap type is 'improvement': Score MUST be 9`;
+    instructions += `\n- If gap type is 'critical': Score MUST be 10`;
+    
+    instructions += `\n\n**STANDARD SCORING (Coverage % System):**`;
+    instructions += `\n- Coverage 0-20%: Score MUST be 10 (critical gap)`;
+    instructions += `\n- Coverage 21-50%: Score MUST be 9 (improvement needed)`;
+    instructions += `\n- Coverage 51-80%: Score MUST be 8 (expansion opportunity)`;
+    instructions += `\n- Coverage 81-100%: Score MUST be 6 (satisfied)`;
+    instructions += `\n- Coverage >100%: Score MUST be 3 (oversaturated)`;
+  }
+  
+  instructions += `\n\nDO NOT consider quality, style, or duplicates. Use ONLY the gap analysis data and user goals.`;
   
   return instructions;
 }

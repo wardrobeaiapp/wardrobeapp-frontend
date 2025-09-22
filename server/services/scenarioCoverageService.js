@@ -1,5 +1,5 @@
 const { generateOuterwearPromptSection, generateRegularPromptSection } = require('../utils/promptGenerationHelpers');
-const {calculateCoveragePercent, hasGap, calculateGapType, getBaseScoreFromGapType, createGapData, logGapAnalysis } = require('../utils/gapAnalysisHelpers');
+const {calculateCoveragePercent, hasGap, calculateGapType, getBaseScoreFromGapType, createGapData } = require('../utils/gapAnalysisHelpers');
 const { analyzeAccessoryGaps, generateAccessoryPromptSection } = require('../utils/accessoryAnalysisHelpers');
 const { analyzeFromDatabase, processFrontendCoverageData, validateCoverageData } = require('../utils/databaseAnalysisHelpers');
 const { SEASONAL_OUTERWEAR_TARGETS, GAP_THRESHOLDS, INAPPROPRIATE_SCENARIO_COMBOS } = require('../constants/scenarioCoverageConstants');
@@ -13,7 +13,7 @@ class ScenarioCoverageService {
   /**
    * Main analysis entry point
    */
-  async analyze(scenarioCoverage, formData, userId, scenarios) {
+  async analyze(scenarioCoverage, formData, userId, scenarios, userGoals = []) {
     // Validate input data
     if (scenarioCoverage) {
       validateCoverageData(scenarioCoverage, 'frontend');
@@ -25,7 +25,7 @@ class ScenarioCoverageService {
         scenarioCoverage, 
         formData,
         (coverage, data) => this.identifySeasonalGaps(coverage, data),
-        (gaps) => this.generatePromptSection(gaps)
+        (gaps) => this.generatePromptSection(gaps, userGoals)
       );
     } else if (userId && formData?.seasons) {
       // Use database fallback
@@ -34,7 +34,7 @@ class ScenarioCoverageService {
         formData, 
         scenarios,
         (coverage, data) => this.identifySeasonalGaps(coverage, data),
-        (gaps) => this.generatePromptSection(gaps)
+        (gaps) => this.generatePromptSection(gaps, userGoals)
       );
     } else {
       console.log('=== SCENARIO COVERAGE ANALYSIS - Skipped (no data provided) ===');
@@ -138,18 +138,18 @@ class ScenarioCoverageService {
   /**
    * Generate appropriate prompt section
    */
-  generatePromptSection(seasonalGaps) {
+  generatePromptSection(seasonalGaps, userGoals = []) {
     if (seasonalGaps.length === 0) return '';
     
     const isOuterwearAnalysis = seasonalGaps.some(gap => gap.isOuterwearGap);
     const isAccessoryAnalysis = seasonalGaps.some(gap => gap.category === 'accessory' || gap.subcategory);
     
     if (isOuterwearAnalysis) {
-      return generateOuterwearPromptSection(seasonalGaps);
+      return generateOuterwearPromptSection(seasonalGaps, userGoals);
     } else if (isAccessoryAnalysis) {
-      return generateAccessoryPromptSection(seasonalGaps);
+      return generateAccessoryPromptSection(seasonalGaps, userGoals);
     } else {
-      return generateRegularPromptSection(seasonalGaps);
+      return generateRegularPromptSection(seasonalGaps, userGoals);
     }
   }
 
@@ -182,16 +182,8 @@ class ScenarioCoverageService {
     const gapType = calculateGapType(seasonData.currentItems, seasonData.targetMin, seasonData.targetIdeal, seasonData.targetMax);
     const baseScore = getBaseScoreFromGapType(gapType);
     
-    logGapAnalysis('outerwear', itemSeason, null, {
-      currentItems: seasonData.currentItems,
-      targetMin: seasonData.targetMin,
-      targetIdeal: seasonData.targetIdeal,
-      targetMax: seasonData.targetMax,
-      hasGap: hasGapResult,
-      gapType,
-      baseScore,
-      coveragePercent
-    });
+    // Log single summary of gap analysis results  
+    console.log(`🔍 ${gapType.toUpperCase()} ${itemSeason} outerwear: ${seasonData.currentItems}/${seasonData.targetIdeal} items (${coveragePercent.toFixed(1)}%, score: ${baseScore})`);
     
     return {
       season: itemSeason,
@@ -226,12 +218,7 @@ class ScenarioCoverageService {
       scenarioName
     );
     
-    logGapAnalysis('regular', scenarioName, coverage.season, {
-      coveragePercent: coverage.coveragePercent,
-      hasGap: hasGapResult,
-      seasonMatch: itemSuitableForSeason,
-      scenarioAppropriate: itemAppropriateForScenario
-    });
+    // Gap analysis complete - results used below
     
     const shouldAdd = hasGapResult && itemSuitableForSeason && itemAppropriateForScenario;
     

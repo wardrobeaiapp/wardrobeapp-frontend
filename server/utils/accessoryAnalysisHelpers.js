@@ -47,7 +47,7 @@ function analyzeAccessoryGaps(scenarioCoverage, formData, itemSeasons) {
  * Generate accessory-specific prompt section with subcategory information
  * Creates detailed breakdown of each subcategory's coverage status
  */
-function generateAccessoryPromptSection(gaps) {
+function generateAccessoryPromptSection(gaps, userGoals = []) {
   let prompt = '\n=== ACCESSORY WARDROBE ANALYSIS ===\n';
   
   // Group by subcategory
@@ -76,7 +76,7 @@ function generateAccessoryPromptSection(gaps) {
   
   // Add mandatory scoring instructions
   const { generateMandatoryScoring } = require('./promptGenerationHelpers');
-  prompt += generateMandatoryScoring();
+  prompt += generateMandatoryScoring(userGoals);
   
   return prompt;
 }
