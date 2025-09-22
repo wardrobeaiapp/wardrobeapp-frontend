@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { filterStylingContext, filterSimilarContext, filterAdditionalContext } from './wardrobeContextHelpers';
-import { getUserAnalysisData } from './analysis/userDataService';
+import { filterStylingContext, filterSimilarContext } from './wardrobeContextHelpers';import { getUserAnalysisData } from './analysis/userDataService';
 import { generateScenarioCoverage } from './analysis/coverageService';
 import { processImageForAnalysis } from './analysis/imageProcessingService';
 import { WardrobeItem } from '../../types';
@@ -94,7 +93,6 @@ export const wardrobeAnalysisService = {
       // Generate styling and gap analysis context
       let stylingContext: WardrobeItem[] = [];
       let similarContext: WardrobeItem[] = [];
-      let additionalContext: WardrobeItem[] = [];
       
       if (wardrobeItems.length > 0 && formData) {
         console.log('[wardrobeAnalysisService] Debug - formData:', formData);
@@ -135,12 +133,8 @@ export const wardrobeAnalysisService = {
         // Filter for gap analysis context using helper function
         similarContext = filterSimilarContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
         
-        // Filter for additional context using helper function
-        additionalContext = filterAdditionalContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
-        
         console.log(`[wardrobeAnalysisService] Generated styling context: ${stylingContext.length} items`);
         console.log(`[wardrobeAnalysisService] Generated gap analysis context: ${similarContext.length} items`);
-        console.log(`[wardrobeAnalysisService] Generated additional context: ${additionalContext.length} items`);
       }
 
       // Generate scenario coverage using dedicated service
@@ -170,7 +164,6 @@ export const wardrobeAnalysisService = {
           // Include wardrobe context for enhanced analysis
           stylingContext: stylingContext.length > 0 ? stylingContext : undefined,
           similarContext: similarContext.length > 0 ? similarContext : undefined,
-          additionalContext: additionalContext.length > 0 ? additionalContext : undefined,
           // Include scenario coverage data calculated in frontend
           scenarioCoverage: scenarioCoverage || undefined,
           // Include user's wardrobe goals for personalized recommendations

@@ -27,7 +27,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, additionalContext, scenarioCoverage, userGoals, userId, preFilledData } = req.body;
+    const { imageBase64, detectedTags, climateData, scenarios, formData, stylingContext, similarContext, scenarioCoverage, userGoals, userId, preFilledData } = req.body;
     
     // Log the complete request body for debugging
     console.log('=== Request Body ===');
@@ -38,7 +38,6 @@ router.post('/', async (req, res) => {
     console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
-    console.log('additionalContext:', additionalContext ? `${additionalContext.length} items` : 'none');
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} scenarios` : 'none');
     console.log('userGoals:', userGoals || 'none');
     console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
@@ -88,7 +87,7 @@ router.post('/', async (req, res) => {
 
     // === ENHANCED DUPLICATE DETECTION ===
     const duplicateResult = await duplicateDetectionService.analyzeWithAI(
-      base64Data, formData, similarContext, additionalContext
+      base64Data, formData, similarContext
     );
     
     if (duplicateResult) {

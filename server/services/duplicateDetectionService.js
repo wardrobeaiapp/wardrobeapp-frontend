@@ -17,15 +17,14 @@ const anthropic = new Anthropic({
 class DuplicateDetectionService {
   
   /**
-   * Run the complete enhanced duplicate detection process
+   * Analyze item for duplicates using AI-extracted attributes and algorithmic analysis
    * @param {string} base64Data - Base64 image data
    * @param {Object} formData - Form data containing category, subcategory, seasons
-   * @param {Array} similarContext - Similar context items
-   * @param {Array} additionalContext - Additional context items
+   * @param {Array} similarContext - Similar context items (same category/subcategory)
    * @returns {Object|null} Duplicate analysis result or null if failed
    */
-  async analyzeWithAI(base64Data, formData, similarContext, additionalContext) {
-    if (!formData || !formData.category || (!similarContext && !additionalContext)) {
+  async analyzeWithAI(base64Data, formData, similarContext) {
+    if (!formData || !formData.category || !similarContext) {
       console.log('Skipping duplicate detection: insufficient data');
       return null;
     }
@@ -55,7 +54,7 @@ class DuplicateDetectionService {
         seasons: formData.seasons
       };
 
-      const allContextItems = [...(similarContext || []), ...(additionalContext || [])];
+      const allContextItems = similarContext || [];
       const duplicateAnalysis = analyzeDuplicatesForAI(enrichedItemData, allContextItems);
       
       console.log('Duplicate analysis result:', JSON.stringify(duplicateAnalysis, null, 2));
