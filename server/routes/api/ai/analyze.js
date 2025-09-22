@@ -82,6 +82,7 @@ router.post('/', async (req, res) => {
     );
     
     if (coverageAnalysis.promptSection) {
+      console.log('🎯 GAP ANALYSIS PROMPT SECTION:', coverageAnalysis.promptSection);
       systemPrompt += coverageAnalysis.promptSection;
     }
 
@@ -103,6 +104,16 @@ router.post('/', async (req, res) => {
     
     // Add final instructions
     systemPrompt = addFinalInstructions(systemPrompt);
+    
+    // CRITICAL: Re-enforce mandatory scoring at the very end
+    if (coverageAnalysis.promptSection && coverageAnalysis.promptSection.includes('MUST be')) {
+      systemPrompt += "\n\n🚨🚨🚨 FINAL CRITICAL REMINDER 🚨🚨🚨";
+      systemPrompt += "\nYour score MUST exactly match the Base Score from the gap analysis above.";
+      systemPrompt += "\nIf Base Score = 3 (oversaturated), you MUST give score 3 and SKIP.";
+      systemPrompt += "\nIf Base Score = 10 (critical), you MUST give score 10 and RECOMMEND.";
+      systemPrompt += "\nDO NOT override these scores for any reason - style, quality, or personal preference.";
+      systemPrompt += "\nThe gap analysis Base Score is MANDATORY and FINAL.";
+    }
     
     // Debug: Log the full prompt being sent to AI (truncated for readability)
     console.log('=== FULL PROMPT TO AI (last 1000 chars) ===');

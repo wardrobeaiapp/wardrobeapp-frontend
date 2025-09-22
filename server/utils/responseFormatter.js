@@ -9,9 +9,9 @@ class ResponseFormatter {
    * @returns {Object} Parsed response with analysis, score, feedback, finalRecommendation
    */
   parseResponse(analysisResponse) {
-    console.log('Claude response:', analysisResponse);
+    console.log('🔍 Full AI Response:', analysisResponse);
     
-    let analysis = "";
+    let analysis = analysisResponse;
     let score = 5.0;
     let feedback = "";
     let finalRecommendation = "";

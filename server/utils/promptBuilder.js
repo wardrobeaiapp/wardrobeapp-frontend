@@ -1,7 +1,7 @@
 // Utility functions for building AI analysis prompts
 
 function buildSystemPrompt() {
-  let systemPrompt = "🚨 CRITICAL SCORING RULE: Your final score MUST exactly match the Base Score provided in the gap analysis. If gap type is 'oversaturated' with Base Score 3, you MUST give score 3. DO NOT adjust for any other factors. ";
+  let systemPrompt = "🚨 CRITICAL SCORING RULE: Your final score MUST exactly match the Base Score provided in the gap analysis section. If gap type is 'oversaturated' with Base Score 3, you MUST give score 3. If gap type is 'critical' with Base Score 10, you MUST give score 10. DO NOT adjust scores for style, quality, or personal preference - use ONLY the provided Base Score. ";
   systemPrompt += "\n\nYou are a financial advisor and wardrobe consultant. Your job is to prevent wasteful spending on TRUE duplicates while recognizing GENUINE gaps that justify purchases. ";
   systemPrompt += "Base your analysis ONLY on the data provided to you - never assume or make up items that aren't explicitly mentioned. ";
   systemPrompt += "If a user has 0-1 items for a high-frequency scenario, that's usually a genuine gap worth filling, not to be overly strict.";
@@ -13,7 +13,7 @@ function buildSystemPrompt() {
   systemPrompt += "\n• BALANCE financial prudence with practical wardrobe needs";
   systemPrompt += "\n• Consider cost-per-wear and scenario frequency - daily use justifies purchases";
   systemPrompt += "\n• Don't reject items that fill obvious gaps in high-frequency scenarios";
-  systemPrompt += "\n\n🚫 CRITICAL: Do NOT mention items like 'burgundy cardigan' or 'black leather jacket' unless they appear in the provided data. Only reference items explicitly found by the duplicate analysis algorithm.";
+  systemPrompt += "\n\n🚫 CRITICAL: Do NOT mention specific items like 'burgundy cardigan' or 'black leather jacket' UNLESS they appear in the provided duplicate analysis data. Only reference items that are explicitly listed in the algorithmic analysis sections.";
   
   systemPrompt += "\n\n=== FASHION RELEVANCE ===";
   systemPrompt += "\nEvaluate whether the piece feels current and stylish:";
@@ -330,68 +330,28 @@ function addFinalInstructions(systemPrompt, detectedTags) {
   systemPrompt += "\n- ONLY mention quality/fit issues IF you see obvious problems like poor stitching, loose threads, bad fit, cheap materials, or broken hardware";
   systemPrompt += "\n\nSCORE: X/10";
   systemPrompt += "\nScore reasoning based on THIS item's value";
-  systemPrompt += "\n\nSCORING GUIDELINES (BALANCED APPROACH):";
-  systemPrompt += "\n- EXACT DUPLICATES (same color + same subcategory): Score MUST be 1-2/10 (automatic rejection)";
-  systemPrompt += "\n- NEAR DUPLICATES (very similar items): Score MUST be 2-3/10 (automatic rejection)";
-  systemPrompt += "\n- MINOR OVERLAP with existing items: Score 3-5/10 (consider if truly needed)";
-  systemPrompt += "\n- FILLS GENUINE GAP in high-frequency scenario: Score 6-8/10 (likely recommend)";
-  systemPrompt += "\n- FILLS CRITICAL GAP (0-1 items for daily/weekly scenario): Score 7-9/10 (strong recommend)";
-  systemPrompt += "\n- ESSENTIAL FOR UNCOVERED SCENARIO: Score 8-10/10 (clear recommend)";
-  systemPrompt += "\n\n**REMEMBER: If user has 0-1 items for a high-frequency scenario, that's typically a 6-8/10 score range, not 1-4/10.**";
+  systemPrompt += "\n\n🚨 CRITICAL REQUIREMENT: Your FINAL RECOMMENDATION section must NEVER be just 'SKIP' or 'RECOMMEND' without explanation. Always include specific reasoning based on gap analysis, existing items, or scenarios.";
+  systemPrompt += "\n\n📝 FINAL RECOMMENDATION LANGUAGE RULES:";
+  systemPrompt += "\n• Use friendly, encouraging language";
+  systemPrompt += "\n• DO NOT mention specific numbers of items (avoid '6 items', '0 items', etc.)";
+  systemPrompt += "\n• DO NOT use technical terms like 'oversaturated', 'gap type', 'base score'";
+  systemPrompt += "\n• USE encouraging phrases: 'well-stocked', 'great coverage', 'fills a gap', 'plenty of options'";
+  systemPrompt += "\n\nExample recommendation formats:";
+  systemPrompt += "\n• 'SKIP - You already have [specific item] that works beautifully for [scenarios]. This would be redundant.'";
+  systemPrompt += "\n• 'SKIP - Your wardrobe is already well-stocked with [category] for [season]. Focus on styling what you own creatively.'";
+  systemPrompt += "\n• 'SKIP - You have great coverage in this area already. Consider exploring new ways to style your existing pieces.'";
+  systemPrompt += "\n• 'RECOMMEND - This fills an important gap in your [scenario] wardrobe and will pair wonderfully with [existing pieces].'";
+  systemPrompt += "\n• 'RECOMMEND - Perfect addition for [scenarios] where you need more options. Great versatility for your lifestyle.'";
+  systemPrompt += "\n\n=== REQUIRED OUTPUT FORMAT ===";
+  systemPrompt += "\nYou MUST structure your response with these exact sections:";
+  systemPrompt += "\n\nANALYSIS:";
+  systemPrompt += "\n[Your detailed analysis here]";
+  systemPrompt += "\n\nSCORE: [Your numerical score]";
   systemPrompt += "\n\nFEEDBACK:";
-  systemPrompt += "\nSpecific recommendation for THIS item";
-  systemPrompt += "\n\nFINAL RECOMMENDATION: [Be selective and strategic. Examples:";
-  systemPrompt += "\n- 'SKIP - You already own [specific item] which serves the same purpose.'";
-  systemPrompt += "\n- 'SKIP - This overlaps too much with existing items and won't add meaningful value.'";
-  systemPrompt += "\n- 'RECOMMEND - This fills a genuine gap in [specific scenario] and offers high versatility with [specific existing items].'";
-  systemPrompt += "\n- 'RECOMMEND - Essential for [specific scenarios] where you currently lack appropriate options.'";
-  systemPrompt += "\nRECOMMEND only when item significantly improves wardrobe functionality, scenario coverage, or versatility.]";
+  systemPrompt += "\n[Your specific recommendation for this item]";
+  systemPrompt += "\n\nFINAL RECOMMENDATION:";
+  systemPrompt += "\n[Your final recommendation with detailed explanation - never just 'SKIP' or 'RECOMMEND' alone]";
   systemPrompt += "\n\nCRITICAL: Analyze the ACTUAL item in the image, not generic examples. Be specific about color, style, fit. Ensure pros and cons are consistent and logical for the same item.";
-  
-  return systemPrompt;
-}
-
-function addUserGoalsSection(systemPrompt, userGoals) {
-  if (userGoals && userGoals.length > 0) {
-    systemPrompt += `\n\n=== USER'S WARDROBE GOALS ===`;
-    systemPrompt += `\nThe user has indicated these wardrobe goals: ${userGoals.join(', ')}`;
-    systemPrompt += `\n\nTailor your recommendations based on their goals:`;
-    
-    if (userGoals.includes('buy-less-shop-more-intentionally') || userGoals.includes('save-money')) {
-      systemPrompt += `\n• Be more conservative with recommendations - focus only on genuine gaps`;
-      systemPrompt += `\n• Emphasize cost-per-wear and necessity`;
-      systemPrompt += `\n• Suggest skipping items unless they're truly essential`;
-    }
-    
-    if (userGoals.includes('build-a-capsule-wardrobe')) {
-      systemPrompt += `\n• Focus on versatile, timeless pieces that work across scenarios`;
-      systemPrompt += `\n• Emphasize quality and multi-functionality`;
-      systemPrompt += `\n• Be selective - fewer, better pieces`;
-    }
-    
-    if (userGoals.includes('declutter-downsize')) {
-      systemPrompt += `\n• Be very strict about recommending purchases`;
-      systemPrompt += `\n• Suggest the user may already have enough in this category`;
-      systemPrompt += `\n• Focus on whether they can declutter existing items instead`;
-    }
-    
-    if (userGoals.includes('define-or-upgrade-my-personal-style') || userGoals.includes('experiment-or-try-something-new')) {
-      systemPrompt += `\n• Be more open to style-forward or unique pieces`;
-      systemPrompt += `\n• Consider how this item could elevate or diversify their style`;
-      systemPrompt += `\n• Balance experimentation with practicality`;
-    }
-    
-    if (userGoals.includes('make-getting-dressed-easier-faster')) {
-      systemPrompt += `\n• Focus on versatile basics that work with many outfits`;
-      systemPrompt += `\n• Consider how this simplifies outfit creation`;
-      systemPrompt += `\n• Value pieces that reduce decision fatigue`;
-    }
-    
-    if (userGoals.includes('optimize-my-wardrobe')) {
-      systemPrompt += `\n• Balance all factors - gaps, duplicates, versatility, and quality`;
-      systemPrompt += `\n• Focus on wardrobe efficiency and strategic additions`;
-    }
-  }
   
   return systemPrompt;
 }
@@ -404,6 +364,5 @@ module.exports = {
   addStylingContextSection,
   addScenarioCoverageSection,
   addGapAnalysisSection,
-  addUserGoalsSection,
   addFinalInstructions
 };
