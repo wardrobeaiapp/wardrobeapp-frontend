@@ -146,7 +146,7 @@ app.use('/api/wardrobe-items', require('./routes/api/wardrobe/items'));
 app.use('/api/outfits', require('./routes/outfits'));
 app.use('/api/capsules', require('./routes/capsules'));
 app.use('/api/migrate-data', require('./routes/dataMigration'));
-app.use('/api/analyze-wardrobe-item', require('./routes/api/ai/analyze'));
+app.use('/api/analyze-wardrobe-item', require('./routes/api/ai/analyze-simple'));
 
 // Debug in-memory users
 console.log('In-memory users at startup:', global.inMemoryUsers);
