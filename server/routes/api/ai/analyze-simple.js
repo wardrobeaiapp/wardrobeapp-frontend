@@ -53,9 +53,10 @@ function extractSuitableScenarios(analysisResponse) {
  * @param {Array} scenarioCoverage - Scenario coverage data
  * @param {string[]} suitableScenarios - Array of suitable scenario names from Claude analysis
  * @param {Object} formData - Form data with category/subcategory info
+ * @param {Array} userGoals - User goals that affect scoring
  * @returns {number} Initial score based on coverage analysis (1-10)
  */
-function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData) {
+function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals) {
   if (!scenarioCoverage || !Array.isArray(scenarioCoverage) || scenarioCoverage.length === 0) {
     return 5.0; // Default score if no coverage data
   }
@@ -115,30 +116,59 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     }
   }
   
-  // Convert gap type to score
+  // Check if user has decluttering/money-saving goals
+  const hasConstraintGoals = userGoals && userGoals.some(goal => 
+    ['buy-less-shop-more-intentionally', 'declutter-downsize', 'save-money'].includes(goal)
+  );
+  
+  // Convert gap type to score with userGoals consideration
   let initialScore = 5.0;
   
-  switch (gapType) {
-    case 'critical':
-      initialScore = 10;
-      break;
-    case 'improvement':
-      initialScore = 9;
-      break;
-    case 'expansion':
-      initialScore = 8;
-      break;
-    case 'satisfied':
-      initialScore = 6;
-      break;
-    case 'oversaturated':
-      initialScore = 3;
-      break;
-    default:
-      initialScore = 5.0;
+  if (hasConstraintGoals) {
+    // CONSTRAINED SCORING (declutter/save money goals)
+    switch (gapType) {
+      case 'critical':
+        initialScore = 10;
+        break;
+      case 'improvement':
+        initialScore = 9;
+        break;
+      case 'expansion':
+        initialScore = 6; // Lower score - probably skip
+        break;
+      case 'satisfied':
+        initialScore = 4; // Lower score - skip, you have enough
+        break;
+      case 'oversaturated':
+        initialScore = 2; // Lower score - definitely skip
+        break;
+      default:
+        initialScore = 5.0;
+    }
+    console.log(`Constrained scoring (${userGoals.filter(g => ['buy-less-shop-more-intentionally', 'declutter-downsize', 'save-money'].includes(g)).join(', ')}) - Gap type '${gapType}': ${initialScore}`);
+  } else {
+    // STANDARD SCORING
+    switch (gapType) {
+      case 'critical':
+        initialScore = 10;
+        break;
+      case 'improvement':
+        initialScore = 9;
+        break;
+      case 'expansion':
+        initialScore = 8;
+        break;
+      case 'satisfied':
+        initialScore = 6;
+        break;
+      case 'oversaturated':
+        initialScore = 3;
+        break;
+      default:
+        initialScore = 5.0;
+    }
+    console.log(`Standard scoring - Gap type '${gapType}': ${initialScore}`);
   }
-  
-  console.log(`Score based on gap type '${gapType}': ${initialScore}`);
   
   return initialScore;
 }
@@ -149,13 +179,14 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios, scenarioCoverage } = req.body;
+    const { imageBase64, formData, scenarios, scenarioCoverage, userGoals } = req.body;
     
     console.log('=== Simple Analysis Request ===');
     console.log('imageBase64:', imageBase64 ? 'present' : 'missing');
     console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('scenarios:', scenarios || 'none');
     console.log('scenarioCoverage:', scenarioCoverage || 'none');
+    console.log('userGoals:', userGoals || 'none');
     console.log('==============================');
 
     // Validate and process image data
@@ -236,7 +267,7 @@ router.post('/', async (req, res) => {
     const suitableScenarios = extractSuitableScenarios(analysisResponse);
     
     // Analyze scenario coverage to get initial score
-    const initialScore = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData);
+    const initialScore = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals);
     
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
