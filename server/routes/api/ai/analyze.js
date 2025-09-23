@@ -78,14 +78,14 @@ router.post('/', async (req, res) => {
     // systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
     // === SCENARIO COVERAGE ANALYSIS ===
-    // const coverageAnalysis = await scenarioCoverageService.analyze(
-    //   scenarioCoverage, formData, userId, req.body.scenarios, userGoals
-    // );
+    const coverageAnalysis = await scenarioCoverageService.analyze(
+      scenarioCoverage, formData, userId, req.body.scenarios, userGoals
+    );
     
-    // if (coverageAnalysis.promptSection) {
-    //   console.log('🎯 GAP ANALYSIS PROMPT SECTION:', coverageAnalysis.promptSection);
-    //   systemPrompt += coverageAnalysis.promptSection;
-    // }
+    if (coverageAnalysis.promptSection) {
+      console.log('🎯 GAP ANALYSIS PROMPT SECTION:', coverageAnalysis.promptSection);
+      systemPrompt += coverageAnalysis.promptSection;
+    }
 
     // === ENHANCED DUPLICATE DETECTION ===
     // const duplicateResult = await duplicateDetectionService.analyzeWithAI(
@@ -163,7 +163,7 @@ router.post('/', async (req, res) => {
     
     console.log('=== FINAL RESPONSE ===');
     // console.log('Duplicate detection:', duplicateResult ? 'enabled' : 'disabled');
-    // console.log('Scenario coverage:', scenarioCoverage ? 'enabled' : 'disabled');
+    console.log('Scenario coverage:', scenarioCoverage ? 'enabled' : 'disabled');
     console.log('Score:', parsedResponse.score);
     console.log('====================');
     res.json(parsedResponse);
