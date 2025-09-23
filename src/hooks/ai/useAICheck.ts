@@ -14,7 +14,6 @@ export const useAICheck = () => {
   const [itemCheckScore, setItemCheckScore] = useState<number | undefined>();
   const [itemCheckStatus, setItemCheckStatus] = useState<WishlistStatus | undefined>();
   const [extractedTags, setExtractedTags] = useState<DetectedTags | null>(null);
-  const [recommendationAction, setRecommendationAction] = useState<string>('');
   const [recommendationText, setRecommendationText] = useState<string>('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
@@ -102,7 +101,6 @@ export const useAICheck = () => {
       setItemCheckScore(score);
       setItemCheckStatus(status);
       setExtractedTags(detectedTags);
-      setRecommendationAction(response.recommendationAction || '');
       setRecommendationText(response.recommendationText || '');
 
       return { analysisResult, score, status, detectedTags };
@@ -125,7 +123,6 @@ export const useAICheck = () => {
     setItemCheckScore(undefined);
     setItemCheckStatus(undefined);
     setExtractedTags(null);
-    setRecommendationAction('');
     setRecommendationText('');
     setError('');
     setErrorType('');
@@ -249,6 +246,14 @@ export const useAICheck = () => {
     }
   };
 
+  // Compute recommendation action from score (same logic as backend had)
+  const recommendationAction = (() => {
+    if (itemCheckScore === undefined) return '';
+    if (itemCheckScore >= 8) return 'RECOMMEND';
+    if (itemCheckScore >= 6) return 'MAYBE';
+    return 'SKIP';
+  })();
+
   return {
     // State
     imageLink,
@@ -260,7 +265,7 @@ export const useAICheck = () => {
     itemCheckScore,
     itemCheckStatus,
     extractedTags,
-    recommendationAction,
+    recommendationAction, // Computed from score
     recommendationText,
     errorType,
     errorDetails,

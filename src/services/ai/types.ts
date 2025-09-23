@@ -26,8 +26,7 @@ export interface WardrobeItemAnalysis {
   analysis: string;
   score: number;
   feedback: string;
-  recommendationAction?: string; // "SKIP" / "RECOMMEND" / "MAYBE"
-  recommendationText?: string; // Human-readable explanation
+  recommendationText?: string; // Human-readable explanation from gap analysis
   error?: string;
   details?: string;
 }

@@ -388,31 +388,19 @@ router.post('/', async (req, res) => {
     const initialScore = analysisResult.score;
     const objectiveFinalReason = analysisResult.reason;
     
-    // Override final recommendation based on objective score
-    let finalRecommendation = "";
-    if (initialScore >= 8) {
-      finalRecommendation = "RECOMMEND";
-    } else if (initialScore >= 6) {
-      finalRecommendation = "MAYBE";  
-    } else {
-      finalRecommendation = "SKIP";
-    }
-    
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
     console.log('Score from coverage analysis:', initialScore);
     console.log('Claude recommendation:', claudeRecommendation);
-    console.log('Final recommendation (score-based):', finalRecommendation);
     console.log('Claude reason:', finalReason);
-    console.log('Objective final reason:', objectiveFinalReason);
+    console.log('Objective reason:', objectiveFinalReason);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
-    // Return the analysis with coverage-based score and clear naming
+    // Return the analysis with coverage-based score and explanation
     res.json({
       analysis: analysisResponse,
-      score: initialScore,
-      recommendationAction: finalRecommendation, // "SKIP" / "RECOMMEND" / "MAYBE"
+      score: initialScore, // Frontend will convert this to action/status
       recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
       success: true

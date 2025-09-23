@@ -181,7 +181,6 @@ export const wardrobeAnalysisService = {
           analysis: response.data.analysis || 'Error analyzing image.',
           score: response.data.score || 5.0,
           feedback: response.data.feedback || 'Could not process the image analysis.',
-          recommendationAction: response.data.recommendationAction,
           recommendationText: response.data.recommendationText,
           error: response.data.error,
           details: response.data.details
@@ -193,7 +192,6 @@ export const wardrobeAnalysisService = {
         analysis: response.data.analysis,
         score: response.data.score,
         feedback: response.data.feedback,
-        recommendationAction: response.data.recommendationAction,
         recommendationText: response.data.recommendationText
       };
     } catch (error: any) {
