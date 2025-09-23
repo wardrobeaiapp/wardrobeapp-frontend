@@ -65,21 +65,6 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
   const category = formData?.category || "this category";
   let reason = "";
   
-  // Helper function to get constraint goal message
-  const getConstraintMessage = () => {
-    if (!userGoals || !hasConstraintGoals) return "";
-    
-    if (userGoals.includes('declutter-downsize')) {
-      return "Since you're working on decluttering";
-    } else if (userGoals.includes('save-money')) {
-      return "Since you're trying to save money";
-    } else if (userGoals.includes('buy-less-shop-more-intentionally')) {
-      return "Since you're focusing on intentional shopping";
-    } else {
-      return "Since you're being more mindful with purchases";
-    }
-  };
-  
   // Build reason based on gap type - human-readable and friendly
   switch (gapType) {
     case 'critical':
