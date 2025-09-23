@@ -49,16 +49,117 @@ function extractSuitableScenarios(analysisResponse) {
 }
 
 /**
+ * Generate objective final reason based on gap analysis results
+ * @param {Array} relevantCoverage - Filtered coverage data used for analysis
+ * @param {string} gapType - Most critical gap type found
+ * @param {string[]} suitableScenarios - Suitable scenarios from Claude
+ * @param {boolean} hasConstraintGoals - Whether user has declutter/save money goals
+ * @param {Object} formData - Form data with category info
+ * @returns {string} Objective reason based on gap analysis
+ */
+function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals) {
+  if (!relevantCoverage || relevantCoverage.length === 0) {
+    return "No coverage data available for analysis.";
+  }
+  
+  const category = formData?.category || "this category";
+  let reason = "";
+  
+  // Helper function to get constraint goal message
+  const getConstraintMessage = () => {
+    if (!userGoals || !hasConstraintGoals) return "";
+    
+    if (userGoals.includes('declutter-downsize')) {
+      return "Since you're working on decluttering";
+    } else if (userGoals.includes('save-money')) {
+      return "Since you're trying to save money";
+    } else if (userGoals.includes('buy-less-shop-more-intentionally')) {
+      return "Since you're focusing on intentional shopping";
+    } else {
+      return "Since you're being more mindful with purchases";
+    }
+  };
+  
+  // Build reason based on gap type - human-readable and friendly
+  switch (gapType) {
+    case 'critical':
+      reason = `You're missing essential ${category} pieces`;
+      if (relevantCoverage.length > 0) {
+        const coverage = relevantCoverage[0];
+        if (coverage.season) reason += ` for ${coverage.season}`;
+        if (coverage.scenarioName !== 'All scenarios') reason += ` for ${coverage.scenarioName}`;
+      }
+      reason += ". This could be a great addition to fill that gap!";
+      break;
+      
+    case 'improvement':
+      reason = `Your ${category} collection could use some variety`;
+      if (relevantCoverage.length > 0) {
+        const coverage = relevantCoverage[0];
+        if (coverage.season) reason += ` for ${coverage.season}`;
+      }
+      if (suitableScenarios && suitableScenarios.length > 0) {
+        reason += `, especially for ${suitableScenarios.join(' and ')}`;
+      }
+      reason += ". This would be a nice addition!";
+      break;
+      
+    case 'expansion':
+      reason = `You have good coverage in ${category}`;
+      if (relevantCoverage.length > 0) {
+        const coverage = relevantCoverage[0];
+        if (coverage.season) reason += ` for ${coverage.season}`;
+      }
+      reason += hasConstraintGoals 
+        ? ". Maybe skip unless it's really special?" 
+        : ", so this would be nice-to-have rather than essential.";
+      break;
+      
+    case 'satisfied':
+      reason = `You're well-stocked with ${category}`;
+      if (relevantCoverage.length > 0) {
+        const coverage = relevantCoverage[0];
+        if (coverage.season) reason += ` for ${coverage.season}`;
+        if (coverage.scenarioName !== 'All scenarios') reason += ` for ${coverage.scenarioName}`;
+      }
+      reason += hasConstraintGoals 
+        ? ". This might be a pass." 
+        : ". Only consider if it offers something truly unique.";
+      break;
+      
+    case 'oversaturated':
+      reason = `You already have plenty of ${category}`;
+      if (relevantCoverage.length > 0) {
+        const coverage = relevantCoverage[0];
+        if (coverage.season) reason += ` for ${coverage.season}`;
+        if (coverage.scenarioName !== 'All scenarios') reason += ` for ${coverage.scenarioName}`;
+      }
+      reason += ".";
+      break;
+      
+    default:
+      reason = `Based on your current wardrobe, this would be a moderate priority.`;
+  }
+  
+  return reason;
+}
+
+/**
  * Analyze scenario coverage to determine initial score based on gap analysis
  * @param {Array} scenarioCoverage - Scenario coverage data
  * @param {string[]} suitableScenarios - Array of suitable scenario names from Claude analysis
  * @param {Object} formData - Form data with category/subcategory info
  * @param {Array} userGoals - User goals that affect scoring
- * @returns {number} Initial score based on coverage analysis (1-10)
+ * @returns {Object} Analysis results with score and reason data
  */
 function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals) {
   if (!scenarioCoverage || !Array.isArray(scenarioCoverage) || scenarioCoverage.length === 0) {
-    return 5.0; // Default score if no coverage data
+    return {
+      score: 5.0,
+      reason: "No coverage data available for analysis.",
+      relevantCoverage: [],
+      gapType: null
+    };
   }
   
   console.log('🎯 Analyzing scenario coverage for initial score...');
@@ -96,7 +197,12 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   if (relevantCoverage.length === 0) {
     console.log('No relevant coverage found, using default score');
-    return 5.0;
+    return {
+      score: 5.0,
+      reason: "No relevant coverage found for this analysis.",
+      relevantCoverage: [],
+      gapType: null
+    };
   }
   
   // Find the most critical gap type to determine score
@@ -170,7 +276,15 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     console.log(`Standard scoring - Gap type '${gapType}': ${initialScore}`);
   }
   
-  return initialScore;
+  // Generate objective final reason
+  const objectiveReason = generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals);
+  
+  return {
+    score: initialScore,
+    reason: objectiveReason,
+    relevantCoverage: relevantCoverage,
+    gapType: gapType
+  };
 }
 
 
@@ -269,8 +383,10 @@ router.post('/', async (req, res) => {
     // Extract suitable scenarios using dedicated function (from raw response)
     const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
     
-    // Analyze scenario coverage to get initial score
-    const initialScore = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals);
+    // Analyze scenario coverage to get score and objective reason
+    const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals);
+    const initialScore = analysisResult.score;
+    const objectiveFinalReason = analysisResult.reason;
     
     // Override final recommendation based on objective score
     let finalRecommendation = "";
@@ -287,16 +403,17 @@ router.post('/', async (req, res) => {
     console.log('Score from coverage analysis:', initialScore);
     console.log('Claude recommendation:', claudeRecommendation);
     console.log('Final recommendation (score-based):', finalRecommendation);
-    console.log('Extracted final reason:', finalReason);
+    console.log('Claude reason:', finalReason);
+    console.log('Objective final reason:', objectiveFinalReason);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
-    // Return the analysis with coverage-based score only
+    // Return the analysis with coverage-based score and clear naming
     res.json({
       analysis: analysisResponse,
-      score: initialScore, // Only score - from gap analysis
-      finalReason: finalReason,
-      finalRecommendation: finalRecommendation,
+      score: initialScore,
+      recommendationAction: finalRecommendation, // "SKIP" / "RECOMMEND" / "MAYBE"
+      recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
       success: true
     });

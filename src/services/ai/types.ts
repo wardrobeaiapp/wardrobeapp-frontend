@@ -26,7 +26,8 @@ export interface WardrobeItemAnalysis {
   analysis: string;
   score: number;
   feedback: string;
-  finalRecommendation?: string;
+  recommendationAction?: string; // "SKIP" / "RECOMMEND" / "MAYBE"
+  recommendationText?: string; // Human-readable explanation
   error?: string;
   details?: string;
 }

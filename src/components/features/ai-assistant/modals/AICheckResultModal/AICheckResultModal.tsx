@@ -33,7 +33,8 @@ interface AICheckResultModalProps {
   onDecideLater?: () => void;
   error?: string; // Error type from Claude API
   errorDetails?: string; // Detailed error message
-  finalRecommendation?: string; // Final recommendation from Claude
+  recommendationAction?: string; // "SKIP" / "RECOMMEND" / "MAYBE"
+  recommendationText?: string; // Human-readable explanation
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -49,7 +50,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   onDecideLater,
   error,
   errorDetails,
-  finalRecommendation
+  recommendationAction,
+  recommendationText
 }) => {
   // Tags are now logged in AICheckModal
   // We still display them here if passed from parent component
@@ -117,8 +119,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
         />
         
         {/* Final Recommendation - Full width, before other details */}
-        {finalRecommendation && (() => {
-          const recommendation = finalRecommendation.toLowerCase();
+        {recommendationAction && (() => {
+          const recommendation = recommendationAction.toLowerCase();
           const isRecommend = recommendation.startsWith('recommend');
           const isMediumScore = score !== undefined && score >= 4 && score <= 8 && !isRecommend;
           
@@ -131,8 +133,13 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                 Final Recommendation
               </RecommendationLabel>
               <RecommendationText>
-                {finalRecommendation}
+                {recommendationAction}
               </RecommendationText>
+              {recommendationText && (
+                <RecommendationText style={{ marginTop: '8px', fontSize: '0.9em', opacity: 0.9 }}>
+                  {recommendationText}
+                </RecommendationText>
+              )}
             </RecommendationBox>
           );
         })()}
