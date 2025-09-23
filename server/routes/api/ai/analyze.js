@@ -60,59 +60,61 @@ router.post('/', async (req, res) => {
     
     const base64Data = imageValidation.base64Data;
 
+    let systemPrompt = "";
+
     // Build the system prompt using modular approach
-    let systemPrompt = buildSystemPrompt();
+    // let systemPrompt = buildSystemPrompt();
     
     // Add form data section (with pre-filled data support)
-    systemPrompt = addFormDataSection(systemPrompt, formData, preFilledData);
+    // systemPrompt = addFormDataSection(systemPrompt, formData, preFilledData);
     
     // Add scenarios section
-    systemPrompt = addScenariosSection(systemPrompt, req.body.scenarios);
+    // systemPrompt = addScenariosSection(systemPrompt, req.body.scenarios);
     
     // Add climate section
-    systemPrompt = addClimateSection(systemPrompt, climateData);
+    // systemPrompt = addClimateSection(systemPrompt, climateData);
     
     // Add styling context section
-    systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
+    // systemPrompt = addStylingContextSection(systemPrompt, stylingContext);
 
     // === SCENARIO COVERAGE ANALYSIS ===
-    const coverageAnalysis = await scenarioCoverageService.analyze(
-      scenarioCoverage, formData, userId, req.body.scenarios, userGoals
-    );
+    // const coverageAnalysis = await scenarioCoverageService.analyze(
+    //   scenarioCoverage, formData, userId, req.body.scenarios, userGoals
+    // );
     
-    if (coverageAnalysis.promptSection) {
-      console.log('🎯 GAP ANALYSIS PROMPT SECTION:', coverageAnalysis.promptSection);
-      systemPrompt += coverageAnalysis.promptSection;
-    }
+    // if (coverageAnalysis.promptSection) {
+    //   console.log('🎯 GAP ANALYSIS PROMPT SECTION:', coverageAnalysis.promptSection);
+    //   systemPrompt += coverageAnalysis.promptSection;
+    // }
 
     // === ENHANCED DUPLICATE DETECTION ===
-    const duplicateResult = await duplicateDetectionService.analyzeWithAI(
-      base64Data, formData, similarContext
-    );
+    // const duplicateResult = await duplicateDetectionService.analyzeWithAI(
+    //   base64Data, formData, similarContext
+    // );
     
-    if (duplicateResult) {
-      const promptSection = duplicateDetectionService.generatePromptSection(
-        duplicateResult.extractedAttributes, 
-        duplicateResult.duplicateAnalysis
-      );
-      systemPrompt += promptSection;
-    }
+    // if (duplicateResult) {
+    //   const promptSection = duplicateDetectionService.generatePromptSection(
+    //     duplicateResult.extractedAttributes, 
+    //     duplicateResult.duplicateAnalysis
+    //   );
+    //   systemPrompt += promptSection;
+    // }
 
     // Note: Gap analysis is handled by the scenario coverage service above
     // No need for duplicate analysis here
     
     // Add final instructions
-    systemPrompt = addFinalInstructions(systemPrompt);
+    // systemPrompt = addFinalInstructions(systemPrompt);
     
     // CRITICAL: Re-enforce mandatory scoring at the very end
-    if (coverageAnalysis.promptSection && coverageAnalysis.promptSection.includes('MUST be')) {
-      systemPrompt += "\n\n🚨🚨🚨 FINAL CRITICAL REMINDER 🚨🚨🚨";
-      systemPrompt += "\nYour score MUST exactly match the Base Score from the gap analysis above.";
-      systemPrompt += "\nIf Base Score = 3 (oversaturated), you MUST give score 3 and SKIP.";
-      systemPrompt += "\nIf Base Score = 10 (critical), you MUST give score 10 and RECOMMEND.";
-      systemPrompt += "\nDO NOT override these scores for any reason - style, quality, or personal preference.";
-      systemPrompt += "\nThe gap analysis Base Score is MANDATORY and FINAL.";
-    }
+    // if (coverageAnalysis.promptSection && coverageAnalysis.promptSection.includes('MUST be')) {
+    //   systemPrompt += "\n\n🚨🚨🚨 FINAL CRITICAL REMINDER 🚨🚨🚨";
+    //   systemPrompt += "\nYour score MUST exactly match the Base Score from the gap analysis above.";
+    //   systemPrompt += "\nIf Base Score = 3 (oversaturated), you MUST give score 3 and SKIP.";
+    //   systemPrompt += "\nIf Base Score = 10 (critical), you MUST give score 10 and RECOMMEND.";
+    //   systemPrompt += "\nDO NOT override these scores for any reason - style, quality, or personal preference.";
+    //   systemPrompt += "\nThe gap analysis Base Score is MANDATORY and FINAL.";
+    // }
     
     // Debug: Log the full prompt being sent to AI (truncated for readability)
     console.log('=== FULL PROMPT TO AI (last 1000 chars) ===');
@@ -144,7 +146,7 @@ router.post('/', async (req, res) => {
             },
             {
               type: "text",
-              text: "Please analyze this clothing item for my wardrobe."
+              text: "Please analyze this clothing item as potential purchase for my wardrobe."
             }
           ]
         }
@@ -156,16 +158,17 @@ router.post('/', async (req, res) => {
     const parsedResponse = responseFormatter.parseResponse(analysisResponse);
     
     // Build the final response with analysis data
-    const analysisData = responseFormatter.formatAnalysisData(duplicateResult, scenarioCoverage);
-    const responseData = responseFormatter.buildResponse(parsedResponse, analysisData);
+    // const analysisData = responseFormatter.formatAnalysisData(duplicateResult, scenarioCoverage);
+    // const responseData = responseFormatter.buildResponse(parsedResponse, analysisData);
     
     console.log('=== FINAL RESPONSE ===');
-    console.log('Duplicate detection:', duplicateResult ? 'enabled' : 'disabled');
-    console.log('Scenario coverage:', scenarioCoverage ? 'enabled' : 'disabled');
+    // console.log('Duplicate detection:', duplicateResult ? 'enabled' : 'disabled');
+    // console.log('Scenario coverage:', scenarioCoverage ? 'enabled' : 'disabled');
     console.log('Score:', parsedResponse.score);
     console.log('====================');
+    res.json(parsedResponse);
     
-    res.json(responseData);
+    // res.json(responseData);
   } catch (err) {
     console.error('Error in Claude analysis:', err);
     res.status(500).json({ 
