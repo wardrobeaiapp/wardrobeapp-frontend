@@ -245,35 +245,49 @@ router.post('/', async (req, res) => {
     });
 
     // Get the raw response text
-    const analysisResponse = response.content[0].text;
+    const rawAnalysisResponse = response.content[0].text;
     
-    // We don't need Claude's score - we use coverage analysis score only
-    
-    // Extract final reason
+    // Extract final reason and recommendation from raw text BEFORE cleaning
     let finalReason = "";
-    const finalReasonMatch = analysisResponse.match(/REASON:?\s*([\s\S]*?)(?=FINAL RECOMMENDATION:?|$)/i);
+    const finalReasonMatch = rawAnalysisResponse.match(/REASON:?\s*([\s\S]*?)(?=FINAL RECOMMENDATION:?|$)/i);
     if (finalReasonMatch && finalReasonMatch[1]) {
       finalReason = finalReasonMatch[1].trim();
     }
     
-    // Extract final recommendation
-    let finalRecommendation = "";
-    const finalRecommendationMatch = analysisResponse.match(/FINAL RECOMMENDATION:?\s*([\s\S]*?)(?=SCORE:?|$)/i);
+    let claudeRecommendation = "";
+    const finalRecommendationMatch = rawAnalysisResponse.match(/FINAL RECOMMENDATION:?\s*([\s\S]*?)(?=SCORE:?|$)/i);
     if (finalRecommendationMatch && finalRecommendationMatch[1]) {
-      finalRecommendation = finalRecommendationMatch[1].trim();
+      claudeRecommendation = finalRecommendationMatch[1].trim();
     }
     
-    // Extract suitable scenarios using dedicated function
-    const suitableScenarios = extractSuitableScenarios(analysisResponse);
+    // Clean up the analysis text for display (remove Claude's recommendation sections)
+    let analysisResponse = rawAnalysisResponse;
+    analysisResponse = analysisResponse.replace(/FINAL RECOMMENDATION:?\s*[\s\S]*?(?=REASON:|$)/i, '');
+    analysisResponse = analysisResponse.replace(/REASON:?\s*[\s\S]*?$/i, '');
+    analysisResponse = analysisResponse.trim();
+    
+    // Extract suitable scenarios using dedicated function (from raw response)
+    const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
     
     // Analyze scenario coverage to get initial score
     const initialScore = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals);
     
+    // Override final recommendation based on objective score
+    let finalRecommendation = "";
+    if (initialScore >= 8) {
+      finalRecommendation = "RECOMMEND";
+    } else if (initialScore >= 6) {
+      finalRecommendation = "MAYBE";  
+    } else {
+      finalRecommendation = "SKIP";
+    }
+    
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
     console.log('Score from coverage analysis:', initialScore);
+    console.log('Claude recommendation:', claudeRecommendation);
+    console.log('Final recommendation (score-based):', finalRecommendation);
     console.log('Extracted final reason:', finalReason);
-    console.log('Extracted final recommendation:', finalRecommendation);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
