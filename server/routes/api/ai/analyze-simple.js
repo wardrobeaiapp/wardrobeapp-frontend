@@ -48,17 +48,114 @@ function extractSuitableScenarios(analysisResponse) {
   return suitableScenarios;
 }
 
+/**
+ * Analyze scenario coverage to determine initial score based on gap analysis
+ * @param {Array} scenarioCoverage - Scenario coverage data
+ * @param {string[]} suitableScenarios - Array of suitable scenario names from Claude analysis
+ * @param {Object} formData - Form data with category/subcategory info
+ * @returns {number} Initial score based on coverage analysis (1-10)
+ */
+function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData) {
+  if (!scenarioCoverage || !Array.isArray(scenarioCoverage) || scenarioCoverage.length === 0) {
+    return 5.0; // Default score if no coverage data
+  }
+  
+  console.log('🎯 Analyzing scenario coverage for initial score...');
+  console.log('Suitable scenarios from Claude:', suitableScenarios);
+  
+  let relevantCoverage = [];
+  
+  // Filter coverage based on suitable scenarios, but handle special cases
+  if (suitableScenarios && suitableScenarios.length > 0) {
+    // Check only suitable scenarios
+    relevantCoverage = scenarioCoverage.filter(coverage => {
+      // Always include "All scenarios" coverage (e.g. outerwear)
+      if (coverage.scenarioName.toLowerCase().includes('all scenarios')) {
+        return true;
+      }
+      
+      // Include specific scenarios that match
+      return suitableScenarios.some(scenario => 
+        coverage.scenarioName.toLowerCase().includes(scenario.toLowerCase()) ||
+        scenario.toLowerCase().includes(coverage.scenarioName.toLowerCase())
+      );
+    });
+    console.log('Filtered coverage for suitable scenarios:', relevantCoverage.length, 'entries');
+    
+    // If filtering resulted in 0 entries, use all coverage as fallback
+    if (relevantCoverage.length === 0) {
+      console.log('No matches found, falling back to all coverage');
+      relevantCoverage = scenarioCoverage;
+    }
+  } else {
+    // Use all coverage if no suitable scenarios identified
+    relevantCoverage = scenarioCoverage;
+    console.log('Using all coverage data:', relevantCoverage.length, 'entries');
+  }
+  
+  if (relevantCoverage.length === 0) {
+    console.log('No relevant coverage found, using default score');
+    return 5.0;
+  }
+  
+  // Find the most critical gap type to determine score
+  let gapType = null;
+  
+  for (const coverage of relevantCoverage) {
+    console.log(`Coverage: ${coverage.scenarioName} - ${coverage.category} - ${coverage.gapType}`);
+    
+    if (coverage.gapType) {
+      // Simple priority: critical > improvement > expansion > satisfied > oversaturated
+      if (!gapType || 
+          (coverage.gapType === 'critical') ||
+          (coverage.gapType === 'improvement' && gapType !== 'critical') ||
+          (coverage.gapType === 'expansion' && !['critical', 'improvement'].includes(gapType))) {
+        gapType = coverage.gapType;
+      }
+    }
+  }
+  
+  // Convert gap type to score
+  let initialScore = 5.0;
+  
+  switch (gapType) {
+    case 'critical':
+      initialScore = 10;
+      break;
+    case 'improvement':
+      initialScore = 9;
+      break;
+    case 'expansion':
+      initialScore = 8;
+      break;
+    case 'satisfied':
+      initialScore = 6;
+      break;
+    case 'oversaturated':
+      initialScore = 3;
+      break;
+    default:
+      initialScore = 5.0;
+  }
+  
+  console.log(`Score based on gap type '${gapType}': ${initialScore}`);
+  
+  return initialScore;
+}
+
+
 // @route   POST /api/analyze-wardrobe-item-simple
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios } = req.body;
+    const { imageBase64, formData, scenarios, scenarioCoverage } = req.body;
     
     console.log('=== Simple Analysis Request ===');
     console.log('imageBase64:', imageBase64 ? 'present' : 'missing');
     console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('scenarios:', scenarios || 'none');
+    console.log('scenarioCoverage:', scenarioCoverage || 'none');
     console.log('==============================');
 
     // Validate and process image data
@@ -80,9 +177,14 @@ router.post('/', async (req, res) => {
         if (scenario.description) systemPrompt += `: ${scenario.description}`;
       });
       systemPrompt += "\n\nInclude a 'SUITABLE SCENARIOS:' section listing ONLY the scenario names where this item would work well. List one per line without explanations.";
+      
+      // Add outerwear-specific exclusion
+      if (formData && formData.category && formData.category.toLowerCase() === 'outerwear') {
+        systemPrompt += " Note: Exclude 'Staying at Home' for outerwear items as they are not worn indoors.";
+      }
     }
     
-    systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]', then 'SCORE: X' where X is a number from 1-10 based on how suitable this item would be for the user's wardrobe.";
+    systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
 
     // Call Claude API
     const response = await anthropic.messages.create({
@@ -114,12 +216,7 @@ router.post('/', async (req, res) => {
     // Get the raw response text
     const analysisResponse = response.content[0].text;
     
-    // Extract score, final recommendation, and reasoning from Claude's response
-    let score = 5.0; // default score
-    const scoreMatch = analysisResponse.match(/SCORE:?\s*([\d\.]+)/i);
-    if (scoreMatch && scoreMatch[1]) {
-      score = parseFloat(scoreMatch[1]);
-    }
+    // We don't need Claude's score - we use coverage analysis score only
     
     // Extract final reason
     let finalReason = "";
@@ -138,18 +235,21 @@ router.post('/', async (req, res) => {
     // Extract suitable scenarios using dedicated function
     const suitableScenarios = extractSuitableScenarios(analysisResponse);
     
+    // Analyze scenario coverage to get initial score
+    const initialScore = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData);
+    
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
-    console.log('Extracted score:', score);
+    console.log('Score from coverage analysis:', initialScore);
     console.log('Extracted final reason:', finalReason);
     console.log('Extracted final recommendation:', finalRecommendation);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
-    // Return the raw analysis with extracted data
+    // Return the analysis with coverage-based score only
     res.json({
       analysis: analysisResponse,
-      score: score,
+      score: initialScore, // Only score - from gap analysis
       finalReason: finalReason,
       finalRecommendation: finalRecommendation,
       suitableScenarios: suitableScenarios,
