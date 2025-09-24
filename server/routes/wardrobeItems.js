@@ -152,7 +152,7 @@ router.post('/', auth, async (req, res) => {
       console.log('No image received in request');
     }
     
-    // Create the item object
+    // Create the item object with all possible fields
     const itemData = {
       user: req.user.id,
       name,
@@ -160,7 +160,25 @@ router.post('/', auth, async (req, res) => {
       color,
       season,
       imageUrl,
-      wishlist: req.body.wishlist === true || req.body.wishlist === 'true'
+      wishlist: req.body.wishlist === true || req.body.wishlist === 'true',
+      // Include all optional fields if provided
+      ...(req.body.subcategory && { subcategory: req.body.subcategory }),
+      ...(req.body.brand && { brand: req.body.brand }),
+      ...(req.body.size && { size: req.body.size }),
+      ...(req.body.material && { material: req.body.material }),
+      ...(req.body.price && { price: parseFloat(req.body.price) }),
+      ...(req.body.pattern && { pattern: req.body.pattern }),
+      ...(req.body.silhouette && { silhouette: req.body.silhouette }),
+      ...(req.body.length && { length: req.body.length }),
+      ...(req.body.sleeves && { sleeves: req.body.sleeves }),
+      ...(req.body.style && { style: req.body.style }),
+      ...(req.body.rise && { rise: req.body.rise }),
+      ...(req.body.neckline && { neckline: req.body.neckline }),
+      ...(req.body.heelHeight && { heelHeight: req.body.heelHeight }),
+      ...(req.body.bootHeight && { bootHeight: req.body.bootHeight }),
+      ...(req.body.type && { type: req.body.type }),
+      ...(req.body.tags && { tags: typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags }),
+      ...(req.body.wishlistStatus && { wishlistStatus: req.body.wishlistStatus })
     };
     
     console.log('Wishlist property in request:', req.body.wishlist);
@@ -181,7 +199,7 @@ router.post('/', auth, async (req, res) => {
       console.log('Item saved successfully with ID:', item.id);
       console.log('Final imageUrl in saved item:', item.imageUrl);
       console.log('=== POST /api/wardrobe-items END ===');
-      return res.json(item);
+      return res.status(201).json(item);
     } else {
       // In-memory storage
       const newItem = {
@@ -199,7 +217,7 @@ router.post('/', auth, async (req, res) => {
       console.log('Item saved successfully with ID:', newItem.id);
       console.log('Final imageUrl in saved item:', newItem.imageUrl);
       console.log('=== POST /api/wardrobe-items END ===');
-      return res.json(newItem);
+      return res.status(201).json(newItem);
     }
   } catch (err) {
     console.error('Error adding wardrobe item:', err);
@@ -219,22 +237,62 @@ router.post('/', auth, async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    const item = await WardrobeItem.findById(req.params.id);
+    // Handle invalid ID formats more gracefully
+    const itemId = req.params.id;
     
-    // Check if item exists
-    if (!item) {
+    // Comprehensive validation for invalid IDs
+    if (!itemId || 
+        itemId.trim() === '' || 
+        itemId === 'null' || 
+        itemId === 'undefined' ||
+        itemId.length > 100 ||  // Too long
+        /[<>\"'%;()&+]/.test(itemId)) {  // Contains suspicious characters
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Check if user owns the item
-    if (item.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
+    if (global.usingMongoDB) {
+      const item = await WardrobeItem.findById(itemId);
+      
+      // Check if item exists
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      // Check if user owns the item
+      if (item.user.toString() !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+      
+      res.json(item);
+    } else {
+      // In-memory storage mode
+      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId);
+      
+      // Check if item exists
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+      
+      res.json(item);
     }
-    
-    res.json(item);
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') {
+    // Handle MongoDB ObjectId errors and other ID-related errors
+    if (err.kind === 'ObjectId' || 
+        err.name === 'CastError' || 
+        err.message.includes('Cast to ObjectId failed') ||
+        err.message.includes('Invalid ObjectId') ||
+        err.message.toLowerCase().includes('objectid')) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+    // For malformed requests that don't match our validation, also return 404
+    if (err.message.includes('Invalid ID format') || 
+        err.name === 'ValidationError') {
       return res.status(404).json({ message: 'Item not found' });
     }
     res.status(500).send('Server error');

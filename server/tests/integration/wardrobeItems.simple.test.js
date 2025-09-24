@@ -59,9 +59,8 @@ describe('Wardrobe Items API - Simple Integration', () => {
         .post('/api/wardrobe-items')
         .send(itemData);
 
-      // Accept any successful status code (200, 201, etc.)
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(300);
+      // Should return 201 Created for new resources
+      expect(response.status).toBe(201);
 
       // Verify response contains our data
       expect(response.body.name).toBe('Test T-Shirt');
@@ -151,8 +150,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         .post('/api/wardrobe-items')
         .send(itemWithSeasons);
 
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(300);
+      expect(response.status).toBe(201);
       
       if (response.body.season) {
         expect(Array.isArray(response.body.season)).toBe(true);
@@ -171,8 +169,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         .post('/api/wardrobe-items')
         .send(wishlistItem);
 
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(300);
+      expect(response.status).toBe(201);
       
       if (response.body.wishlist !== undefined) {
         expect(typeof response.body.wishlist).toBe('boolean');
@@ -231,8 +228,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         .post('/api/wardrobe-items')
         .send(itemWithSpecialChars);
 
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(300);
+      expect(response.status).toBe(201);
       expect(response.body.name).toBe(itemWithSpecialChars.name);
     });
 
@@ -250,8 +246,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         .post('/api/wardrobe-items')
         .send(itemWithEmptyFields);
 
-      expect(response.status).toBeGreaterThanOrEqual(200);
-      expect(response.status).toBeLessThan(300);
+      expect(response.status).toBe(201);
       expect(response.body.name).toBe('Simple Item');
     });
   });
@@ -267,8 +262,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
           color: 'blue'
         });
 
-      expect(createResponse.status).toBeGreaterThanOrEqual(200);
-      expect(createResponse.status).toBeLessThan(300);
+      expect(createResponse.status).toBe(201);
 
       // Retrieve items and verify our item is there
       const getResponse = await request(app)
@@ -299,8 +293,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
 
       // All should succeed
       responses.forEach(response => {
-        expect(response.status).toBeGreaterThanOrEqual(200);
-        expect(response.status).toBeLessThan(300);
+        expect(response.status).toBe(201);
       });
 
       // Verify items have unique IDs (if IDs are returned)
