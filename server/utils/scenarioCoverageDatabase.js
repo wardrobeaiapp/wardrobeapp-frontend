@@ -7,8 +7,11 @@
 async function getUserWardrobeItems(userId) {
   try {
     // For now, use the global in-memory store
-    const userItems = global.inMemoryWardrobeItems.filter(item => item.userId === userId);
-    console.log(`Retrieved ${userItems.length} wardrobe items for user ${userId}`);
+    // IMPORTANT: Exclude wishlist items from coverage calculations
+    const userItems = global.inMemoryWardrobeItems.filter(item => 
+      item.userId === userId && (item.wishlist === false || item.wishlist === null || item.wishlist === undefined)
+    );
+    console.log(`Retrieved ${userItems.length} wardrobe items for user ${userId} (excluding wishlist items)`);
     return userItems;
   } catch (error) {
     console.error('Error getting user wardrobe items:', error);

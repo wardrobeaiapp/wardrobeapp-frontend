@@ -39,21 +39,17 @@ router.post('/', async (req, res) => {
     const base64Data = imageValidation.base64Data;
 
     // Build system prompt with scenarios if provided
-    let systemPrompt = "Analyze the clothing item";
+    let systemPrompt = "You are evaluating whether this clothing/accessory item is suitable for different lifestyle scenarios. Think about where and when this item would realistically be used.";
     
     // Add scenarios section if provided
     if (scenarios && scenarios.length > 0) {
-      systemPrompt += " and assess how well it works for the following scenarios:\n";
+      systemPrompt += "\n\nEvaluate suitability for these scenarios:\n";
       scenarios.forEach((scenario, index) => {
         systemPrompt += `\n${index + 1}. ${scenario.name}`;
         if (scenario.description) systemPrompt += `: ${scenario.description}`;
       });
-      systemPrompt += "\n\nInclude a 'SUITABLE SCENARIOS:' section listing ONLY the scenario names where this item would work well. List one per line without explanations.";
-      
-      // Add outerwear-specific exclusion
-      if (formData && formData.category && formData.category.toLowerCase() === 'outerwear') {
-        systemPrompt += " Note: Exclude 'Staying at Home' for outerwear items as they are not worn indoors.";
-      }
+      systemPrompt += "\n\nKey rule: Items like bags, outdoor shoes, coats, hats, sunglasses are NOT suitable for home/indoor scenarios like 'Staying at Home'.";
+      systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. One scenario per line, no explanations.";
     }
     
     systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
@@ -62,7 +58,7 @@ router.post('/', async (req, res) => {
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 1024,
-      temperature: 0.7,
+      temperature: 0.5,
       system: systemPrompt,
       messages: [
         {

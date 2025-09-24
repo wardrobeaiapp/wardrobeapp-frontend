@@ -277,13 +277,16 @@ export const calculateCategoryCoverage = async (
                          item.season.length === 0 || 
                          item.season.includes(season);
     
+    // CRITICAL: Exclude wishlist items from all coverage calculations
+    const isWardrobeItem = item.wishlist === false || item.wishlist === null || item.wishlist === undefined;
+    
     if (category === ItemCategory.OUTERWEAR || category === ItemCategory.ACCESSORY) {
       // Outerwear and Accessories: ignore scenario filtering (universal across scenarios)
-      return matchesCategory && matchesSeason;
+      return matchesCategory && matchesSeason && isWardrobeItem;
     } else {
       // Other categories: filter by scenario
       const matchesScenario = scenarioId ? (item.scenarios?.includes(scenarioId) || false) : false;
-      return matchesCategory && matchesScenario && matchesSeason;
+      return matchesCategory && matchesScenario && matchesSeason && isWardrobeItem;
     }
   });
 
