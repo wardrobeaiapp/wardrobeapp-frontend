@@ -48,7 +48,11 @@ router.post('/', async (req, res) => {
         systemPrompt += `\n${index + 1}. ${scenario.name}`;
         if (scenario.description) systemPrompt += `: ${scenario.description}`;
       });
-      systemPrompt += "\n\nKey rule: Items like bags, outdoor shoes, coats, hats, sunglasses are NOT suitable for home/indoor scenarios like 'Staying at Home'.";
+      systemPrompt += "\n\nKey rules:";
+      systemPrompt += "\n- Items like bags, outdoor shoes, coats, hats, sunglasses are NOT suitable for home/indoor scenarios like 'Staying at Home'";
+      systemPrompt += "\n- High heels, dress shoes, and formal footwear are NOT suitable for outdoor activities, sports, or physically demanding scenarios";
+      systemPrompt += "\n- Athletic shoes, sneakers, boots are NOT suitable for formal business or dressy social scenarios";
+      systemPrompt += "\n- Consider the practical reality: Would someone actually wear this item for this activity?";
       systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. One scenario per line, no explanations.";
     }
     
