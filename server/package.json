@@ -4,6 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
+    "test:unit": "jest --testPathIgnorePatterns=integration",
+    "test:integration": "jest --testPathPattern=integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "start": "node server.js",
@@ -31,12 +33,22 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup/testSetup.js"],
     "collectCoverageFrom": [
       "utils/**/*.js",
-      "!utils/**/*.test.js"
+      "routes/**/*.js",
+      "middleware/**/*.js",
+      "models/**/*.js",
+      "!**/*.test.js",
+      "!**/node_modules/**"
     ],
     "testMatch": [
       "**/tests/**/*.test.js"
-    ]
+    ],
+    "testPathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "coverageReporters": ["text", "lcov", "html"],
+    "coverageDirectory": "coverage"
   }
 }

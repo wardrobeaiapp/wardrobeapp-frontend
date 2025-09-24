@@ -53,31 +53,16 @@ import { renderHook, act } from '@testing-library/react';
 
 describe('useAICheck', () => {
   it('should handle loading state', () => {
-    const { result } = renderHook(() => useAICheck());
-    expect(result.current.isLoading).toBe(false);
-  });
-});
-```
-
-### 4. **React Components**
-```javascript
 // ✅ Test user interactions and rendered output
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 describe('AICheckResultModal', () => {
-  it('should display analysis results', () => {
+  it('should display analysis results', async () => {
     render(<AICheckResultModal {...props} />);
+    await waitFor(() => screen.getByText('Analysis complete'));
     expect(screen.getByText('Analysis complete')).toBeInTheDocument();
   });
 });
-```
-
-## 🏆 Best Practices
-
-### ✅ **DO:**
-- **Test behavior, not implementation** - Test what users see/do
-- **Use descriptive test names** - `should display error when API fails`
-- **Group related tests** - Use `describe` blocks
 - **Mock external dependencies** - APIs, file system, external services
 - **Test edge cases** - Empty data, errors, loading states
 - **Keep tests isolated** - Each test should work independently
@@ -130,9 +115,11 @@ describe('When analyzing a bag item', () => {
 ### Server Tests
 ```bash
 cd server
-npm test                 # Run all tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report
+npm test                    # Run all tests (unit + integration)
+npm run test:unit          # Unit tests only
+npm run test:integration   # Integration tests only
+npm run test:watch         # Watch mode
+npm run test:coverage      # Coverage report
 ```
 
 ### Frontend Tests
