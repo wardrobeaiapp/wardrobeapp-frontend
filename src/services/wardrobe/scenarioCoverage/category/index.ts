@@ -17,10 +17,11 @@ export const updateCategoryCoverage = async (
   scenarioFrequency: string,
   season: Season,
   category: ItemCategory,
-  items: WardrobeItem[]
+  items: WardrobeItem[],
+  scenarios?: Scenario[]
 ): Promise<void> => {
   const coverageResult = await calculateCategoryCoverage(
-    userId, scenarioId, scenarioName, scenarioFrequency, season, category, items
+    userId, scenarioId, scenarioName, scenarioFrequency, season, category, items, scenarios
   );
   
   // Handle both single coverage and array of coverages
@@ -42,7 +43,8 @@ export const updateAllCategoriesForScenario = async (
   userId: string,
   scenario: Scenario,
   season: Season,
-  items: WardrobeItem[]
+  items: WardrobeItem[],
+  allScenarios?: Scenario[]
 ): Promise<void> => {
   const categories: ItemCategory[] = [
     ItemCategory.TOP, 
@@ -62,7 +64,8 @@ export const updateAllCategoriesForScenario = async (
       scenario.frequency || '',
       season, 
       category, 
-      items
+      items,
+      allScenarios
     )
   );
 
@@ -77,7 +80,8 @@ export const initializeNewScenarioCoverage = async (
   userId: string,
   scenario: Scenario,
   currentSeason: Season,
-  items: WardrobeItem[]
+  items: WardrobeItem[],
+  allScenarios?: Scenario[]
 ): Promise<void> => {
   console.log(`🟦 INIT SCENARIO - Creating coverage for new scenario: ${scenario.name}`);
   
@@ -100,7 +104,8 @@ export const initializeNewScenarioCoverage = async (
       scenario.frequency || '',
       currentSeason,
       category,
-      items
+      items,
+      allScenarios
     )
   );
 
@@ -143,7 +148,8 @@ export const initializeCompleteCoverageMatrix = async (
             scenario.frequency || '',
             season,
             category,
-            items
+            items,
+            scenarios
           )
         );
       }

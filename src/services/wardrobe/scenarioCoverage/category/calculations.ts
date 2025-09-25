@@ -1,5 +1,34 @@
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
 import { CategoryNeeds, CategoryCoverage } from './types';
+import { Scenario } from '../../../scenarios/types';
+import { detectLifestyleType, getLifestyleTargets, getOuterwearTargets, getLifestyleMultiplier, analyzeAndLogLifestyle, LifestyleAnalysis } from '../lifestyle/lifestyleDetectionService';
+
+// Performance optimization: Cache lifestyle analysis to avoid redundant calculations
+let lifestyleCache: { scenarioKey: string; result: LifestyleAnalysis } | null = null;
+
+/**
+ * Get cached lifestyle analysis to avoid redundant calculations during bulk updates
+ */
+function getCachedLifestyleAnalysis(scenarios: Scenario[]): LifestyleAnalysis {
+  // Create a cache key based on scenario names and frequencies
+  const scenarioKey = scenarios
+    .map(s => `${s.name}:${s.frequency}`)
+    .sort()
+    .join('|');
+  
+  // Return cached result if scenarios haven't changed
+  if (lifestyleCache && lifestyleCache.scenarioKey === scenarioKey) {
+    console.log(`🏠🏃 LIFESTYLE CACHE HIT - Using cached ${lifestyleCache.result.type} analysis`);
+    return lifestyleCache.result;
+  }
+  
+  // Calculate new lifestyle analysis and cache it
+  const result = analyzeAndLogLifestyle(scenarios);
+  lifestyleCache = { scenarioKey, result };
+  console.log(`🏠🏃 LIFESTYLE CACHE MISS - Calculated and cached ${result.type} analysis`);
+  
+  return result;
+}
 
 // Import helper functions inline to avoid circular dependency
 function parseFrequencyToSeasonalUse(frequency: string): number {
@@ -52,80 +81,120 @@ function determinePriorityLevel(
 
 
 /**
- * Calculate category needs based on outfit requirements
+ * FIXED: Sensible baseline category needs (no more stupid multipliers!)
+ * These are reasonable defaults that get overridden by lifestyle logic
  */
 export function calculateCategoryNeeds(outfitsNeeded: number): CategoryNeeds {
   return {
     [ItemCategory.TOP]: {
-      min: Math.ceil(outfitsNeeded * 0.5),
-      ideal: Math.ceil(outfitsNeeded * 0.8), 
-      max: Math.ceil(outfitsNeeded * 1.2)
+      min: Math.max(5, Math.ceil(outfitsNeeded * 0.4)),
+      ideal: Math.max(8, Math.ceil(outfitsNeeded * 0.7)), 
+      max: Math.max(12, Math.ceil(outfitsNeeded * 1.0))
     },
     [ItemCategory.BOTTOM]: {
-      min: Math.ceil(outfitsNeeded * 0.3),
-      ideal: Math.ceil(outfitsNeeded * 0.6),
-      max: Math.ceil(outfitsNeeded * 0.9)
+      min: Math.max(3, Math.ceil(outfitsNeeded * 0.25)),
+      ideal: Math.max(5, Math.ceil(outfitsNeeded * 0.5)),
+      max: Math.max(8, Math.ceil(outfitsNeeded * 0.8))
     },
     [ItemCategory.ONE_PIECE]: {
-      min: 0,
-      ideal: Math.ceil(outfitsNeeded * 0.3),
-      max: Math.ceil(outfitsNeeded * 0.7)
+      min: 0, // Optional category
+      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.2)),
+      max: Math.max(4, Math.ceil(outfitsNeeded * 0.4))
     },
     [ItemCategory.OUTERWEAR]: {
-      min: Math.ceil(outfitsNeeded * 0.1),
-      ideal: Math.ceil(outfitsNeeded * 0.2),
-      max: Math.ceil(outfitsNeeded * 0.4)
+      // Will be overridden by seasonal logic anyway
+      min: 2,
+      ideal: 3,
+      max: 5
     },
     [ItemCategory.FOOTWEAR]: {
-      min: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
-      ideal: Math.ceil(outfitsNeeded * 0.4),
-      max: Math.ceil(outfitsNeeded * 0.6)
+      // Will be overridden by lifestyle logic anyway
+      min: 3,
+      ideal: 5,
+      max: 7
     },
     [ItemCategory.ACCESSORY]: {
-      // Accessories are about variety, not quantity - focus on having some options
-      min: 0,
-      ideal: Math.min(5, Math.max(2, Math.ceil(outfitsNeeded * 0.1))), // Cap at 5, min 2 for variety
-      max: Math.min(8, Math.ceil(outfitsNeeded * 0.2)) // Reasonable cap
+      // FIXED: Reasonable baseline that gets overridden by lifestyle subcategory logic
+      min: 3, // Everyone needs basic accessories
+      ideal: 5,
+      max: 8
     },
     [ItemCategory.OTHER]: {
-      min: 0,
-      ideal: Math.ceil(outfitsNeeded * 0.1), // Minimal needs for 'other' items
-      max: Math.ceil(outfitsNeeded * 0.3)
+      min: 0, // Optional
+      ideal: 2,
+      max: 4
     }
   };
 }
 
 /**
- * Get accessory subcategory limits (matching actual form subcategories)
+ * Get accessory subcategory limits with lifestyle adjustments
  */
-function getAccessorySubcategoryLimits(outfitsNeeded: number) {
+function getAccessorySubcategoryLimits(outfitsNeeded: number, lifestyleAnalysis?: LifestyleAnalysis) {
+  // Get lifestyle targets for bags and multiplier for accessories
+  const bagTargets = lifestyleAnalysis ? getLifestyleTargets('bags', lifestyleAnalysis.type) : { min: 3, ideal: 4, max: 6 };
+  const accessoryMultiplier = lifestyleAnalysis ? getLifestyleMultiplier('accessories', lifestyleAnalysis.type) : 1.0;
+  
   return {
     // Jewelry is collectible - no practical maximum, just provide guidance on variety
-    'Jewelry': { min: 0, ideal: Math.min(12, Math.max(3, outfitsNeeded * 0.4)), max: 999 }, // Essentially unlimited
+    'Jewelry': { 
+      min: 0, 
+      ideal: Math.min(12, Math.max(3, Math.ceil(outfitsNeeded * 0.4 * accessoryMultiplier))), 
+      max: 999 
+    },
     
-    // Bags are more expensive and you need fewer
-    'Bag': { min: 0, ideal: Math.min(4, Math.max(1, Math.ceil(outfitsNeeded * 0.1))), max: 6 },
+    // Bags - FIXED: Realistic numbers based on lifestyle (no more multipliers!)
+    // People need different bags: work bag, casual bag, evening bag, travel bag, etc.
+    'Bag': bagTargets,
     
     // Belts provide functional variety
-    'Belt': { min: 0, ideal: Math.min(5, Math.max(2, Math.ceil(outfitsNeeded * 0.2))), max: 8 },
+    'Belt': { 
+      min: 0, 
+      ideal: Math.min(5, Math.max(2, Math.ceil(outfitsNeeded * 0.2 * accessoryMultiplier))), 
+      max: 8 
+    },
     
     // Scarves for seasonal/style variety
-    'Scarf': { min: 0, ideal: Math.min(6, Math.max(2, Math.ceil(outfitsNeeded * 0.15))), max: 10 },
+    'Scarf': { 
+      min: 0, 
+      ideal: Math.min(6, Math.max(2, Math.ceil(outfitsNeeded * 0.15 * accessoryMultiplier))), 
+      max: 10 
+    },
     
     // Hats are more specialized
-    'Hat': { min: 0, ideal: Math.min(3, Math.max(1, Math.ceil(outfitsNeeded * 0.08))), max: 5 },
+    'Hat': { 
+      min: 0, 
+      ideal: Math.min(3, Math.max(1, Math.ceil(outfitsNeeded * 0.08 * accessoryMultiplier))), 
+      max: 5 
+    },
     
     // Sunglasses - seasonal/functional
-    'Sunglasses': { min: 0, ideal: Math.min(3, Math.max(1, Math.ceil(outfitsNeeded * 0.05))), max: 4 },
+    'Sunglasses': { 
+      min: 0, 
+      ideal: Math.min(3, Math.max(1, Math.ceil(outfitsNeeded * 0.05 * accessoryMultiplier))), 
+      max: 4 
+    },
     
     // Watches - usually have 1-2 good ones
-    'Watch': { min: 0, ideal: Math.min(2, Math.max(1, Math.ceil(outfitsNeeded * 0.03))), max: 3 },
+    'Watch': { 
+      min: 0, 
+      ideal: Math.min(2, Math.max(1, Math.ceil(outfitsNeeded * 0.03))), 
+      max: 3 
+    },
     
     // Socks - more functional, seasonal
-    'Socks': { min: 0, ideal: Math.min(8, Math.max(3, Math.ceil(outfitsNeeded * 0.3))), max: 12 },
+    'Socks': { 
+      min: 0, 
+      ideal: Math.min(8, Math.max(3, Math.ceil(outfitsNeeded * 0.3))), 
+      max: 12 
+    },
     
     // Tights - seasonal, fewer needed
-    'Tights': { min: 0, ideal: Math.min(4, Math.max(2, Math.ceil(outfitsNeeded * 0.1))), max: 6 }
+    'Tights': { 
+      min: 0, 
+      ideal: Math.min(4, Math.max(2, Math.ceil(outfitsNeeded * 0.1))), 
+      max: 6 
+    }
   };
 }
 
@@ -172,13 +241,14 @@ async function calculateAccessorySubcategoryCoverage(
   scenarioName: string,
   scenarioFrequency: string,
   season: Season,
-  categoryItems: WardrobeItem[]
+  categoryItems: WardrobeItem[],
+  lifestyleAnalysis?: LifestyleAnalysis
 ): Promise<CategoryCoverage[]> {
   console.log(`🟦 ACCESSORY SUBCATEGORY - Creating separate coverage records for each subcategory`);
   
   const usesPerSeason = 5; // Default seasonal usage for accessories
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
-  const subcategoryLimits = getAccessorySubcategoryLimits(outfitsNeeded);
+  const subcategoryLimits = getAccessorySubcategoryLimits(outfitsNeeded, lifestyleAnalysis);
   
   // Group accessories by subcategory
   const subcategoryGroups: Record<string, WardrobeItem[]> = {};
@@ -237,7 +307,7 @@ async function calculateAccessorySubcategoryCoverage(
       category: ItemCategory.ACCESSORY,
       subcategory: subcatName,
       currentItems: currentCount,
-      neededItemsMin: 0, // Accessories are always optional
+      neededItemsMin: limits.min, // Use actual lifestyle-based minimum!
       neededItemsIdeal: limits.ideal,
       neededItemsMax: limits.max,
       coveragePercent: coverage,
@@ -255,7 +325,7 @@ async function calculateAccessorySubcategoryCoverage(
 }
 
 /**
- * Calculate category-specific coverage for a single category
+ * Calculate category-specific coverage for a single category with lifestyle adjustments
  */
 export const calculateCategoryCoverage = async (
   userId: string,
@@ -264,9 +334,16 @@ export const calculateCategoryCoverage = async (
   scenarioFrequency: string,
   season: Season,
   category: ItemCategory,
-  items: WardrobeItem[]
+  items: WardrobeItem[],
+  scenarios?: Scenario[]
 ): Promise<CategoryCoverage | CategoryCoverage[]> => {
   console.log(`🟦 CATEGORY COVERAGE - Calculating for ${scenarioName}/${season}/${category}`);
+  
+  // Detect lifestyle type if scenarios are provided (with caching)
+  let lifestyleAnalysis: LifestyleAnalysis | undefined;
+  if (scenarios && scenarios.length > 0) {
+    lifestyleAnalysis = getCachedLifestyleAnalysis(scenarios);
+  }
 
   // Filter items for this specific category and season
   // Special handling: Outerwear and Accessories are scenario-agnostic
@@ -294,7 +371,7 @@ export const calculateCategoryCoverage = async (
   // Special handling for accessories - analyze by subcategory (scenario-agnostic like outerwear)
   if (category === ItemCategory.ACCESSORY) {
     return calculateAccessorySubcategoryCoverage(
-      userId, scenarioId, scenarioName, scenarioFrequency, season, categoryItems
+      userId, scenarioId, scenarioName, scenarioFrequency, season, categoryItems, lifestyleAnalysis
     );
   }
 
@@ -309,7 +386,22 @@ export const calculateCategoryCoverage = async (
   }
   
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
-  const categoryNeeds = calculateCategoryNeeds(outfitsNeeded);
+  let categoryNeeds = calculateCategoryNeeds(outfitsNeeded);
+
+  // Apply realistic lifestyle targets for outerwear and footwear (NO MORE WEIRD MULTIPLIERS!)
+  if (lifestyleAnalysis) {
+    if (category === ItemCategory.OUTERWEAR) {
+      // Outerwear uses seasonal + lifestyle logic
+      const lifestyleTargets = getOuterwearTargets(season, lifestyleAnalysis.type);
+      console.log(`🏠🏃 SEASONAL OUTERWEAR - ${season}: ${lifestyleTargets.min}/${lifestyleTargets.ideal}/${lifestyleTargets.max} (${lifestyleAnalysis.type})`);
+      categoryNeeds[category] = lifestyleTargets;
+    } else if (category === ItemCategory.FOOTWEAR) {
+      // Footwear uses lifestyle targets
+      const lifestyleTargets = getLifestyleTargets('footwear', lifestyleAnalysis.type);
+      console.log(`🏠🏃 LIFESTYLE TARGETS - ${category}: ${lifestyleTargets.min}/${lifestyleTargets.ideal}/${lifestyleTargets.max} (${lifestyleAnalysis.type})`);
+      categoryNeeds[category] = lifestyleTargets;
+    }
+  }
 
   const categoryNeed = categoryNeeds[category];
   

@@ -38,7 +38,8 @@ export const triggerItemAddedCoverage = async (
             '', // No frequency for scenario-agnostic categories
             season,
             newItem.category,
-            items
+            items,
+            scenarios // Pass scenarios for lifestyle detection
           )
         );
       } else if (newItem.scenarios?.length) {
@@ -55,7 +56,8 @@ export const triggerItemAddedCoverage = async (
             scenario.frequency || '',
             season,
             newItem.category!,
-            items
+            items,
+            scenarios // Pass scenarios for lifestyle detection
           );
         });
         updatePromises.push(...scenarioPromises);
@@ -117,7 +119,8 @@ export const triggerItemUpdatedCoverage = async (
             '', // No frequency for scenario-agnostic categories
             season,
             category,
-            items
+            items,
+            scenarios // Pass scenarios for lifestyle detection
           )
         );
       } else {
@@ -135,7 +138,8 @@ export const triggerItemUpdatedCoverage = async (
               scenario.frequency || '',
               season,
               category,
-              items
+              items,
+              scenarios // Pass scenarios for lifestyle detection
             )
           );
         }
@@ -182,7 +186,8 @@ export const triggerItemDeletedCoverage = async (
             '', // No frequency for scenario-agnostic categories
             season,
             deletedItem.category,
-            items // Note: items array should already exclude the deleted item
+            items, // Note: items array should already exclude the deleted item
+            scenarios // Pass scenarios for lifestyle detection
           )
         );
       } else if (deletedItem.scenarios?.length) {
@@ -199,7 +204,8 @@ export const triggerItemDeletedCoverage = async (
             scenario.frequency || '',
             season,
             deletedItem.category!,
-            items // Note: items array should already exclude the deleted item
+            items, // Note: items array should already exclude the deleted item
+            scenarios // Pass scenarios for lifestyle detection
           );
         });
         updatePromises.push(...scenarioPromises);

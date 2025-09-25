@@ -108,23 +108,32 @@ calculateOutfitNeeds(usesPerSeason):
 
 ## Current Issues & Limitations
 
-### ❌ Problems with Current System
+### ❌ Remaining Issues
 
-1. **No Outfit Combination Logic**
+1. **No Outfit Combination Logic** ⚠️ **DESIGN CHOICE** 
    - Calculates each category independently
    - Doesn't account for: 1 dress = 1 outfit (no bottom needed)
    - Doesn't follow "more tops than bottoms" principle
+   - **Note:** May be intentionally simple for user understanding
 
-2. **No Lifestyle Adjustment**
-   - Work-from-home person gets same outerwear/bag targets as office commuter
-   - Indoor vs outdoor lifestyle not considered
-   - All users get identical multipliers
+### ✅ Recently Fixed Problems
 
-3. **Inconsistent Calculation Methods**
-   - Current system: Basic multipliers
-   - Unused smart system: Proper outfit strategies (separates vs dress-focused)
+2. **No Lifestyle Adjustment** ✅ **FIXED WITH LIFESTYLE-BASED SYSTEM**
+   - ~~Work-from-home person gets same outerwear/bag targets as office commuter~~
+   - ~~Indoor vs outdoor lifestyle not considered~~
+   - ~~All users get identical multipliers~~
+   - **Now:** Ultra-simple binary detection (indoor vs outdoor) with realistic targets
 
-4. **Wishlist Item Issues** ✅ **RECENTLY FIXED**
+3. **Unrealistic Minimum Values** ✅ **FIXED**
+   - ~~Hardcoded `neededItemsMin: 0` for accessories ignored lifestyle logic~~
+   - ~~Ridiculous "0 minimum bags" for office workers~~
+   - **Now:** Proper minimum values (min: 3 bags for everyone, higher ideals by lifestyle)
+
+4. **Performance Issues** ✅ **FIXED** 
+   - ~~Redundant lifestyle calculations on every coverage update~~
+   - **Now:** Caching system prevents duplicate analysis during bulk updates
+
+5. **Wishlist Item Issues** ✅ **PREVIOUSLY FIXED**
    - ~~Coverage calculations included wishlist items~~
    - ~~Mismatch between UI (wardrobe only) and analysis (wardrobe + wishlist)~~
 
@@ -133,10 +142,22 @@ calculateOutfitNeeds(usesPerSeason):
 1. **Efficient Updates**
    - Only recalculates affected categories when items change
    - Scenario-agnostic approach for outerwear/accessories
+   - **NEW:** Lifestyle analysis caching prevents redundant calculations
 
 2. **Subcategory Breakdown**
    - Accessories split into meaningful subcategories (Bag, Belt, Jewelry)
    - Allows fine-grained analysis
+
+3. **Realistic Lifestyle-Based Targets** ✅ **NEW**
+   - Binary indoor/outdoor detection with 90% confidence
+   - Seasonal outerwear integration (spring/fall needs variety)  
+   - Common-sense minimums (min: 3 bags for everyone)
+   - Higher variety targets for outdoor-focused users
+
+4. **Performance Optimized** ✅ **NEW**
+   - Ultra-simple binary detection (no complex scoring)
+   - Caching prevents duplicate lifestyle analysis
+   - Fixed hardcoded bugs that ignored lifestyle logic
 
 3. **AI Integration**
    - Coverage data available for AI analysis
