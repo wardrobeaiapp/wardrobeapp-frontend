@@ -3,14 +3,49 @@
 // Mock console methods to reduce test output noise (optional)
 const originalConsole = global.console;
 
-// Mock file system operations for tests
-jest.mock('fs', () => ({
-  existsSync: jest.fn(() => true),
-  mkdirSync: jest.fn(),
-  writeFileSync: jest.fn(),
-  readFileSync: jest.fn(() => Buffer.from('fake-file-content')),
-  unlinkSync: jest.fn()
-}));
+// Mock file system operations for tests with proper stream support
+jest.mock('fs', () => {
+  const EventEmitter = require('events');
+  
+  class MockWriteStream extends EventEmitter {
+    constructor() {
+      super();
+      this.writable = true;
+    }
+    
+    write(chunk, encoding, callback) {
+      if (callback) callback();
+      return true;
+    }
+    
+    end(chunk, encoding, callback) {
+      if (chunk) this.write(chunk, encoding);
+      if (callback) callback();
+      this.emit('finish');
+      return this;
+    }
+    
+    destroy() {
+      this.emit('close');
+      return this;
+    }
+  }
+  
+  return {
+    existsSync: jest.fn(() => true),
+    mkdirSync: jest.fn(),
+    writeFileSync: jest.fn(),
+    readFileSync: jest.fn(() => Buffer.from('fake-file-content')),
+    unlinkSync: jest.fn(),
+    createWriteStream: jest.fn(() => new MockWriteStream()),
+    // Add missing methods for base64 image processing
+    statSync: jest.fn(() => ({ size: 1024 })), // Mock file stats
+    accessSync: jest.fn(() => undefined), // Mock file access check (success = undefined)
+    constants: {
+      W_OK: 2 // Write access constant
+    }
+  };
+});
 
 // Mock path operations
 jest.mock('path', () => ({

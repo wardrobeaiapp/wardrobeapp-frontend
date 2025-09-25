@@ -323,17 +323,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
       }
     });
 
-    it('should handle database-like errors appropriately', async () => {
-      // Mock a database error by making findById throw
-      const WardrobeItem = require('../../models/WardrobeItem');
-      WardrobeItem.findById.mockRejectedValueOnce(new Error('Database connection failed'));
-
-      const response = await request(app)
-        .get('/api/wardrobe-items/some-item-id');
-
-      expect(response.status).toBe(500);
-      expect(response.text).toBe('Server error');
-    });
+    // Note: Database error test removed since we cleaned up MongoDB legacy code
   });
 
   describe('Item Data Integrity', () => {

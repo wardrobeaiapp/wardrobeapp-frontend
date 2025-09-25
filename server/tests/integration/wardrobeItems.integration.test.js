@@ -6,13 +6,9 @@ const path = require('path');
 const wardrobeItemsRouter = require('../../routes/wardrobeItems');
 const auth = require('../../middleware/auth');
 
-// Import models
-const WardrobeItem = require('../../models/WardrobeItem');
-
 // Test database setup
 const setupTestDatabase = () => {
-  // In a real app, you'd set up a test database here
-  global.usingMongoDB = false; // Use in-memory storage for tests
+  // Use in-memory storage for tests
   global.inMemoryWardrobeItems = [];
 };
 
@@ -41,9 +37,7 @@ jest.mock('../../middleware/auth', () => {
   };
 });
 
-// Mock WardrobeItem model
-jest.mock('../../models/WardrobeItem');
-const mockWardrobeItem = WardrobeItem;
+// Note: WardrobeItem model no longer needed since we use Supabase, not MongoDB
 
 describe('Wardrobe Items API - Integration Tests', () => {
   let app;
@@ -120,24 +114,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
       expect(response.body[1].name).toBe('Old Item');
     });
 
-    it('should work with MongoDB when enabled', async () => {
-      global.usingMongoDB = true;
-      
-      const mockItems = [
-        { _id: '1', name: 'MongoDB Item', user: 'test-user-123', dateAdded: new Date() }
-      ];
-      
-      mockWardrobeItem.find.mockReturnValue({
-        sort: jest.fn().mockResolvedValue(mockItems)
-      });
-
-      const response = await request(app)
-        .get('/api/wardrobe-items')
-        .expect(200);
-
-      expect(mockWardrobeItem.find).toHaveBeenCalledWith({ user: 'test-user-123' });
-      expect(response.body).toEqual(mockItems);
-    });
+    // Note: Removed MongoDB test since this app uses Supabase, not MongoDB
   });
 
   describe('POST /api/wardrobe-items', () => {

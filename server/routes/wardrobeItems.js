@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const WardrobeItem = require('../models/WardrobeItem');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -30,16 +29,12 @@ const upload = multer({
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    if (global.usingMongoDB) {
-      const wardrobeItems = await WardrobeItem.find({ user: req.user.id }).sort({ dateAdded: -1 });
-      res.json(wardrobeItems);
-    } else {
-      // Filter items for the current user from in-memory storage
-      const userItems = global.inMemoryWardrobeItems.filter(item => item.user === req.user.id);
-      // Sort by dateAdded (newest first)
-      userItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-      res.json(userItems);
-    }
+    // Filter items for the current user from in-memory storage
+    // In production, this would be replaced with your Supabase queries
+    const userItems = (global.inMemoryWardrobeItems || []).filter(item => item.user === req.user.id);
+    // Sort by dateAdded (newest first)
+    userItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+    res.json(userItems);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -49,7 +44,7 @@ router.get('/', auth, async (req, res) => {
 // @route   POST /api/wardrobe-items
 // @desc    Add a new wardrobe item
 // @access  Private
-router.post('/', auth, async (req, res) => {
+router.post('/', auth, upload.single('image'), async (req, res) => {
   try {
     console.log('=== POST /api/wardrobe-items START ===');
     console.log('Request body keys:', Object.keys(req.body));
@@ -192,33 +187,23 @@ router.post('/', auth, async (req, res) => {
     console.log('- imageUrl:', imageUrl);
     console.log('- wishlist:', itemData.wishlist);
     
-    // Store the item (MongoDB or in-memory)
-    if (global.usingMongoDB) {
-      const newItem = new WardrobeItem(itemData);
-      const item = await newItem.save();
-      console.log('Item saved successfully with ID:', item.id);
-      console.log('Final imageUrl in saved item:', item.imageUrl);
-      console.log('=== POST /api/wardrobe-items END ===');
-      return res.status(201).json(item);
-    } else {
-      // In-memory storage
-      const newItem = {
-        ...itemData,
-        id: `item-${Date.now()}`,
-        dateAdded: new Date().toISOString(),
-      };
-      
-      // Make sure the in-memory array exists
-      if (!global.inMemoryWardrobeItems) {
-        global.inMemoryWardrobeItems = [];
-      }
-      
-      global.inMemoryWardrobeItems.push(newItem);
-      console.log('Item saved successfully with ID:', newItem.id);
-      console.log('Final imageUrl in saved item:', newItem.imageUrl);
-      console.log('=== POST /api/wardrobe-items END ===');
-      return res.status(201).json(newItem);
+    // Store the item in memory (in production, this would be replaced with Supabase queries)
+    const newItem = {
+      ...itemData,
+      id: `item-${Date.now()}`,
+      dateAdded: new Date().toISOString(),
+    };
+    
+    // Make sure the in-memory array exists
+    if (!global.inMemoryWardrobeItems) {
+      global.inMemoryWardrobeItems = [];
     }
+    
+    global.inMemoryWardrobeItems.push(newItem);
+    console.log('Item saved successfully with ID:', newItem.id);
+    console.log('Final imageUrl in saved item:', newItem.imageUrl);
+    console.log('=== POST /api/wardrobe-items END ===');
+    return res.status(201).json(newItem);
   } catch (err) {
     console.error('Error adding wardrobe item:', err);
     console.error('Error stack:', err.stack);
@@ -250,47 +235,23 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    if (global.usingMongoDB) {
-      const item = await WardrobeItem.findById(itemId);
-      
-      // Check if item exists
-      if (!item) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      // Check if user owns the item
-      if (item.user.toString() !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-      
-      res.json(item);
-    } else {
-      // In-memory storage mode
-      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId);
-      
-      // Check if item exists
-      if (!item) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      // Check if user owns the item
-      if (item.user !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-      
-      res.json(item);
-    }
-  } catch (err) {
-    console.error(err.message);
-    // Handle MongoDB ObjectId errors and other ID-related errors
-    if (err.kind === 'ObjectId' || 
-        err.name === 'CastError' || 
-        err.message.includes('Cast to ObjectId failed') ||
-        err.message.includes('Invalid ObjectId') ||
-        err.message.toLowerCase().includes('objectid')) {
+    // Find item in storage (in production, this would be replaced with Supabase queries)
+    const item = (global.inMemoryWardrobeItems || []).find(item => item.id === itemId);
+    
+    // Check if item exists
+    if (!item) {
       return res.status(404).json({ message: 'Item not found' });
     }
-    // For malformed requests that don't match our validation, also return 404
+    
+    // Check if user owns the item
+    if (item.user !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+    
+    res.json(item);
+  } catch (err) {
+    console.error(err.message);
+    // For malformed requests that don't match our validation, return 404
     if (err.message.includes('Invalid ID format') || 
         err.name === 'ValidationError') {
       return res.status(404).json({ message: 'Item not found' });
@@ -304,55 +265,29 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
   try {
-    if (global.usingMongoDB) {
-      let item = await WardrobeItem.findById(req.params.id);
-
-      // Check if item exists
-      if (!item) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-
-      // Check if user owns the item
-      if (item.user.toString() !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-
-      // Update item
-      item = await WardrobeItem.findByIdAndUpdate(
-        req.params.id,
-        { $set: req.body },
-        { new: true }
-      );
-
-      res.json(item);
-    } else {
-      // Find item in in-memory storage
-      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === req.params.id);
-      
-      // Check if item exists
-      if (itemIndex === -1) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      // Check if user owns the item
-      if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-      
-      // Update item
-      global.inMemoryWardrobeItems[itemIndex] = {
-        ...global.inMemoryWardrobeItems[itemIndex],
-        ...req.body,
-        id: req.params.id // Ensure ID doesn't change
-      };
-      
-      res.json(global.inMemoryWardrobeItems[itemIndex]);
-    }
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
+    // Find item in storage (in production, this would be replaced with Supabase queries)
+    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
+    
+    // Check if item exists
+    if (itemIndex === -1) {
       return res.status(404).json({ message: 'Item not found' });
     }
+    
+    // Check if user owns the item
+    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+    
+    // Update item
+    global.inMemoryWardrobeItems[itemIndex] = {
+      ...global.inMemoryWardrobeItems[itemIndex],
+      ...req.body,
+      id: req.params.id // Ensure ID doesn't change
+    };
+    
+    res.json(global.inMemoryWardrobeItems[itemIndex]);
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send('Server error');
   }
 });
@@ -362,47 +297,25 @@ router.put('/:id', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
-    if (global.usingMongoDB) {
-      const item = await WardrobeItem.findById(req.params.id);
-      
-      // Check if item exists
-      if (!item) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      // Check if user owns the item
-      if (item.user.toString() !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-      
-      // Delete the item
-      await item.remove();
-      
-      res.json({ message: 'Item removed' });
-    } else {
-      // Find item in in-memory storage
-      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === req.params.id);
-      
-      // Check if item exists
-      if (itemIndex === -1) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      // Check if user owns the item
-      if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
-      
-      // Delete the item
-      global.inMemoryWardrobeItems.splice(itemIndex, 1);
-      
-      res.json({ message: 'Item removed' });
-    }
-  } catch (err) {
-    console.error(err.message);
-    if (err.kind === 'ObjectId') {
+    // Find item in storage (in production, this would be replaced with Supabase queries)
+    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
+    
+    // Check if item exists
+    if (itemIndex === -1) {
       return res.status(404).json({ message: 'Item not found' });
     }
+    
+    // Check if user owns the item
+    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
+      return res.status(401).json({ message: 'Not authorized' });
+    }
+    
+    // Delete the item
+    global.inMemoryWardrobeItems.splice(itemIndex, 1);
+    
+    res.json({ message: 'Item removed' });
+  } catch (err) {
+    console.error(err.message);
     res.status(500).send('Server error');
   }
 });
@@ -412,30 +325,29 @@ router.delete('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id/wear', auth, async (req, res) => {
   try {
-    let item = await WardrobeItem.findById(req.params.id);
+    // Find item in storage (in production, this would be replaced with Supabase queries)
+    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
     
     // Check if item exists
-    if (!item) {
+    if (itemIndex === -1) {
       return res.status(404).json({ message: 'Item not found' });
     }
     
     // Check if user owns the item
-    if (item.user.toString() !== req.user.id) {
+    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
       return res.status(401).json({ message: 'Not authorized' });
     }
     
     // Update times worn and last worn date
-    item = await WardrobeItem.findByIdAndUpdate(
-      req.params.id,
-      { new: true }
-    );
+    global.inMemoryWardrobeItems[itemIndex] = {
+      ...global.inMemoryWardrobeItems[itemIndex],
+      timesWorn: (global.inMemoryWardrobeItems[itemIndex].timesWorn || 0) + 1,
+      lastWorn: new Date().toISOString()
+    };
     
-    res.json(item);
+    res.json(global.inMemoryWardrobeItems[itemIndex]);
   } catch (err) {
     console.error(err.message);
-    if (err.kind === 'ObjectId') {
-      return res.status(404).json({ message: 'Item not found' });
-    }
     res.status(500).send('Server error');
   }
 });

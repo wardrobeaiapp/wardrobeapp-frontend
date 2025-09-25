@@ -368,7 +368,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         .post('/api/wardrobe-items')
         .send(createData);
 
-      expect(createResponse.status).toBe(200);
+      expect(createResponse.status).toBe(201);
       expect(createResponse.body.name).toBe('CRUD Workflow Item');
       
       const itemId = createResponse.body.id;
