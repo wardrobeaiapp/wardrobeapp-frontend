@@ -19,7 +19,6 @@ export const saveCategoryCoverage = async (coverage: CategoryCoverage): Promise<
     coverage_percent: coverage.coveragePercent,
     gap_count: coverage.gapCount,
     gap_type: coverage.gapType,
-    is_critical: coverage.isCritical,
     priority_level: coverage.priorityLevel,
     last_updated: coverage.lastUpdated
   };
@@ -89,7 +88,6 @@ export function mapDatabaseRowToCategoryCoverage(row: any): CategoryCoverage {
     coveragePercent: row.coverage_percent,
     gapCount: row.gap_count,
     gapType: row.gap_type || 'improvement', // Default for existing data
-    isCritical: row.is_critical,
     priorityLevel: row.priority_level,
     lastUpdated: row.last_updated
   };

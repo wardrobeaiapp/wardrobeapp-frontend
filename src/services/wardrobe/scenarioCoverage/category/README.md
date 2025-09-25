@@ -52,8 +52,7 @@ const criticalGaps = await getCriticalCoverageGaps(userId);
 wardrobe_coverage (
   user_id, scenario_id, season, category, subcategory,  -- Primary key
   current_items, needed_items_ideal, coverage_percent,
-  is_critical, priority_level, gap_type,
-  category_recommendations, last_updated
+  priority_level, gap_type, last_updated
 )
 ```
 

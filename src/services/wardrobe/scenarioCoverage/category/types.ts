@@ -58,7 +58,6 @@ export type CategoryCoverage = {
    *   → Message: "Consider decluttering"
    */
   gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated';
-  isCritical: boolean;
   priorityLevel: number; // 1-5, 1=critical, 5=nice-to-have (accessories)
   lastUpdated: string;
 };

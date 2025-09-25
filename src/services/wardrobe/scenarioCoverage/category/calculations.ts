@@ -33,7 +33,7 @@ function determinePriorityLevel(
   category: ItemCategory,
   currentItems: number,
   gapCount: number,
-  isCritical: boolean
+  gapType: 'critical' | 'improvement' | 'expansion' | 'satisfied' | 'oversaturated'
 ): number {
   // Accessories are never critical - always nice-to-have
   if (category === ItemCategory.ACCESSORY) {
@@ -42,8 +42,8 @@ function determinePriorityLevel(
     return 5; // Satisfied
   }
   
-  // Regular categories
-  if (isCritical) return 1; // Critical
+  // Regular categories - use gapType instead of isCritical
+  if (gapType === 'critical') return 1; // Critical
   if (category === ItemCategory.FOOTWEAR && currentItems < 2) return 2; // High
   if ([ItemCategory.TOP, ItemCategory.BOTTOM].includes(category) && gapCount > 3) return 2; // High
   if (gapCount > 0) return 3; // Medium
@@ -243,7 +243,6 @@ async function calculateAccessorySubcategoryCoverage(
       coveragePercent: coverage,
       gapCount,
       gapType,
-      isCritical: false, // Accessories are never critical
       priorityLevel: currentCount === 0 ? 4 : 5, // Low to very low priority
       lastUpdated: new Date().toISOString()
     };
@@ -350,11 +349,9 @@ export const calculateCategoryCoverage = async (
     gapCount = 0;
     gapType = 'oversaturated';
   }
-  const isCritical = currentItems === 0 && 
-                     [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.FOOTWEAR].includes(category);
   
-  // Determine priority level
-  const priorityLevel = determinePriorityLevel(category, currentItems, gapCount, isCritical);
+  // Determine priority level using gapType instead of isCritical
+  const priorityLevel = determinePriorityLevel(category, currentItems, gapCount, gapType);
 
   const coverage: CategoryCoverage = {
     userId,
@@ -369,7 +366,6 @@ export const calculateCategoryCoverage = async (
     coveragePercent,
     gapCount,
     gapType,
-    isCritical,
     priorityLevel,
     lastUpdated: new Date().toISOString()
   };

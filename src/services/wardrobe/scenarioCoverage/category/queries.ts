@@ -162,7 +162,7 @@ export const getCriticalCoverageGaps = async (userId: string): Promise<CategoryC
     .from('wardrobe_coverage')
     .select('*')
     .eq('user_id', userId)
-    .eq('is_critical', true)
+    .eq('gap_type', 'critical')
     .order('priority_level', { ascending: true })
     .limit(10);
 
