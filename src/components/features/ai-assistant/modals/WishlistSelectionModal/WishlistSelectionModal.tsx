@@ -4,15 +4,10 @@ import { Modal } from '../../../../common/Modal';
 import {
   FilterSection,
   ItemsFoundText,
-  ItemGrid,
-  WishlistItemCard,
-  ItemImage,
-  ItemInfo,
-  ItemName,
-  ItemDetails,
   EmptyState
 } from './WishlistSelectionModal.styles';
 import FiltersPanel from '../../../wardrobe/shared/FiltersPanel';
+import ItemsGrid from '../../../wardrobe/shared/ItemsGrid/ItemsGrid';
 
 interface WishlistSelectionModalProps {
   isOpen: boolean;
@@ -99,27 +94,18 @@ const WishlistSelectionModal: React.FC<WishlistSelectionModalProps> = ({
       </FilterSection>
 
         {filteredItems.length > 0 ? (
-          <ItemGrid>
-            {filteredItems.map((item: WardrobeItem) => (
-              <WishlistItemCard key={item.id} onClick={() => handleSelectItem(item)}>
-                <ItemImage>
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.name} />
-                  ) : (
-                    <div className="no-image">No Image</div>
-                  )}
-                </ItemImage>
-                <ItemInfo>
-                  <ItemName>{item.name}</ItemName>
-                  <ItemDetails>
-                    {item.brand && <span>{item.brand}</span>}
-                    <span>{item.category.charAt(0).toUpperCase() + item.category.slice(1).toLowerCase().replace(/_/g, ' ')}</span>
-                    {item.price && <span>${item.price}</span>}
-                  </ItemDetails>
-                </ItemInfo>
-              </WishlistItemCard>
-            ))}
-          </ItemGrid>
+          <ItemsGrid
+            items={filteredItems}
+            selectedItems={[]}
+            onItemSelect={(itemId: string) => {
+              const item = filteredItems.find(item => item.id === itemId);
+              if (item) {
+                handleSelectItem(item);
+              }
+            }}
+            singleSelect={true}
+            noResultsMessage="No wishlist items found"
+          />
         ) : (
           <EmptyState>
             No items found matching your criteria
