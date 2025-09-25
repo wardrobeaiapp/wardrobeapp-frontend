@@ -1,7 +1,9 @@
 import { 
   detectLifestyleType,
+  getOuterwearTargets,
   LifestyleAnalysis,
-  LifestyleType
+  LifestyleType,
+  SEASONAL_OUTERWEAR_TARGETS
 } from '../../../../../services/wardrobe/scenarioCoverage/lifestyle/lifestyleDetectionService';
 import { Scenario } from '../../../../../types';
 
@@ -674,6 +676,304 @@ describe('lifestyleDetectionService - Indoor-Focused Detection', () => {
         expect(result.factors).toHaveLength(1);
         expect(typeof result.factors[0]).toBe('string');
         expect(result.factors[0].length).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  describe('getOuterwearTargets() - Seasonal Variations', () => {
+    
+    describe('Summer Season Targets', () => {
+      test('should return correct indoor_focused summer targets', () => {
+        const result = getOuterwearTargets('summer', 'indoor_focused');
+        
+        // Expected: base summer targets (1/2/3) × 0.7 = 0.7/1.4/2.1 → floor to 1/1/2 with minimums
+        expect(result.min).toBe(1);  // max(1, floor(1 × 0.7)) = max(1, 0) = 1
+        expect(result.ideal).toBe(1); // max(1, floor(2 × 0.7)) = max(1, 1) = 1  
+        expect(result.max).toBe(2);   // max(2, floor(3 × 0.7)) = max(2, 2) = 2
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should return correct outdoor_focused summer targets', () => {
+        const result = getOuterwearTargets('summer', 'outdoor_focused');
+        
+        // Expected: full base summer targets (no reduction)
+        expect(result.min).toBe(1);
+        expect(result.ideal).toBe(2);
+        expect(result.max).toBe(3);
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should apply 0.7x lifestyle adjustment correctly for indoor summer', () => {
+        const indoorResult = getOuterwearTargets('summer', 'indoor_focused');
+        const outdoorResult = getOuterwearTargets('summer', 'outdoor_focused');
+        
+        // Indoor should have equal or lower targets than outdoor
+        expect(indoorResult.min).toBeLessThanOrEqual(outdoorResult.min);
+        expect(indoorResult.ideal).toBeLessThanOrEqual(outdoorResult.ideal);
+        expect(indoorResult.max).toBeLessThanOrEqual(outdoorResult.max);
+      });
+    });
+
+    describe('Winter Season Targets', () => {
+      test('should return correct indoor_focused winter targets', () => {
+        const result = getOuterwearTargets('winter', 'indoor_focused');
+        
+        // Expected: base winter targets (2/3/4) × 0.7 = 1.4/2.1/2.8 → floor to 1/2/2 with minimums
+        expect(result.min).toBe(1);  // max(1, floor(2 × 0.7)) = max(1, 1) = 1
+        expect(result.ideal).toBe(2); // max(1, floor(3 × 0.7)) = max(1, 2) = 2
+        expect(result.max).toBe(2);   // max(2, floor(4 × 0.7)) = max(2, 2) = 2
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should return correct outdoor_focused winter targets', () => {
+        const result = getOuterwearTargets('winter', 'outdoor_focused');
+        
+        // Expected: full base winter targets (no reduction)
+        expect(result.min).toBe(2);
+        expect(result.ideal).toBe(3);
+        expect(result.max).toBe(4);
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should apply 0.7x lifestyle adjustment correctly for indoor winter', () => {
+        const indoorResult = getOuterwearTargets('winter', 'indoor_focused');
+        const outdoorResult = getOuterwearTargets('winter', 'outdoor_focused');
+        
+        // Indoor should have equal or lower targets than outdoor
+        expect(indoorResult.min).toBeLessThanOrEqual(outdoorResult.min);
+        expect(indoorResult.ideal).toBeLessThanOrEqual(outdoorResult.ideal);
+        expect(indoorResult.max).toBeLessThanOrEqual(outdoorResult.max);
+      });
+    });
+
+    describe('Spring/Fall Season Targets', () => {
+      test('should return correct indoor_focused spring/fall targets', () => {
+        const result = getOuterwearTargets('spring/fall', 'indoor_focused');
+        
+        // Expected: base spring/fall targets (3/4/5) × 0.7 = 2.1/2.8/3.5 → floor to 2/2/3 with minimums
+        expect(result.min).toBe(2);  // max(1, floor(3 × 0.7)) = max(1, 2) = 2
+        expect(result.ideal).toBe(2); // max(1, floor(4 × 0.7)) = max(1, 2) = 2
+        expect(result.max).toBe(3);   // max(2, floor(5 × 0.7)) = max(2, 3) = 3
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should return correct outdoor_focused spring/fall targets', () => {
+        const result = getOuterwearTargets('spring/fall', 'outdoor_focused');
+        
+        // Expected: full base spring/fall targets (no reduction)
+        expect(result.min).toBe(3);
+        expect(result.ideal).toBe(4);
+        expect(result.max).toBe(5);
+        
+        // Check it's a proper progression
+        expect(result.min).toBeLessThanOrEqual(result.ideal);
+        expect(result.ideal).toBeLessThanOrEqual(result.max);
+      });
+
+      test('should apply 0.7x lifestyle adjustment correctly for indoor spring/fall', () => {
+        const indoorResult = getOuterwearTargets('spring/fall', 'indoor_focused');
+        const outdoorResult = getOuterwearTargets('spring/fall', 'outdoor_focused');
+        
+        // Indoor should have equal or lower targets than outdoor
+        expect(indoorResult.min).toBeLessThanOrEqual(outdoorResult.min);
+        expect(indoorResult.ideal).toBeLessThanOrEqual(outdoorResult.ideal);
+        expect(indoorResult.max).toBeLessThanOrEqual(outdoorResult.max);
+      });
+
+      test('should handle spring/fall as the highest-need season', () => {
+        const springFallIndoor = getOuterwearTargets('spring/fall', 'indoor_focused');
+        const winterIndoor = getOuterwearTargets('winter', 'indoor_focused');
+        const summerIndoor = getOuterwearTargets('summer', 'indoor_focused');
+        
+        // Spring/fall should generally have highest or equal targets (most variety needed)
+        expect(springFallIndoor.ideal).toBeGreaterThanOrEqual(winterIndoor.ideal);
+        expect(springFallIndoor.ideal).toBeGreaterThanOrEqual(summerIndoor.ideal);
+      });
+    });
+
+    describe('Invalid/Default Season Handling', () => {
+      test('should use default targets for invalid season', () => {
+        const result = getOuterwearTargets('invalid_season', 'outdoor_focused');
+        
+        // Should use 'default' seasonal targets (2/3/4)
+        expect(result.min).toBe(2);
+        expect(result.ideal).toBe(3);
+        expect(result.max).toBe(4);
+      });
+
+      test('should use default targets with indoor adjustment for invalid season', () => {
+        const result = getOuterwearTargets('invalid_season', 'indoor_focused');
+        
+        // Expected: default targets (2/3/4) × 0.7 = 1.4/2.1/2.8 → floor to 1/2/2 with minimums
+        expect(result.min).toBe(1);  // max(1, floor(2 × 0.7)) = max(1, 1) = 1
+        expect(result.ideal).toBe(2); // max(1, floor(3 × 0.7)) = max(1, 2) = 2
+        expect(result.max).toBe(2);   // max(2, floor(4 × 0.7)) = max(2, 2) = 2
+      });
+
+      test('should handle empty string season gracefully', () => {
+        const result = getOuterwearTargets('', 'outdoor_focused');
+        
+        // Should use default targets
+        expect(result.min).toBe(2);
+        expect(result.ideal).toBe(3);
+        expect(result.max).toBe(4);
+      });
+
+      test('should handle null/undefined season gracefully', () => {
+        const result1 = getOuterwearTargets(null as any, 'outdoor_focused');
+        const result2 = getOuterwearTargets(undefined as any, 'indoor_focused');
+        
+        // Both should use default targets
+        expect(result1.min).toBe(2);
+        expect(result1.ideal).toBe(3);
+        expect(result1.max).toBe(4);
+        
+        expect(result2.min).toBe(1);
+        expect(result2.ideal).toBe(2);
+        expect(result2.max).toBe(2);
+      });
+    });
+
+    describe('Lifestyle Multiplier Edge Cases', () => {
+      test('should enforce minimum values for indoor lifestyle', () => {
+        // Test all seasons to ensure minimums are enforced
+        const seasons = ['summer', 'winter', 'spring/fall'];
+        
+        seasons.forEach(season => {
+          const result = getOuterwearTargets(season, 'indoor_focused');
+          
+          // Should never go below absolute minimums
+          expect(result.min).toBeGreaterThanOrEqual(1);
+          expect(result.ideal).toBeGreaterThanOrEqual(1);
+          expect(result.max).toBeGreaterThanOrEqual(2);
+        });
+      });
+
+      test('should maintain logical progression after adjustments', () => {
+        const seasons = ['summer', 'winter', 'spring/fall'];
+        const lifestyles: LifestyleType[] = ['indoor_focused', 'outdoor_focused'];
+        
+        seasons.forEach(season => {
+          lifestyles.forEach(lifestyle => {
+            const result = getOuterwearTargets(season, lifestyle);
+            
+            // Should always maintain min ≤ ideal ≤ max
+            expect(result.min).toBeLessThanOrEqual(result.ideal);
+            expect(result.ideal).toBeLessThanOrEqual(result.max);
+            
+            // Should be positive numbers
+            expect(result.min).toBeGreaterThan(0);
+            expect(result.ideal).toBeGreaterThan(0);
+            expect(result.max).toBeGreaterThan(0);
+          });
+        });
+      });
+
+      test('should return integer values only', () => {
+        const seasons = ['summer', 'winter', 'spring/fall'];
+        const lifestyles: LifestyleType[] = ['indoor_focused', 'outdoor_focused'];
+        
+        seasons.forEach(season => {
+          lifestyles.forEach(lifestyle => {
+            const result = getOuterwearTargets(season, lifestyle);
+            
+            // Should all be integers (no decimals)
+            expect(Number.isInteger(result.min)).toBe(true);
+            expect(Number.isInteger(result.ideal)).toBe(true);
+            expect(Number.isInteger(result.max)).toBe(true);
+          });
+        });
+      });
+    });
+
+    describe('Constants Validation', () => {
+      test('SEASONAL_OUTERWEAR_TARGETS should have all required seasons', () => {
+        expect(SEASONAL_OUTERWEAR_TARGETS).toHaveProperty('summer');
+        expect(SEASONAL_OUTERWEAR_TARGETS).toHaveProperty('winter');
+        expect(SEASONAL_OUTERWEAR_TARGETS).toHaveProperty('spring/fall');
+        expect(SEASONAL_OUTERWEAR_TARGETS).toHaveProperty('default');
+      });
+
+      test('SEASONAL_OUTERWEAR_TARGETS should have proper structure', () => {
+        const seasons = ['summer', 'winter', 'spring/fall', 'default'];
+        
+        seasons.forEach(season => {
+          const target = SEASONAL_OUTERWEAR_TARGETS[season as keyof typeof SEASONAL_OUTERWEAR_TARGETS];
+          
+          expect(target).toHaveProperty('min');
+          expect(target).toHaveProperty('ideal');
+          expect(target).toHaveProperty('max');
+          
+          // Should be positive integers
+          expect(Number.isInteger(target.min)).toBe(true);
+          expect(Number.isInteger(target.ideal)).toBe(true);
+          expect(Number.isInteger(target.max)).toBe(true);
+          
+          expect(target.min).toBeGreaterThan(0);
+          expect(target.ideal).toBeGreaterThan(0);
+          expect(target.max).toBeGreaterThan(0);
+          
+          // Should maintain progression
+          expect(target.min).toBeLessThanOrEqual(target.ideal);
+          expect(target.ideal).toBeLessThanOrEqual(target.max);
+        });
+      });
+
+      test('should have realistic seasonal target values', () => {
+        // Summer should have lowest targets (light layering needs)
+        expect(SEASONAL_OUTERWEAR_TARGETS.summer.ideal).toBeLessThanOrEqual(
+          SEASONAL_OUTERWEAR_TARGETS.winter.ideal
+        );
+        expect(SEASONAL_OUTERWEAR_TARGETS.summer.ideal).toBeLessThanOrEqual(
+          SEASONAL_OUTERWEAR_TARGETS['spring/fall'].ideal
+        );
+        
+        // Spring/fall should have highest targets (most variable weather)
+        expect(SEASONAL_OUTERWEAR_TARGETS['spring/fall'].ideal).toBeGreaterThanOrEqual(
+          SEASONAL_OUTERWEAR_TARGETS.summer.ideal
+        );
+        expect(SEASONAL_OUTERWEAR_TARGETS['spring/fall'].ideal).toBeGreaterThanOrEqual(
+          SEASONAL_OUTERWEAR_TARGETS.winter.ideal
+        );
+      });
+    });
+
+    describe('Return Type Structure Validation', () => {
+      test('should return proper target structure', () => {
+        const result = getOuterwearTargets('summer', 'indoor_focused');
+        
+        expect(result).toHaveProperty('min');
+        expect(result).toHaveProperty('ideal');  
+        expect(result).toHaveProperty('max');
+        
+        expect(typeof result.min).toBe('number');
+        expect(typeof result.ideal).toBe('number');
+        expect(typeof result.max).toBe('number');
+      });
+
+      test('should not have additional unexpected properties', () => {
+        const result = getOuterwearTargets('winter', 'outdoor_focused');
+        
+        const keys = Object.keys(result);
+        expect(keys).toHaveLength(3);
+        expect(keys).toContain('min');
+        expect(keys).toContain('ideal');
+        expect(keys).toContain('max');
       });
     });
   });
