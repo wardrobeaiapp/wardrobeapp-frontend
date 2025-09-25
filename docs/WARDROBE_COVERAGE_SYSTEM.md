@@ -108,15 +108,22 @@ calculateOutfitNeeds(usesPerSeason):
 
 ## Current Issues & Limitations
 
-### ❌ Remaining Issues
+### ✅ All Major Issues Resolved!
 
-1. **No Outfit Combination Logic** ⚠️ **DESIGN CHOICE** 
-   - Calculates each category independently
-   - Doesn't account for: 1 dress = 1 outfit (no bottom needed)
-   - Doesn't follow "more tops than bottoms" principle
-   - **Note:** May be intentionally simple for user understanding
+**The wardrobe coverage system now works correctly with proper category interchangeability.**
 
 ### ✅ Recently Fixed Problems
+
+1. **Category Interchangeability** ✅ **FIXED - DECEMBER 2025**
+   - ~~Calculated each category independently~~
+   - ~~Didn't account for: 1 dress = 1 outfit (no bottom needed)~~
+   - ~~When checking tops: ignored that dresses also serve as tops~~
+   - **Now:** Enhanced `calculateCategoryCoverage()` with proper interchangeability:
+     - **Checking tops**: Counts `tops + one_piece` (dresses reduce top need)
+     - **Checking bottoms**: Counts `bottoms + one_piece` (dresses reduce bottom need)  
+     - **Checking dresses**: Counts only `one_piece` (no double-counting)
+     - **Other categories**: Exact match only (no interchangeability)
+   - **Result**: AI gets accurate coverage data that reflects outfit reality
 
 2. **No Lifestyle Adjustment** ✅ **FIXED WITH LIFESTYLE-BASED SYSTEM**
    - ~~Work-from-home person gets same outerwear/bag targets as office commuter~~

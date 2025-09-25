@@ -346,9 +346,21 @@ export const calculateCategoryCoverage = async (
   }
 
   // Filter items for this specific category and season
-  // Special handling: Outerwear and Accessories are scenario-agnostic
+  // ✅ NEW: Account for category interchangeability (tops/bottoms can be replaced by one-pieces)
   const categoryItems = items.filter(item => {
-    const matchesCategory = item.category === category;
+    // Determine category match with interchangeability
+    let matchesCategory;
+    if (category === ItemCategory.TOP) {
+      // Tops: count both tops and one-pieces (dresses replace top need)
+      matchesCategory = item.category === ItemCategory.TOP || item.category === ItemCategory.ONE_PIECE;
+    } else if (category === ItemCategory.BOTTOM) {
+      // Bottoms: count both bottoms and one-pieces (dresses replace bottom need)
+      matchesCategory = item.category === ItemCategory.BOTTOM || item.category === ItemCategory.ONE_PIECE;
+    } else {
+      // Other categories: exact match only (footwear, outerwear, accessories)
+      matchesCategory = item.category === category;
+    }
+    
     const matchesSeason = !item.season || 
                          item.season.length === 0 || 
                          item.season.includes(season);

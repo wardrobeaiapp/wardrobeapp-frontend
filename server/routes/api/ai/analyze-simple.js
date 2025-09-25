@@ -57,7 +57,6 @@ router.post('/', async (req, res) => {
       
       systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
     }
-    
     systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
 
     // Call Claude API
