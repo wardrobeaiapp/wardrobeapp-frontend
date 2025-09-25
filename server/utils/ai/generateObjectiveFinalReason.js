@@ -15,20 +15,19 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
   
   const category = formData?.category || "this category";
   
-  // Use subcategory from formData first, then fall back to coverage data
-  // This ensures we use the correct subcategory for the item being analyzed
-  let itemType = category;
+  // ✅ FIXED: Use category-level reasoning to match coverage calculation
+  // Coverage checks category-level (e.g., "tops"), so reasoning should too
+  let itemType = category.toLowerCase();
   
-  if (formData?.subcategory) {
-    // Use the actual subcategory of the item being analyzed (most reliable)
+  // Only use subcategory for accessories (which have subcategory-based coverage)
+  if (category === 'accessory' && formData?.subcategory) {
     itemType = formData.subcategory.toLowerCase();
-    // Make it plural for better readability (e.g., "bags" instead of "bag")  
-    if (!itemType.endsWith('s')) itemType += 's';
-  } else if (relevantCoverage.length > 0 && relevantCoverage[0].subcategory) {
-    // Fallback to coverage data subcategory
+  } else if (category === 'accessory' && relevantCoverage.length > 0 && relevantCoverage[0].subcategory) {
     itemType = relevantCoverage[0].subcategory.toLowerCase();
-    if (!itemType.endsWith('s')) itemType += 's';
   }
+  
+  // Make it plural for better readability (e.g., "tops" instead of "top")  
+  if (!itemType.endsWith('s')) itemType += 's';
   
   let reason = "";
   
