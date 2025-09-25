@@ -297,8 +297,21 @@ router.put('/:id', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
+    // Handle invalid ID formats more gracefully
+    const itemId = req.params.id;
+    
+    // Comprehensive validation for invalid IDs
+    if (!itemId || 
+        itemId.trim() === '' || 
+        itemId === 'null' || 
+        itemId === 'undefined' ||
+        itemId.length > 100 ||  // Too long
+        /[<>\"'%;()&+]/.test(itemId)) {  // Contains suspicious characters
+      return res.status(404).json({ message: 'Item not found' });
+    }
+    
     // Find item in storage (in production, this would be replaced with Supabase queries)
-    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
+    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === itemId);
     
     // Check if item exists
     if (itemIndex === -1) {
