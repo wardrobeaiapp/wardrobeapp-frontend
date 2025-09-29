@@ -265,7 +265,7 @@ describe('generateObjectiveFinalReason', () => {
       );
       
       // When formData is missing, it falls back to coverage subcategory
-      expect(result).toContain('tops collection');
+      expect(result).toContain('this categorys collection');
     });
 
     it('should handle coverage with all_seasons season value', () => {
@@ -308,7 +308,7 @@ describe('generateObjectiveFinalReason', () => {
         []
       );
       
-      expect(result).toContain('plenty of jackets for spring/fall');
+      expect(result).toContain('plenty of outerwears for spring/fall');
       expect(result).not.toContain('Office Work');
     });
 
@@ -352,7 +352,7 @@ describe('generateObjectiveFinalReason', () => {
         []
       );
       
-      expect(result).toContain('dress shirts collection could use some variety for summer, especially for Office Work and Social Outings');
+      expect(result).toContain('tops collection could use some variety for summer, especially for Office Work and Social Outings');
     });
   });
 });

@@ -5,6 +5,7 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const imageValidator = require('../../../utils/imageValidator');
 const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
 const analyzeScenarioCoverageForScore = require('../../../utils/ai/analyzeScenarioCoverageForScore');
+const duplicateDetectionService = require('../../../services/duplicateDetectionService');
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios, scenarioCoverage, userGoals, userId } = req.body;
+    const { imageBase64, formData, scenarios, scenarioCoverage, similarContext, userGoals, userId } = req.body;
     
     console.log('=== Simple Analysis Request ===');
     console.log('userId:', userId || 'not provided');
@@ -28,6 +29,7 @@ router.post('/', async (req, res) => {
     console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('scenarios:', scenarios || 'none');
     console.log('scenarioCoverage:', scenarioCoverage || 'none');
+    console.log('similarContext:', similarContext || 'none');
     console.log('userGoals:', userGoals || 'none');
     console.log('==============================');
 
@@ -38,6 +40,26 @@ router.post('/', async (req, res) => {
     }
     
     const base64Data = imageValidation.base64Data;
+
+    // === DUPLICATE DETECTION ===
+    console.log('=== STEP: Duplicate Detection ===');
+    const duplicateResult = await duplicateDetectionService.analyzeWithAI(
+      base64Data, formData, similarContext
+    );
+    
+    let duplicatePromptSection = '';
+    if (duplicateResult) {
+      duplicatePromptSection = duplicateDetectionService.generatePromptSection(
+        duplicateResult.extractedAttributes, 
+        duplicateResult.duplicateAnalysis
+      );
+      console.log('✅ Duplicate analysis completed');
+      console.log('   - Duplicates found:', duplicateResult.duplicateAnalysis.duplicate_analysis.found);
+      console.log('   - Count:', duplicateResult.duplicateAnalysis.duplicate_analysis.count);
+      console.log('   - Severity:', duplicateResult.duplicateAnalysis.duplicate_analysis.severity);
+    } else {
+      console.log('⚠️ Duplicate analysis skipped (insufficient data)');
+    }
 
     // Build system prompt with scenarios if provided
     let systemPrompt = "You are evaluating whether this clothing/accessory item is suitable for different lifestyle scenarios. Think about where and when this item would realistically be used.";
@@ -58,6 +80,12 @@ router.post('/', async (req, res) => {
       
       systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
     }
+    
+    // Add duplicate detection results to system prompt
+    if (duplicatePromptSection) {
+      systemPrompt += duplicatePromptSection;
+    }
+    
     systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
 
     // Call Claude API

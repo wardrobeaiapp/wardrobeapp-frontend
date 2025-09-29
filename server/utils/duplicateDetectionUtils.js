@@ -51,7 +51,7 @@ function calculateSimilarityScore(newItem, existingItem) {
   }
   
   let score = 0;
-  const weights = { color: 40, silhouette: 30, style: 20, material: 10 };
+  const weights = { color: 50, silhouette: 30, style: 10, material: 10 }; // Focus on visual attributes
   const maxScore = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
   
   if (colorsMatch(newItem.color, existingItem.color)) score += weights.color;

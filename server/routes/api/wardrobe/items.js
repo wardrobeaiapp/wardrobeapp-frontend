@@ -102,7 +102,31 @@ router.post('/', auth, async (req, res) => {
 router.put('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, category, color, season, occasion, image } = req.body;
+    console.log('[API] PUT /api/wardrobe-items/:id received:', req.body);
+    
+    const { 
+      name, 
+      category, 
+      subcategory, 
+      color, 
+      pattern,
+      material,
+      brand,
+      silhouette,
+      length,
+      sleeves,
+      style,
+      rise,
+      neckline,
+      heelHeight,
+      bootHeight,
+      type,
+      season, 
+      scenarios,
+      wishlist,
+      imageUrl,
+      tags
+    } = req.body;
 
     // Find item index
     const itemIndex = global.inMemoryWardrobeItems.findIndex(
@@ -116,15 +140,30 @@ router.put('/:id', auth, async (req, res) => {
     // Store old item for coverage recalculation
     const oldItem = { ...global.inMemoryWardrobeItems[itemIndex] };
 
-    // Update item
+    // Update item with all fields
     const updatedItem = {
       ...global.inMemoryWardrobeItems[itemIndex],
-      name: name || global.inMemoryWardrobeItems[itemIndex].name,
-      category: category || global.inMemoryWardrobeItems[itemIndex].category,
-      color: color || global.inMemoryWardrobeItems[itemIndex].color,
-      season: season || global.inMemoryWardrobeItems[itemIndex].season,
-      occasion: occasion || global.inMemoryWardrobeItems[itemIndex].occasion,
-      image: image || global.inMemoryWardrobeItems[itemIndex].image,
+      name: name !== undefined ? name : global.inMemoryWardrobeItems[itemIndex].name,
+      category: category !== undefined ? category : global.inMemoryWardrobeItems[itemIndex].category,
+      subcategory: subcategory !== undefined ? subcategory : global.inMemoryWardrobeItems[itemIndex].subcategory,
+      color: color !== undefined ? color : global.inMemoryWardrobeItems[itemIndex].color,
+      pattern: pattern !== undefined ? pattern : global.inMemoryWardrobeItems[itemIndex].pattern,
+      material: material !== undefined ? material : global.inMemoryWardrobeItems[itemIndex].material,
+      brand: brand !== undefined ? brand : global.inMemoryWardrobeItems[itemIndex].brand,
+      silhouette: silhouette !== undefined ? silhouette : global.inMemoryWardrobeItems[itemIndex].silhouette,
+      length: length !== undefined ? length : global.inMemoryWardrobeItems[itemIndex].length,
+      sleeves: sleeves !== undefined ? sleeves : global.inMemoryWardrobeItems[itemIndex].sleeves,
+      style: style !== undefined ? style : global.inMemoryWardrobeItems[itemIndex].style,
+      rise: rise !== undefined ? rise : global.inMemoryWardrobeItems[itemIndex].rise,
+      neckline: neckline !== undefined ? neckline : global.inMemoryWardrobeItems[itemIndex].neckline,
+      heelHeight: heelHeight !== undefined ? heelHeight : global.inMemoryWardrobeItems[itemIndex].heelHeight,
+      bootHeight: bootHeight !== undefined ? bootHeight : global.inMemoryWardrobeItems[itemIndex].bootHeight,
+      type: type !== undefined ? type : global.inMemoryWardrobeItems[itemIndex].type,
+      season: season !== undefined ? season : global.inMemoryWardrobeItems[itemIndex].season,
+      scenarios: scenarios !== undefined ? scenarios : global.inMemoryWardrobeItems[itemIndex].scenarios,
+      wishlist: wishlist !== undefined ? (wishlist === true || wishlist === 'true') : global.inMemoryWardrobeItems[itemIndex].wishlist,
+      imageUrl: imageUrl !== undefined ? imageUrl : global.inMemoryWardrobeItems[itemIndex].imageUrl,
+      tags: tags !== undefined ? tags : global.inMemoryWardrobeItems[itemIndex].tags
     };
 
     global.inMemoryWardrobeItems[itemIndex] = updatedItem;
