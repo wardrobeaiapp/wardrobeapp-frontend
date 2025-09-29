@@ -137,6 +137,7 @@ export const wardrobeAnalysisService = {
         console.log(`[wardrobeAnalysisService] Generated gap analysis context: ${similarContext.length} items`);
       }
 
+
       // Generate scenario coverage using dedicated service
       const scenarioCoverage = user?.id && formData ? 
         await generateScenarioCoverage(user.id, formData, scenarios, wardrobeItems) : 
@@ -169,7 +170,9 @@ export const wardrobeAnalysisService = {
           // Include user's wardrobe goals for personalized recommendations
           userGoals: userGoals.length > 0 ? userGoals : undefined,
           // Include pre-filled data from wishlist item if available (filtered to exclude metadata)
-          preFilledData: preFilledData ? filterPreFilledData(preFilledData) : undefined
+          preFilledData: preFilledData ? filterPreFilledData(preFilledData) : undefined,
+          // Include user ID for scenario-based filtering
+          userId: user?.id
         }
       );
 

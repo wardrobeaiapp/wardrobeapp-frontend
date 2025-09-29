@@ -20,9 +20,10 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios, scenarioCoverage, userGoals } = req.body;
+    const { imageBase64, formData, scenarios, scenarioCoverage, userGoals, userId } = req.body;
     
     console.log('=== Simple Analysis Request ===');
+    console.log('userId:', userId || 'not provided');
     console.log('imageBase64:', imageBase64 ? 'present' : 'missing');
     console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
     console.log('scenarios:', scenarios || 'none');
