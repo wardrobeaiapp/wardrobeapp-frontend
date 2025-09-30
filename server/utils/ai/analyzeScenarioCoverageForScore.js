@@ -1,4 +1,40 @@
 const generateObjectiveFinalReason = require('./generateObjectiveFinalReason');
+const { calculateVarietyScoreModifier } = require('../duplicateDetectionUtils');
+
+/**
+ * Format variety analysis into natural user-facing message
+ */
+function formatVarietyMessage(varietyModifier) {
+  if (!varietyModifier || varietyModifier.impact === 'NEUTRAL' || varietyModifier.impact === 'SKIPPED') {
+    return '';
+  }
+  
+  if (varietyModifier.modifier > 0) {
+    // Positive variety impact
+    const boosts = varietyModifier.variety_boosts || [];
+    const varietyTypes = boosts.map(boost => {
+      switch (boost) {
+        case 'NEW_COLOR': return 'color';
+        case 'NEW_STYLE': return 'style';
+        case 'NEW_SILHOUETTE': return 'silhouette';
+        default: return boost.toLowerCase().replace('new_', '');
+      }
+    });
+    
+    if (varietyTypes.length === 1) {
+      return ` This piece would expand your styling options by adding a new ${varietyTypes[0]}.`;
+    } else if (varietyTypes.length === 2) {
+      return ` This piece would expand your styling options by adding new ${varietyTypes.join(' and ')}.`;
+    } else if (varietyTypes.length > 2) {
+      return ` This piece would expand your styling options with new ${varietyTypes.slice(0, -1).join(', ')} and ${varietyTypes[varietyTypes.length - 1]}.`;
+    }
+  } else if (varietyModifier.modifier < 0) {
+    // Negative variety impact
+    return ', but this would limit your styling variety as you already have many similar pieces.';
+  }
+  
+  return '';
+}
 
 /**
  * Analyze scenario coverage to determine initial score based on gap analysis
@@ -58,6 +94,26 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   console.log('✅ No duplicates detected - analyzing scenario coverage for score...');
   console.log('Suitable scenarios from Claude:', suitableScenarios);
+  console.log('Raw scenario coverage entries:', scenarioCoverage.length);
+  
+  // DEDUPLICATE scenario coverage data (fix for duplicate database rows)
+  const uniqueCoverage = [];
+  const seen = new Set();
+  
+  scenarioCoverage.forEach((coverage, index) => {
+    console.log(`  [${index}] ${coverage.scenarioName} - ${coverage.category} - ${coverage.gapType || 'no gap'} - season: ${coverage.season || 'none'}`);
+    
+    const key = `${coverage.scenarioName || 'unknown'}-${coverage.category || 'unknown'}-${coverage.season || 'none'}-${coverage.subcategoryName || 'unknown'}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueCoverage.push(coverage);
+    }
+  });
+  
+  console.log('After deduplication:', uniqueCoverage.length, 'unique entries');
+  
+  // Use deduplicated data for the rest of the analysis
+  scenarioCoverage = uniqueCoverage;
   
   let relevantCoverage = [];
   
@@ -170,14 +226,34 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     console.log(`Standard scoring - Gap type '${gapType}': ${initialScore}`);
   }
   
+  // VARIETY ANALYSIS (only for expansion gaps)
+  let varietyModifier = null;
+  let finalScore = initialScore;
+  
+  if (gapType === 'expansion' && duplicateAnalysis && !duplicateAnalysis.duplicate_analysis.found) {
+    // Only run variety analysis for expansion gaps when no duplicates found
+    // We need the newItem from duplicateAnalysis context - for now, skip if not available
+    console.log('🎨 Running variety analysis for expansion gap...');
+    // TODO: Implement when we have access to newItem and existingItems
+    // varietyModifier = calculateVarietyScoreModifier(newItem, existingItems, gapType);
+    // finalScore = initialScore + varietyModifier.modifier;
+  }
+  
   // Generate objective final reason
   const objectiveReason = generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals);
   
+  // Add variety messaging if applicable
+  let finalReason = objectiveReason;
+  if (varietyModifier) {
+    finalReason += formatVarietyMessage(varietyModifier);
+  }
+  
   return {
-    score: initialScore,
-    reason: objectiveReason,
+    score: finalScore,
+    reason: finalReason,
     relevantCoverage: relevantCoverage,
-    gapType: gapType
+    gapType: gapType,
+    varietyAnalysis: varietyModifier
   };
 }
 

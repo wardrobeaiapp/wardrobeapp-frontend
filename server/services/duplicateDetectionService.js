@@ -145,11 +145,7 @@ class DuplicateDetectionService {
       promptSection += `\n- NO DUPLICATES: No similar items detected`;
     }
     
-    promptSection += `\nVARIETY IMPACT:`;
-    promptSection += `\n- ${duplicateAnalysis.variety_impact.message}`;
-    promptSection += `\n- Color dominance risk: ${duplicateAnalysis.variety_impact.would_dominate ? 'YES' : 'NO'}`;
-    
-    promptSection += `\nALGORITHMIC RECOMMENDATION: ${duplicateAnalysis.recommendation}`;
+    // Variety impact and recommendations are now handled separately in coverage analysis
     
     promptSection += `\n\n🚫 CRITICAL INSTRUCTION: Use ONLY the duplicate analysis above. Do NOT assume or mention any items that aren't explicitly listed. Do NOT make up items like "burgundy cardigan" or "black leather jacket" - only reference items actually found by the algorithm. If no duplicates were found, say so clearly. Your job is to interpret the algorithmic findings, not to guess what items might exist.`;
     

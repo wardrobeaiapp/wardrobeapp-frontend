@@ -41,7 +41,7 @@ function findCriticalDuplicates(newItem, existingItems) {
     return {
       item,
       similarity_score: score,
-      overlap_factors: getOverlapFactors(newItem, item)
+      overlap_factors: identifyDuplicateFactors(newItem, item)
     };
   });
   
@@ -54,7 +54,7 @@ function findCriticalDuplicates(newItem, existingItems) {
 /**
  * Get overlap factors between items
  */
-function getOverlapFactors(newItem, existingItem) {
+function identifyDuplicateFactors(newItem, existingItem) {
   const factors = [];
   
   if (colorsMatch(newItem.color, existingItem.color)) {
@@ -73,42 +73,219 @@ function getOverlapFactors(newItem, existingItem) {
 }
 
 /**
+ * Analyze stylistic diversity and identify potential traps
+ */
+function analyzeStyleDiversity(newItem, existingItems) {
+  const categoryItems = existingItems.filter(item => item.category === newItem.category);
+  
+  // Get items that match seasons (if item has seasons)
+  const seasonalItems = newItem.seasons && newItem.seasons.length > 0 ? 
+    categoryItems.filter(item => {
+      if (!item.seasons || item.seasons.length === 0) return true; // Include items without seasons
+      return item.seasons.some(season => newItem.seasons.includes(season));
+    }) : categoryItems;
+  
+  // Analyze different style dimensions
+  const styleAnalysis = {};
+  const dimensions = ['style', 'silhouette', 'color', 'pattern'];
+  
+  dimensions.forEach(dim => {
+    const counts = {};
+    const totalItems = seasonalItems.length + 1; // +1 for new item
+    
+    // Count existing items
+    seasonalItems.forEach(item => {
+      if (item[dim]) counts[item[dim]] = (counts[item[dim]] || 0) + 1;
+    });
+    
+    // Add new item
+    if (newItem[dim]) counts[newItem[dim]] = (counts[newItem[dim]] || 0) + 1;
+    
+    const uniqueOptions = Object.keys(counts).length;
+    const mostCommon = Object.entries(counts)
+      .sort(([,a], [,b]) => b - a)[0];
+    
+    const dominantPercentage = mostCommon ? Math.round((mostCommon[1] / totalItems) * 100) : 0;
+    const isNewOption = newItem[dim] && !seasonalItems.some(item => item[dim] === newItem[dim]);
+    
+    styleAnalysis[dim] = {
+      unique_count: uniqueOptions,
+      dominant_option: mostCommon ? mostCommon[0] : null,
+      dominant_percentage: dominantPercentage,
+      is_monotonous: dominantPercentage >= 70, // 70%+ of same style
+      adds_new_option: isNewOption,
+      variety_score: uniqueOptions >= 4 ? 'HIGH' : uniqueOptions >= 2 ? 'MEDIUM' : 'LOW'
+    };
+  });
+  
+  // Identify stylistic traps
+  const traps = [];
+  const warnings = [];
+  
+  if (styleAnalysis.style.is_monotonous) {
+    traps.push(`STYLE_TRAP: ${styleAnalysis.style.dominant_percentage}% of items are "${styleAnalysis.style.dominant_option}"`);
+  }
+  
+  if (styleAnalysis.silhouette.is_monotonous) {
+    traps.push(`SILHOUETTE_TRAP: ${styleAnalysis.silhouette.dominant_percentage}% are "${styleAnalysis.silhouette.dominant_option}" silhouette`);
+  }
+  
+  if (styleAnalysis.color.is_monotonous) {
+    traps.push(`COLOR_TRAP: ${styleAnalysis.color.dominant_percentage}% are "${styleAnalysis.color.dominant_option}" colored`);
+  }
+  
+  // Generate recommendations
+  const recommendations = [];
+  if (styleAnalysis.style.adds_new_option) {
+    recommendations.push(`Adds new style "${newItem.style}" - great for variety!`);
+  }
+  if (styleAnalysis.silhouette.adds_new_option) {
+    recommendations.push(`Introduces "${newItem.silhouette}" silhouette - expands your options`);
+  }
+  if (styleAnalysis.color.adds_new_option) {
+    recommendations.push(`Brings new color "${newItem.color}" to your ${newItem.category} collection`);
+  }
+  
+  return {
+    style_analysis: styleAnalysis,
+    stylistic_traps: traps,
+    variety_benefits: recommendations,
+    overall_variety_score: Object.values(styleAnalysis)
+      .reduce((sum, analysis) => sum + (analysis.variety_score === 'HIGH' ? 3 : analysis.variety_score === 'MEDIUM' ? 2 : 1), 0)
+  };
+}
+
+/**
+ * Determine if variety analysis should be skipped based on gap type
+ * @param {string} gapType - The gap analysis type
+ * @returns {boolean} True if variety analysis should be skipped
+ */
+function shouldSkipVarietyAnalysis(gapType) {
+  // Only run variety analysis for expansion gaps - when you have adequate coverage but room to add selectively
+  const runAnalysisFor = ['expansion'];
+  return !runAnalysisFor.includes(gapType);
+}
+
+/**
+ * Calculate pure variety score modifier - ONLY about style diversity, NOT duplicates
+ * Returns: +2, +1, 0, -1, -2 to modify the base score (1-10 scale)
+ * NOTE: Duplicate detection is handled separately in base score
+ * 
+ * @param {Object} newItem - The item being analyzed
+ * @param {Array} existingItems - Existing wardrobe items
+ * @param {string} gapType - Gap analysis type: 'critical', 'improvement', 'expansion', 'satisfied', 'oversaturated'
+ */
+function calculateVarietyScoreModifier(newItem, existingItems, gapType = null) {
+  // Skip variety analysis based on gap type
+  if (shouldSkipVarietyAnalysis(gapType)) {
+    return {
+      modifier: 0,
+      impact: 'SKIPPED',
+      reasoning: [`Variety analysis skipped - ${gapType} gap doesn't benefit from variety scoring`],
+      variety_boosts: [],
+      monotony_warnings: [],
+      skipped_reason: `Gap type "${gapType}" doesn't require variety analysis`
+    };
+  }
+  const categoryItems = existingItems.filter(item => item.category === newItem.category);
+  
+  // Get items that match seasons (if item has seasons)
+  const seasonalItems = newItem.seasons && newItem.seasons.length > 0 ? 
+    categoryItems.filter(item => {
+      if (!item.seasons || item.seasons.length === 0) return true;
+      return item.seasons.some(season => newItem.seasons.includes(season));
+    }) : categoryItems;
+  
+  let scoreModifier = 0;
+  let reasoning = [];
+  
+  // POSITIVE MODIFIERS - Adds new variety dimensions
+  const varietyBoosts = [];
+  
+  // Check if adds new style to category+season
+  const existingStyles = seasonalItems.map(item => item.style).filter(Boolean);
+  const isNewStyle = newItem.style && !existingStyles.includes(newItem.style);
+  if (isNewStyle) varietyBoosts.push('NEW_STYLE');
+  
+  // Check if adds new silhouette to category+season  
+  const existingSilhouettes = seasonalItems.map(item => item.silhouette).filter(Boolean);
+  const isNewSilhouette = newItem.silhouette && !existingSilhouettes.includes(newItem.silhouette);
+  if (isNewSilhouette) varietyBoosts.push('NEW_SILHOUETTE');
+  
+  // Check if adds new color to category+season
+  const existingColors = seasonalItems.map(item => item.color).filter(Boolean);
+  const isNewColor = newItem.color && !existingColors.includes(newItem.color);
+  if (isNewColor) varietyBoosts.push('NEW_COLOR');
+  
+  // Apply positive modifiers based on variety boosts
+  if (varietyBoosts.length >= 3) {
+    scoreModifier += 2;
+    reasoning.push('MAJOR_VARIETY: Adds new style + silhouette + color');
+  } else if (varietyBoosts.length >= 2) {
+    scoreModifier += 1;
+    reasoning.push(`GOOD_VARIETY: Adds ${varietyBoosts.join(' + ').toLowerCase()}`);
+  } else if (varietyBoosts.length >= 1) {
+    scoreModifier += 1;
+    reasoning.push(`MINOR_VARIETY: Adds ${varietyBoosts[0].toLowerCase()}`);
+  }
+  
+  // NEGATIVE MODIFIERS - Creates monotony (style dominance)
+  const monotonyWarnings = [];
+  
+  // Check style monotony (70%+ threshold)
+  if (newItem.style) {
+    const styleCount = seasonalItems.filter(item => item.style === newItem.style).length + 1;
+    const stylePercentage = Math.round((styleCount / (seasonalItems.length + 1)) * 100);
+    if (stylePercentage >= 70) {
+      monotonyWarnings.push('STYLE_DOMINANCE');
+    }
+  }
+  
+  // Check silhouette monotony
+  if (newItem.silhouette) {
+    const silhouetteCount = seasonalItems.filter(item => item.silhouette === newItem.silhouette).length + 1;
+    const silhouettePercentage = Math.round((silhouetteCount / (seasonalItems.length + 1)) * 100);
+    if (silhouettePercentage >= 70) {
+      monotonyWarnings.push('SILHOUETTE_DOMINANCE');
+    }
+  }
+  
+  // Apply negative modifiers (but don't double-penalize with duplicate detection)
+  if (monotonyWarnings.length >= 2) {
+    scoreModifier -= 1; // Only -1, not -2, since duplicates are handled elsewhere
+    reasoning.push('STYLE_MONOTONY: Multiple style dimensions becoming dominant');
+  }
+  
+  // Cap the modifier between -1 and +2 (asymmetric - variety is more valuable than monotony penalty)
+  scoreModifier = Math.max(-1, Math.min(2, scoreModifier));
+  
+  return {
+    modifier: scoreModifier,
+    impact: scoreModifier > 0 ? 'ENRICHES' : scoreModifier < 0 ? 'MONOTONOUS' : 'NEUTRAL',
+    reasoning: reasoning,
+    variety_boosts: varietyBoosts,
+    monotony_warnings: monotonyWarnings
+  };
+}
+
+/**
  * Analyze duplicate situation and generate structured output for AI
  */
 function analyzeDuplicatesForAI(newItem, existingItems) {
   const criticalDuplicates = findCriticalDuplicates(newItem, existingItems);
-  
-  // Calculate variety impact
-  const categoryItems = existingItems.filter(item => item.category === newItem.category);
-  const colorCounts = {};
-  categoryItems.forEach(item => {
-    if (item.color) colorCounts[item.color] = (colorCounts[item.color] || 0) + 1;
-  });
-  
-  const newColor = newItem.color;
-  const currentColorCount = colorCounts[newColor] || 0;
-  const afterAddition = currentColorCount + 1;
-  const colorPercentage = Math.round((afterAddition / (categoryItems.length + 1)) * 100);
   
   return {
     duplicate_analysis: {
       found: criticalDuplicates.length > 0,
       count: criticalDuplicates.length,
       items: criticalDuplicates.map(d => d.item.name),
+      similarity_scores: criticalDuplicates.map(d => d.similarity_score),
+      overlap_factors: criticalDuplicates.map(d => d.overlap_factors),
       severity: criticalDuplicates.length >= 3 ? 'EXCESSIVE' : 
                 criticalDuplicates.length >= 2 ? 'HIGH' : 
                 criticalDuplicates.length >= 1 ? 'MODERATE' : 'NONE'
-    },
-    variety_impact: {
-      color_percentage: colorPercentage,
-      would_dominate: colorPercentage >= 60,
-      message: colorPercentage >= 60 ? 
-        `Would make ${colorPercentage}% of your ${newItem.category?.toLowerCase()} items the same color` :
-        'Maintains good color variety'
-    },
-    recommendation: criticalDuplicates.length >= 2 ? 'SKIP' :
-                   criticalDuplicates.length >= 1 && colorPercentage >= 60 ? 'CONSIDER' : 
-                   'ANALYZE_FURTHER'
+    }
+    // All variety analysis removed - will be handled separately after gap analysis
   };
 }
 
@@ -162,10 +339,12 @@ function parseExtractionResponse(response) {
 }
 
 module.exports = {
-  // Core functions
-  calculateSimilarityScore,
   findCriticalDuplicates,
   analyzeDuplicatesForAI,
+  analyzeStyleDiversity,
+  calculateVarietyScoreModifier,
+  shouldSkipVarietyAnalysis,
+  identifyDuplicateFactors,
   generateExtractionPrompt,
   parseExtractionResponse,
   
