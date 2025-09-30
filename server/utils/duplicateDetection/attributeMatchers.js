@@ -1,0 +1,103 @@
+/**
+ * Generic attribute matching functions for duplicate detection
+ * All functions are case-insensitive and handle null/undefined values
+ */
+
+const { COLOR_FAMILIES, SILHOUETTE_FAMILIES } = require('../../constants/wardrobeOptions');
+
+/**
+ * Generic case-insensitive string matcher
+ */
+function simpleMatch(value1, value2) {
+  if (!value1 || !value2) return false;
+  return value1.toLowerCase() === value2.toLowerCase();
+}
+
+/**
+ * Check if two colors are considered matching (case insensitive + color families)
+ */
+function colorsMatch(color1, color2) {
+  if (!color1 || !color2) return false;
+  if (color1.toLowerCase() === color2.toLowerCase()) return true;
+  
+  // For color families, find canonical color name first
+  const findCanonicalColor = (color) => {
+    for (const family of Object.values(COLOR_FAMILIES)) {
+      const match = family.find(c => c.toLowerCase() === color.toLowerCase());
+      if (match) return match;
+    }
+    return color;
+  };
+  
+  const canonical1 = findCanonicalColor(color1);
+  const canonical2 = findCanonicalColor(color2);
+  
+  for (const family of Object.values(COLOR_FAMILIES)) {
+    if (family.includes(canonical1) && family.includes(canonical2)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if two silhouettes are considered matching
+ * Special handling for basic casual tops (t-shirts, tanks)
+ */
+function silhouettesMatch(silhouette1, silhouette2, category, subcategory) {
+  if (!silhouette1 || !silhouette2) return false;
+  if (silhouette1.toLowerCase() === silhouette2.toLowerCase()) return true;
+  
+  // Special case: For basic casual tops, treat Fitted and Regular as similar
+  const isBasicTop = category?.toLowerCase() === 'top' && 
+                     (subcategory?.toLowerCase() === 't-shirt' || 
+                      subcategory?.toLowerCase() === 'tank top');
+  
+  if (isBasicTop) {
+    const basicFits = ['Fitted', 'Regular'];
+    if (basicFits.includes(silhouette1) && basicFits.includes(silhouette2)) {
+      return true;
+    }
+  }
+  
+  // Check silhouette families for other categories
+  for (const family of Object.values(SILHOUETTE_FAMILIES)) {
+    if (family.includes(silhouette1) && family.includes(silhouette2)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if two patterns are considered matching
+ * Normalizes empty strings and 'solid'/'plain' to be equivalent
+ */
+function patternMatches(pattern1, pattern2) {
+  if (!pattern1 || !pattern2) return false;
+  
+  const normalize = (p) => {
+    const lower = p.toLowerCase().trim();
+    return (lower === '' || lower === 'solid' || lower === 'plain') ? 'solid' : lower;
+  };
+  
+  return normalize(pattern1) === normalize(pattern2);
+}
+
+// Export all matchers
+module.exports = {
+  simpleMatch,
+  colorsMatch,
+  silhouettesMatch,
+  patternMatches,
+  
+  // Simple matchers using the generic function
+  styleMatches: simpleMatch,
+  materialMatches: simpleMatch,
+  necklineMatches: simpleMatch,
+  sleevesMatch: simpleMatch,
+  heelHeightMatches: simpleMatch,
+  bootHeightMatches: simpleMatch,
+  riseMatches: simpleMatch,
+  lengthMatches: simpleMatch
+};
