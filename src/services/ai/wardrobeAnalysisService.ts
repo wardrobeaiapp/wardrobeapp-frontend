@@ -1,7 +1,9 @@
 import axios from 'axios';
-import { filterStylingContext, filterSimilarContext } from './wardrobeContextHelpers';import { getUserAnalysisData } from './analysis/userDataService';
+import { filterStylingContext, filterSimilarContext } from './wardrobeContextHelpers';
+import { getUserAnalysisData } from './analysis/userDataService';
 import { generateScenarioCoverage } from './analysis/coverageService';
 import { processImageForAnalysis } from './analysis/imageProcessingService';
+import { filterItemContextForAI, getPayloadStats } from './itemContextFilter';
 import { WardrobeItem } from '../../types';
 import type { WardrobeItemAnalysis } from './types';
 
@@ -137,6 +139,30 @@ export const wardrobeAnalysisService = {
         console.log(`[wardrobeAnalysisService] Generated gap analysis context: ${similarContext.length} items`);
       }
 
+      // Debug: Log raw items BEFORE filtering
+      if (similarContext.length > 0) {
+        console.log('[wardrobeAnalysisService] 🔍 RAW similarContext (first item):', JSON.stringify(similarContext[0], null, 2));
+      }
+      
+      // Filter contexts to reduce payload size before sending to backend
+      const filteredStylingContext = filterItemContextForAI(stylingContext);
+      const filteredSimilarContext = filterItemContextForAI(similarContext);
+      
+      // Debug: Log filtered items AFTER filtering
+      if (filteredSimilarContext.length > 0) {
+        console.log('[wardrobeAnalysisService] 🔍 FILTERED similarContext (first item):', JSON.stringify(filteredSimilarContext[0], null, 2));
+      }
+      
+      // Log payload reduction stats
+      if (stylingContext.length > 0) {
+        const stylingStats = getPayloadStats(stylingContext, filteredStylingContext);
+        console.log(`[wardrobeAnalysisService] Styling context payload reduced by ${stylingStats.reductionPercent}% (${stylingStats.reduction} chars)`);
+      }
+      
+      if (similarContext.length > 0) {
+        const similarStats = getPayloadStats(similarContext, filteredSimilarContext);
+        console.log(`[wardrobeAnalysisService] Similar context payload reduced by ${similarStats.reductionPercent}% (${similarStats.reduction} chars)`);
+      }
 
       // Generate scenario coverage using dedicated service
       const scenarioCoverage = user?.id && formData ? 
@@ -162,9 +188,9 @@ export const wardrobeAnalysisService = {
             subcategory: formData.subcategory,
             seasons: formData.seasons
           } : undefined,
-          // Include wardrobe context for enhanced analysis
-          stylingContext: stylingContext.length > 0 ? stylingContext : undefined,
-          similarContext: similarContext.length > 0 ? similarContext : undefined,
+          // Include wardrobe context for enhanced analysis (filtered to reduce payload)
+          stylingContext: filteredStylingContext.length > 0 ? filteredStylingContext : undefined,
+          similarContext: filteredSimilarContext.length > 0 ? filteredSimilarContext : undefined,
           // Include scenario coverage data calculated in frontend
           scenarioCoverage: scenarioCoverage || undefined,
           // Include user's wardrobe goals for personalized recommendations

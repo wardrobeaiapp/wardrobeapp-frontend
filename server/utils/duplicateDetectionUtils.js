@@ -11,14 +11,26 @@ const {
 } = require('../constants/wardrobeOptions');
 
 /**
- * Check if two colors are considered matching
+ * Check if two colors are considered matching (case insensitive)
  */
 function colorsMatch(color1, color2) {
   if (!color1 || !color2) return false;
-  if (color1 === color2) return true;
+  if (color1.toLowerCase() === color2.toLowerCase()) return true;
+  
+  // For color families, we need to find the canonical color name first
+  const findCanonicalColor = (color) => {
+    for (const family of Object.values(COLOR_FAMILIES)) {
+      const match = family.find(c => c.toLowerCase() === color.toLowerCase());
+      if (match) return match;
+    }
+    return color; // Return original if not found in families
+  };
+  
+  const canonical1 = findCanonicalColor(color1);
+  const canonical2 = findCanonicalColor(color2);
   
   for (const family of Object.values(COLOR_FAMILIES)) {
-    if (family.includes(color1) && family.includes(color2)) {
+    if (family.includes(canonical1) && family.includes(canonical2)) {
       return true;
     }
   }
@@ -30,7 +42,7 @@ function colorsMatch(color1, color2) {
  */
 function silhouettesMatch(silhouette1, silhouette2) {
   if (!silhouette1 || !silhouette2) return false;
-  if (silhouette1 === silhouette2) return true;
+  if (silhouette1.toLowerCase() === silhouette2.toLowerCase()) return true;
   
   for (const family of Object.values(SILHOUETTE_FAMILIES)) {
     if (family.includes(silhouette1) && family.includes(silhouette2)) {
@@ -41,23 +53,149 @@ function silhouettesMatch(silhouette1, silhouette2) {
 }
 
 /**
+ * Check if two styles are considered matching (case insensitive)
+ */
+function styleMatches(style1, style2) {
+  if (!style1 || !style2) return false;
+  return style1.toLowerCase() === style2.toLowerCase();
+}
+
+/**
+ * Check if two materials are considered matching (case insensitive)  
+ */
+function materialMatches(material1, material2) {
+  if (!material1 || !material2) return false;
+  return material1.toLowerCase() === material2.toLowerCase();
+}
+
+/**
+ * Check if two patterns are considered matching (case insensitive)
+ */
+function patternMatches(pattern1, pattern2) {
+  if (!pattern1 || !pattern2) return false;
+  // Normalize empty strings and 'solid' to mean the same thing
+  const normalize = (p) => {
+    const lower = p.toLowerCase().trim();
+    return (lower === '' || lower === 'solid' || lower === 'plain') ? 'solid' : lower;
+  };
+  return normalize(pattern1) === normalize(pattern2);
+}
+
+/**
+ * Check if two necklines are considered matching (case insensitive)
+ */
+function necklineMatches(neckline1, neckline2) {
+  if (!neckline1 || !neckline2) return false;
+  return neckline1.toLowerCase() === neckline2.toLowerCase();
+}
+
+/**
+ * Check if two sleeve types are considered matching (case insensitive)
+ */
+function sleevesMatch(sleeves1, sleeves2) {
+  if (!sleeves1 || !sleeves2) return false;
+  return sleeves1.toLowerCase() === sleeves2.toLowerCase();
+}
+
+/**
  * Calculate similarity score between items (0-100)
+ * Uses category-specific weights for more accurate duplicate detection
  */
 function calculateSimilarityScore(newItem, existingItem) {
-  // Must match category and subcategory
-  if (newItem.category !== existingItem.category || 
-      newItem.subcategory !== existingItem.subcategory) {
+  // Must match category and subcategory (case insensitive)
+  if (newItem.category?.toLowerCase() !== existingItem.category?.toLowerCase() || 
+      newItem.subcategory?.toLowerCase() !== existingItem.subcategory?.toLowerCase()) {
     return 0;
   }
   
   let score = 0;
-  const weights = { color: 50, silhouette: 30, style: 10, material: 10 }; // Focus on visual attributes
-  const maxScore = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+  let weights;
   
-  if (colorsMatch(newItem.color, existingItem.color)) score += weights.color;
-  if (silhouettesMatch(newItem.silhouette, existingItem.silhouette)) score += weights.silhouette;
-  if (newItem.style === existingItem.style) score += weights.style;
-  if (newItem.material === existingItem.material) score += weights.material;
+  // Category-specific weights
+  const category = newItem.category?.toLowerCase();
+  const subcategory = newItem.subcategory?.toLowerCase();
+  
+  if (category === 'top' && (subcategory === 't-shirt' || subcategory === 'tank top')) {
+    // For t-shirts/tanks: pattern, neckline, sleeves matter more than exact silhouette
+    weights = { 
+      color: 40, 
+      pattern: 20,      // Plain vs patterned is important
+      neckline: 15,     // Crew vs v-neck vs scoop matters
+      sleeves: 10,      // Short vs long matters
+      silhouette: 10,   // Less important for basic tops
+      style: 5 
+    };
+  } else if (category === 'bottom') {
+    // For bottoms: silhouette is very important (skinny vs wide leg)
+    weights = { 
+      color: 40, 
+      silhouette: 35,   // Very important for pants/skirts
+      style: 15, 
+      material: 10 
+    };
+  } else if (category === 'outerwear') {
+    // For outerwear: style and silhouette matter a lot
+    weights = { 
+      color: 35, 
+      silhouette: 30, 
+      style: 25, 
+      material: 10 
+    };
+  } else {
+    // Default weights for other categories
+    weights = { 
+      color: 50, 
+      silhouette: 30, 
+      style: 10, 
+      material: 10 
+    };
+  }
+  
+  // Calculate dynamic max score based on available attributes
+  // Only count weights for attributes that exist on BOTH items
+  let maxScore = 0;
+  let applicableWeights = {};
+  
+  if (weights.color && newItem.color && existingItem.color) {
+    maxScore += weights.color;
+    applicableWeights.color = weights.color;
+  }
+  if (weights.silhouette && newItem.silhouette && existingItem.silhouette) {
+    maxScore += weights.silhouette;
+    applicableWeights.silhouette = weights.silhouette;
+  }
+  if (weights.style && newItem.style && existingItem.style) {
+    maxScore += weights.style;
+    applicableWeights.style = weights.style;
+  }
+  if (weights.material && newItem.material && existingItem.material) {
+    maxScore += weights.material;
+    applicableWeights.material = weights.material;
+  }
+  if (weights.pattern && newItem.pattern && existingItem.pattern) {
+    maxScore += weights.pattern;
+    applicableWeights.pattern = weights.pattern;
+  }
+  if (weights.neckline && newItem.neckline && existingItem.neckline) {
+    maxScore += weights.neckline;
+    applicableWeights.neckline = weights.neckline;
+  }
+  if (weights.sleeves && newItem.sleeves && existingItem.sleeves) {
+    maxScore += weights.sleeves;
+    applicableWeights.sleeves = weights.sleeves;
+  }
+  
+  // If no common attributes, can't compare
+  if (maxScore === 0) return 0;
+  
+  // Calculate score based on available attributes
+  if (applicableWeights.color && colorsMatch(newItem.color, existingItem.color)) score += applicableWeights.color;
+  if (applicableWeights.silhouette && silhouettesMatch(newItem.silhouette, existingItem.silhouette)) score += applicableWeights.silhouette;
+  if (applicableWeights.style && styleMatches(newItem.style, existingItem.style)) score += applicableWeights.style;
+  if (applicableWeights.material && materialMatches(newItem.material, existingItem.material)) score += applicableWeights.material;
+  if (applicableWeights.pattern && patternMatches(newItem.pattern, existingItem.pattern)) score += applicableWeights.pattern;
+  if (applicableWeights.neckline && necklineMatches(newItem.neckline, existingItem.neckline)) score += applicableWeights.neckline;
+  if (applicableWeights.sleeves && sleevesMatch(newItem.sleeves, existingItem.sleeves)) score += applicableWeights.sleeves;
   
   return Math.round((score / maxScore) * 100);
 }
@@ -66,18 +204,44 @@ function calculateSimilarityScore(newItem, existingItem) {
  * Find critical duplicates (85%+ similarity)
  */
 function findCriticalDuplicates(newItem, existingItems) {
-  return existingItems
-    .filter(item => 
-      item.category === newItem.category && 
-      item.subcategory === newItem.subcategory
-    )
-    .map(item => ({
+  console.log('🔍 DEBUG - Finding duplicates for:', JSON.stringify(newItem, null, 2));
+  
+  const categoryMatches = existingItems.filter(item => 
+    item.category?.toLowerCase() === newItem.category?.toLowerCase() && 
+    item.subcategory?.toLowerCase() === newItem.subcategory?.toLowerCase()
+  );
+  
+  console.log('🔍 DEBUG - Category/subcategory matches found:', categoryMatches.length);
+  
+  const withScores = categoryMatches.map(item => {
+    const score = calculateSimilarityScore(newItem, item);
+    console.log(`🔍 DEBUG - Comparing with "${item.name}":`, {
+      itemAttributes: { 
+        category: item.category, 
+        subcategory: item.subcategory, 
+        color: item.color, 
+        silhouette: item.silhouette, 
+        style: item.style,
+        pattern: item.pattern,
+        neckline: item.neckline,
+        sleeves: item.sleeves,
+        material: item.material
+      },
+      similarityScore: score,
+      passesThreshold: score >= 85
+    });
+    
+    return {
       item,
-      similarity_score: calculateSimilarityScore(newItem, item),
+      similarity_score: score,
       overlap_factors: getOverlapFactors(newItem, item)
-    }))
-    .filter(match => match.similarity_score >= 85)
-    .sort((a, b) => b.similarity_score - a.similarity_score);
+    };
+  });
+  
+  const duplicates = withScores.filter(match => match.similarity_score >= 85);
+  console.log('🔍 DEBUG - Duplicates found (85%+ threshold):', duplicates.length);
+  
+  return duplicates.sort((a, b) => b.similarity_score - a.similarity_score);
 }
 
 /**
@@ -193,6 +357,8 @@ function parseExtractionResponse(response) {
 module.exports = {
   colorsMatch,
   silhouettesMatch,
+  styleMatches,
+  materialMatches,
   calculateSimilarityScore,
   findCriticalDuplicates,
   analyzeDuplicatesForAI,

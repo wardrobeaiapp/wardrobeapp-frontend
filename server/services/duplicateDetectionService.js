@@ -51,10 +51,20 @@ class DuplicateDetectionService {
         color: extractedAttributes.color,
         silhouette: extractedAttributes.silhouette,
         style: extractedAttributes.style,
-        seasons: formData.seasons
+        seasons: formData.seasons,
+        // Include additional attributes from formData if available
+        pattern: formData.pattern,
+        neckline: formData.neckline,
+        sleeves: formData.sleeves,
+        material: formData.material
       };
 
       const allContextItems = similarContext || [];
+      
+      console.log('🔍 DEBUG - enrichedItemData:', JSON.stringify(enrichedItemData, null, 2));
+      console.log('🔍 DEBUG - allContextItems count:', allContextItems.length);
+      console.log('🔍 DEBUG - allContextItems sample:', JSON.stringify(allContextItems.slice(0, 3), null, 2));
+      
       const duplicateAnalysis = analyzeDuplicatesForAI(enrichedItemData, allContextItems);
       
       console.log('Duplicate analysis result:', JSON.stringify(duplicateAnalysis, null, 2));

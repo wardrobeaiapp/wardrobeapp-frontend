@@ -16,6 +16,7 @@ const anthropic = new Anthropic({
 
 
 
+
 // @route   POST /api/analyze-wardrobe-item-simple
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
@@ -43,6 +44,10 @@ router.post('/', async (req, res) => {
 
     // === DUPLICATE DETECTION ===
     console.log('=== STEP: Duplicate Detection ===');
+    console.log('🔍 DEBUG - similarContext count:', similarContext?.length || 0);
+    console.log('🔍 DEBUG - similarContext sample (first 2):', JSON.stringify(similarContext?.slice(0, 2), null, 2));
+    console.log('🔍 DEBUG - formData:', JSON.stringify(formData, null, 2));
+    
     const duplicateResult = await duplicateDetectionService.analyzeWithAI(
       base64Data, formData, similarContext
     );

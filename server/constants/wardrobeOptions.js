@@ -21,8 +21,10 @@ const SILHOUETTE_OPTIONS = {
 };
 
 // Color families for duplicate detection
+// Note: Keep families narrow for duplicate detection - Black and Grey are different enough
 const COLOR_FAMILIES = {
-  blacks: ['Black', 'Grey'],
+  blacks: ['Black'],
+  greys: ['Grey'],
   whites: ['White', 'Cream', 'Beige'],
   blues: ['Navy', 'Blue', 'Light Blue', 'Turquoise'],
   greens: ['Green'],
@@ -36,9 +38,8 @@ const COLOR_FAMILIES = {
 
 // Silhouette families for duplicate detection
 const SILHOUETTE_FAMILIES = {
-  fitted_group: ['Fitted'],
+  fitted_regular_group: ['Fitted', 'Regular', 'Regular Fit'],  // Group similar basic fits together
   loose_group: ['Loose'],
-  regular_group: ['Regular'],
   tight_group: ['Skinny', 'Slim Fit'],
   straight_group: ['Straight', 'Regular Fit'],
   wide_group: ['Wide Leg', 'Relaxed Fit', 'Flared', 'Bootcut'],
