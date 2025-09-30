@@ -43,7 +43,8 @@
       "!**/node_modules/**"
     ],
     "testMatch": [
-      "**/tests/**/*.test.js"
+      "**/tests/**/*.test.js",
+      "**/__tests__/**/*.test.js"
     ],
     "testPathIgnorePatterns": [
       "/node_modules/"

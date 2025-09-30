@@ -74,14 +74,16 @@ function silhouettesMatch(silhouette1, silhouette2, category, subcategory) {
  * Normalizes empty strings and 'solid'/'plain' to be equivalent
  */
 function patternMatches(pattern1, pattern2) {
-  if (!pattern1 || !pattern2) return false;
+  // Handle null/undefined by treating them as empty string
+  const p1 = pattern1 || '';
+  const p2 = pattern2 || '';
   
   const normalize = (p) => {
     const lower = p.toLowerCase().trim();
     return (lower === '' || lower === 'solid' || lower === 'plain') ? 'solid' : lower;
   };
   
-  return normalize(pattern1) === normalize(pattern2);
+  return normalize(p1) === normalize(p2);
 }
 
 // Export all matchers
