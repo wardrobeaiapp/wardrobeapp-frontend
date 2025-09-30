@@ -6,9 +6,47 @@ const generateObjectiveFinalReason = require('./generateObjectiveFinalReason');
  * @param {string[]} suitableScenarios - Array of suitable scenario names from Claude analysis
  * @param {Object} formData - Form data with category/subcategory info
  * @param {Array} userGoals - User goals that affect scoring
+ * @param {Object} duplicateAnalysis - Optional duplicate detection results
  * @returns {Object} Analysis results with score and reason data
  */
-function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals) {
+function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysis) {
+  // PRIORITY 1: Check for duplicates first
+  if (duplicateAnalysis && duplicateAnalysis.duplicate_analysis && duplicateAnalysis.duplicate_analysis.found) {
+    const duplicateCount = duplicateAnalysis.duplicate_analysis.count;
+    const severity = duplicateAnalysis.duplicate_analysis.severity;
+    const duplicateItems = duplicateAnalysis.duplicate_analysis.items;
+    
+    console.log('🚫 DUPLICATE DETECTED - Setting low score based on duplicate severity');
+    console.log(`   - Found ${duplicateCount} duplicate(s): ${duplicateItems.join(', ')}`);
+    console.log(`   - Severity: ${severity}`);
+    
+    let score;
+    let reason;
+    
+    if (duplicateCount >= 2) {
+      // Multiple duplicates - very low score
+      score = 1.0;
+      reason = `You already have ${duplicateCount} very similar items (${duplicateItems.join(', ')}). Adding this would create excessive redundancy in your wardrobe.`;
+    } else {
+      // One duplicate - low score
+      score = 2.0;
+      reason = `You already have a very similar item: "${duplicateItems[0]}". Consider if you really need another similar piece.`;
+    }
+    
+    return {
+      score,
+      reason,
+      relevantCoverage: [],
+      gapType: 'duplicate',
+      duplicateInfo: {
+        count: duplicateCount,
+        severity,
+        items: duplicateItems
+      }
+    };
+  }
+  
+  // PRIORITY 2: No duplicates found - proceed with scenario coverage analysis
   if (!scenarioCoverage || !Array.isArray(scenarioCoverage) || scenarioCoverage.length === 0) {
     return {
       score: 5.0,
@@ -18,7 +56,7 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     };
   }
   
-  console.log('🎯 Analyzing scenario coverage for initial score...');
+  console.log('✅ No duplicates detected - analyzing scenario coverage for score...');
   console.log('Suitable scenarios from Claude:', suitableScenarios);
   
   let relevantCoverage = [];

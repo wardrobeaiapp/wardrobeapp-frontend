@@ -146,7 +146,9 @@ router.post('/', async (req, res) => {
     const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
     
     // Analyze scenario coverage to get score and objective reason
-    const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals);
+    // Pass duplicate analysis results to prioritize duplicate detection in scoring
+    const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
+    const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysisForScore);
     const initialScore = analysisResult.score;
     const objectiveFinalReason = analysisResult.reason;
     
