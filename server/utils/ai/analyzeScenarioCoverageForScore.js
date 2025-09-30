@@ -258,3 +258,4 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
 }
 
 module.exports = analyzeScenarioCoverageForScore;
+module.exports.formatVarietyMessage = formatVarietyMessage;
