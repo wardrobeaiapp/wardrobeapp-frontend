@@ -38,7 +38,8 @@ const COLOR_FAMILIES = {
 
 // Silhouette families for duplicate detection
 const SILHOUETTE_FAMILIES = {
-  fitted_regular_group: ['Fitted', 'Regular', 'Regular Fit'],  // Group similar basic fits together
+  fitted_group: ['Fitted'],
+  regular_group: ['Regular'],
   loose_group: ['Loose'],
   tight_group: ['Skinny', 'Slim Fit'],
   straight_group: ['Straight', 'Regular Fit'],

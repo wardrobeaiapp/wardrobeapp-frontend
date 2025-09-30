@@ -39,11 +39,25 @@ function colorsMatch(color1, color2) {
 
 /**
  * Check if two silhouettes are considered matching
+ * For basic casual tops (t-shirts, tanks), Fitted and Regular are considered similar
  */
-function silhouettesMatch(silhouette1, silhouette2) {
+function silhouettesMatch(silhouette1, silhouette2, category, subcategory) {
   if (!silhouette1 || !silhouette2) return false;
   if (silhouette1.toLowerCase() === silhouette2.toLowerCase()) return true;
   
+  // Special case: For basic casual tops, treat Fitted and Regular as similar
+  const isBasicTop = category?.toLowerCase() === 'top' && 
+                     (subcategory?.toLowerCase() === 't-shirt' || 
+                      subcategory?.toLowerCase() === 'tank top');
+  
+  if (isBasicTop) {
+    const basicFits = ['Fitted', 'Regular'];
+    if (basicFits.includes(silhouette1) && basicFits.includes(silhouette2)) {
+      return true;
+    }
+  }
+  
+  // Check silhouette families for other categories
   for (const family of Object.values(SILHOUETTE_FAMILIES)) {
     if (family.includes(silhouette1) && family.includes(silhouette2)) {
       return true;
@@ -98,6 +112,38 @@ function sleevesMatch(sleeves1, sleeves2) {
 }
 
 /**
+ * Check if two heel heights are considered matching (case insensitive)
+ */
+function heelHeightMatches(heel1, heel2) {
+  if (!heel1 || !heel2) return false;
+  return heel1.toLowerCase() === heel2.toLowerCase();
+}
+
+/**
+ * Check if two boot heights are considered matching (case insensitive)
+ */
+function bootHeightMatches(boot1, boot2) {
+  if (!boot1 || !boot2) return false;
+  return boot1.toLowerCase() === boot2.toLowerCase();
+}
+
+/**
+ * Check if two rise types are considered matching (case insensitive)
+ */
+function riseMatches(rise1, rise2) {
+  if (!rise1 || !rise2) return false;
+  return rise1.toLowerCase() === rise2.toLowerCase();
+}
+
+/**
+ * Check if two length types are considered matching (case insensitive)
+ */
+function lengthMatches(length1, length2) {
+  if (!length1 || !length2) return false;
+  return length1.toLowerCase() === length2.toLowerCase();
+}
+
+/**
  * Calculate similarity score between items (0-100)
  * Uses category-specific weights for more accurate duplicate detection
  */
@@ -131,7 +177,9 @@ function calculateSimilarityScore(newItem, existingItem) {
       color: 40, 
       silhouette: 35,   // Very important for pants/skirts
       style: 15, 
-      material: 10 
+      material: 10,
+      rise: 10,         // High-rise vs low-rise matters
+      length: 10        // Full-length vs cropped matters
     };
   } else if (category === 'outerwear') {
     // For outerwear: style and silhouette matter a lot
@@ -139,7 +187,17 @@ function calculateSimilarityScore(newItem, existingItem) {
       color: 35, 
       silhouette: 30, 
       style: 25, 
-      material: 10 
+      material: 10,
+      length: 10        // Long coat vs short jacket
+    };
+  } else if (category === 'footwear') {
+    // For footwear: heel height and boot height are defining characteristics
+    weights = {
+      color: 35,
+      heelHeight: 30,   // Flat vs high heel is crucial
+      bootHeight: 20,   // Ankle vs knee-high for boots
+      style: 10,
+      material: 5
     };
   } else {
     // Default weights for other categories
@@ -184,18 +242,38 @@ function calculateSimilarityScore(newItem, existingItem) {
     maxScore += weights.sleeves;
     applicableWeights.sleeves = weights.sleeves;
   }
+  if (weights.heelHeight && newItem.heelHeight && existingItem.heelHeight) {
+    maxScore += weights.heelHeight;
+    applicableWeights.heelHeight = weights.heelHeight;
+  }
+  if (weights.bootHeight && newItem.bootHeight && existingItem.bootHeight) {
+    maxScore += weights.bootHeight;
+    applicableWeights.bootHeight = weights.bootHeight;
+  }
+  if (weights.rise && newItem.rise && existingItem.rise) {
+    maxScore += weights.rise;
+    applicableWeights.rise = weights.rise;
+  }
+  if (weights.length && newItem.length && existingItem.length) {
+    maxScore += weights.length;
+    applicableWeights.length = weights.length;
+  }
   
   // If no common attributes, can't compare
   if (maxScore === 0) return 0;
   
   // Calculate score based on available attributes
   if (applicableWeights.color && colorsMatch(newItem.color, existingItem.color)) score += applicableWeights.color;
-  if (applicableWeights.silhouette && silhouettesMatch(newItem.silhouette, existingItem.silhouette)) score += applicableWeights.silhouette;
+  if (applicableWeights.silhouette && silhouettesMatch(newItem.silhouette, existingItem.silhouette, newItem.category, newItem.subcategory)) score += applicableWeights.silhouette;
   if (applicableWeights.style && styleMatches(newItem.style, existingItem.style)) score += applicableWeights.style;
   if (applicableWeights.material && materialMatches(newItem.material, existingItem.material)) score += applicableWeights.material;
   if (applicableWeights.pattern && patternMatches(newItem.pattern, existingItem.pattern)) score += applicableWeights.pattern;
   if (applicableWeights.neckline && necklineMatches(newItem.neckline, existingItem.neckline)) score += applicableWeights.neckline;
   if (applicableWeights.sleeves && sleevesMatch(newItem.sleeves, existingItem.sleeves)) score += applicableWeights.sleeves;
+  if (applicableWeights.heelHeight && heelHeightMatches(newItem.heelHeight, existingItem.heelHeight)) score += applicableWeights.heelHeight;
+  if (applicableWeights.bootHeight && bootHeightMatches(newItem.bootHeight, existingItem.bootHeight)) score += applicableWeights.bootHeight;
+  if (applicableWeights.rise && riseMatches(newItem.rise, existingItem.rise)) score += applicableWeights.rise;
+  if (applicableWeights.length && lengthMatches(newItem.length, existingItem.length)) score += applicableWeights.length;
   
   return Math.round((score / maxScore) * 100);
 }
