@@ -5,12 +5,16 @@ import { WardrobeItem } from '../../types';
  * Removes IDs, URLs, timestamps, and null/empty fields to reduce payload size
  * 
  * @param items - Array of wardrobe items to filter
+ * @param maxItems - Optional maximum number of items to include (default: no limit)
  * @returns Filtered array with only essential fields
  */
-export function filterItemContextForAI(items: WardrobeItem[]): Partial<WardrobeItem>[] {
+export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number): Partial<WardrobeItem>[] {
   if (!items || !Array.isArray(items)) return [];
   
-  return items.map(item => {
+  // Limit number of items if specified to prevent payload size issues
+  const itemsToProcess = maxItems ? items.slice(0, maxItems) : items;
+  
+  return itemsToProcess.map(item => {
     const filtered: Partial<WardrobeItem> = {};
     
     // Only include non-null, non-empty essential fields

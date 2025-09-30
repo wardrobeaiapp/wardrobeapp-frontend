@@ -81,8 +81,15 @@ export const compressImageToMaxSize = async (base64Image: string, maxSizeBytes =
 
   // Check if this is actually a base64 data URI
   if (!base64Image.startsWith('data:')) {
-    console.error('[imageUtils] Not a valid data URI format');
-    return base64Image; // Return original if not valid data URI
+    console.error('[imageUtils] Not a valid data URI format - adding prefix');
+    // If it's raw base64 without prefix, add it
+    if (base64Image.match(/^[A-Za-z0-9+/=]+$/)) {
+      base64Image = `data:image/jpeg;base64,${base64Image}`;
+      console.log('[imageUtils] Added data URI prefix to raw base64');
+    } else {
+      console.error('[imageUtils] Image data is neither data URI nor valid base64');
+      return base64Image; // Return original if not valid
+    }
   }
   
   // Try with progressively more aggressive compression

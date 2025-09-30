@@ -145,8 +145,9 @@ export const wardrobeAnalysisService = {
       }
       
       // Filter contexts to reduce payload size before sending to backend
+      // Limit similarContext to 5 items to prevent Claude API payload size errors
       const filteredStylingContext = filterItemContextForAI(stylingContext);
-      const filteredSimilarContext = filterItemContextForAI(similarContext);
+      const filteredSimilarContext = filterItemContextForAI(similarContext, 5);
       
       // Debug: Log filtered items AFTER filtering
       if (filteredSimilarContext.length > 0) {

@@ -26,18 +26,33 @@ router.post('/', async (req, res) => {
     
     console.log('=== Simple Analysis Request ===');
     console.log('userId:', userId || 'not provided');
-    console.log('imageBase64:', imageBase64 ? 'present' : 'missing');
-    console.log('formData:', JSON.stringify(formData, null, 2) || 'none');
-    console.log('scenarios:', scenarios || 'none');
-    console.log('scenarioCoverage:', scenarioCoverage || 'none');
-    console.log('similarContext:', similarContext || 'none');
-    console.log('userGoals:', userGoals || 'none');
+    console.log('imageBase64:', imageBase64 ? `${imageBase64.length} bytes` : 'missing');
+    console.log('formData:', formData);
+    console.log('scenarios:', scenarios ? `${scenarios.length} scenarios` : 'none');
+    console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} items` : 'none');
+    console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
+    console.log('userGoals:', userGoals);
+    console.log('userId:', userId);
+    
+    // Calculate total payload size
+    const totalPayloadSize = JSON.stringify(req.body).length;
+    console.log(`📦 Total payload size: ${totalPayloadSize} bytes (${(totalPayloadSize / 1024 / 1024).toFixed(2)} MB)`);
+    
+    // Claude API has a ~5MB limit for total request size
+    if (totalPayloadSize > 4500000) {
+      console.error('❌ Payload too large for Claude API');
+      return res.status(400).json({
+        error: 'payload_too_large',
+        message: 'The request payload is too large. Please try with a smaller image or less context data.',
+        details: `Payload size: ${(totalPayloadSize / 1024 / 1024).toFixed(2)} MB (limit: ~4.5 MB)`
+      });
+    }
+    
     console.log('==============================');
 
     // Validate and process image data
     const imageValidation = imageValidator.validateAndProcess(imageBase64);
     if (!imageValidation.isValid) {
-      return res.status(imageValidation.statusCode).json(imageValidation.errorResponse);
     }
     
     const base64Data = imageValidation.base64Data;
