@@ -22,7 +22,7 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios, scenarioCoverage, similarContext, userGoals, userId } = req.body;
+    const { imageBase64, formData, scenarios, scenarioCoverage, similarContext, stylingContext, userGoals, userId } = req.body;
     
     console.log('=== Simple Analysis Request ===');
     console.log('userId:', userId || 'not provided');
@@ -31,6 +31,7 @@ router.post('/', async (req, res) => {
     console.log('scenarios:', scenarios ? `${scenarios.length} scenarios` : 'none');
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
+    console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('userGoals:', userGoals);
     console.log('userId:', userId);
     
