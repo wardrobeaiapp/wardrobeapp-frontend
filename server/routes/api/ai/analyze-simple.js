@@ -3,18 +3,19 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const router = express.Router();
 
 // Import services
-const duplicateDetectionService = require('../../services/duplicateDetectionService');
-const scenarioCoverageService = require('../../services/scenarioCoverageService');
+const duplicateDetectionService = require('../../../services/duplicateDetectionService');
+const scenarioCoverageService = require('../../../services/scenarioCoverageService');
 
 // Import utilities
-const extractSuitableScenarios = require('../../utils/ai/extractSuitableScenarios');
-const analyzeScenarioCoverageForScore = require('../../utils/ai/analyzeScenarioCoverageForScore');
-const generateObjectiveFinalReason = require('../../utils/ai/generateObjectiveFinalReason');
+const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
+const analyzeScenarioCoverageForScore = require('../../../utils/ai/analyzeScenarioCoverageForScore');
+const generateObjectiveFinalReason = require('../../../utils/ai/generateObjectiveFinalReason');
+const imageValidator = require('../../../utils/imageValidator');
 
 // Import new modular utilities
-const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../utils/ai/analysisScopeUtils');
-const { extractItemCharacteristics } = require('../../utils/ai/characteristicExtractionUtils');
-const { buildEnhancedAnalysisPrompt } = require('../../utils/ai/enhancedPromptBuilder');
+const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../utils/ai/analysisScopeUtils');
+const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
+const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 
 // Initialize Claude client
 const anthropic = new Anthropic({
@@ -26,6 +27,7 @@ const anthropic = new Anthropic({
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
 router.post('/', async (req, res) => {
+  console.log('🚀 ANALYZE SIMPLE ENDPOINT HIT - Request received!');
   try {
     const { imageBase64, formData, preFilledData, scenarios, scenarioCoverage, similarContext, stylingContext, userGoals, userId } = req.body;
     
@@ -34,11 +36,14 @@ router.post('/', async (req, res) => {
     console.log('imageBase64:', imageBase64 ? `${imageBase64.length} bytes` : 'missing');
     console.log('formData:', formData);
     console.log('scenarios:', scenarios ? `${scenarios.length} scenarios` : 'none');
+    if (scenarios && scenarios.length > 0) {
+      console.log('scenario objects:', scenarios.map(s => ({ id: s.id, name: s.name })));
+    }
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('userGoals:', userGoals);
-    console.log('preFilledData:', preFilledData ? 'provided from wishlist' : 'none');
+    console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
     console.log('userId:', userId);
     
     // Calculate total payload size

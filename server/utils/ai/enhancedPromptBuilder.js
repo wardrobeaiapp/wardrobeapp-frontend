@@ -20,21 +20,65 @@
 function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData, scenarios, duplicatePromptSection) {
   let systemPrompt = "You are evaluating whether this clothing/accessory item is suitable for different lifestyle scenarios. Think about where and when this item would realistically be used.";
   
-  // Add scenarios section if provided
+  // Handle scenarios differently for wishlist items vs regular items
   if (scenarios && scenarios.length > 0) {
-    systemPrompt += "\n\nEvaluate suitability for these scenarios:\n";
-    scenarios.forEach((scenario, index) => {
-      systemPrompt += `\n${index + 1}. ${scenario.name}`;
-      if (scenario.description) systemPrompt += `: ${scenario.description}`;
-    });
+    const isWishlistItem = !!preFilledData;
+    const wishlistScenarioIds = preFilledData?.scenarios || preFilledData?.suitableScenarios;
     
-    systemPrompt += "\n\nGuidelines:";
-    systemPrompt += "\n- Pay close attention to scenario descriptions - they specify dress codes and formality requirements";
-    systemPrompt += "\n- Match the item's formality level to the scenario's requirements";
-    systemPrompt += "\n- Consider practical reality: Would someone actually wear this item for this activity?";
-    systemPrompt += "\n- Think about styling potential: Basic items can work in elevated scenarios when styled appropriately";
+    // Convert scenario IDs to scenario names (handle both UUIDs and names)
+    let wishlistScenarios = [];
+    if (wishlistScenarioIds && wishlistScenarioIds.length > 0) {
+      console.log('🔄 Converting wishlist scenarios:', wishlistScenarioIds);
+      wishlistScenarios = wishlistScenarioIds.map(scenarioIdOrName => {
+        // Check if it's already a scenario name (for test environment)
+        const existingScenario = scenarios.find(s => s.name === scenarioIdOrName);
+        if (existingScenario) {
+          console.log(`📝 Already a name: ${scenarioIdOrName}`);
+          return scenarioIdOrName;
+        }
+        
+        // Otherwise, treat as UUID and look up by ID (for real app)
+        const scenario = scenarios.find(s => s.id === scenarioIdOrName);
+        const scenarioName = scenario ? scenario.name : `Unknown scenario (${scenarioIdOrName})`;
+        console.log(`📝 UUID ${scenarioIdOrName} → Name: ${scenarioName}`);
+        return scenarioName;
+      });
+      console.log('✅ Final wishlist scenarios:', wishlistScenarios);
+    }
     
-    systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
+    if (isWishlistItem && wishlistScenarios && wishlistScenarios.length > 0) {
+      // WISHLIST ITEM: Validate user's pre-selected scenarios
+      systemPrompt += "\n\n🏷️ WISHLIST ITEM - SCENARIO VALIDATION:";
+      systemPrompt += "\nThe user already selected these scenarios for this wishlist item:";
+      wishlistScenarios.forEach((scenario, index) => {
+        systemPrompt += `\n${index + 1}. ${scenario}`;
+      });
+      
+      systemPrompt += "\n\n⚠️ VALIDATION TASK:";
+      systemPrompt += "\n- VALIDATE whether this item is actually suitable for the scenarios the user already chose";
+      systemPrompt += "\n- If suitable: List the scenario in 'SUITABLE SCENARIOS:' section";  
+      systemPrompt += "\n- If NOT suitable: Explain why in the analysis and don't include it";
+      systemPrompt += "\n- Be honest - if the user's choice doesn't match the item, flag it";
+      systemPrompt += "\n- Consider dress codes, formality, and practical reality";
+      
+      systemPrompt += "\n\nList VALIDATED scenarios in a 'SUITABLE SCENARIOS:' section. Only include scenarios that truly work for this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
+      
+    } else {
+      // REGULAR ITEM: Suggest suitable scenarios
+      systemPrompt += "\n\nEvaluate suitability for these scenarios:\n";
+      scenarios.forEach((scenario, index) => {
+        systemPrompt += `\n${index + 1}. ${scenario.name}`;
+        if (scenario.description) systemPrompt += `: ${scenario.description}`;
+      });
+      
+      systemPrompt += "\n\nGuidelines:";
+      systemPrompt += "\n- Pay close attention to scenario descriptions - they specify dress codes and formality requirements";
+      systemPrompt += "\n- Match the item's formality level to the scenario's requirements";
+      systemPrompt += "\n- Consider practical reality: Would someone actually wear this item for this activity?";
+      systemPrompt += "\n- Think about styling potential: Basic items can work in elevated scenarios when styled appropriately";
+      
+      systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
+    }
   }
   
   // === ENHANCED CHARACTERISTIC ANALYSIS PROMPT ===

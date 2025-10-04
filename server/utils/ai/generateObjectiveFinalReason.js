@@ -26,8 +26,12 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
     itemType = relevantCoverage[0].subcategory.toLowerCase();
   }
   
-  // Make it plural for better readability (e.g., "tops" instead of "top")  
-  if (!itemType.endsWith('s')) itemType += 's';
+  // Make it plural for better readability (e.g., "tops" instead of "top")
+  // Handle special cases: mass nouns and words that are already plural
+  const massNouns = ['outerwear', 'footwear', 'sleepwear', 'activewear', 'underwear'];
+  if (!itemType.endsWith('s') && !massNouns.includes(itemType)) {
+    itemType += 's';
+  }
   
   let reason = "";
   
@@ -65,7 +69,9 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
       reason = `You have good coverage in ${itemType}`;
       if (relevantCoverage.length > 0) {
         const coverage = relevantCoverage[0];
+        console.log(`📊 EXPANSION GAP DETAIL: ${coverage.scenarioName} - ${itemType} - ${coverage.season || 'all seasons'}`);
         if (coverage.season && coverage.season !== 'all_seasons' && !isNonSeasonalAccessory) reason += ` for ${coverage.season}`;
+        if (coverage.scenarioName !== 'All scenarios') reason += ` for ${coverage.scenarioName}`;
       }
       reason += hasConstraintGoals 
         ? ". Maybe skip unless it's really special?" 

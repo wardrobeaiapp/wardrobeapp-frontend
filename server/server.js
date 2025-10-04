@@ -24,14 +24,16 @@ app.use(cors());
 
 // Request logging middleware
 app.use((req, res, next) => {
+  // Log AI analyze endpoints with special highlighting
+  if (req.path.includes('/api/analyze') || req.path.includes('/api/ai')) {
+    console.log(`🎯 AI ENDPOINT HIT: ${req.method} ${req.path}`);
+  }
+  
   // Log request size if large
   const contentLength = req.headers['content-length'];
   if (contentLength && parseInt(contentLength) > 1000000) {
-    console.log(`Large request received: ${parseInt(contentLength) / 1000000} MB`);
+    console.log(`📦 Large request: ${parseInt(contentLength) / 1000000} MB`);
   }
-  
-  // Log all requests for debugging
-  console.log(`${req.method} ${req.url}`);
   next();
 });
 

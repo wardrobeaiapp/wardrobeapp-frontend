@@ -308,7 +308,7 @@ describe('generateObjectiveFinalReason', () => {
         []
       );
       
-      expect(result).toContain('plenty of outerwears for spring/fall');
+      expect(result).toContain('plenty of outerwear for spring/fall');
       expect(result).not.toContain('Office Work');
     });
 

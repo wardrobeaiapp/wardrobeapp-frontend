@@ -36,6 +36,9 @@ const filterPreFilledData = (preFilledData: WardrobeItem) => {
   if (preFilledData.size) filtered.size = preFilledData.size;
   if (preFilledData.season) filtered.season = preFilledData.season;
   
+  // CRITICAL: Include scenarios for wishlist items - these are the user's pre-selected scenarios
+  if (preFilledData.scenarios) filtered.scenarios = preFilledData.scenarios;
+  
   // Explicitly exclude metadata fields:
   // - imageUrl: AI already has the image
   // - id, userId: Not descriptive of the item
@@ -69,8 +72,7 @@ export const wardrobeAnalysisService = {
       
       if (preFilledData) {
         console.log('[wardrobeAnalysisService] Original pre-filled data:', preFilledData);
-        const filtered = filterPreFilledData(preFilledData);
-        console.log('[wardrobeAnalysisService] Filtered pre-filled data:', filtered);
+        console.log('[wardrobeAnalysisService] Scenarios in original data:', preFilledData.scenarios);
       }
       
       // Process and validate image using dedicated service
@@ -91,6 +93,27 @@ export const wardrobeAnalysisService = {
       // Get all user data using dedicated service
       const userData = await getUserAnalysisData();
       const { user, climateData, userGoals, scenarios, wardrobeItems } = userData;
+      
+      // Process preFilledData for wishlist items - convert scenario UUIDs to names
+      let processedPreFilledData = preFilledData;
+      if (preFilledData && preFilledData.scenarios && preFilledData.scenarios.length > 0 && scenarios.length > 0) {
+        console.log('[wardrobeAnalysisService] 🔄 Converting wishlist scenario UUIDs to names');
+        processedPreFilledData = {
+          ...preFilledData,
+          scenarios: preFilledData.scenarios.map(scenarioId => {
+            const scenario = scenarios.find(s => s.id === scenarioId);
+            const scenarioName = scenario ? scenario.name : scenarioId;
+            console.log(`[wardrobeAnalysisService] Converting UUID ${scenarioId} → Name: ${scenarioName}`);
+            return scenarioName;
+          })
+        };
+        console.log('[wardrobeAnalysisService] ✅ Converted scenarios:', processedPreFilledData.scenarios);
+        
+        // Show final filtered preFilledData for debugging
+        const filtered = filterPreFilledData(processedPreFilledData);
+        console.log('[wardrobeAnalysisService] Final filtered pre-filled data:', filtered);
+        console.log('[wardrobeAnalysisService] Final scenarios in filtered data:', filtered.scenarios);
+      }
       
       // Generate styling and gap analysis context
       let stylingContext: WardrobeItem[] = [];
@@ -166,9 +189,37 @@ export const wardrobeAnalysisService = {
       }
 
       // Generate scenario coverage using dedicated service
-      const scenarioCoverage = user?.id && formData ? 
+      let scenarioCoverage = user?.id && formData ? 
         await generateScenarioCoverage(user.id, formData, scenarios, wardrobeItems) : 
         null;
+      
+      // Filter scenario coverage for wishlist items to only include their pre-selected scenarios
+      if (preFilledData && preFilledData.scenarios && preFilledData.scenarios.length > 0 && scenarioCoverage) {
+        console.log('[wardrobeAnalysisService] 🎯 WISHLIST ITEM - Filtering scenario coverage');
+        console.log('[wardrobeAnalysisService] Original coverage scenarios:', scenarioCoverage.map(c => c.scenarioName));
+        console.log('[wardrobeAnalysisService] Wishlist item selected scenario IDs:', preFilledData.scenarios);
+        
+        // Convert wishlist scenario IDs to names for filtering
+        const wishlistScenarioNames = preFilledData.scenarios.map(scenarioId => {
+          const scenario = scenarios.find(s => s.id === scenarioId);
+          return scenario ? scenario.name : null;
+        }).filter(name => name !== null);
+        
+        console.log('[wardrobeAnalysisService] Converted to scenario names:', wishlistScenarioNames);
+        
+        // Filter scenario coverage to only include the wishlist item's scenarios
+        scenarioCoverage = scenarioCoverage.filter(coverage => {
+          // Always include "All scenarios" coverage (e.g. outerwear)
+          if (coverage.scenarioName.toLowerCase().includes('all scenarios')) {
+            return true;
+          }
+          // Include only the scenarios selected for this wishlist item
+          return wishlistScenarioNames.includes(coverage.scenarioName);
+        });
+        
+        console.log('[wardrobeAnalysisService] ✅ Filtered coverage to scenarios:', scenarioCoverage.map(c => c.scenarioName));
+        console.log('[wardrobeAnalysisService] Reduced from ALL scenarios to', scenarioCoverage.length, 'relevant scenarios');
+      }
       
       // Call our backend endpoint for analysis
       const response = await axios.post(
@@ -197,7 +248,7 @@ export const wardrobeAnalysisService = {
           // Include user's wardrobe goals for personalized recommendations
           userGoals: userGoals.length > 0 ? userGoals : undefined,
           // Include pre-filled data from wishlist item if available (filtered to exclude metadata)
-          preFilledData: preFilledData ? filterPreFilledData(preFilledData) : undefined,
+          preFilledData: processedPreFilledData ? filterPreFilledData(processedPreFilledData) : undefined,
           // Include user ID for scenario-based filtering
           userId: user?.id
         }
