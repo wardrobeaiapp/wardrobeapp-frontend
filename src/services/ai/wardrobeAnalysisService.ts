@@ -172,7 +172,7 @@ export const wardrobeAnalysisService = {
       
       // Call our backend endpoint for analysis
       const response = await axios.post(
-        `${API_URL}/analyze-wardrobe-item`,
+        `${API_URL}/analyze-wardrobe-item-simple`,
         {
           imageBase64,
           detectedTags,

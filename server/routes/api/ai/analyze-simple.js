@@ -1,28 +1,33 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
-
-// Import utilities
-const imageValidator = require('../../../utils/imageValidator');
-const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
-const analyzeScenarioCoverageForScore = require('../../../utils/ai/analyzeScenarioCoverageForScore');
-const duplicateDetectionService = require('../../../services/duplicateDetectionService');
-
 const router = express.Router();
 
-// Initialize Anthropic client
+// Import services
+const duplicateDetectionService = require('../../services/duplicateDetectionService');
+const scenarioCoverageService = require('../../services/scenarioCoverageService');
+
+// Import utilities
+const extractSuitableScenarios = require('../../utils/ai/extractSuitableScenarios');
+const analyzeScenarioCoverageForScore = require('../../utils/ai/analyzeScenarioCoverageForScore');
+const generateObjectiveFinalReason = require('../../utils/ai/generateObjectiveFinalReason');
+
+// Import new modular utilities
+const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../utils/ai/analysisScopeUtils');
+const { extractItemCharacteristics } = require('../../utils/ai/characteristicExtractionUtils');
+const { buildEnhancedAnalysisPrompt } = require('../../utils/ai/enhancedPromptBuilder');
+
+// Initialize Claude client
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY
+  apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-
-
-
+//
 // @route   POST /api/analyze-wardrobe-item-simple
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
 router.post('/', async (req, res) => {
   try {
-    const { imageBase64, formData, scenarios, scenarioCoverage, similarContext, stylingContext, userGoals, userId } = req.body;
+    const { imageBase64, formData, preFilledData, scenarios, scenarioCoverage, similarContext, stylingContext, userGoals, userId } = req.body;
     
     console.log('=== Simple Analysis Request ===');
     console.log('userId:', userId || 'not provided');
@@ -33,6 +38,7 @@ router.post('/', async (req, res) => {
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
     console.log('userGoals:', userGoals);
+    console.log('preFilledData:', preFilledData ? 'provided from wishlist' : 'none');
     console.log('userId:', userId);
     
     // Calculate total payload size
@@ -82,32 +88,33 @@ router.post('/', async (req, res) => {
       console.log('⚠️ Duplicate analysis skipped (insufficient data)');
     }
 
-    // Build system prompt with scenarios if provided
-    let systemPrompt = "You are evaluating whether this clothing/accessory item is suitable for different lifestyle scenarios. Think about where and when this item would realistically be used.";
+    // === ENHANCED CHARACTERISTIC ANALYSIS ===
+    console.log('=== STEP: Enhanced Characteristic Analysis Setup ===');
     
-    // Add scenarios section if provided
-    if (scenarios && scenarios.length > 0) {
-      systemPrompt += "\n\nEvaluate suitability for these scenarios:\n";
-      scenarios.forEach((scenario, index) => {
-        systemPrompt += `\n${index + 1}. ${scenario.name}`;
-        if (scenario.description) systemPrompt += `: ${scenario.description}`;
-      });
-      
-      systemPrompt += "\n\nGuidelines:";
-      systemPrompt += "\n- Pay close attention to scenario descriptions - they specify dress codes and formality requirements";
-      systemPrompt += "\n- Match the item's formality level to the scenario's requirements";
-      systemPrompt += "\n- Consider practical reality: Would someone actually wear this item for this activity?";
-      systemPrompt += "\n- Think about styling potential: Basic items can work in elevated scenarios when styled appropriately";
-      
-      systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
+    // Merge form data with pre-filled wishlist data
+    const analysisData = {
+      ...formData,
+      ...(preFilledData || {}), // Wishlist data takes precedence where available
+      isFromWishlist: !!preFilledData
+    };
+    
+    // Determine analysis scope based on category/subcategory (using DetailsFields.tsx logic)
+    const analysisScope = getAnalysisScope(analysisData.category, analysisData.subcategory);
+    
+    console.log('📊 Analysis data:', analysisData);
+    console.log('🔍 Analysis scope:', analysisScope);
+    if (preFilledData) {
+      console.log('👗 Pre-filled wishlist data detected - will verify/correct/complete');
     }
-    
-    // Add duplicate detection results to system prompt
-    if (duplicatePromptSection) {
-      systemPrompt += duplicatePromptSection;
-    }
-    
-    systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
+
+    // Build comprehensive system prompt using modular approach
+    const systemPrompt = buildEnhancedAnalysisPrompt(
+      analysisData,
+      analysisScope,
+      preFilledData,
+      scenarios,
+      duplicatePromptSection
+    );
 
     // Call Claude API
     const response = await anthropic.messages.create({
@@ -177,12 +184,30 @@ router.post('/', async (req, res) => {
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
-    // Return the analysis with coverage-based score and explanation
+    // Extract comprehensive characteristics from the raw response
+    console.log('=== STEP: Extracting Item Characteristics ===');
+    const extractedCharacteristics = extractItemCharacteristics(rawAnalysisResponse, analysisScope, preFilledData);
+    console.log('🏷️ Extracted characteristics:', extractedCharacteristics);
+
+    // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       analysis: analysisResponse,
       score: initialScore, // Frontend will convert this to action/status
       recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
+      
+      // COMPREHENSIVE CHARACTERISTICS for future compatibility analysis
+      itemCharacteristics: extractedCharacteristics,
+      
+      // Data integration info
+      dataIntegration: {
+        isFromWishlist: !!preFilledData,
+        preFilledFields: preFilledData ? Object.keys(preFilledData).filter(key => 
+          !['id', 'userId', 'imageUrl', 'dateAdded', 'imageExpiry'].includes(key)
+        ) : [],
+        analysisScope: analysisScope
+      },
+      
       success: true
     });
     
@@ -196,5 +221,6 @@ router.post('/', async (req, res) => {
     });
   }
 });
+
 
 module.exports = router;

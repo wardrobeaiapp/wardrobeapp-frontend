@@ -132,19 +132,21 @@ describe('duplicateDetectionUtils', () => {
       expect(result.duplicate_analysis.severity).toMatch(/MODERATE|HIGH|EXCESSIVE/);
     });
 
-    test('should calculate color variety impact', () => {
+    test('should focus on duplicate detection only', () => {
       const newItem = {
         category: 'top',
-        color: 'Black' // Adding 3rd black item out of 5 total = 60%
+        color: 'Black' // Adding 3rd black item out of 5 total
       };
 
       const result = analyzeDuplicatesForAI(newItem, mockWardrobeItems);
       
-      expect(result.variety_impact.color_percentage).toBe(60);
-      expect(result.variety_impact.would_dominate).toBe(true);
+      // Function now only returns duplicate analysis, not variety impact
+      expect(result.duplicate_analysis).toBeDefined();
+      expect(result.duplicate_analysis.found).toBe(false); // Black items aren't exact duplicates
+      expect(result.duplicate_analysis.severity).toBe('NONE');
     });
 
-    test('should provide appropriate recommendations', () => {
+    test('should analyze duplicate structure correctly', () => {
       const newItem = {
         category: 'top',
         subcategory: 't-shirt',
@@ -154,7 +156,11 @@ describe('duplicateDetectionUtils', () => {
 
       const result = analyzeDuplicatesForAI(newItem, mockWardrobeItems);
       
-      expect(['SKIP', 'CONSIDER', 'ANALYZE_FURTHER']).toContain(result.recommendation);
+      // Function returns structured duplicate analysis without recommendations
+      expect(result.duplicate_analysis).toBeDefined();
+      expect(result.duplicate_analysis.found).toEqual(expect.any(Boolean));
+      expect(result.duplicate_analysis.count).toEqual(expect.any(Number));
+      expect(result.duplicate_analysis.severity).toMatch(/NONE|MODERATE|HIGH|EXCESSIVE/);
     });
 
     test('should handle no duplicates case', () => {
@@ -170,7 +176,7 @@ describe('duplicateDetectionUtils', () => {
       expect(result.duplicate_analysis.found).toBe(false);
       expect(result.duplicate_analysis.count).toBe(0);
       expect(result.duplicate_analysis.severity).toBe('NONE');
-      expect(result.recommendation).toBe('ANALYZE_FURTHER');
+      expect(result.duplicate_analysis.items).toEqual([]);
     });
   });
 });
