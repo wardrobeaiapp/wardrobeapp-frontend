@@ -8,7 +8,7 @@ export const stylingRules: Record<string, {
   },
   'shirt': {
     accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],
-    tops: ['cardigan', 'blazer', 'vest']
+    tops: ['cardigan', 'blazer', 'vest', 'sweatshirt', 'sweater']
   },
   'blouse': {
     accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],
@@ -23,13 +23,15 @@ export const stylingRules: Record<string, {
     tops: ['cardigan', 'blazer']
   },
   'sweater': {
-    accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch']
+    accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],
+    tops: ['shirt']
   },
   'hoodie': {
     accessories: ['bag', 'hat', 'sunglasses']
   },
   'sweatshirt': {
-    accessories: ['bag', 'hat', 'sunglasses']
+    accessories: ['bag', 'hat', 'sunglasses'],
+    tops: ['shirt']
   },
   'cardigan': {
     accessories: ['belt', 'bag', 'jewelry', 'watch'],

@@ -170,7 +170,7 @@ const isComplementingCategory = (newItemCategory: ItemCategory, itemCategory: It
   const complementingMap: Record<ItemCategory, ItemCategory[]> = {
     [ItemCategory.TOP]: [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY],
     [ItemCategory.BOTTOM]: [ItemCategory.TOP, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
-    [ItemCategory.ONE_PIECE]: [ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
+    [ItemCategory.ONE_PIECE]: [ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY],
     [ItemCategory.FOOTWEAR]: [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
     [ItemCategory.OUTERWEAR]: [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY],
     [ItemCategory.ACCESSORY]: [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR],
@@ -197,6 +197,11 @@ const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCat
   // Cross-category layering
   if (newItemCategory === ItemCategory.OUTERWEAR) {
     return itemCategory === ItemCategory.TOP || itemCategory === ItemCategory.ONE_PIECE;
+  }
+  
+  // NEW: TOP and OUTERWEAR items can layer over ONE_PIECE (blazers/jackets over dresses)
+  if (newItemCategory === ItemCategory.ONE_PIECE) {
+    return itemCategory === ItemCategory.TOP || itemCategory === ItemCategory.OUTERWEAR;
   }
   
   return false;
