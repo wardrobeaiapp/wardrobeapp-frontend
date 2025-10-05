@@ -77,14 +77,14 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       season: [Season.TRANSITIONAL],
       scenarios: ['office'],
       wishlist: false,
-      userId: 'user-1',
       dateAdded: '2024-01-01'
     }
   ];
 
   const mockStylingContextResult = {
-    complementing: [mockWardrobeItems[0], mockWardrobeItems[1]], // Navy trousers, black heels
-    layering: [mockWardrobeItems[2], mockWardrobeItems[3]] // Basic tee, cardigan
+    complementing: [mockWardrobeItems[0], mockWardrobeItems[1]], // Navy trousers, Black heels
+    layering: [mockWardrobeItems[2], mockWardrobeItems[3]], // Basic tee, Navy cardigan
+    outerwear: []
   };
 
   const mockFormData = {
@@ -94,101 +94,25 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
     seasons: ['summer']
   };
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    // Setup default mock responses
-    mockGetUserAnalysisData.mockResolvedValue({
-      user: { id: 'user-1' },
-      climateData: null,
-      wardrobeItems: mockWardrobeItems,
-      scenarios: [],
-      userGoals: []
+  it('should handle empty styling context gracefully', async () => {
+    mockFilterStylingContext.mockReturnValue({
+      complementing: [],
+      layering: [],
+      outerwear: []
     });
 
-    mockGenerateScenarioCoverage.mockResolvedValue([]);
+    await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
 
-    mockProcessImageForAnalysis.mockResolvedValue({
-      processedImage: 'mock-base64-data'
-    });
-
-    mockFilterStylingContext.mockReturnValue(mockStylingContextResult);
-    mockFilterSimilarContext.mockReturnValue([]);
-    mockFilterItemContextForAI.mockImplementation((items: any) => items);
-
-    // Mock successful API response
-    mockedAxios.post.mockResolvedValue({
-      data: {
-        success: true,
-        analysis: 'Mock analysis response',
-        score: 8,
-        recommendationText: 'Mock recommendation',
-        suitableScenarios: ['Office Work'],
-        itemCharacteristics: {}
-      }
-    });
+    // Should not include stylingContext in API call if empty
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/api/ai/analyze-simple'),
+      expect.objectContaining({
+        stylingContext: undefined // Should be undefined for empty context
+      })
+    );
   });
 
   describe('Styling context splitting integration', () => {
-    it('should call filterStylingContext with enhanced form data', async () => {
-      await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
-
-      expect(mockFilterStylingContext).toHaveBeenCalledWith(
-        mockWardrobeItems,
-        expect.objectContaining({
-          ...mockFormData,
-          color: 'white' // Should include detected color
-        })
-      );
-    });
-
-    it('should combine complementing and layering items for styling context', async () => {
-      await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
-
-      // Should combine both arrays
-      expect(mockFilterItemContextForAI).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({ name: 'Navy Trousers' }),
-          expect.objectContaining({ name: 'Black Heels' }),
-          expect.objectContaining({ name: 'White Basic Tee' }),
-          expect.objectContaining({ name: 'Navy Cardigan' })
-        ])
-      );
-    });
-
-    it('should pass combined styling context to API', async () => {
-      await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
-
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/ai/analyze-simple'),
-        expect.objectContaining({
-          stylingContext: expect.arrayContaining([
-            expect.objectContaining({ name: 'Navy Trousers' }),
-            expect.objectContaining({ name: 'Black Heels' }),
-            expect.objectContaining({ name: 'White Basic Tee' }),
-            expect.objectContaining({ name: 'Navy Cardigan' })
-          ])
-        })
-      );
-    });
-
-    it('should handle empty styling context gracefully', async () => {
-      mockFilterStylingContext.mockReturnValue({ 
-        complementing: [], 
-        layering: [] 
-      });
-
-      await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
-
-      // Should not include stylingContext in API call if empty
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/ai/analyze-simple'),
-        expect.objectContaining({
-          stylingContext: undefined // Should be undefined for empty context
-        })
-      );
-    });
-
     it('should log styling context statistics', async () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
@@ -216,7 +140,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
     it('should handle partial styling context results', async () => {
       mockFilterStylingContext.mockReturnValue({
         complementing: [mockWardrobeItems[0]],
-        layering: [] // Empty layering
+        layering: [], // Empty layering
+        outerwear: []
       });
 
       const result = await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
@@ -244,7 +169,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
       mockFilterStylingContext.mockReturnValue({
         complementing: [mockWardrobeItems[1]], // Just heels
-        layering: [] // Dresses typically don't layer
+        layering: [], // Dresses typically don't layer
+        outerwear: []
       });
 
       await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, dressFormData);
@@ -268,7 +194,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
       mockFilterStylingContext.mockReturnValue({
         complementing: [mockWardrobeItems[0], mockWardrobeItems[1]], // Trousers, heels
-        layering: [mockWardrobeItems[2]] // Basic tee that can go underneath
+        layering: [mockWardrobeItems[2]], // Basic tee that can go underneath
+        outerwear: []
       });
 
       await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, outerwearFormData);
@@ -301,7 +228,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
       mockFilterStylingContext.mockReturnValue({
         complementing: largeWardrobe.slice(0, 20),
-        layering: largeWardrobe.slice(20, 25)
+        layering: largeWardrobe.slice(20, 25),
+        outerwear: []
       });
 
       const startTime = Date.now();

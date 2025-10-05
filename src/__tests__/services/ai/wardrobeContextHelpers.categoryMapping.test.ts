@@ -11,7 +11,7 @@ import { filterStylingContext } from '../../../services/ai/wardrobeContextHelper
 
 describe('wardrobeContextHelpers - Category Mapping Logic', () => {
   // Helper to create a minimal test item
-  const createTestItem = (category: ItemCategory, subcategory: string = 'test', season: Season[] = [Season.SUMMER]) => ({
+  const createTestItem = (category: ItemCategory, subcategory: string = 'test', season: string[] = ['summer']) => ({
     id: 'test-id',
     name: 'Test Item',
     category,
@@ -38,6 +38,8 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
         
         expect(result.complementing).toHaveLength(1);
         expect(result.complementing[0].category).toBe(ItemCategory.BOTTOM);
+        expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should complement with FOOTWEAR items', () => {
@@ -46,6 +48,8 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
         
         expect(result.complementing).toHaveLength(1);
         expect(result.complementing[0].category).toBe(ItemCategory.FOOTWEAR);
+        expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should complement with ACCESSORY items', () => {
@@ -54,6 +58,8 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
         
         expect(result.complementing).toHaveLength(1);
         expect(result.complementing[0].category).toBe(ItemCategory.ACCESSORY);
+        expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should NOT complement with other TOP items (layering instead)', () => {
@@ -62,6 +68,7 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
         
         expect(result.complementing).toHaveLength(0);
         expect(result.layering).toHaveLength(1);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should NOT complement with ONE_PIECE items', () => {
@@ -70,6 +77,7 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
         
         expect(result.complementing).toHaveLength(0);
         expect(result.layering).toHaveLength(0); // Dresses don't layer with tops
+        expect(result.outerwear).toHaveLength(0);
       });
     });
 
@@ -339,6 +347,115 @@ describe('wardrobeContextHelpers - Category Mapping Logic', () => {
       // Our logic should put it in layering for tops since TOP+OUTERWEAR typically involves layering
       expect(result.layering).toHaveLength(1);
       expect(result.complementing).toHaveLength(0);
+    });
+  });
+
+  describe('Regression Tests - Recent Fixes', () => {
+    describe('ONE_PIECE complementing vs layering fixes', () => {
+      const dressFormData = {
+        category: 'one_piece',
+        subcategory: 'dress',
+        seasons: ['summer']
+      };
+
+      it('should include OUTERWEAR in separate outerwear category for dresses', () => {
+        const jacket = createTestItem(ItemCategory.OUTERWEAR, 'jacket', ['summer']);
+        const result = filterStylingContext([jacket], dressFormData);
+        
+        expect(result.complementing).toHaveLength(0); // Should be empty
+        expect(result.layering).toHaveLength(0); // Should be empty
+        expect(result.outerwear).toHaveLength(1); // Should be in outerwear category
+        expect(result.outerwear[0].category).toBe(ItemCategory.OUTERWEAR);
+      });
+
+      it('should include FOOTWEAR and ACCESSORY in complementing for dresses', () => {
+        const heels = createTestItem(ItemCategory.FOOTWEAR, 'heels', ['summer']);
+        const bag = createTestItem(ItemCategory.ACCESSORY, 'bag', ['summer']);
+        
+        const result = filterStylingContext([heels, bag], dressFormData);
+        
+        expect(result.complementing).toHaveLength(2);
+        expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
+      });
+
+      it('should allow TOP items to layer over ONE_PIECE', () => {
+        const blazer = createTestItem(ItemCategory.TOP, 'blazer', ['summer']);
+        const result = filterStylingContext([blazer], dressFormData);
+        
+        expect(result.layering).toContainEqual(expect.objectContaining({ 
+          category: ItemCategory.TOP,
+          subcategory: 'blazer'
+        }));
+        expect(result.complementing).toHaveLength(0);
+        expect(result.outerwear).toStrictEqual([]);
+      });
+
+      it('should put OUTERWEAR items in outerwear category for ONE_PIECE', () => {
+        const jacket = createTestItem(ItemCategory.OUTERWEAR, 'jacket', ['summer']);  
+        const result = filterStylingContext([jacket], dressFormData);
+        
+        expect(result.outerwear).toStrictEqual([expect.objectContaining({
+          category: ItemCategory.OUTERWEAR,
+          subcategory: 'jacket'
+        })]);
+        expect(result.complementing).toStrictEqual([]);
+        expect(result.layering).toStrictEqual([]);
+      });
+    });
+
+    describe('Bidirectional styling rules', () => {
+      it('should include shirts in layering when analyzing sweaters', () => {
+        const shirt = createTestItem(ItemCategory.TOP, 'shirt', ['spring/fall']);
+        const sweaterFormData = {
+          category: 'top',
+          subcategory: 'sweater',
+          seasons: ['spring/fall']
+        };
+        
+        const result = filterStylingContext([shirt], sweaterFormData);
+        
+        expect(result.layering).toContainEqual(expect.objectContaining({
+          category: ItemCategory.TOP,
+          subcategory: 'shirt'
+        }));
+      });
+
+      it('should include shirts in layering when analyzing sweatshirts', () => {
+        const shirt = createTestItem(ItemCategory.TOP, 'shirt', ['spring/fall']);
+        const sweatshirtFormData = {
+          category: 'top',
+          subcategory: 'sweatshirt',
+          seasons: ['spring/fall']
+        };
+        
+        const result = filterStylingContext([shirt], sweatshirtFormData);
+        
+        expect(result.layering).toContainEqual(expect.objectContaining({
+          category: ItemCategory.TOP,
+          subcategory: 'shirt'
+        }));
+      });
+
+      it('should include sweaters/sweatshirts in layering when analyzing shirts', () => {
+        const sweater = createTestItem(ItemCategory.TOP, 'sweater', ['spring/fall']);
+        const sweatshirt = createTestItem(ItemCategory.TOP, 'sweatshirt', ['spring/fall']);
+        const shirtFormData = {
+          category: 'top',
+          subcategory: 'shirt',
+          seasons: ['spring/fall']
+        };
+        
+        const result = filterStylingContext([sweater, sweatshirt], shirtFormData);
+        
+        expect(result.layering).toHaveLength(2);
+        expect(result.layering).toContainEqual(expect.objectContaining({
+          subcategory: 'sweater'
+        }));
+        expect(result.layering).toContainEqual(expect.objectContaining({
+          subcategory: 'sweatshirt'
+        }));
+      });
     });
   });
 });

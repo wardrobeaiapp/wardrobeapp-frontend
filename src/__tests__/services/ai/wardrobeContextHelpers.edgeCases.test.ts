@@ -296,8 +296,10 @@ describe('wardrobeContextHelpers - Edge Cases and Error Handling', () => {
         
         expect(result).toHaveProperty('complementing');
         expect(result).toHaveProperty('layering');
+        expect(result).toHaveProperty('outerwear');
         expect(Array.isArray(result.complementing)).toBe(true);
         expect(Array.isArray(result.layering)).toBe(true);
+        expect(Array.isArray(result.outerwear)).toBe(true);
       });
     });
 
@@ -308,6 +310,8 @@ describe('wardrobeContextHelpers - Edge Cases and Error Handling', () => {
       expect(result.complementing).not.toBeUndefined();
       expect(result.layering).not.toBeNull();
       expect(result.layering).not.toBeUndefined();
+      expect(result.outerwear).not.toBeNull();
+      expect(result.outerwear).not.toBeUndefined();
     });
 
     it('should maintain referential integrity of original items', () => {

@@ -115,34 +115,35 @@ const handleAccessoryCategory = (item: WardrobeItem, subcategory: string, formDa
 
 /**
  * Filters wardrobe items to find styling context based on form data
- * Returns separate arrays for complementing and layering items
+ * Returns separate arrays for complementing, layering, and outerwear items
  */
 export const filterStylingContext = (
   wardrobeItems: WardrobeItem[], 
   formData: { category?: string; subcategory?: string; seasons?: string[] }
-): { complementing: WardrobeItem[], layering: WardrobeItem[] } => {
+): { complementing: WardrobeItem[], layering: WardrobeItem[], outerwear: WardrobeItem[] } => {
   console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}`);
   console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
   
   let complementingItems: WardrobeItem[] = [];
   let layeringItems: WardrobeItem[] = [];
+  let outerwearItems: WardrobeItem[] = [];
   
   wardrobeItems.forEach(item => {
     // Exclude wishlist items from styling context
     if (item.wishlist === true) {
       return;
     }
-    
-    const matchesSeason = checkSeasonMatch(item, formData.seasons);
-    if (!matchesSeason) {
-      return; // Skip items that don't match season
-    }
 
-    // Determine if item is complementing or layering
+    // Determine if item is complementing, layering, or outerwear
     const itemCategory = item.category as ItemCategory;
     const newItemCategory = formData.category as ItemCategory;
     
-    if (isComplementingCategory(newItemCategory, itemCategory)) {
+    if (isOuterwearCategory(newItemCategory, itemCategory)) {
+      // Outerwear items that complete outfits (separate from layering)
+      if (shouldIncludeInContext(item, formData)) {
+        outerwearItems.push(item);
+      }
+    } else if (isComplementingCategory(newItemCategory, itemCategory)) {
       // Add original category/subcategory filtering logic for complementing items
       if (shouldIncludeInContext(item, formData)) {
         complementingItems.push(item);
@@ -155,14 +156,16 @@ export const filterStylingContext = (
     }
   });
   
-  console.log(`[wardrobeContextHelpers] STYLING CONTEXT RESULTS: ${complementingItems.length} complementing, ${layeringItems.length} layering`);
+  console.log(`[wardrobeContextHelpers] STYLING CONTEXT RESULTS: ${complementingItems.length} complementing, ${layeringItems.length} layering, ${outerwearItems.length} outerwear`);
 
   console.log('[wardrobeContextHelpers] 🔗 COMPLEMENTING ITEMS:');
   complementingItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
   console.log('[wardrobeContextHelpers] 🧥 LAYERING ITEMS:');
   layeringItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
+  console.log('[wardrobeContextHelpers] 🧥 OUTERWEAR ITEMS:');
+  outerwearItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
   
-  return { complementing: complementingItems, layering: layeringItems };
+  return { complementing: complementingItems, layering: layeringItems, outerwear: outerwearItems };
 };
 
 // Helper function to determine if item category complements the new item
@@ -180,6 +183,16 @@ const isComplementingCategory = (newItemCategory: ItemCategory, itemCategory: It
   return complementingMap[newItemCategory]?.includes(itemCategory) || false;
 };
 
+// Helper function to determine if item should be in outerwear category
+const isOuterwearCategory = (newItemCategory: ItemCategory, itemCategory: ItemCategory): boolean => {
+  // Outerwear items that complete any outfit (not just layering)
+  if (itemCategory === ItemCategory.OUTERWEAR) {
+    return true; // Outerwear can complete any outfit type
+  }
+  
+  return false;
+};
+
 // Helper function to determine if item can be layered with new item  
 const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCategory, newItemSubcategory?: string): boolean => {
   // Same category items can potentially layer
@@ -194,14 +207,10 @@ const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCat
     }
   }
   
-  // Cross-category layering
-  if (newItemCategory === ItemCategory.OUTERWEAR) {
-    return itemCategory === ItemCategory.TOP || itemCategory === ItemCategory.ONE_PIECE;
-  }
-  
-  // NEW: TOP and OUTERWEAR items can layer over ONE_PIECE (blazers/jackets over dresses)
+  // Cross-category layering (excluding outerwear since it has its own category now)
+  // NEW: TOP items can layer over ONE_PIECE (blazers over dresses, but NOT outerwear like coats)
   if (newItemCategory === ItemCategory.ONE_PIECE) {
-    return itemCategory === ItemCategory.TOP || itemCategory === ItemCategory.OUTERWEAR;
+    return itemCategory === ItemCategory.TOP; // Only TOP items, outerwear is separate
   }
   
   return false;

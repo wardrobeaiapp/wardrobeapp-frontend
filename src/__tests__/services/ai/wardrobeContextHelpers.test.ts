@@ -129,23 +129,26 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         expect(result.complementing.map(item => item.name)).toContain('Black Heels');
         expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
 
-        // Should include layering items: other tops and outerwear
-        expect(result.layering).toHaveLength(2);
+        // Should include layering items: other tops only
+        expect(result.layering).toHaveLength(1);
         expect(result.layering.map(item => item.name)).toContain('Basic White Tee');
-        expect(result.layering.map(item => item.name)).toContain('Navy Cardigan');
+        
+        // Should include outerwear items: cardigans, blazers, coats
+        expect(result.outerwear).toHaveLength(1);
+        expect(result.outerwear.map(item => item.name)).toContain('Navy Cardigan');
       });
 
       it('should exclude wishlist items', () => {
         const result = filterStylingContext(mockWardrobeItems, topFormData);
         
-        const allItems = [...result.complementing, ...result.layering];
+        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
         expect(allItems.map(item => item.name)).not.toContain('Wishlist Blouse');
       });
 
       it('should exclude wrong season items', () => {
         const result = filterStylingContext(mockWardrobeItems, topFormData);
         
-        const allItems = [...result.complementing, ...result.layering];
+        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
         expect(allItems.map(item => item.name)).not.toContain('Winter Coat');
       });
     });
@@ -160,14 +163,18 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
       it('should correctly split complementing and layering items for ONE_PIECE', () => {
         const result = filterStylingContext(mockWardrobeItems, dresFormData);
 
-        // Should include complementing items: shoes, accessories, outerwear
-        expect(result.complementing).toHaveLength(2); // Heels and Necklace (cardigan wrong season)
+        // Should include complementing items: shoes, accessories only
+        expect(result.complementing).toHaveLength(2); // Heels and Necklace
         expect(result.complementing.map(item => item.name)).toContain('Black Heels');
         expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
 
-        // Should include layering items: other dresses (very limited)
-        // Most one_pieces don't layer, so should be empty or very few
-        expect(result.layering.length).toBeLessThanOrEqual(1);
+        // Should include layering items: other tops that layer over dresses
+        expect(result.layering).toHaveLength(1); // Basic tee can layer
+        expect(result.layering.map(item => item.name)).toContain('Basic White Tee');
+        
+        // Should include outerwear items: cardigans, blazers that complete the look
+        expect(result.outerwear).toHaveLength(1); // Navy cardigan
+        expect(result.outerwear.map(item => item.name)).toContain('Navy Cardigan');
       });
     });
 
@@ -187,10 +194,11 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         expect(result.complementing.map(item => item.name)).toContain('Black Heels');
         expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
 
-        // Should include layering items: tops and dresses that can go underneath
-        expect(result.layering).toHaveLength(2);
-        expect(result.layering.map(item => item.name)).toContain('Basic White Tee');
-        expect(result.layering.map(item => item.name)).toContain('Slip Dress');
+        // Should include layering items: none (outerwear doesn't have cross-category layering now)
+        expect(result.layering).toHaveLength(0);
+        
+        // Should include outerwear items: other outerwear that can complement
+        expect(result.outerwear).toHaveLength(0); // No other outerwear in test data that matches season
       });
     });
 
@@ -204,8 +212,8 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
       it('should correctly split complementing and layering items for FOOTWEAR', () => {
         const result = filterStylingContext(mockWardrobeItems, footwearFormData);
 
-        // Should include complementing items: tops, bottoms, dresses, accessories, outerwear
-        expect(result.complementing).toHaveLength(4);
+        // Should include complementing items: tops, bottoms, dresses, accessories (NO outerwear)
+        expect(result.complementing).toHaveLength(3);
         expect(result.complementing.map(item => item.name)).toContain('Navy Trousers');
         expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
         expect(result.complementing.map(item => item.name)).toContain('Basic White Tee');
@@ -213,6 +221,10 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         // Footwear typically doesn't layer, so should be empty
         expect(result.layering).toHaveLength(0);
+        
+        // Should include outerwear items: cardigans, blazers, coats
+        expect(result.outerwear).toHaveLength(1);
+        expect(result.outerwear.map(item => item.name)).toContain('Navy Cardigan');
       });
     });
 
@@ -226,6 +238,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         expect(result.complementing).toHaveLength(0);
         expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should handle missing seasons', () => {
@@ -236,7 +249,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         });
 
         // Should still work, likely including all seasonal items
-        expect(result.complementing.length + result.layering.length).toBeGreaterThan(0);
+        expect(result.complementing.length + result.layering.length + result.outerwear.length).toBeGreaterThan(0);
       });
 
       it('should handle OTHER category', () => {
@@ -249,6 +262,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         // OTHER category should return empty contexts
         expect(result.complementing).toHaveLength(0);
         expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
 
       it('should handle all wishlist items', () => {
@@ -262,6 +276,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         expect(result.complementing).toHaveLength(0);
         expect(result.layering).toHaveLength(0);
+        expect(result.outerwear).toHaveLength(0);
       });
     });
 
@@ -275,7 +290,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         const result = filterStylingContext(mockWardrobeItems, winterFormData);
         
-        const allItems = [...result.complementing, ...result.layering];
+        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
         
         // Should include winter items and all-season items
         expect(allItems.map(item => item.name)).toContain('Gold Necklace'); // All-season accessory
@@ -294,7 +309,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         const result = filterStylingContext(mockWardrobeItems, multiSeasonFormData);
         
-        const allItems = [...result.complementing, ...result.layering];
+        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
         expect(allItems.length).toBeGreaterThan(3); // Should include items from both seasons
       });
     });
@@ -310,7 +325,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         { newItem: 'top', existing: 'top', shouldComplement: false }, // Same category
         
         { newItem: 'one_piece', existing: 'footwear', shouldComplement: true },
-        { newItem: 'one_piece', existing: 'outerwear', shouldComplement: true },
+        { newItem: 'one_piece', existing: 'outerwear', shouldComplement: false }, // Now goes to outerwear category
         { newItem: 'one_piece', existing: 'top', shouldComplement: false },
         
         { newItem: 'outerwear', existing: 'bottom', shouldComplement: true },
