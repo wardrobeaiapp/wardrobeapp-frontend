@@ -115,22 +115,95 @@ const handleAccessoryCategory = (item: WardrobeItem, subcategory: string, formDa
 
 /**
  * Filters wardrobe items to find styling context based on form data
+ * Returns separate arrays for complementing and layering items
  */
 export const filterStylingContext = (
   wardrobeItems: WardrobeItem[], 
   formData: { category?: string; subcategory?: string; seasons?: string[] }
-): WardrobeItem[] => {
+): { complementing: WardrobeItem[], layering: WardrobeItem[] } => {
   console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}`);
   console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
   
-  const filtered = wardrobeItems.filter(item => {
+  let complementingItems: WardrobeItem[] = [];
+  let layeringItems: WardrobeItem[] = [];
+  
+  wardrobeItems.forEach(item => {
     // Exclude wishlist items from styling context
     if (item.wishlist === true) {
-      return false;
+      return;
     }
     
     const matchesSeason = checkSeasonMatch(item, formData.seasons);
+    if (!matchesSeason) {
+      return; // Skip items that don't match season
+    }
+
+    // Determine if item is complementing or layering
+    const itemCategory = item.category as ItemCategory;
+    const newItemCategory = formData.category as ItemCategory;
     
+    if (isComplementingCategory(newItemCategory, itemCategory)) {
+      // Add original category/subcategory filtering logic for complementing items
+      if (shouldIncludeInContext(item, formData)) {
+        complementingItems.push(item);
+      }
+    } else if (isLayeringCategory(newItemCategory, itemCategory, formData.subcategory)) {
+      // Add to layering if it's a same-category item suitable for layering
+      if (shouldIncludeInContext(item, formData)) {
+        layeringItems.push(item);
+      }
+    }
+  });
+  
+  console.log(`[wardrobeContextHelpers] STYLING CONTEXT RESULTS: ${complementingItems.length} complementing, ${layeringItems.length} layering`);
+
+  console.log('[wardrobeContextHelpers] 🔗 COMPLEMENTING ITEMS:');
+  complementingItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
+  console.log('[wardrobeContextHelpers] 🧥 LAYERING ITEMS:');
+  layeringItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
+  
+  return { complementing: complementingItems, layering: layeringItems };
+};
+
+// Helper function to determine if item category complements the new item
+const isComplementingCategory = (newItemCategory: ItemCategory, itemCategory: ItemCategory): boolean => {
+  const complementingMap: Record<ItemCategory, ItemCategory[]> = {
+    [ItemCategory.TOP]: [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY],
+    [ItemCategory.BOTTOM]: [ItemCategory.TOP, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
+    [ItemCategory.ONE_PIECE]: [ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
+    [ItemCategory.FOOTWEAR]: [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE, ItemCategory.ACCESSORY, ItemCategory.OUTERWEAR],
+    [ItemCategory.OUTERWEAR]: [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.ACCESSORY],
+    [ItemCategory.ACCESSORY]: [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR],
+    [ItemCategory.OTHER]: []
+  };
+
+  return complementingMap[newItemCategory]?.includes(itemCategory) || false;
+};
+
+// Helper function to determine if item can be layered with new item  
+const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCategory, newItemSubcategory?: string): boolean => {
+  // Same category items can potentially layer
+  if (newItemCategory === itemCategory) {
+    // TOP + TOP: layering pieces like cardigans over basic tops
+    if (newItemCategory === ItemCategory.TOP) {
+      return true; // Will filter by subcategory rules later
+    }
+    // ONE_PIECE + ONE_PIECE: dresses can layer in some cases
+    if (newItemCategory === ItemCategory.ONE_PIECE) {
+      return true; // Will filter by subcategory rules later
+    }
+  }
+  
+  // Cross-category layering
+  if (newItemCategory === ItemCategory.OUTERWEAR) {
+    return itemCategory === ItemCategory.TOP || itemCategory === ItemCategory.ONE_PIECE;
+  }
+  
+  return false;
+};
+
+// Helper function to check if item should be included based on original logic
+const shouldIncludeInContext = (item: WardrobeItem, formData: { category?: string; subcategory?: string; seasons?: string[] }): boolean => {
     // Handle ACCESSORY category with configuration
     if (formData.category === ItemCategory.ACCESSORY && formData.subcategory) {
       return handleAccessoryCategory(item, formData.subcategory, formData);
@@ -138,7 +211,6 @@ export const filterStylingContext = (
 
     // Handle OTHER category - no styling context needed
     if (formData.category === ItemCategory.OTHER) {
-      console.log(`[wardrobeContextHelpers] Debug - OTHER category: no styling context needed`);
       return false;
     }
     
@@ -148,12 +220,8 @@ export const filterStylingContext = (
       const rules = stylingRules[subcategoryKey];
       
       if (rules) {
-        console.log(`[wardrobeContextHelpers] Debug - Found styling rules for '${subcategoryKey}':`, rules);
-        console.log(`[wardrobeContextHelpers] Debug - checking item: ${item.name}, category: ${item.category}, subcategory: ${item.subcategory}, season: ${item.season}`);
-        
         // Define main categories based on form category
         const mainCategories = getMainCategoriesForRuleBased(formData.category as ItemCategory);
-        console.log(`[wardrobeContextHelpers] Debug - Main categories for ${formData.category}:`, mainCategories);
         const { matchesMainCategories, matchesTops, matchesAccessories } = checkRuleBasedMatches(item, rules, mainCategories);
         
         // Special case for OUTERWEAR - include specific ONE_PIECE items
@@ -166,24 +234,11 @@ export const filterStylingContext = (
           (item.category as string) === ItemCategory.ACCESSORY && 
           checkSubcategoryMatch(item, ['socks']) : false;
         
-        console.log(`[wardrobeContextHelpers] Debug - matchesMainCategories: ${matchesMainCategories}, matchesTops: ${!!matchesTops}, matchesAccessories: ${!!matchesAccessories}, matchesOnePiece: ${matchesOnePiece}, matchesFootwearAccessories: ${matchesFootwearAccessories}, matchesSeason: ${matchesSeason}`);
-        
-        return (matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories) && matchesSeason;
-      } else {
-        console.log(`[wardrobeContextHelpers] Debug - NO styling rules found for subcategory '${subcategoryKey}'`);
-        return false;
+        return matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories;
       }
     }
     
-    return false; // No styling rules for this category/subcategory
-  });
-  
-  console.log(`[wardrobeContextHelpers] STYLING CONTEXT FILTERED RESULTS: ${filtered.length} items selected`);
-  filtered.forEach(item => {
-    console.log(`[wardrobeContextHelpers] Selected item: ${item.name} - ${item.category} (${item.subcategory}) - COLOR: ${item.color}`);
-  });
-  
-  return filtered;
+    return false;
 };
 
 const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] => {
@@ -241,9 +296,7 @@ export const filterSimilarContext = (
     const matchesSeason = formData.seasons?.some(season => 
       item.season?.includes(season as any)
     ) ?? true; // If no seasons specified, include all
-    
-    console.log(`[wardrobeContextHelpers] Item: ${item.name} - Category match: ${matchesCategory} (${item.category} vs ${formData.category}), Subcategory match: ${matchesSubcategory} (${item.subcategory} vs ${formData.subcategory}), Season match: ${matchesSeason}, Item seasons: [${item.season?.join(',') || 'NONE'}], Form seasons: [${formData.seasons?.join(',') || 'NONE'}], Color: ${item.color}`);
-    
+        
     const shouldInclude = matchesCategory && matchesSubcategory && matchesSeason;
     
     return shouldInclude;

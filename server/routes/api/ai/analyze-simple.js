@@ -194,7 +194,7 @@ router.post('/', async (req, res) => {
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       analysis: analysisResponse,
-      score: initialScore, // Frontend will convert this to action/status
+      score: analysisResult.score, // Frontend will convert this to action/status
       recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
       

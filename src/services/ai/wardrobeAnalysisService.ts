@@ -153,7 +153,8 @@ export const wardrobeAnalysisService = {
         console.log('[wardrobeAnalysisService] Enhanced formData with color:', enhancedFormData);
         
         // Filter for styling context using helper function
-        stylingContext = filterStylingContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
+        const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData);
+        stylingContext = [...stylingContextResult.complementing, ...stylingContextResult.layering] as WardrobeItem[];
         
         // Filter for gap analysis context using helper function
         similarContext = filterSimilarContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
