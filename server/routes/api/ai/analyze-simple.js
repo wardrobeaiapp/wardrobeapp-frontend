@@ -170,21 +170,18 @@ router.post('/', async (req, res) => {
     analysisResponse = analysisResponse.replace(/REASON:?\s*[\s\S]*?$/i, '');
     analysisResponse = analysisResponse.trim();
     
-    // Extract suitable scenarios using dedicated function (from raw response)
     const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
     
     // Analyze scenario coverage to get score and objective reason
     // Pass duplicate analysis results to prioritize duplicate detection in scoring
     const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
     const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysisForScore);
-    const initialScore = analysisResult.score;
     const objectiveFinalReason = analysisResult.reason;
     
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
-    console.log('Score from coverage analysis:', initialScore);
+    console.log('Score from coverage analysis:', analysisResult.score);
     console.log('Claude recommendation:', claudeRecommendation);
-    console.log('Claude reason:', finalReason);
     console.log('Objective reason:', objectiveFinalReason);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');

@@ -233,7 +233,7 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   if (gapType === 'expansion' && duplicateAnalysis && !duplicateAnalysis.duplicate_analysis.found) {
     // Only run variety analysis for expansion gaps when no duplicates found
     // We need the newItem from duplicateAnalysis context - for now, skip if not available
-    console.log('🎨 Running variety analysis for expansion gap...');
+    console.log(' Running variety analysis for expansion gap...');
     // TODO: Implement when we have access to newItem and existingItems
     // varietyModifier = calculateVarietyScoreModifier(newItem, existingItems, gapType);
     // finalScore = initialScore + varietyModifier.modifier;
