@@ -193,6 +193,48 @@ const isOuterwearCategory = (newItemCategory: ItemCategory, itemCategory: ItemCa
   return false;
 };
 
+/**
+ * Helper function to filter outerwear based on AI-detected incompatibilities
+ * This works with the enhanced AI prompt that detects real physical/structural conflicts
+ * @param {WardrobeItem} outerwearItem - The outerwear item to check
+ * @param {WardrobeItem} targetItem - The item being analyzed (from form data)
+ * @param {Object} aiAnalysisResult - Results from AI analysis with detected incompatibilities
+ * @returns {boolean} - Whether this outerwear is compatible
+ */
+export const isOuterwearCompatible = (
+  outerwearItem: WardrobeItem, 
+  targetItem: { subcategory?: string; [key: string]: any }, 
+  aiAnalysisResult?: { incompatibleOuterwear?: string[] }
+): boolean => {
+  // If AI analysis hasn't detected any incompatibilities, assume compatible
+  if (!aiAnalysisResult?.incompatibleOuterwear) {
+    return true;
+  }
+  
+  // Check if this specific outerwear item was flagged as incompatible
+  const incompatibleItems = aiAnalysisResult.incompatibleOuterwear;
+  
+  // Match by name or subcategory (AI might reference either)
+  const isIncompatible = incompatibleItems.some(incompatible => {
+    const incompatibleLower = incompatible.toLowerCase();
+    const itemNameLower = outerwearItem.name.toLowerCase();
+    const itemSubcategoryLower = outerwearItem.subcategory?.toLowerCase();
+    
+    return (
+      // Check if incompatible term is in item name
+      incompatibleLower.includes(itemNameLower) ||
+      // Check if incompatible term is in item subcategory (only if subcategory exists)
+      (itemSubcategoryLower && incompatibleLower.includes(itemSubcategoryLower)) ||
+      // Check if item name contains incompatible term
+      itemNameLower.includes(incompatibleLower) ||
+      // Check if item subcategory contains incompatible term (only if subcategory exists)
+      (itemSubcategoryLower && itemSubcategoryLower.includes(incompatibleLower))
+    );
+  });
+  
+  return !isIncompatible;
+};
+
 // Helper function to determine if item can be layered with new item  
 const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCategory, newItemSubcategory?: string): boolean => {
   // Same category items can potentially layer

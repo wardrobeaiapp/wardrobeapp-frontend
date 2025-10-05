@@ -104,7 +104,10 @@ function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData,
     systemPrompt += duplicatePromptSection;
   }
   
-  systemPrompt += " End your response with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'.";
+  systemPrompt += "\n\n📝 RESPONSE FORMAT:";
+  systemPrompt += "\n• If you detect outerwear incompatibilities, include a section: 'OUTERWEAR INCOMPATIBILITIES: [list specific items that won't work, e.g. 'fitted blazers', 'slim jackets']'";
+  systemPrompt += "\n• End with 'REASON: [brief explanation]', then 'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]'";
+  systemPrompt += "\n• Only list REAL physical incompatibilities, not style preferences";
 
   return systemPrompt;
 }
@@ -236,6 +239,25 @@ function buildAnalysisRulesSection() {
   section += "\n• If you cannot determine something from the image, say 'cannot determine from image'";
   section += "\n• Don't guess or assume - base analysis on visible evidence only";
   section += "\n• Focus on characteristics that will matter for future styling decisions";
+
+  section += "\n\n🧥 OUTERWEAR COMPATIBILITY RULES:";
+  section += "\n• ONLY flag TRUE incompatibilities - real physical/structural conflicts, not style preferences";
+  section += "\n• MAJOR INCOMPATIBILITIES (flag these):";
+  section += "\n  ⚠️  Puffy/balloon sleeves + fitted blazers/jackets (sleeves won't fit)";
+  section += "\n  ⚠️  Extremely voluminous/oversized items + fitted coats (too much bulk)";
+  section += "\n  ⚠️  High cowl necks/turtlenecks + crew/high neckline blazers (neckline clash)";
+  section += "\n  ⚠️  Very structured shoulders + structured blazers (shoulder conflicts)";
+  section += "\n  ⚠️  Thick chunky knits + slim-fit blazers (thickness incompatibility)";
+  
+  section += "\n• USUALLY COMPATIBLE (don't flag these):";
+  section += "\n  ✅  Regular sleeves (fitted, relaxed, 3/4) + most outerwear";
+  section += "\n  ✅  Standard necklines (crew, v-neck, scoop) + most jackets";
+  section += "\n  ✅  Normal-thickness tops + appropriately-sized outerwear";
+  section += "\n  ✅  Dresses + blazers/cardigans (very common combination)";
+  section += "\n  ✅  Basic tees/blouses + jackets (fundamental layering)";
+  
+  section += "\n• BE CONSERVATIVE - only flag obvious physical impossibilities, not debatable style choices";
+  section += "\n• Most clothing is designed to work together - incompatibilities are RARE exceptions";
 
   return section;
 }

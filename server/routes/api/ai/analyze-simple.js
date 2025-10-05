@@ -17,6 +17,21 @@ const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../ut
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 
+/**
+ * OUTERWEAR COMPATIBILITY FEATURE:
+ * 
+ * The AI now detects real physical/structural incompatibilities between items and outerwear.
+ * This prevents suggesting combinations that users literally cannot wear (e.g., puffy sleeves + fitted blazers).
+ * 
+ * How it works:
+ * 1. Enhanced AI prompt teaches the difference between real incompatibilities vs. style preferences
+ * 2. AI only flags RARE cases of true physical conflicts (sleeve volume, thickness, neckline clashes)
+ * 3. AI responds with "OUTERWEAR INCOMPATIBILITIES: [specific items]" section if conflicts detected
+ * 4. Frontend can use isOuterwearCompatible() helper to filter suggestions
+ * 
+ * Conservative approach: Most items are compatible by design - only obvious impossibilities are flagged
+ */
+
 // Initialize Claude client
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

@@ -81,7 +81,14 @@ describe('Scenario Detection and Filtering Integration', () => {
       expect(prompt).toContain('STYLE LEVEL CLASSIFICATION');
       expect(prompt).toContain('FORMALITY LEVEL (1-5 scale)');
       expect(prompt).toContain('COLOR & PATTERN ANALYSIS');
-      expect(prompt).toContain('End your response with \'REASON: [brief explanation]\'');
+      expect(prompt).toContain('End with \'REASON: [brief explanation]\', then \'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]\'');
+      
+      // Should include new outerwear compatibility rules
+      expect(prompt).toContain('OUTERWEAR COMPATIBILITY RULES');
+      expect(prompt).toContain('MAJOR INCOMPATIBILITIES (flag these)');
+      expect(prompt).toContain('Puffy/balloon sleeves + fitted blazers/jackets');
+      expect(prompt).toContain('OUTERWEAR INCOMPATIBILITIES: [list specific items');
+      expect(prompt).toContain('BE CONSERVATIVE - only flag obvious physical impossibilities');
     });
   });
 
