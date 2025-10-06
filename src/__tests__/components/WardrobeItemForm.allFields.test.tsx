@@ -403,6 +403,128 @@ describe('WardrobeItemForm - Complete Field Testing', () => {
     });
   });
 
+  describe('Conditional Fields Logic Tests', () => {
+    // Add specific test cases for edge cases to improve mocked test coverage
+    it('should test outerwear type field inclusion in mocked scenario', async () => {
+      // Update mock to return outerwear-specific form data
+      const outerwearFormData = {
+        ...COMPLETE_FORM_DATA,
+        category: ItemCategory.OUTERWEAR,
+        subcategory: 'jacket',
+        type: 'blazer', // This was the bug - would be undefined in real hook
+        seasons: [Season.WINTER]
+      };
+      
+      mockFormState.getFormData.mockReturnValue(outerwearFormData);
+
+      render(
+        <WardrobeItemForm
+          onSubmit={mockOnSubmit}
+          onCancel={mockOnCancel}
+        />
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('form-actions')).toBeInTheDocument();
+      });
+
+      const form = screen.getByRole('form');
+      fireEvent.submit(form);
+
+      await waitFor(() => {
+        expect(mockOnSubmit).toHaveBeenCalled();
+      });
+
+      const submittedItem = mockOnSubmit.mock.calls[0][0];
+      
+      // Critical regression test - this should NOT be undefined for outerwear jackets
+      expect(submittedItem.type).toBe('blazer');
+      expect(submittedItem.category).toBe(ItemCategory.OUTERWEAR);
+      expect(submittedItem.subcategory).toBe('jacket');
+    });
+
+    it('should verify ALL conditional field scenarios in mocked tests', async () => {
+      const conditionalTestCases = [
+        {
+          name: 'outerwear jacket with type',
+          formData: {
+            ...COMPLETE_FORM_DATA,
+            category: ItemCategory.OUTERWEAR,
+            subcategory: 'jacket',
+            type: 'blazer',
+            length: 'regular'
+          },
+          expectedFields: { type: 'blazer', length: 'regular' }
+        },
+        {
+          name: 'outerwear coat with type',
+          formData: {
+            ...COMPLETE_FORM_DATA,
+            category: ItemCategory.OUTERWEAR,
+            subcategory: 'coat', 
+            type: 'trench',
+            length: 'long'
+          },
+          expectedFields: { type: 'trench', length: 'long' }
+        },
+        {
+          name: 'footwear boots with all fields',
+          formData: {
+            ...COMPLETE_FORM_DATA,
+            category: ItemCategory.FOOTWEAR,
+            subcategory: 'boots',
+            type: 'ankle boots',
+            heelHeight: 'medium',
+            bootHeight: 'ankle'
+          },
+          expectedFields: { type: 'ankle boots', heelHeight: 'medium', bootHeight: 'ankle' }
+        },
+        {
+          name: 'accessory bag with type',
+          formData: {
+            ...COMPLETE_FORM_DATA,
+            category: ItemCategory.ACCESSORY,
+            subcategory: 'bag',
+            type: 'tote',
+            style: undefined // Should be undefined for accessories
+          },
+          expectedFields: { type: 'tote', style: undefined }
+        }
+      ];
+
+      for (const testCase of conditionalTestCases) {
+        mockFormState.getFormData.mockReturnValue(testCase.formData);
+
+        render(
+          <WardrobeItemForm
+            onSubmit={mockOnSubmit}
+            onCancel={mockOnCancel}
+          />
+        );
+
+        await waitFor(() => {
+          expect(screen.getByTestId('form-actions')).toBeInTheDocument();
+        });
+
+        const form = screen.getByRole('form');
+        fireEvent.submit(form);
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+
+        const submittedItem = mockOnSubmit.mock.calls[0][0];
+        
+        // Verify expected fields for this test case
+        Object.entries(testCase.expectedFields).forEach(([field, expectedValue]) => {
+          expect(submittedItem[field]).toBe(expectedValue);
+        });
+
+        jest.clearAllMocks();
+      }
+    });
+  });
+
   describe('Category-Specific Field Tests', () => {
     const categoryTestCases = [
       {
