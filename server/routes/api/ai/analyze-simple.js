@@ -15,6 +15,7 @@ const imageValidator = require('../../../utils/imageValidator');
 // Import new modular utilities
 const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../utils/ai/analysisScopeUtils');
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
+const { buildCompatibilityCheckingPrompt, extractItemDataForCompatibility, parseCompatibilityResponse } = require('../../../utils/ai/complementingCompatibilityPrompt');
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 
 /**
@@ -206,6 +207,69 @@ router.post('/', async (req, res) => {
     const extractedCharacteristics = extractItemCharacteristics(rawAnalysisResponse, analysisScope, preFilledData);
     console.log('🏷️ Extracted characteristics:', extractedCharacteristics);
 
+    // === COMPLEMENTING ITEMS COMPATIBILITY CHECK ===
+    let compatibleComplementingItems = null;
+    if (stylingContext && stylingContext.length > 0) {
+      console.log('\n=== STEP: Complementing Items Compatibility Check ===');
+      
+      try {
+        // Extract item data from available sources
+        const itemDataForCompatibility = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
+        
+        // Filter to get only complementing items (not layering/outerwear)
+        const complementingItems = stylingContext.filter(item => {
+          const newCategory = formData?.category?.toLowerCase();
+          const existingCategory = item.category?.toLowerCase();
+          
+          // Basic complementing category check
+          const complementingMap = {
+            'top': ['bottom', 'footwear', 'accessory'],
+            'bottom': ['top', 'footwear', 'accessory', 'outerwear'],
+            'one_piece': ['footwear', 'accessory'],
+            'footwear': ['top', 'bottom', 'one_piece', 'accessory', 'outerwear'],
+            'outerwear': ['bottom', 'footwear', 'accessory'],
+            'accessory': ['top', 'bottom', 'one_piece', 'footwear', 'outerwear']
+          };
+          
+          const validComplements = complementingMap[newCategory] || [];
+          return validComplements.includes(existingCategory);
+        });
+        
+        console.log(`🔍 Found ${complementingItems.length} complementing items to evaluate`);
+        
+        if (complementingItems.length > 0) {
+          // Build compatibility checking prompt
+          const compatibilityPrompt = buildCompatibilityCheckingPrompt(itemDataForCompatibility, complementingItems);
+          
+          // Make Claude compatibility check call
+          console.log('🤖 Calling Claude for compatibility evaluation...');
+          const compatibilityResponse = await anthropic.messages.create({
+            model: "claude-3-haiku-20240307",
+            max_tokens: 1024,
+            messages: [{
+              role: "user",
+              content: compatibilityPrompt
+            }]
+          });
+          
+          const rawCompatibilityResponse = compatibilityResponse.content[0].text;
+          console.log('🎯 Claude compatibility response received');
+          
+          // Parse compatibility response
+          compatibleComplementingItems = parseCompatibilityResponse(rawCompatibilityResponse);
+          
+          console.log('✅ Compatible complementing items by category:', JSON.stringify(compatibleComplementingItems, null, 2));
+        } else {
+          console.log('ℹ️ No complementing items found to evaluate');
+        }
+      } catch (error) {
+        console.error('❌ Error in compatibility checking:', error);
+        // Continue without compatibility data rather than failing the whole request
+      }
+    } else {
+      console.log('ℹ️ No styling context provided for compatibility checking');
+    }
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       analysis: analysisResponse,
@@ -215,6 +279,9 @@ router.post('/', async (req, res) => {
       
       // COMPREHENSIVE CHARACTERISTICS for future compatibility analysis
       itemCharacteristics: extractedCharacteristics,
+      
+      // COMPATIBLE COMPLEMENTING ITEMS grouped by category
+      compatibleComplementingItems: compatibleComplementingItems,
       
       // Data integration info
       dataIntegration: {
