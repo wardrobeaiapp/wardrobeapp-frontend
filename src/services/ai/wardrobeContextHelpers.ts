@@ -114,17 +114,30 @@ const handleAccessoryCategory = (item: WardrobeItem, subcategory: string, formDa
 };
 
 /**
+ * Structured complementing items grouped by category
+ */
+export interface ComplementingItems {
+  bottoms?: WardrobeItem[];
+  footwear?: WardrobeItem[];
+  accessories?: WardrobeItem[];
+  tops?: WardrobeItem[];
+  onePieces?: WardrobeItem[];
+  outerwear?: WardrobeItem[]; // For cases where outerwear complements (rare, but possible)
+}
+
+/**
  * Filters wardrobe items to find styling context based on form data
- * Returns separate arrays for complementing, layering, and outerwear items
+ * Returns structured complementing items grouped by category, plus layering and outerwear arrays
  */
 export const filterStylingContext = (
   wardrobeItems: WardrobeItem[], 
   formData: { category?: string; subcategory?: string; seasons?: string[] }
-): { complementing: WardrobeItem[], layering: WardrobeItem[], outerwear: WardrobeItem[] } => {
+): { complementing: ComplementingItems, layering: WardrobeItem[], outerwear: WardrobeItem[] } => {
   console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}`);
   console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
   
-  let complementingItems: WardrobeItem[] = [];
+  // Initialize structured complementing items
+  let complementingItems: ComplementingItems = {};
   let layeringItems: WardrobeItem[] = [];
   let outerwearItems: WardrobeItem[] = [];
   
@@ -146,7 +159,33 @@ export const filterStylingContext = (
     } else if (isComplementingCategory(newItemCategory, itemCategory)) {
       // Add original category/subcategory filtering logic for complementing items
       if (shouldIncludeInContext(item, formData)) {
-        complementingItems.push(item);
+        // Group by category
+        switch (itemCategory) {
+          case ItemCategory.BOTTOM:
+            if (!complementingItems.bottoms) complementingItems.bottoms = [];
+            complementingItems.bottoms.push(item);
+            break;
+          case ItemCategory.FOOTWEAR:
+            if (!complementingItems.footwear) complementingItems.footwear = [];
+            complementingItems.footwear.push(item);
+            break;
+          case ItemCategory.ACCESSORY:
+            if (!complementingItems.accessories) complementingItems.accessories = [];
+            complementingItems.accessories.push(item);
+            break;
+          case ItemCategory.TOP:
+            if (!complementingItems.tops) complementingItems.tops = [];
+            complementingItems.tops.push(item);
+            break;
+          case ItemCategory.ONE_PIECE:
+            if (!complementingItems.onePieces) complementingItems.onePieces = [];
+            complementingItems.onePieces.push(item);
+            break;
+          case ItemCategory.OUTERWEAR:
+            if (!complementingItems.outerwear) complementingItems.outerwear = [];
+            complementingItems.outerwear.push(item);
+            break;
+        }
       }
     } else if (isLayeringCategory(newItemCategory, itemCategory, formData.subcategory)) {
       // Add to layering if it's a same-category item suitable for layering
@@ -156,16 +195,47 @@ export const filterStylingContext = (
     }
   });
   
-  console.log(`[wardrobeContextHelpers] STYLING CONTEXT RESULTS: ${complementingItems.length} complementing, ${layeringItems.length} layering, ${outerwearItems.length} outerwear`);
+  // Calculate total complementing items count
+  const totalComplementing = Object.values(complementingItems).reduce((total, items) => total + (items?.length || 0), 0);
+  console.log(`[wardrobeContextHelpers] STYLING CONTEXT RESULTS: ${totalComplementing} complementing, ${layeringItems.length} layering, ${outerwearItems.length} outerwear`);
 
-  console.log('[wardrobeContextHelpers] 🔗 COMPLEMENTING ITEMS:');
-  complementingItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
+  console.log('[wardrobeContextHelpers] 🔗 COMPLEMENTING ITEMS (by category):');
+  Object.entries(complementingItems).forEach(([category, items]) => {
+    if (items && items.length > 0) {
+      console.log(`  ${category.toUpperCase()}: ${items.length} items`);
+      items.forEach((item: WardrobeItem, i: number) => console.log(`    ${i+1}. ${item.name} (${item.subcategory})`));
+    }
+  });
   console.log('[wardrobeContextHelpers] 🧥 LAYERING ITEMS:');
   layeringItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
   console.log('[wardrobeContextHelpers] 🧥 OUTERWEAR ITEMS:');
   outerwearItems.forEach((item, i) => console.log(`  ${i+1}. ${item.name} (${item.category})`));
   
   return { complementing: complementingItems, layering: layeringItems, outerwear: outerwearItems };
+};
+
+/**
+ * Helper function to flatten structured complementing items into a single array
+ * Useful for backwards compatibility with existing code
+ */
+export const flattenComplementingItems = (complementingItems: ComplementingItems): WardrobeItem[] => {
+  const result: WardrobeItem[] = [];
+  
+  // Iterate through all categories and combine items
+  Object.values(complementingItems).forEach(items => {
+    if (items) {
+      result.push(...items);
+    }
+  });
+  
+  return result;
+};
+
+/**
+ * Helper function to get total count of complementing items
+ */
+export const getComplementingItemsCount = (complementingItems: ComplementingItems): number => {
+  return Object.values(complementingItems).reduce((total, items) => total + (items?.length || 0), 0);
 };
 
 // Helper function to determine if item category complements the new item

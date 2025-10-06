@@ -154,7 +154,15 @@ export const wardrobeAnalysisService = {
         
         // Filter for styling context using helper function
         const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData);
-        stylingContext = [...stylingContextResult.complementing, ...stylingContextResult.layering, ...stylingContextResult.outerwear] as WardrobeItem[];
+        
+        // Import helper function for flattening structured complementing items
+        const { flattenComplementingItems } = require('./wardrobeContextHelpers');
+        
+        stylingContext = [
+          ...flattenComplementingItems(stylingContextResult.complementing), 
+          ...stylingContextResult.layering, 
+          ...stylingContextResult.outerwear
+        ] as WardrobeItem[];
         
         // Filter for gap analysis context using helper function
         similarContext = filterSimilarContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
