@@ -2,7 +2,7 @@
  * Unit tests for wardrobeContextHelpers - Styling Context Splitting
  */
 
-import { filterStylingContext } from '../../../services/ai/wardrobeContextHelpers';
+import { filterStylingContext, flattenComplementingItems, getComplementingItemsCount } from '../../../services/ai/wardrobeContextHelpers';
 import { WardrobeItem, ItemCategory, Season } from '../../../types';
 
 describe('wardrobeContextHelpers - Styling Context Splitting', () => {
@@ -124,10 +124,11 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         const result = filterStylingContext(mockWardrobeItems, topFormData);
 
         // Should include complementing items: bottoms, shoes, accessories
-        expect(result.complementing).toHaveLength(3);
-        expect(result.complementing.map(item => item.name)).toContain('Navy Trousers');
-        expect(result.complementing.map(item => item.name)).toContain('Black Heels');
-        expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
+        const flattenedComplementing = flattenComplementingItems(result.complementing);
+        expect(flattenedComplementing).toHaveLength(3);
+        expect(flattenedComplementing.map(item => item.name)).toContain('Navy Trousers');
+        expect(flattenedComplementing.map(item => item.name)).toContain('Black Heels');
+        expect(flattenedComplementing.map(item => item.name)).toContain('Gold Necklace');
 
         // Should include layering items: other tops only
         expect(result.layering).toHaveLength(1);
@@ -164,9 +165,10 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         const result = filterStylingContext(mockWardrobeItems, dresFormData);
 
         // Should include complementing items: shoes, accessories only
-        expect(result.complementing).toHaveLength(2); // Heels and Necklace
-        expect(result.complementing.map(item => item.name)).toContain('Black Heels');
-        expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
+        const flattenedComplementing2 = flattenComplementingItems(result.complementing);
+        expect(flattenedComplementing2).toHaveLength(2); // Heels and Necklace
+        expect(flattenedComplementing2.map(item => item.name)).toContain('Black Heels');
+        expect(flattenedComplementing2.map(item => item.name)).toContain('Gold Necklace');
 
         // Should include layering items: other tops that layer over dresses
         expect(result.layering).toHaveLength(1); // Basic tee can layer
@@ -189,10 +191,11 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         const result = filterStylingContext(mockWardrobeItems, outerwearFormData);
 
         // Should include complementing items: bottoms, shoes, accessories
-        expect(result.complementing).toHaveLength(3);
-        expect(result.complementing.map(item => item.name)).toContain('Navy Trousers');
-        expect(result.complementing.map(item => item.name)).toContain('Black Heels');
-        expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
+        const flattenedComplementing3 = flattenComplementingItems(result.complementing);
+        expect(flattenedComplementing3).toHaveLength(3);
+        expect(flattenedComplementing3.map(item => item.name)).toContain('Navy Trousers');
+        expect(flattenedComplementing3.map(item => item.name)).toContain('Black Heels');
+        expect(flattenedComplementing3.map(item => item.name)).toContain('Gold Necklace');
 
         // Should include layering items: none (outerwear doesn't have cross-category layering now)
         expect(result.layering).toHaveLength(0);
@@ -213,11 +216,12 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         const result = filterStylingContext(mockWardrobeItems, footwearFormData);
 
         // Should include complementing items: tops, bottoms, dresses, accessories (NO outerwear)
-        expect(result.complementing).toHaveLength(3);
-        expect(result.complementing.map(item => item.name)).toContain('Navy Trousers');
-        expect(result.complementing.map(item => item.name)).toContain('Gold Necklace');
-        expect(result.complementing.map(item => item.name)).toContain('Basic White Tee');
-        expect(result.complementing.map(item => item.name)).toContain('Slip Dress');
+        const flattenedComplementing4 = flattenComplementingItems(result.complementing);
+        expect(flattenedComplementing4).toHaveLength(4);
+        expect(flattenedComplementing4.map(item => item.name)).toContain('Navy Trousers');
+        expect(flattenedComplementing4.map(item => item.name)).toContain('Gold Necklace');
+        expect(flattenedComplementing4.map(item => item.name)).toContain('Basic White Tee');
+        expect(flattenedComplementing4.map(item => item.name)).toContain('Slip Dress');
 
         // Footwear typically doesn't layer, so should be empty
         expect(result.layering).toHaveLength(0);
@@ -249,7 +253,8 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         });
 
         // Should still work, likely including all seasonal items
-        expect(result.complementing.length + result.layering.length + result.outerwear.length).toBeGreaterThan(0);
+        const totalItems = getComplementingItemsCount(result.complementing) + result.layering.length + result.outerwear.length;
+        expect(totalItems).toBeGreaterThan(0);
       });
 
       it('should handle OTHER category', () => {
@@ -290,7 +295,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         const result = filterStylingContext(mockWardrobeItems, winterFormData);
         
-        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
+        const allItems = [...flattenComplementingItems(result.complementing), ...result.layering, ...result.outerwear];
         
         // Should include winter items and all-season items
         expect(allItems.map(item => item.name)).toContain('Gold Necklace'); // All-season accessory
@@ -309,7 +314,7 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
 
         const result = filterStylingContext(mockWardrobeItems, multiSeasonFormData);
         
-        const allItems = [...result.complementing, ...result.layering, ...result.outerwear];
+        const allItems = [...flattenComplementingItems(result.complementing), ...result.layering, ...result.outerwear];
         expect(allItems.length).toBeGreaterThan(3); // Should include items from both seasons
       });
     });
@@ -346,9 +351,9 @@ describe('wardrobeContextHelpers - Styling Context Splitting', () => {
         });
 
         if (shouldComplement) {
-          expect(result.complementing.length).toBeGreaterThan(0);
+          expect(getComplementingItemsCount(result.complementing)).toBeGreaterThan(0);
         } else {
-          expect(result.complementing.length).toBe(0);
+          expect(getComplementingItemsCount(result.complementing)).toBe(0);
         }
       });
     });

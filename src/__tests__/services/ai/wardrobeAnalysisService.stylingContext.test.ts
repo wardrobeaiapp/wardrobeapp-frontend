@@ -96,7 +96,7 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
   it('should handle empty styling context gracefully', async () => {
     mockFilterStylingContext.mockReturnValue({
-      complementing: [],
+      complementing: {},
       layering: [],
       outerwear: []
     });
@@ -139,7 +139,7 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
     it('should handle partial styling context results', async () => {
       mockFilterStylingContext.mockReturnValue({
-        complementing: [mockWardrobeItems[0]],
+        complementing: { bottoms: [mockWardrobeItems[0]] },
         layering: [], // Empty layering
         outerwear: []
       });
@@ -168,7 +168,7 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       };
 
       mockFilterStylingContext.mockReturnValue({
-        complementing: [mockWardrobeItems[1]], // Just heels
+        complementing: { footwear: [mockWardrobeItems[1]] }, // Just heels
         layering: [], // Dresses typically don't layer
         outerwear: []
       });
@@ -193,7 +193,10 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       };
 
       mockFilterStylingContext.mockReturnValue({
-        complementing: [mockWardrobeItems[0], mockWardrobeItems[1]], // Trousers, heels
+        complementing: { 
+          bottoms: [mockWardrobeItems[0]], // Trousers
+          footwear: [mockWardrobeItems[1]] // Heels
+        },
         layering: [mockWardrobeItems[2]], // Basic tee that can go underneath
         outerwear: []
       });
@@ -227,7 +230,11 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       });
 
       mockFilterStylingContext.mockReturnValue({
-        complementing: largeWardrobe.slice(0, 20),
+        complementing: { 
+          bottoms: largeWardrobe.slice(0, 7),
+          footwear: largeWardrobe.slice(7, 13), 
+          accessories: largeWardrobe.slice(13, 20)
+        },
         layering: largeWardrobe.slice(20, 25),
         outerwear: []
       });
