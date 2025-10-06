@@ -16,6 +16,7 @@ const imageValidator = require('../../../utils/imageValidator');
 const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../utils/ai/analysisScopeUtils');
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
 const { buildCompatibilityCheckingPrompt, extractItemDataForCompatibility, parseCompatibilityResponse } = require('../../../utils/ai/complementingCompatibilityPrompt');
+const { isItemSuitableForLayering, buildLayeringCompatibilityPrompt, parseLayeringCompatibilityResponse, getLayeringItemsFromContext } = require('../../../utils/ai/layeringCompatibilityPrompt');
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 
 /**
@@ -270,6 +271,56 @@ router.post('/', async (req, res) => {
       console.log('ℹ️ No styling context provided for compatibility checking');
     }
 
+    // === LAYERING ITEMS COMPATIBILITY CHECK ===
+    let compatibleLayeringItems = null;
+    if (stylingContext && stylingContext.length > 0) {
+      console.log('\n=== STEP: Layering Items Compatibility Check ===');
+      
+      try {
+        // First check if the item is suitable for layering
+        const itemDataForLayering = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
+        const isSuitableForLayering = isItemSuitableForLayering(itemDataForLayering, extractedCharacteristics);
+        
+        if (isSuitableForLayering) {
+          // Get layering items from styling context
+          const layeringItems = getLayeringItemsFromContext(stylingContext, formData?.category);
+          
+          if (layeringItems.length > 0) {
+            // Build layering compatibility prompt
+            const layeringPrompt = buildLayeringCompatibilityPrompt(itemDataForLayering, layeringItems);
+            
+            // Make Claude layering compatibility check call
+            console.log('🤖 Calling Claude for layering compatibility evaluation...');
+            const layeringResponse = await anthropic.messages.create({
+              model: "claude-3-haiku-20240307",
+              max_tokens: 1024,
+              messages: [{
+                role: "user",
+                content: layeringPrompt
+              }]
+            });
+            
+            const rawLayeringResponse = layeringResponse.content[0].text;
+            console.log('🎯 Claude layering compatibility response received');
+            
+            // Parse layering compatibility response
+            compatibleLayeringItems = parseLayeringCompatibilityResponse(rawLayeringResponse);
+            
+            console.log('✅ Compatible layering items by category:', JSON.stringify(compatibleLayeringItems, null, 2));
+          } else {
+            console.log('ℹ️ No layering items found to evaluate');
+          }
+        } else {
+          console.log('ℹ️ Item is not suitable for layering - skipping layering compatibility check');
+        }
+      } catch (error) {
+        console.error('❌ Error in layering compatibility checking:', error);
+        // Continue without layering compatibility data rather than failing the whole request
+      }
+    } else {
+      console.log('ℹ️ No styling context provided for layering compatibility checking');
+    }
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       analysis: analysisResponse,
@@ -282,6 +333,9 @@ router.post('/', async (req, res) => {
       
       // COMPATIBLE COMPLEMENTING ITEMS grouped by category
       compatibleComplementingItems: compatibleComplementingItems,
+      
+      // COMPATIBLE LAYERING ITEMS grouped by category
+      compatibleLayeringItems: compatibleLayeringItems,
       
       // Data integration info
       dataIntegration: {
