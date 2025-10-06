@@ -189,7 +189,7 @@ export const filterStylingContext = (
       }
     } else if (isLayeringCategory(newItemCategory, itemCategory, formData.subcategory)) {
       // Add to layering if it's a same-category item suitable for layering
-      if (shouldIncludeInContext(item, formData)) {
+      if (shouldIncludeInLayeringContext(item, formData)) {
         layeringItems.push(item);
       }
     }
@@ -328,6 +328,46 @@ const isLayeringCategory = (newItemCategory: ItemCategory, itemCategory: ItemCat
   return false;
 };
 
+// Helper function to check if layering item should be included
+const shouldIncludeInLayeringContext = (item: WardrobeItem, formData: { category?: string; subcategory?: string; seasons?: string[] }): boolean => {
+  // For layering, we primarily need season matching and subcategory rules
+  const matchesSeason = checkSeasonMatch(item, formData.seasons);
+  
+  if (!matchesSeason) return false;
+  
+  const newItemCategory = formData.category as ItemCategory;
+  const itemCategory = item.category as ItemCategory;
+  
+  // Apply specific layering rules based on category combinations
+  if (newItemCategory === ItemCategory.ONE_PIECE && itemCategory === ItemCategory.ONE_PIECE) {
+    // ONE_PIECE + ONE_PIECE: Generally not suitable for layering (dress + dress doesn't work)
+    return false;
+  }
+  
+  if (newItemCategory === ItemCategory.TOP && itemCategory === ItemCategory.TOP) {
+    // TOP + TOP: Only allow if both have styling rules (cardigan over tee, etc.)
+    if (item.subcategory && formData.subcategory) {
+      const itemSubcategoryKey = item.subcategory.toLowerCase();
+      const newItemSubcategoryKey = formData.subcategory.toLowerCase();
+      const itemRules = stylingRules[itemSubcategoryKey];
+      const newItemRules = stylingRules[newItemSubcategoryKey];
+      
+      return !!itemRules && !!newItemRules;
+    }
+  }
+  
+  if (newItemCategory === ItemCategory.ONE_PIECE && itemCategory === ItemCategory.TOP) {
+    // ONE_PIECE + TOP: Tops can layer over dresses
+    if (item.subcategory) {
+      const subcategoryKey = item.subcategory.toLowerCase();
+      const rules = stylingRules[subcategoryKey];
+      return !!rules;
+    }
+  }
+  
+  return false;
+};
+
 // Helper function to check if item should be included based on original logic
 const shouldIncludeInContext = (item: WardrobeItem, formData: { category?: string; subcategory?: string; seasons?: string[] }): boolean => {
     // Handle ACCESSORY category with configuration
@@ -360,7 +400,13 @@ const shouldIncludeInContext = (item: WardrobeItem, formData: { category?: strin
           (item.category as string) === ItemCategory.ACCESSORY && 
           checkSubcategoryMatch(item, ['socks']) : false;
         
-        return matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories;
+        // ⚠️ CRITICAL FIX: Add season check for all non-accessory categories
+        const matchesSeason = checkSeasonMatch(item, formData.seasons);
+        
+        const categoriesMatch = matchesMainCategories || matchesTops || matchesAccessories || matchesOnePiece || matchesFootwearAccessories;
+        
+        // Item must match both category rules AND season requirements
+        return categoriesMatch && matchesSeason;
       }
     }
     
@@ -370,15 +416,15 @@ const shouldIncludeInContext = (item: WardrobeItem, formData: { category?: strin
 const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] => {
   switch (category) {
     case ItemCategory.TOP:
-      return [ItemCategory.BOTTOM, ItemCategory.OUTERWEAR];
+      return [ItemCategory.BOTTOM, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
     case ItemCategory.BOTTOM:
-      return [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
+      return [ItemCategory.TOP, ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
     case ItemCategory.ONE_PIECE:
       return [ItemCategory.FOOTWEAR, ItemCategory.OUTERWEAR];
     case ItemCategory.OUTERWEAR:
-      return [ItemCategory.FOOTWEAR, ItemCategory.BOTTOM];
+      return [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.FOOTWEAR];
     case ItemCategory.FOOTWEAR:
-      return [ItemCategory.OUTERWEAR, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE];
+      return [ItemCategory.TOP, ItemCategory.BOTTOM, ItemCategory.ONE_PIECE, ItemCategory.OUTERWEAR];
     default:
       return [];
   }
