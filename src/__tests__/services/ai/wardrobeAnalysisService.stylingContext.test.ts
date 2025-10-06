@@ -4,6 +4,7 @@
 
 import { wardrobeAnalysisService } from '../../../services/ai/wardrobeAnalysisService';
 import { WardrobeItem, ItemCategory, Season } from '../../../types';
+import axios from 'axios';
 
 // Mock the axios module
 jest.mock('axios');
@@ -21,7 +22,6 @@ import * as itemContextFilter from '../../../services/ai/itemContextFilter';
 import * as userDataService from '../../../services/ai/analysis/userDataService';
 import * as coverageService from '../../../services/ai/analysis/coverageService';
 import * as imageProcessingService from '../../../services/ai/analysis/imageProcessingService';
-import axios from 'axios';
 
 const mockFilterStylingContext = wardrobeContextHelpers.filterStylingContext as jest.MockedFunction<typeof wardrobeContextHelpers.filterStylingContext>;
 const mockFilterSimilarContext = wardrobeContextHelpers.filterSimilarContext as jest.MockedFunction<typeof wardrobeContextHelpers.filterSimilarContext>;

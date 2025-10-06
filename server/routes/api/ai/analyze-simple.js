@@ -17,6 +17,7 @@ const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../ut
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
 const { buildCompatibilityCheckingPrompt, extractItemDataForCompatibility, parseCompatibilityResponse } = require('../../../utils/ai/complementingCompatibilityPrompt');
 const { isItemSuitableForLayering, buildLayeringCompatibilityPrompt, parseLayeringCompatibilityResponse, getLayeringItemsFromContext } = require('../../../utils/ai/layeringCompatibilityPrompt');
+const { isItemSuitableForOuterwear, buildOuterwearCompatibilityPrompt, parseOuterwearCompatibilityResponse, getOuterwearItemsFromContext } = require('../../../utils/ai/outerwearCompatibilityPrompt');
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 
 /**
@@ -321,6 +322,56 @@ router.post('/', async (req, res) => {
       console.log('ℹ️ No styling context provided for layering compatibility checking');
     }
 
+    // === OUTERWEAR ITEMS COMPATIBILITY CHECK ===
+    let compatibleOuterwearItems = null;
+    if (stylingContext && stylingContext.length > 0) {
+      console.log('\n=== STEP: Outerwear Items Compatibility Check ===');
+      
+      try {
+        // First check if the item is suitable for outerwear compatibility
+        const itemDataForOuterwear = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
+        const isSuitableForOuterwear = isItemSuitableForOuterwear(itemDataForOuterwear, extractedCharacteristics);
+        
+        if (isSuitableForOuterwear) {
+          // Get outerwear items from styling context
+          const outerwearItems = getOuterwearItemsFromContext(stylingContext, formData?.category);
+          
+          if (outerwearItems.length > 0) {
+            // Build outerwear compatibility prompt
+            const outerwearPrompt = buildOuterwearCompatibilityPrompt(itemDataForOuterwear, outerwearItems);
+            
+            // Make Claude outerwear compatibility check call
+            console.log('🤖 Calling Claude for outerwear compatibility evaluation...');
+            const outerwearResponse = await anthropic.messages.create({
+              model: "claude-3-haiku-20240307",
+              max_tokens: 1024,
+              messages: [{
+                role: "user",
+                content: outerwearPrompt
+              }]
+            });
+            
+            const rawOuterwearResponse = outerwearResponse.content[0].text;
+            console.log('🎯 Claude outerwear compatibility response received');
+            
+            // Parse outerwear compatibility response
+            compatibleOuterwearItems = parseOuterwearCompatibilityResponse(rawOuterwearResponse);
+            
+            console.log('✅ Compatible outerwear items by category:', JSON.stringify(compatibleOuterwearItems, null, 2));
+          } else {
+            console.log('ℹ️ No outerwear items found to evaluate');
+          }
+        } else {
+          console.log('ℹ️ Item is not suitable for outerwear compatibility - skipping outerwear compatibility check');
+        }
+      } catch (error) {
+        console.error('❌ Error in outerwear compatibility checking:', error);
+        // Continue without outerwear compatibility data rather than failing the whole request
+      }
+    } else {
+      console.log('ℹ️ No styling context provided for outerwear compatibility checking');
+    }
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       analysis: analysisResponse,
@@ -336,6 +387,9 @@ router.post('/', async (req, res) => {
       
       // COMPATIBLE LAYERING ITEMS grouped by category
       compatibleLayeringItems: compatibleLayeringItems,
+      
+      // COMPATIBLE OUTERWEAR ITEMS grouped by category
+      compatibleOuterwearItems: compatibleOuterwearItems,
       
       // Data integration info
       dataIntegration: {

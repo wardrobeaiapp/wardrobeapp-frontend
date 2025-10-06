@@ -184,7 +184,9 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       type: ((category === ItemCategory.FOOTWEAR && subcategory && 
         ['boots', 'formal shoes'].includes(subcategory.toLowerCase())) ||
         (category === ItemCategory.ACCESSORY && subcategory && 
-        ['bag', 'jewelry'].includes(subcategory.toLowerCase())))
+        ['bag', 'jewelry'].includes(subcategory.toLowerCase())) ||
+        (category === ItemCategory.OUTERWEAR && subcategory && 
+        ['jacket', 'coat'].includes(subcategory.toLowerCase())))
         ? type || undefined : undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
