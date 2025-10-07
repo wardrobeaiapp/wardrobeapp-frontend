@@ -258,8 +258,14 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt', 'Blue Sweater'],
-        outerwear: ['Gray Cardigan', 'Light Blazer']
+        tops: [
+          { name: 'White Shirt', compatibilityTypes: ['layering'] },
+          { name: 'Blue Sweater', compatibilityTypes: ['layering'] }
+        ],
+        outerwear: [
+          { name: 'Gray Cardigan', compatibilityTypes: ['layering'] },
+          { name: 'Light Blazer', compatibilityTypes: ['layering'] }
+        ]
       });
     });
 
@@ -273,8 +279,8 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt'],
-        outerwear: ['Gray Cardigan']
+        tops: [{ name: 'White Shirt', compatibilityTypes: ['layering'] }],
+        outerwear: [{ name: 'Gray Cardigan', compatibilityTypes: ['layering'] }]
       });
     });
 
@@ -289,7 +295,10 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt', 'Blue Sweater']
+        tops: [
+          { name: 'White Shirt', compatibilityTypes: ['layering'] },
+          { name: 'Blue Sweater', compatibilityTypes: ['layering'] }
+        ]
       });
       
       // Should not include empty categories
@@ -308,9 +317,9 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt'],
-        outerwear: ['Gray Cardigan'],
-        accessories: ['Silk Scarf']
+        tops: [{ name: 'White Shirt', compatibilityTypes: ['layering'] }],
+        outerwear: [{ name: 'Gray Cardigan', compatibilityTypes: ['layering'] }],
+        accessories: [{ name: 'Silk Scarf', compatibilityTypes: ['layering'] }]
       });
     });
 
@@ -338,8 +347,8 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt'],
-        outerwear: ['Gray Cardigan']
+        tops: [{ name: 'White Shirt', compatibilityTypes: ['layering'] }],
+        outerwear: [{ name: 'Gray Cardigan', compatibilityTypes: ['layering'] }]
       });
     });
 
@@ -353,8 +362,11 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt', 'Blue Sweater'],
-        outerwear: ['Gray Cardigan']
+        tops: [
+          { name: 'White Shirt', compatibilityTypes: ['layering'] },
+          { name: 'Blue Sweater', compatibilityTypes: ['layering'] }
+        ],
+        outerwear: [{ name: 'Gray Cardigan', compatibilityTypes: ['layering'] }]
       });
     });
 
@@ -374,8 +386,8 @@ describe('layeringCompatibilityPrompt', () => {
       const result = parseLayeringCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        tops: ['White Shirt'],
-        outerwear: ['Gray Cardigan']
+        tops: [{ name: 'White Shirt', compatibilityTypes: ['layering'] }],
+        outerwear: [{ name: 'Gray Cardigan', compatibilityTypes: ['layering'] }]
       });
     });
 
@@ -477,7 +489,7 @@ describe('layeringCompatibilityPrompt', () => {
         
         expect(result.tops[0]).toEqual(expect.objectContaining({
           id: '101',
-          name: 'White Cotton Blouse',
+          name: 'White Cotton Blouse', // Should return the full name from styling context
           compatibilityTypes: ['layering']
         }));
         

@@ -259,9 +259,9 @@ describe('analyze-simple route components', () => {
         Analysis of the item...
         
         SUITABLE SCENARIOS:
-        - Office Work
-        - Social Outings: great for dates
-        - Light Outdoor Activities (with proper styling)
+        1. Office Work
+        2. Social Outings: great for dates
+        3. Light Outdoor Activities (with proper styling)
         
         REASON: Versatile piece
         FINAL RECOMMENDATION: RECOMMEND

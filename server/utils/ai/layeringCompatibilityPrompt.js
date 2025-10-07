@@ -197,6 +197,12 @@ function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = [])
         const category = match[1].toLowerCase();
         const itemsStr = match[2].trim();
         
+        // Only accept valid layering categories
+        const validLayeringCategories = ['tops', 'outerwear', 'accessories'];
+        if (!validLayeringCategories.includes(category)) {
+          return; // Skip invalid categories
+        }
+        
         if (itemsStr && itemsStr !== 'none' && itemsStr !== '-') {
           const itemNames = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
           
@@ -204,10 +210,21 @@ function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = [])
             // Match item names to full objects from styling context
             const fullItemObjects = itemNames.map(itemName => {
               // Find matching item in styling context by name
-              const fullItem = stylingContext.find(item => 
-                item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-                itemName.toLowerCase().includes(item.name && item.name.toLowerCase())
-              );
+              // Use flexible matching: either full name contains partial name, or vice versa
+              const fullItem = stylingContext.find(item => {
+                if (!item.name || !itemName) return false;
+                
+                const itemNameLower = item.name.toLowerCase();
+                const searchNameLower = itemName.toLowerCase();
+                
+                // Try bidirectional partial matching
+                return itemNameLower.includes(searchNameLower) || 
+                       searchNameLower.includes(itemNameLower) ||
+                       // Also try word-by-word matching for better flexibility
+                       searchNameLower.split(' ').every(word => 
+                         word.length > 2 && itemNameLower.includes(word)
+                       );
+              });
               
               if (fullItem) {
                 // Return full item object with all properties needed for cards

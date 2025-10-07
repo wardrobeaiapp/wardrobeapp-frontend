@@ -171,7 +171,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                         gap: '0.75rem', 
                         marginTop: '8px' 
                       }}>
-                        {items.slice(0, 3).map((item, index) => (
+                        {items.map((item, index) => (
                           <ItemCard key={item.id || index} $isSelected={false}>
                             <ItemImageContainer>
                               {item.imageUrl ? (
@@ -196,7 +196,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                     ) : (
                       // Fallback to text when we don't have full item objects
                       <>
-                        {items.slice(0, 3).map((item, index) => (
+                        {items.map((item, index) => (
                           <div key={index} style={{ 
                             fontSize: '14px', 
                             color: '#374151',
@@ -206,11 +206,6 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                           </div>
                         ))}
                       </>
-                    )}
-                    {items.length > 3 && (
-                      <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic', marginTop: '8px' }}>
-                        ...and {items.length - 3} more items
-                      </div>
                     )}
                   </div>
                 </div>
