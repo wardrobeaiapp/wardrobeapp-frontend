@@ -163,8 +163,10 @@ function buildUniversalAnalysisSection() {
   section += "\n• 1 = Casual (loungewear, athletic wear, basic tees, flip-flops)";
   section += "\n• 2 = Smart Casual (nice jeans, casual dresses, sneakers, polo shirts)"; 
   section += "\n• 3 = Business Casual (blazers, dress pants, blouses, professional flats)";
-  section += "\n• 4 = Business Formal (suits, formal dresses, dress shoes)";
-  section += "\n• 5 = Formal/Black Tie (evening wear, tuxedos, formal gowns)";
+  section += "\n• 4 = Business Formal (professional suits, conservative work dresses, dress shoes)";
+  section += "\n  ⚠️  BUSINESS FORMAL = WORKPLACE APPROPRIATE (no sequins, sparkles, metallics, sheer, low-cut, or party elements)";
+  section += "\n• 5 = Formal/Black Tie (evening wear, cocktail dresses, tuxedos, formal gowns)";
+  section += "\n  ✨ EVENING FORMAL = PARTY/EVENT WEAR (sequins, metallics, sparkles, dramatic elements welcome)";
 
   section += "\n\n3. COLOR & PATTERN ANALYSIS:";
   section += "\n• Primary color(s): Exact color names you can see";
