@@ -198,10 +198,21 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
             // Match item names to full objects from styling context
             const fullItemObjects = itemNames.map(itemName => {
               // Find matching item in styling context by name
-              const fullItem = stylingContext.find(item => 
-                item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) ||
-                itemName.toLowerCase().includes(item.name && item.name.toLowerCase())
-              );
+              // Use flexible matching: either full name contains partial name, or vice versa
+              const fullItem = stylingContext.find(item => {
+                if (!item.name || !itemName) return false;
+                
+                const itemNameLower = item.name.toLowerCase();
+                const searchNameLower = itemName.toLowerCase();
+                
+                // Try bidirectional partial matching
+                return itemNameLower.includes(searchNameLower) || 
+                       searchNameLower.includes(itemNameLower) ||
+                       // Also try word-by-word matching for better flexibility
+                       searchNameLower.split(' ').every(word => 
+                         word.length > 2 && itemNameLower.includes(word)
+                       );
+              });
               
               console.log(`🔍 [compatibility] Trying to match: "${itemName}" | Found: ${fullItem ? `✅ ${fullItem.name} (ID: ${fullItem.id})` : '❌ No match'}`);
               

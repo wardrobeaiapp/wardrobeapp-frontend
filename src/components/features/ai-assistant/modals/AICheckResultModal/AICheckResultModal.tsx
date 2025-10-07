@@ -25,9 +25,7 @@ import {
   PlaceholderImage,
   ItemContent,
   ItemName,
-  ItemDetail
 } from '../../../wardrobe/forms/OutfitForm/OutfitForm.styles';
-import { formatCategory } from '../../../../../utils/textFormatting';
 
 interface AICheckResultModalProps {
   isOpen: boolean;

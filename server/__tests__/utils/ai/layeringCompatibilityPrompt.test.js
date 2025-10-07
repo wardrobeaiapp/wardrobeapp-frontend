@@ -389,5 +389,125 @@ describe('layeringCompatibilityPrompt', () => {
       
       consoleSpy.mockRestore();
     });
+
+    describe('parseLayeringCompatibilityResponse with styling context (Card Functionality)', () => {
+      const mockStylingContext = [
+        {
+          id: '101',
+          name: 'White Cotton Blouse',
+          imageUrl: '/uploads/white-blouse.jpg',
+          category: 'top',
+          subcategory: 'blouse',
+          color: 'white',
+          brand: 'H&M',
+          season: ['spring', 'summer']
+        },
+        {
+          id: '102', 
+          name: 'Navy Wool Cardigan',
+          imageUrl: '/uploads/navy-cardigan.jpg',
+          category: 'outerwear',
+          subcategory: 'cardigan',
+          color: 'navy',
+          brand: 'Uniqlo',
+          season: ['fall', 'winter']
+        },
+        {
+          id: '103',
+          name: 'Cashmere Scarf',
+          imageUrl: '/uploads/cashmere-scarf.jpg',
+          category: 'accessory',
+          subcategory: 'scarf', 
+          color: 'beige',
+          brand: 'Burberry',
+          season: ['fall', 'winter']
+        }
+      ];
+
+      it('should return full item objects for layering compatibility with styling context', () => {
+        const claudeResponse = `
+          Here's my layering compatibility analysis...
+
+          COMPATIBLE LAYERING ITEMS:
+          tops: White Cotton Blouse
+          outerwear: Navy Wool Cardigan
+          accessories: Cashmere Scarf
+          
+          These items layer well together...
+        `;
+        
+        const result = parseLayeringCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result).toEqual({
+          tops: [expect.objectContaining({
+            id: '101',
+            name: 'White Cotton Blouse',
+            imageUrl: '/uploads/white-blouse.jpg',
+            category: 'top',
+            color: 'white',
+            compatibilityTypes: ['layering']
+          })],
+          outerwear: [expect.objectContaining({
+            id: '102',
+            name: 'Navy Wool Cardigan', 
+            imageUrl: '/uploads/navy-cardigan.jpg',
+            category: 'outerwear',
+            color: 'navy',
+            compatibilityTypes: ['layering']
+          })],
+          accessories: [expect.objectContaining({
+            id: '103',
+            name: 'Cashmere Scarf',
+            imageUrl: '/uploads/cashmere-scarf.jpg',
+            category: 'accessory',
+            color: 'beige',
+            compatibilityTypes: ['layering']
+          })]
+        });
+      });
+
+      it('should handle partial name matching for layering items', () => {
+        const claudeResponse = `
+          COMPATIBLE LAYERING ITEMS:
+          tops: White Blouse
+          outerwear: Navy Cardigan
+        `;
+        
+        const result = parseLayeringCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result.tops[0]).toEqual(expect.objectContaining({
+          id: '101',
+          name: 'White Cotton Blouse',
+          compatibilityTypes: ['layering']
+        }));
+        
+        expect(result.outerwear[0]).toEqual(expect.objectContaining({
+          id: '102', 
+          name: 'Navy Wool Cardigan',
+          compatibilityTypes: ['layering']
+        }));
+      });
+
+      it('should fallback to text-only for layering when no match found', () => {
+        const claudeResponse = `
+          COMPATIBLE LAYERING ITEMS:
+          tops: Red Silk Shirt
+          outerwear: Green Jacket
+        `;
+        
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        
+        const result = parseLayeringCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result).toEqual({
+          tops: [{ name: 'Red Silk Shirt', compatibilityTypes: ['layering'] }],
+          outerwear: [{ name: 'Green Jacket', compatibilityTypes: ['layering'] }]
+        });
+        
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: Red Silk Shirt'));
+        
+        consoleSpy.mockRestore();
+      });
+    });
   });
 });

@@ -373,5 +373,142 @@ outerwear: Navy Cardigan, , Denim Jacket, ,
         outerwear: ['Navy Cardigan', 'Denim Jacket']
       });
     });
+
+    describe('parseOuterwearCompatibilityResponse with styling context (Card Functionality)', () => {
+      const mockStylingContext = [
+        {
+          id: '201',
+          name: 'Brown Trench Coat',
+          imageUrl: '/uploads/brown-trench.jpg',
+          category: 'outerwear',
+          subcategory: 'coat',
+          color: 'brown',
+          brand: 'Burberry',
+          season: ['fall', 'winter']
+        },
+        {
+          id: '202', 
+          name: 'Black Leather Jacket',
+          imageUrl: '/uploads/black-jacket.jpg',
+          category: 'outerwear',
+          subcategory: 'jacket',
+          color: 'black',
+          brand: 'Zara',
+          season: ['fall', 'spring']
+        },
+        {
+          id: '203',
+          name: 'Navy Wool Blazer',
+          imageUrl: '/uploads/navy-blazer.jpg',
+          category: 'outerwear',
+          subcategory: 'blazer', 
+          color: 'navy',
+          brand: 'Hugo Boss',
+          season: ['all']
+        }
+      ];
+
+      it('should return full item objects for outerwear compatibility with styling context', () => {
+        const claudeResponse = `
+          Here's my outerwear compatibility analysis...
+
+          COMPATIBLE OUTERWEAR ITEMS:
+          outerwear: Brown Trench Coat, Black Leather Jacket, Navy Wool Blazer
+          
+          These outerwear pieces work well...
+        `;
+        
+        const result = parseOuterwearCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result).toEqual({
+          outerwear: [
+            expect.objectContaining({
+              id: '201',
+              name: 'Brown Trench Coat',
+              imageUrl: '/uploads/brown-trench.jpg',
+              category: 'outerwear',
+              color: 'brown',
+              compatibilityTypes: ['outerwear']
+            }),
+            expect.objectContaining({
+              id: '202',
+              name: 'Black Leather Jacket',
+              imageUrl: '/uploads/black-jacket.jpg',
+              category: 'outerwear',
+              color: 'black',
+              compatibilityTypes: ['outerwear']
+            }),
+            expect.objectContaining({
+              id: '203',
+              name: 'Navy Wool Blazer',
+              imageUrl: '/uploads/navy-blazer.jpg',
+              category: 'outerwear',
+              color: 'navy',
+              compatibilityTypes: ['outerwear']
+            })
+          ]
+        });
+      });
+
+      it('should handle partial name matching for outerwear items', () => {
+        const claudeResponse = `
+          COMPATIBLE OUTERWEAR ITEMS:
+          outerwear: Brown Trench, Navy Blazer
+        `;
+        
+        const result = parseOuterwearCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result.outerwear).toHaveLength(2);
+        expect(result.outerwear[0]).toEqual(expect.objectContaining({
+          id: '201',
+          name: 'Brown Trench Coat',
+          compatibilityTypes: ['outerwear']
+        }));
+        
+        expect(result.outerwear[1]).toEqual(expect.objectContaining({
+          id: '203', 
+          name: 'Navy Wool Blazer',
+          compatibilityTypes: ['outerwear']
+        }));
+      });
+
+      it('should fallback to text-only for outerwear when no match found', () => {
+        const claudeResponse = `
+          COMPATIBLE OUTERWEAR ITEMS:
+          outerwear: Red Winter Coat, Green Windbreaker
+        `;
+        
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+        
+        const result = parseOuterwearCompatibilityResponse(claudeResponse, mockStylingContext);
+        
+        expect(result).toEqual({
+          outerwear: [
+            { name: 'Red Winter Coat', compatibilityTypes: ['outerwear'] },
+            { name: 'Green Windbreaker', compatibilityTypes: ['outerwear'] }
+          ]
+        });
+        
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: Red Winter Coat'));
+        
+        consoleSpy.mockRestore();
+      });
+
+      it('should maintain backward compatibility for outerwear when no styling context provided', () => {
+        const claudeResponse = `
+          COMPATIBLE OUTERWEAR ITEMS:
+          outerwear: Navy Cardigan, Denim Jacket
+        `;
+        
+        const result = parseOuterwearCompatibilityResponse(claudeResponse); // No second parameter
+        
+        expect(result).toEqual({
+          outerwear: [
+            { name: 'Navy Cardigan', compatibilityTypes: ['outerwear'] },
+            { name: 'Denim Jacket', compatibilityTypes: ['outerwear'] }
+          ]
+        });
+      });
+    });
   });
 });

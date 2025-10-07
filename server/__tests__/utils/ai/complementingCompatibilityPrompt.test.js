@@ -220,9 +220,19 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers', 'Black Jeans', 'Gray Slacks'],
-        footwear: ['Brown Boots', 'Black Heels'],
-        accessories: ['Leather Belt', 'Gold Watch']
+        bottoms: [
+          { name: 'Navy Trousers', compatibilityTypes: ['complementing'] },
+          { name: 'Black Jeans', compatibilityTypes: ['complementing'] },
+          { name: 'Gray Slacks', compatibilityTypes: ['complementing'] }
+        ],
+        footwear: [
+          { name: 'Brown Boots', compatibilityTypes: ['complementing'] },
+          { name: 'Black Heels', compatibilityTypes: ['complementing'] }
+        ],
+        accessories: [
+          { name: 'Leather Belt', compatibilityTypes: ['complementing'] },
+          { name: 'Gold Watch', compatibilityTypes: ['complementing'] }
+        ]
       });
     });
 
@@ -237,9 +247,9 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers'],
-        footwear: ['Brown Boots'],
-        accessories: ['Leather Belt']
+        bottoms: [{ name: 'Navy Trousers', compatibilityTypes: ['complementing'] }],
+        footwear: [{ name: 'Brown Boots', compatibilityTypes: ['complementing'] }],
+        accessories: [{ name: 'Leather Belt', compatibilityTypes: ['complementing'] }]
       });
     });
 
@@ -256,8 +266,13 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers', 'Black Jeans'],
-        outerwear: ['Blazer']
+        bottoms: [
+          { name: 'Navy Trousers', compatibilityTypes: ['complementing'] },
+          { name: 'Black Jeans', compatibilityTypes: ['complementing'] }
+        ],
+        outerwear: [
+          { name: 'Blazer', compatibilityTypes: ['complementing'] }
+        ]
       });
       
       // Should not include empty categories
@@ -277,9 +292,9 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers'],
-        footwear: ['Brown Boots'],
-        accessories: ['Leather Belt']
+        bottoms: [{ name: 'Navy Trousers', compatibilityTypes: ['complementing'] }],
+        footwear: [{ name: 'Brown Boots', compatibilityTypes: ['complementing'] }],
+        accessories: [{ name: 'Leather Belt', compatibilityTypes: ['complementing'] }]
       });
     });
 
@@ -306,7 +321,7 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Valid Item']
+        bottoms: [{ name: 'Valid Item', compatibilityTypes: ['complementing'] }]
       });
     });
 
@@ -320,8 +335,14 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers', 'Black Jeans', 'Gray Slacks'],
-        footwear: ['Brown Boots']
+        bottoms: [
+          { name: 'Navy Trousers', compatibilityTypes: ['complementing'] },
+          { name: 'Black Jeans', compatibilityTypes: ['complementing'] },
+          { name: 'Gray Slacks', compatibilityTypes: ['complementing'] }
+        ],
+        footwear: [
+          { name: 'Brown Boots', compatibilityTypes: ['complementing'] }
+        ]
       });
     });
 
@@ -341,8 +362,13 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse);
       
       expect(result).toEqual({
-        bottoms: ['Navy Trousers', 'Black Jeans'],
-        footwear: ['Brown Boots']
+        bottoms: [
+          { name: 'Navy Trousers', compatibilityTypes: ['complementing'] },
+          { name: 'Black Jeans', compatibilityTypes: ['complementing'] }
+        ],
+        footwear: [
+          { name: 'Brown Boots', compatibilityTypes: ['complementing'] }
+        ]
       });
     });
 
@@ -355,6 +381,193 @@ describe('complementingCompatibilityPrompt', () => {
       expect(result).toEqual({});
       
       consoleSpy.mockRestore();
+    });
+  });
+
+  describe('parseCompatibilityResponse with styling context (Card Functionality)', () => {
+    const mockStylingContext = [
+      {
+        id: '123',
+        name: 'Brown Leather Boots',
+        imageUrl: '/uploads/brown-boots.jpg',
+        category: 'footwear',
+        subcategory: 'boots',
+        color: 'brown',
+        brand: 'Nike',
+        season: ['fall', 'winter']
+      },
+      {
+        id: '456', 
+        name: 'Navy Cotton Trousers',
+        imageUrl: '/uploads/navy-trousers.jpg',
+        category: 'bottoms',
+        subcategory: 'trousers',
+        color: 'navy',
+        brand: 'Zara',
+        season: ['all']
+      },
+      {
+        id: '789',
+        name: 'Brown Leather Belt',
+        imageUrl: '/uploads/brown-belt.jpg',
+        category: 'accessories',
+        subcategory: 'belt', 
+        color: 'brown',
+        brand: 'Gucci',
+        season: ['all']
+      }
+    ];
+
+    it('should return full item objects when styling context matches Claude response', () => {
+      const claudeResponse = `
+        Here's my analysis of the compatibility...
+
+        COMPATIBLE COMPLEMENTING ITEMS:
+        bottoms: Navy Cotton Trousers
+        footwear: Brown Leather Boots
+        accessories: Brown Leather Belt
+        
+        These items work well together because...
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result).toEqual({
+        bottoms: [expect.objectContaining({
+          id: '456',
+          name: 'Navy Cotton Trousers',
+          imageUrl: '/uploads/navy-trousers.jpg',
+          category: 'bottoms',
+          color: 'navy',
+          compatibilityTypes: ['complementing']
+        })],
+        footwear: [expect.objectContaining({
+          id: '123',
+          name: 'Brown Leather Boots',
+          imageUrl: '/uploads/brown-boots.jpg', 
+          category: 'footwear',
+          color: 'brown',
+          compatibilityTypes: ['complementing']
+        })],
+        accessories: [expect.objectContaining({
+          id: '789',
+          name: 'Brown Leather Belt',
+          imageUrl: '/uploads/brown-belt.jpg',
+          category: 'accessories',
+          color: 'brown',
+          compatibilityTypes: ['complementing']
+        })]
+      });
+    });
+
+    it('should handle partial name matching (Claude says "Brown Boots", item is "Brown Leather Boots")', () => {
+      const claudeResponse = `
+        COMPATIBLE COMPLEMENTING ITEMS:
+        footwear: Brown Boots
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result.footwear).toHaveLength(1);
+      expect(result.footwear[0]).toEqual(expect.objectContaining({
+        id: '123',
+        name: 'Brown Leather Boots',
+        compatibilityTypes: ['complementing']
+      }));
+    });
+
+    it('should fallback to text-only objects when no match found in styling context', () => {
+      const claudeResponse = `
+        COMPATIBLE COMPLEMENTING ITEMS:
+        footwear: Pink High Heels
+        bottoms: White Shorts
+      `;
+      
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result).toEqual({
+        footwear: [expect.objectContaining({
+          name: 'Pink High Heels',
+          compatibilityTypes: ['complementing']
+          // Should NOT have id, imageUrl, etc.
+        })],
+        bottoms: [expect.objectContaining({
+          name: 'White Shorts',
+          compatibilityTypes: ['complementing']
+        })]
+      });
+      
+      // Should log warnings for no matches found
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: Pink High Heels'));
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle mixed results - some matches, some fallbacks', () => {
+      const claudeResponse = `
+        COMPATIBLE COMPLEMENTING ITEMS:
+        footwear: Brown Boots, Pink Sneakers
+        bottoms: Navy Cotton Trousers
+      `;
+      
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result.footwear).toHaveLength(2);
+      
+      // First item should have full object (matched)
+      expect(result.footwear[0]).toEqual(expect.objectContaining({
+        id: '123',
+        name: 'Brown Leather Boots',
+        imageUrl: '/uploads/brown-boots.jpg'
+      }));
+      
+      // Second item should be text-only (no match)
+      expect(result.footwear[1]).toEqual({
+        name: 'Pink Sneakers',
+        compatibilityTypes: ['complementing']
+      });
+      
+      // Bottoms should have full object (matched)
+      expect(result.bottoms[0]).toEqual(expect.objectContaining({
+        id: '456',
+        name: 'Navy Cotton Trousers'
+      }));
+      
+      consoleSpy.mockRestore();
+    });
+
+    it('should work with empty styling context (fallback to text-only)', () => {
+      const claudeResponse = `
+        COMPATIBLE COMPLEMENTING ITEMS:
+        bottoms: Navy Trousers
+        footwear: Brown Boots
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, []);
+      
+      expect(result).toEqual({
+        bottoms: [{ name: 'Navy Trousers', compatibilityTypes: ['complementing'] }],
+        footwear: [{ name: 'Brown Boots', compatibilityTypes: ['complementing'] }]
+      });
+    });
+
+    it('should maintain backward compatibility when no styling context provided', () => {
+      const claudeResponse = `
+        COMPATIBLE COMPLEMENTING ITEMS:
+        bottoms: Navy Trousers
+        footwear: Brown Boots
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse); // No second parameter
+      
+      expect(result).toEqual({
+        bottoms: [{ name: 'Navy Trousers', compatibilityTypes: ['complementing'] }],
+        footwear: [{ name: 'Brown Boots', compatibilityTypes: ['complementing'] }]
+      });
     });
   });
 });
