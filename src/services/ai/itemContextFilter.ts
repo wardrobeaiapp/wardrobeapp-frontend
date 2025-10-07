@@ -6,9 +6,10 @@ import { WardrobeItem } from '../../types';
  * 
  * @param items - Array of wardrobe items to filter
  * @param maxItems - Optional maximum number of items to include (default: no limit)
+ * @param includeCardFields - Whether to include ID and imageUrl for frontend card display
  * @returns Filtered array with only essential fields
  */
-export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number): Partial<WardrobeItem>[] {
+export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number, includeCardFields?: boolean): Partial<WardrobeItem>[] {
   if (!items || !Array.isArray(items)) return [];
   
   // Limit number of items if specified to prevent payload size issues
@@ -37,7 +38,15 @@ export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number)
     if (item.heelHeight !== undefined && item.heelHeight !== null) filtered.heelHeight = item.heelHeight;
     if (item.bootHeight !== undefined && item.bootHeight !== null) filtered.bootHeight = item.bootHeight;
     
-    // Explicitly exclude these heavy/unnecessary fields:
+    // Include card fields for frontend display when requested
+    if (includeCardFields) {
+      if (item.id) filtered.id = item.id;
+      if (item.imageUrl) filtered.imageUrl = item.imageUrl;
+      if (item.brand) filtered.brand = item.brand;
+      if (item.scenarios && Array.isArray(item.scenarios)) filtered.scenarios = item.scenarios;
+    }
+    
+    // Explicitly exclude these heavy/unnecessary fields (unless includeCardFields is true):
     // - id, userId: Database identifiers not needed for analysis
     // - imageUrl: Can be very large base64 strings or long URLs  
     // - dateAdded, updatedAt, imageExpiry: Timestamps irrelevant for analysis

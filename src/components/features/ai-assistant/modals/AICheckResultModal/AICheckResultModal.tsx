@@ -18,6 +18,16 @@ import {
 } from './AICheckResultModal.styles';
 import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
+import { 
+  ItemCard,
+  ItemImageContainer,
+  ItemImage,
+  PlaceholderImage,
+  ItemContent,
+  ItemName,
+  ItemDetail
+} from '../../../wardrobe/forms/OutfitForm/OutfitForm.styles';
+import { formatCategory } from '../../../../../utils/textFormatting';
 
 interface AICheckResultModalProps {
   isOpen: boolean;
@@ -154,17 +164,53 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                     {category === 'one_piece' ? 'Dresses' : category}:
                   </h5>
                   <div style={{ paddingLeft: '12px' }}>
-                    {items.slice(0, 3).map((item, index) => (
-                      <div key={index} style={{ 
-                        fontSize: '14px', 
-                        color: '#374151',
-                        marginBottom: '4px'
+                    {/* Check if we have full item objects with IDs for card display */}
+                    {items.some(item => item.id) ? (
+                      // Render as popup-style cards when we have full item objects
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
+                        gap: '0.75rem', 
+                        marginTop: '8px' 
                       }}>
-                        • {item.name || 'Unnamed item'}
+                        {items.slice(0, 3).map((item, index) => (
+                          <ItemCard key={item.id || index} $isSelected={false}>
+                            <ItemImageContainer>
+                              {item.imageUrl ? (
+                                <ItemImage 
+                                  src={item.imageUrl} 
+                                  alt={item.name} 
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              ) : (
+                                <PlaceholderImage>No Image</PlaceholderImage>
+                              )}
+                            </ItemImageContainer>
+                            <ItemContent>
+                              <ItemName>{item.name}</ItemName>
+                              {/* Hide category/color details for cleaner compatibility cards */}
+                            </ItemContent>
+                          </ItemCard>
+                        ))}
                       </div>
-                    ))}
+                    ) : (
+                      // Fallback to text when we don't have full item objects
+                      <>
+                        {items.slice(0, 3).map((item, index) => (
+                          <div key={index} style={{ 
+                            fontSize: '14px', 
+                            color: '#374151',
+                            marginBottom: '4px'
+                          }}>
+                            • {item.name || 'Unnamed item'}
+                          </div>
+                        ))}
+                      </>
+                    )}
                     {items.length > 3 && (
-                      <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>
+                      <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic', marginTop: '8px' }}>
                         ...and {items.length - 3} more items
                       </div>
                     )}

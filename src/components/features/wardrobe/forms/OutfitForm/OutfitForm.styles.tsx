@@ -102,7 +102,7 @@ export const PlaceholderImage = styled.div`
 `;
 
 export const ItemContent = styled.div`
-  padding: 0.75rem;
+  padding-top: 0.75rem;
 `;
 
 export const ItemDetail = styled.div`

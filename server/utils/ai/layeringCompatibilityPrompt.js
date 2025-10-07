@@ -160,20 +160,24 @@ function groupLayeringItemsByCategory(items) {
     if (groupKey) {
       grouped[groupKey].push(item);
     }
-  });
+  }); // Close the forEach loop
   
   return grouped;
 }
 
 /**
- * Parse Claude's layering compatibility response
+ * Parse Claude's layering compatibility response and match names to full item objects
+ * @param {string} claudeResponse - Claude's response text
+ * @param {Array} stylingContext - Full item objects for matching
+ * @returns {Object} - Compatible items organized by category with full objects
  */
-function parseLayeringCompatibilityResponse(claudeResponse) {
+function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = []) {
   try {
     // Look for the COMPATIBLE LAYERING ITEMS section
     const compatibleSection = claudeResponse.match(/COMPATIBLE LAYERING ITEMS:\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
     
     if (!compatibleSection || !compatibleSection[1]) {
+      console.log('[layering] No compatible layering items section found in response');
       return {};
     }
     
@@ -181,31 +185,60 @@ function parseLayeringCompatibilityResponse(claudeResponse) {
     const lines = itemsText.split('\n').filter(line => line.trim());
     const compatibleItems = {};
     
-    // Use a for loop so we can break when hitting explanatory text
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
+    lines.forEach((line) => {
       // Stop processing if we hit explanatory text
-      if (line.toLowerCase().includes('these items') || line.toLowerCase().includes('because') || 
-          line.toLowerCase().includes('analysis') || line.toLowerCase().includes('combination') ||
-          line.toLowerCase().includes('work well') || line.toLowerCase().includes('should not')) {
-        break; // Stop processing all subsequent lines
+      if (line.toLowerCase().includes('these items') || line.toLowerCase().includes('because') || line.toLowerCase().includes('analysis')) {
+        return;
       }
       
-      // Parse format like "tops: White Shirt, Blue Sweater" (with optional leading whitespace)
+      // Parse format like "tops: White Blouse, Navy Cardigan"
       const match = line.match(/^\s*(\w+):\s*(.+)$/i);
       if (match) {
         const category = match[1].toLowerCase();
         const itemsStr = match[2].trim();
         
         if (itemsStr && itemsStr !== 'none' && itemsStr !== '-') {
-          const items = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
-          if (items.length > 0) {
-            compatibleItems[category] = items;
+          const itemNames = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
+          
+          if (itemNames.length > 0) {
+            // Match item names to full objects from styling context
+            const fullItemObjects = itemNames.map(itemName => {
+              // Find matching item in styling context by name
+              const fullItem = stylingContext.find(item => 
+                item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) ||
+                itemName.toLowerCase().includes(item.name && item.name.toLowerCase())
+              );
+              
+              if (fullItem) {
+                // Return full item object with all properties needed for cards
+                return {
+                  id: fullItem.id,
+                  name: fullItem.name,
+                  imageUrl: fullItem.imageUrl,
+                  category: fullItem.category,
+                  subcategory: fullItem.subcategory,
+                  color: fullItem.color,
+                  brand: fullItem.brand,
+                  // Add compatibility type for frontend display
+                  compatibilityTypes: ['layering']
+                };
+              } else {
+                // Fallback: return text-only object if no match found
+                console.log(`⚠️ No matching item found for: ${itemName}`);
+                return {
+                  name: itemName,
+                  compatibilityTypes: ['layering']
+                };
+              }
+            }).filter(Boolean);
+            
+            if (fullItemObjects.length > 0) {
+              compatibleItems[category] = fullItemObjects;
+            }
           }
         }
       }
-    }
+    });
     
     return compatibleItems;
     

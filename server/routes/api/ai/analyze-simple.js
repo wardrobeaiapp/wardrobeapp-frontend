@@ -54,17 +54,17 @@ function consolidateCompatibilityResults(compatibleComplementingItems, compatibl
     }
     // Handle both string arrays and object arrays
     const labeledItems = items.map(item => {
-      // If item is a string, convert to object
+      // If item is a string, convert to object (legacy support)
       if (typeof item === 'string') {
         return {
           name: item,
-          compatibilityType: compatibilityType
+          compatibilityTypes: [compatibilityType]
         };
       }
-      // If item is already an object, add compatibility type
+      // If item is already an object with full card data
       return {
         ...item,
-        compatibilityType: compatibilityType
+        compatibilityTypes: item.compatibilityTypes || [compatibilityType]
       };
     });
     consolidatedResults[category] = consolidatedResults[category].concat(labeledItems);

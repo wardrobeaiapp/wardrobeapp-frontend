@@ -157,9 +157,12 @@ function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisD
 }
 
 /**
- * Parse Claude's compatibility response
+ * Parse Claude's compatibility response and match names to full item objects
+ * @param {string} claudeResponse - Claude's response text
+ * @param {Array} stylingContext - Full item objects for matching
+ * @returns {Object} - Compatible items organized by category with full objects
  */
-function parseCompatibilityResponse(claudeResponse) {
+function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
   console.log('\n=== 🎯 PARSING COMPATIBILITY RESPONSE ===');
   
   try {
@@ -189,9 +192,45 @@ function parseCompatibilityResponse(claudeResponse) {
         const itemsStr = match[2].trim();
         
         if (itemsStr && itemsStr !== 'none' && itemsStr !== '-') {
-          const items = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
-          if (items.length > 0) {
-            compatibleItems[category] = items;
+          const itemNames = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
+          
+          if (itemNames.length > 0) {
+            // Match item names to full objects from styling context
+            const fullItemObjects = itemNames.map(itemName => {
+              // Find matching item in styling context by name
+              const fullItem = stylingContext.find(item => 
+                item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) ||
+                itemName.toLowerCase().includes(item.name && item.name.toLowerCase())
+              );
+              
+              console.log(`🔍 [compatibility] Trying to match: "${itemName}" | Found: ${fullItem ? `✅ ${fullItem.name} (ID: ${fullItem.id})` : '❌ No match'}`);
+              
+              if (fullItem) {
+                // Return full item object with all properties needed for cards
+                return {
+                  id: fullItem.id,
+                  name: fullItem.name,
+                  imageUrl: fullItem.imageUrl,
+                  category: fullItem.category,
+                  subcategory: fullItem.subcategory,
+                  color: fullItem.color,
+                  brand: fullItem.brand,
+                  // Add compatibility type for frontend display
+                  compatibilityTypes: ['complementing']
+                };
+              } else {
+                // Fallback: return text-only object if no match found
+                console.log(`⚠️ No matching item found for: ${itemName} | Available items: ${stylingContext.map(item => item.name).slice(0, 5).join(', ')}...`);
+                return {
+                  name: itemName,
+                  compatibilityTypes: ['complementing']
+                };
+              }
+            }).filter(Boolean);
+            
+            if (fullItemObjects.length > 0) {
+              compatibleItems[category] = fullItemObjects;
+            }
           }
         }
       }

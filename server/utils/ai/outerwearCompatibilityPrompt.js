@@ -124,14 +124,18 @@ function groupOuterwearItemsByCategory(outerwearItems) {
 }
 
 /**
- * Parse Claude's outerwear compatibility response
+ * Parse Claude's outerwear compatibility response and match names to full item objects
+ * @param {string} claudeResponse - Claude's response text
+ * @param {Array} stylingContext - Full item objects for matching
+ * @returns {Object} - Compatible items organized by category with full objects
  */
-function parseOuterwearCompatibilityResponse(claudeResponse) {
+function parseOuterwearCompatibilityResponse(claudeResponse, stylingContext = []) {
   try {
     // Look for the COMPATIBLE OUTERWEAR ITEMS section
     const compatibleSection = claudeResponse.match(/COMPATIBLE OUTERWEAR ITEMS:\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
     
     if (!compatibleSection || !compatibleSection[1]) {
+      console.log('[outerwear] No compatible outerwear items section found in response');
       return {};
     }
     
@@ -139,35 +143,63 @@ function parseOuterwearCompatibilityResponse(claudeResponse) {
     const lines = itemsText.split('\n').filter(line => line.trim());
     const compatibleItems = {};
     
-    // Use a for loop so we can break when hitting explanatory text
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      
+    lines.forEach((line) => {
       // Stop processing if we hit explanatory text
-      if (line.toLowerCase().includes('incompatibilities') || 
-          line.toLowerCase().includes('excluded') || 
-          line.toLowerCase().includes('because') ||
-          line.toLowerCase().includes('explanation')) {
-        break;
+      if (line.toLowerCase().includes('these items') || line.toLowerCase().includes('because') || line.toLowerCase().includes('analysis')) {
+        return;
       }
       
-      // Parse format like "outerwear: Navy Cardigan, Winter Coat"
+      // Parse format like "outerwear: Navy Cardigan, Denim Jacket"
       const match = line.match(/^\s*(\w+):\s*(.+)$/i);
       if (match) {
         const category = match[1].toLowerCase();
         const itemsStr = match[2].trim();
         
-        if (itemsStr && itemsStr.toLowerCase() !== 'none' && itemsStr !== '-' && itemsStr.toLowerCase() !== 'no items') {
-          const items = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
-          if (items.length > 0) {
-            compatibleItems[category] = items;
+        if (itemsStr && itemsStr !== 'none' && itemsStr !== '-') {
+          const itemNames = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
+          
+          if (itemNames.length > 0) {
+            // Match item names to full objects from styling context
+            const fullItemObjects = itemNames.map(itemName => {
+              // Find matching item in styling context by name
+              const fullItem = stylingContext.find(item => 
+                item.name && item.name.toLowerCase().includes(itemName.toLowerCase()) ||
+                itemName.toLowerCase().includes(item.name && item.name.toLowerCase())
+              );
+              
+              if (fullItem) {
+                // Return full item object with all properties needed for cards
+                return {
+                  id: fullItem.id,
+                  name: fullItem.name,
+                  imageUrl: fullItem.imageUrl,
+                  category: fullItem.category,
+                  subcategory: fullItem.subcategory,
+                  color: fullItem.color,
+                  brand: fullItem.brand,
+                  // Add compatibility type for frontend display
+                  compatibilityTypes: ['outerwear']
+                };
+              } else {
+                // Fallback: return text-only object if no match found
+                console.log(`⚠️ No matching item found for: ${itemName}`);
+                return {
+                  name: itemName,
+                  compatibilityTypes: ['outerwear']
+                };
+              }
+            }).filter(Boolean);
+            
+            if (fullItemObjects.length > 0) {
+              compatibleItems[category] = fullItemObjects;
+            }
+          } else if (itemsStr.toLowerCase() === 'none') {
+            // Explicitly handle the "none" case - don't add empty array, let the system know no compatible items found
+            console.log('[outerwear-compatibility] No compatible outerwear items found');
           }
-        } else if (itemsStr.toLowerCase() === 'none') {
-          // Explicitly handle the "none" case - don't add empty array, let the system know no compatible items found
-          console.log('[outerwear-compatibility] No compatible outerwear items found');
         }
       }
-    }
+    });
     
     return compatibleItems;
     

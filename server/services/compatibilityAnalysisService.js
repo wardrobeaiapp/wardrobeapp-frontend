@@ -46,6 +46,12 @@ async function analyzeAllCompatibilities(formData, preFilledData, extractedChara
   
   console.log('🔍 [compatibilityAnalysisService] Starting compatibility analysis...');
   console.log('🔍 [compatibilityAnalysisService] Styling context items:', stylingContext.length);
+  
+  // Debug: Show actual item names in styling context
+  console.log('🔍 [DEBUG] Sample styling context item names:');
+  stylingContext.slice(0, 5).forEach((item, index) => {
+    console.log(`   ${index + 1}. "${item.name}" (ID: ${item.id}, Category: ${item.category})`);
+  });
 
   // Extract item data once for all compatibility checks
   const itemDataForCompatibility = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
@@ -118,8 +124,8 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       const rawCompatibilityResponse = compatibilityResponse.content[0].text;
       console.log('🎯 Claude compatibility response received');
       
-      // Parse compatibility response
-      const result = parseCompatibilityResponse(rawCompatibilityResponse);
+      // Parse compatibility response with full item objects
+      const result = parseCompatibilityResponse(rawCompatibilityResponse, stylingContext);
       
       console.log('✅ Compatible complementing items by category:', JSON.stringify(result, null, 2));
       return result;
@@ -154,23 +160,23 @@ async function analyzeLayeringCompatibility(itemDataForLayering, extractedCharac
         
         // Make Claude layering compatibility check call
         console.log('🤖 Calling Claude for layering compatibility evaluation...');
-        const layeringResponse = await anthropic.messages.create({
+        const response = await anthropic.messages.create({
           model: "claude-3-haiku-20240307",
-          max_tokens: 1024,
+          max_tokens: 512,
           messages: [{
             role: "user",
             content: layeringPrompt
           }]
         });
         
-        const rawLayeringResponse = layeringResponse.content[0].text;
-        console.log('🎯 Claude layering compatibility response received');
+        const rawResponse = response.content[0].text;
+        console.log('🤖 Claude compatibility analysis response:', rawResponse);
         
-        // Parse layering compatibility response
-        const result = parseLayeringCompatibilityResponse(rawLayeringResponse);
+        // Parse the response to extract compatible items with full objects
+        const compatibleItems = parseLayeringCompatibilityResponse(rawResponse, stylingContext);
+        console.log('✅ Parsed compatible layering items:', JSON.stringify(compatibleItems, null, 2));
         
-        console.log('✅ Compatible layering items by category:', JSON.stringify(result, null, 2));
-        return result;
+        return compatibleItems;
       } else {
         console.log('ℹ️ No layering items found to evaluate');
         return null;
@@ -218,8 +224,8 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
         const rawOuterwearResponse = outerwearResponse.content[0].text;
         console.log('🎯 Claude outerwear compatibility response received');
         
-        // Parse outerwear compatibility response
-        const result = parseOuterwearCompatibilityResponse(rawOuterwearResponse);
+        // Parse outerwear compatibility response with full item objects
+        const result = parseOuterwearCompatibilityResponse(rawOuterwearResponse, stylingContext);
         
         console.log('✅ Compatible outerwear items by category:', JSON.stringify(result, null, 2));
         return result;

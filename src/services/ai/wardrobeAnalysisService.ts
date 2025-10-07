@@ -177,11 +177,15 @@ export const wardrobeAnalysisService = {
       }
       
       // Filter contexts to reduce payload size before sending to backend
+      // Include card fields (ID, imageUrl) for styling context to enable card display
       // Limit similarContext to 5 items to prevent Claude API payload size errors
-      const filteredStylingContext = filterItemContextForAI(stylingContext);
+      const filteredStylingContext = filterItemContextForAI(stylingContext, undefined, true); // true = include card fields
       const filteredSimilarContext = filterItemContextForAI(similarContext, 5);
       
       // Debug: Log filtered items AFTER filtering
+      if (filteredStylingContext.length > 0) {
+        console.log('[wardrobeAnalysisService] 🔍 FILTERED stylingContext (first item with card fields):', JSON.stringify(filteredStylingContext[0], null, 2));
+      }
       if (filteredSimilarContext.length > 0) {
         console.log('[wardrobeAnalysisService] 🔍 FILTERED similarContext (first item):', JSON.stringify(filteredSimilarContext[0], null, 2));
       }
