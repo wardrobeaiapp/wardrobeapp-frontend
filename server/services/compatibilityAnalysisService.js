@@ -201,10 +201,19 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
   try {
     // First check if the item is suitable for outerwear compatibility
     const isSuitableForOuterwear = isItemSuitableForOuterwear(itemDataForOuterwear, extractedCharacteristics);
+    console.log(`🧥 [outerwear] Is item suitable for outerwear compatibility: ${isSuitableForOuterwear}`);
     
     if (isSuitableForOuterwear) {
+      // Debug: Log styling context outerwear items
+      const allOuterwearInContext = stylingContext.filter(item => item.category?.toLowerCase() === 'outerwear');
+      console.log(`🧥 [outerwear] Total outerwear items in styling context: ${allOuterwearInContext.length}`);
+      allOuterwearInContext.forEach((item, i) => 
+        console.log(`  ${i+1}. ${item.name} (category: ${item.category}, wishlist: ${item.wishlist})`)
+      );
+      
       // Get outerwear items from styling context
       const outerwearItems = getOuterwearItemsFromContext(stylingContext, formData?.category);
+      console.log(`🧥 [outerwear] Filtered outerwear items for compatibility: ${outerwearItems.length}`);
       
       if (outerwearItems.length > 0) {
         // Build outerwear compatibility prompt
@@ -230,11 +239,12 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
         console.log('✅ Compatible outerwear items by category:', JSON.stringify(result, null, 2));
         return result;
       } else {
-        console.log('ℹ️ No outerwear items found to evaluate');
+        console.log('🚫 [outerwear] No outerwear items found to evaluate - returning null');
+        console.log('🚫 [outerwear] This will cause compatibleOuterwearItems to be null and consolidation to show {}');
         return null;
       }
     } else {
-      console.log('ℹ️ Item is not suitable for outerwear compatibility - skipping outerwear compatibility check');
+      console.log('🚫 [outerwear] Item is not suitable for outerwear compatibility - skipping outerwear compatibility check');
       return null;
     }
   } catch (error) {

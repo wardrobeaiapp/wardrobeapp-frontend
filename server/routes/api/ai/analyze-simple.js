@@ -144,6 +144,10 @@ router.post('/', async (req, res) => {
     console.log('scenarioCoverage:', scenarioCoverage ? `${scenarioCoverage.length} items` : 'none');
     console.log('similarContext:', similarContext ? `${similarContext.length} items` : 'none');
     console.log('stylingContext:', stylingContext ? `${stylingContext.length} items` : 'none');
+    if (stylingContext && stylingContext.length > 0) {
+      const outerwearCount = stylingContext.filter(item => item.category?.toLowerCase() === 'outerwear').length;
+      console.log(`  → ${outerwearCount} outerwear items in styling context`);
+    }
     console.log('userGoals:', userGoals);
     console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
     console.log('userId:', userId);
