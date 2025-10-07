@@ -43,6 +43,9 @@ async function analyzeAllCompatibilities(formData, preFilledData, extractedChara
     console.log('ℹ️ No styling context provided for compatibility checking');
     return results;
   }
+  
+  console.log('🔍 [compatibilityAnalysisService] Starting compatibility analysis...');
+  console.log('🔍 [compatibilityAnalysisService] Styling context items:', stylingContext.length);
 
   // Extract item data once for all compatibility checks
   const itemDataForCompatibility = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
@@ -59,6 +62,12 @@ async function analyzeAllCompatibilities(formData, preFilledData, extractedChara
   results.compatibleOuterwearItems = await analyzeOuterwearCompatibility(
     itemDataForCompatibility, extractedCharacteristics, stylingContext, formData, anthropic
   );
+  
+  console.log('✅ [compatibilityAnalysisService] Compatibility analysis complete:', {
+    complementingCount: results.compatibleComplementingItems ? Object.keys(results.compatibleComplementingItems).length : 0,
+    layeringCount: results.compatibleLayeringItems ? Object.keys(results.compatibleLayeringItems).length : 0,
+    outerwearCount: results.compatibleOuterwearItems ? Object.keys(results.compatibleOuterwearItems).length : 0
+  });
 
   return results;
 }

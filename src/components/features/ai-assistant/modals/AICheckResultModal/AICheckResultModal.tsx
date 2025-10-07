@@ -6,7 +6,6 @@ import {
   ItemDetails,
 } from '../../../wardrobe/modals/ItemViewModal.styles';
 import { 
-  AnalysisText, 
   RecommendationBox, 
   RecommendationLabel, 
   RecommendationText,
@@ -23,7 +22,9 @@ import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 interface AICheckResultModalProps {
   isOpen: boolean;
   onClose: () => void;
-  analysisResult: string;
+  analysisResult: string; // Technical analysis (for debugging, not displayed)
+  suitableScenarios?: string[]; // Clean scenarios for display
+  compatibleItems?: { [category: string]: any[] }; // Compatible items by category
   score?: number;
   status?: WishlistStatus;
   imageUrl?: string;
@@ -41,6 +42,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   isOpen,
   onClose,
   analysisResult,
+  suitableScenarios,
+  compatibleItems,
   score,
   status,
   imageUrl,
@@ -53,8 +56,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   recommendationAction,
   recommendationText
 }) => {
-  // Tags are now logged in AICheckModal
-  // We still display them here if passed from parent component
+  // Clean user interface ready
 
   const handleAddToWishlist = () => {
     onAddToWishlist?.();
@@ -110,13 +112,68 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           </ImageContainer>
         )}
         
-        <AnalysisText 
-          dangerouslySetInnerHTML={{
-            __html: analysisResult
-              .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-              .replace(/\n/g, '<br />')
-          }}
-        />
+        {/* User-friendly display instead of technical analysis */}
+        {suitableScenarios && suitableScenarios.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#374151' }}>
+              Perfect for:
+            </h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {suitableScenarios.map((scenario, index) => (
+                <span 
+                  key={index}
+                  style={{
+                    background: '#f3f4f6',
+                    padding: '4px 12px',
+                    borderRadius: '16px',
+                    fontSize: '14px',
+                    color: '#374151'
+                  }}
+                >
+                  {scenario}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {compatibleItems && Object.keys(compatibleItems).length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#374151' }}>
+              Works well with:
+            </h4>
+            {Object.entries(compatibleItems).map(([category, items]) => (
+              items.length > 0 && (
+                <div key={category} style={{ marginBottom: '12px' }}>
+                  <h5 style={{ 
+                    margin: '0 0 6px 0', 
+                    fontSize: '14px', 
+                    color: '#6b7280',
+                    textTransform: 'capitalize'
+                  }}>
+                    {category === 'one_piece' ? 'Dresses' : category}:
+                  </h5>
+                  <div style={{ paddingLeft: '12px' }}>
+                    {items.slice(0, 3).map((item, index) => (
+                      <div key={index} style={{ 
+                        fontSize: '14px', 
+                        color: '#374151',
+                        marginBottom: '4px'
+                      }}>
+                        • {item.name || 'Unnamed item'}
+                      </div>
+                    ))}
+                    {items.length > 3 && (
+                      <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>
+                        ...and {items.length - 3} more items
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            ))}
+          </div>
+        )}
         
         {/* Final Recommendation - Full width, before other details */}
         {recommendationAction && (() => {

@@ -54,14 +54,19 @@ function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData,
         systemPrompt += `\n${index + 1}. ${scenario}`;
       });
       
-      systemPrompt += "\n\n⚠️ VALIDATION TASK:";
-      systemPrompt += "\n- VALIDATE whether this item is actually suitable for the scenarios the user already chose";
-      systemPrompt += "\n- If suitable: List the scenario in 'SUITABLE SCENARIOS:' section";  
-      systemPrompt += "\n- If NOT suitable: Explain why in the analysis and don't include it";
-      systemPrompt += "\n- Be honest - if the user's choice doesn't match the item, flag it";
-      systemPrompt += "\n- Consider dress codes, formality, and practical reality";
+      systemPrompt += "\n\n⚠️ CRITICAL VALIDATION RULES:";
+      systemPrompt += "\n- ONLY validate the user's pre-selected scenarios listed above";
+      systemPrompt += "\n- DO NOT suggest any additional scenarios beyond what the user chose";
+      systemPrompt += "\n- DO NOT mention other scenarios, even if they might be suitable";
+      systemPrompt += "\n- If a user scenario is suitable: Include it in 'SUITABLE SCENARIOS:'";
+      systemPrompt += "\n- If a user scenario is NOT suitable: Exclude it and explain why";
+      systemPrompt += "\n- MAXIMUM scenarios in output = scenarios user already selected";
       
-      systemPrompt += "\n\nList VALIDATED scenarios in a 'SUITABLE SCENARIOS:' section. Only include scenarios that truly work for this item. Number them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
+      systemPrompt += "\n\n📝 REQUIRED OUTPUT FORMAT:";
+      systemPrompt += "\n- Only list scenarios from the user's pre-selected list above";
+      systemPrompt += "\n- Do not add any scenarios the user didn't already choose";
+      systemPrompt += "\n- Number them starting from 1 (1., 2., 3., etc.), one scenario per line";
+      systemPrompt += "\n- No explanations in the scenarios list - just the scenario names";
       
     } else {
       // REGULAR ITEM: Suggest suitable scenarios

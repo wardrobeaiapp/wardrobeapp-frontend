@@ -4,17 +4,15 @@ const router = express.Router();
 
 // Import services
 const duplicateDetectionService = require('../../../services/duplicateDetectionService');
-const scenarioCoverageService = require('../../../services/scenarioCoverageService');
 const compatibilityAnalysisService = require('../../../services/compatibilityAnalysisService');
 
 // Import utilities
 const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
 const analyzeScenarioCoverageForScore = require('../../../utils/ai/analyzeScenarioCoverageForScore');
-const generateObjectiveFinalReason = require('../../../utils/ai/generateObjectiveFinalReason');
 const imageValidator = require('../../../utils/imageValidator');
 
 // Import new modular utilities
-const { getAnalysisScope, getAllRelevantCharacteristics } = require('../../../utils/ai/analysisScopeUtils');
+const { getAnalysisScope } = require('../../../utils/ai/analysisScopeUtils');
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
 // Individual compatibility utilities are now handled by compatibilityAnalysisService
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
@@ -38,6 +36,93 @@ const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromp
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+/**
+ * Consolidate all compatibility results by category for frontend popup display
+ * @param {Object} compatibleComplementingItems - Results from complementing compatibility check
+ * @param {Object} compatibleLayeringItems - Results from layering compatibility check  
+ * @param {Object} compatibleOuterwearItems - Results from outerwear compatibility check
+ * @returns {Object} Consolidated results organized by category with compatibility type labels
+ */
+function consolidateCompatibilityResults(compatibleComplementingItems, compatibleLayeringItems, compatibleOuterwearItems) {
+  const consolidatedResults = {};
+  
+  // Helper to safely add items to category
+  const addItemsToCategory = (category, items, compatibilityType) => {
+    if (!consolidatedResults[category]) {
+      consolidatedResults[category] = [];
+    }
+    // Handle both string arrays and object arrays
+    const labeledItems = items.map(item => {
+      // If item is a string, convert to object
+      if (typeof item === 'string') {
+        return {
+          name: item,
+          compatibilityType: compatibilityType
+        };
+      }
+      // If item is already an object, add compatibility type
+      return {
+        ...item,
+        compatibilityType: compatibilityType
+      };
+    });
+    consolidatedResults[category] = consolidatedResults[category].concat(labeledItems);
+  };
+  
+  // Merge complementing items (tops, bottoms, footwear, accessories)
+  if (compatibleComplementingItems) {
+    Object.keys(compatibleComplementingItems).forEach(category => {
+      if (compatibleComplementingItems[category] && compatibleComplementingItems[category].length > 0) {
+        addItemsToCategory(category, compatibleComplementingItems[category], 'complementing');
+      }
+    });
+  }
+  
+  // Merge layering items (cardigans, blazers, etc.)
+  if (compatibleLayeringItems) {
+    Object.keys(compatibleLayeringItems).forEach(category => {
+      if (compatibleLayeringItems[category] && compatibleLayeringItems[category].length > 0) {
+        addItemsToCategory(category, compatibleLayeringItems[category], 'layering');
+      }
+    });
+  }
+  
+  // Merge outerwear items (coats, jackets, etc.)
+  if (compatibleOuterwearItems) {
+    Object.keys(compatibleOuterwearItems).forEach(category => {
+      if (compatibleOuterwearItems[category] && compatibleOuterwearItems[category].length > 0) {
+        addItemsToCategory(category, compatibleOuterwearItems[category], 'outerwear');
+      }
+    });
+  }
+  
+  // Remove duplicates within each category (same item might appear in multiple compatibility types)
+  Object.keys(consolidatedResults).forEach(category => {
+    const uniqueItems = [];
+    const seenNames = new Set();
+    
+    consolidatedResults[category].forEach(item => {
+      const itemName = item.name || item.id || JSON.stringify(item);
+      if (!seenNames.has(itemName)) {
+        seenNames.add(itemName);
+        // If item appears in multiple compatibility types, combine them
+        const allCompatibilityTypes = consolidatedResults[category]
+          .filter(i => (i.name || i.id || JSON.stringify(i)) === itemName)
+          .map(i => i.compatibilityType);
+        
+        uniqueItems.push({
+          ...item,
+          compatibilityTypes: allCompatibilityTypes // Array of all compatibility types
+        });
+      }
+    });
+    
+    consolidatedResults[category] = uniqueItems;
+  });
+  
+  return consolidatedResults;
+}
 
 //
 // @route   POST /api/analyze-wardrobe-item-simple
@@ -225,26 +310,34 @@ router.post('/', async (req, res) => {
       compatibleOuterwearItems 
     } = compatibilityResults;
 
+    // Consolidate all compatibility results by category for frontend popup
+    const consolidatedCompatibleItems = consolidateCompatibilityResults(
+      compatibleComplementingItems, 
+      compatibleLayeringItems, 
+      compatibleOuterwearItems
+    );
+    
+    console.log('✅ Consolidated compatible items by category:', Object.keys(consolidatedCompatibleItems));
+    console.log('✅ Suitable scenarios extracted:', suitableScenarios.length, 'scenarios');
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
+      // MAIN ANALYSIS (required field for frontend popup trigger)
       analysis: analysisResponse,
+      
+      // USER-FACING POPUP DATA
       score: analysisResult.score, // Frontend will convert this to action/status
       recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
+      compatibleItems: consolidatedCompatibleItems, // Items organized by category for popup
       
-      // COMPREHENSIVE CHARACTERISTICS for future compatibility analysis
+      // TECHNICAL DATA (for processing, not user display)
       itemCharacteristics: extractedCharacteristics,
-      
-      // COMPATIBLE COMPLEMENTING ITEMS grouped by category
-      compatibleComplementingItems: compatibleComplementingItems,
-      
-      // COMPATIBLE LAYERING ITEMS grouped by category
-      compatibleLayeringItems: compatibleLayeringItems,
-      
-      // COMPATIBLE OUTERWEAR ITEMS grouped by category
-      compatibleOuterwearItems: compatibleOuterwearItems,
-      
-      // Data integration info
+      compatibilityDetails: {
+        complementing: compatibleComplementingItems,
+        layering: compatibleLayeringItems,
+        outerwear: compatibleOuterwearItems
+      },
       dataIntegration: {
         isFromWishlist: !!preFilledData,
         preFilledFields: preFilledData ? Object.keys(preFilledData).filter(key => 

@@ -27,6 +27,8 @@ export interface WardrobeItemAnalysis {
   score: number;
   feedback: string;
   recommendationText?: string; // Human-readable explanation from gap analysis
+  suitableScenarios?: string[]; // Clean scenarios for popup display
+  compatibleItems?: { [category: string]: any[] }; // Compatible items by category for popup
   error?: string;
   details?: string;
 }

@@ -6,7 +6,16 @@
 function extractSuitableScenarios(analysisResponse) {
   let suitableScenarios = [];
   
-  const suitableScenariosMatch = analysisResponse.match(/SUITABLE SCENARIOS:?\s*([\s\S]*?)(?=REASON:?|FINAL RECOMMENDATION:?|SCORE:?|$)/i);
+  // Try to match the new equals format first (=== SUITABLE SCENARIOS ===)
+  let suitableScenariosMatch = analysisResponse.match(/={3,}\s*SUITABLE SCENARIOS\s*={3,}([\s\S]*?)(?=={3,}.*?={3,}|REASON:?|FINAL RECOMMENDATION:?|SCORE:?|$)/i);
+  
+  // If that fails, try the original colon format (SUITABLE SCENARIOS:)
+  if (!suitableScenariosMatch) {
+    suitableScenariosMatch = analysisResponse.match(/SUITABLE SCENARIOS:?\s*([\s\S]*?)(?=REASON:?|FINAL RECOMMENDATION:?|SCORE:?|$)/i);
+  }
+  
+  // Extract scenarios from the designated section
+  
   if (suitableScenariosMatch && suitableScenariosMatch[1]) {
     const scenariosText = suitableScenariosMatch[1].trim();
     
@@ -18,14 +27,26 @@ function extractSuitableScenarios(analysisResponse) {
     
     for (let line of lines) {
       line = line.trim();
-      if (line && !negativeWords.test(line)) {
-        // Extract scenario name by removing leading numbers, bullets, dashes
-        let scenarioName = line.replace(/^[\d+\.\-\•\*\s]+/, '').trim();
+      
+      // STRICT FILTERING: Only accept lines that look like numbered scenarios
+      // Must start with number followed by period and space: "1. Scenario Name"
+      if (/^\d+\.\s+/.test(line) && !negativeWords.test(line)) {
+        // Extract scenario name by removing the number prefix
+        let scenarioName = line.replace(/^\d+\.\s+/, '').trim();
         
         // Remove any trailing explanations in parentheses or after colons/dashes
         scenarioName = scenarioName.split(/[\(\:\-]/)[0].trim();
         
-        if (scenarioName && scenarioName.length > 2) {
+        // Filter out system messages and analysis text
+        const systemWords = /STYLE LEVEL|FORMALITY LEVEL|COLOR|PATTERN|NECKLINE|LAYERING|STATEMENT|CLASSIFICATION|OUTERWEAR|NONE|REASON|FINAL|RECOMMENDATION|SCORE|ANALYSIS|DEBUG|===|---|###/i;
+        
+        // Only add if it looks like an actual scenario name (not analysis text)
+        if (scenarioName && 
+            scenarioName.length > 2 && 
+            scenarioName.length < 50 && // Scenarios shouldn't be super long
+            !systemWords.test(scenarioName) &&
+            !/^(this|the|a|an|and|or|but|for|with|has|have|is|are|was|were)/i.test(scenarioName) // Not sentence fragments
+        ) {
           suitableScenarios.push(scenarioName);
         }
       }

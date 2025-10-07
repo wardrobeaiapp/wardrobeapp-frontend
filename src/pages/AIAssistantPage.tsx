@@ -66,6 +66,8 @@ const AIAssistantPage: React.FC = () => {
     extractedTags,
     recommendationAction,
     recommendationText: itemRecommendationText,
+    suitableScenarios,
+    compatibleItems,
     errorType,
     errorDetails,
 
@@ -265,6 +267,8 @@ const AIAssistantPage: React.FC = () => {
           isOpen={true}
           onClose={handleCloseCheckResultModal}
           analysisResult={itemCheckResponse}
+          suitableScenarios={suitableScenarios}
+          compatibleItems={compatibleItems}
           score={itemCheckScore}
           status={itemCheckStatus}
           imageUrl={imageLink}

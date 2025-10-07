@@ -15,6 +15,8 @@ export const useAICheck = () => {
   const [itemCheckStatus, setItemCheckStatus] = useState<WishlistStatus | undefined>();
   const [extractedTags, setExtractedTags] = useState<DetectedTags | null>(null);
   const [recommendationText, setRecommendationText] = useState<string>('');
+  const [suitableScenarios, setSuitableScenarios] = useState<string[]>([]);
+  const [compatibleItems, setCompatibleItems] = useState<{ [category: string]: any[] }>({});
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
 
@@ -97,13 +99,24 @@ export const useAICheck = () => {
         status = WishlistStatus.POTENTIAL_ISSUE;
       }
 
+      // Extract clean data from the new API response structure
+      const responseData = response as any; // Type-safe access to dynamic API response
+      const scenarios = responseData.suitableScenarios || [];
+      const compatibleItemsData = responseData.compatibleItems || {};
+
+      // Clean data extraction complete
+
       setItemCheckResponse(analysisResult);
       setItemCheckScore(score);
       setItemCheckStatus(status);
       setExtractedTags(detectedTags);
       setRecommendationText(response.recommendationText || '');
+      setSuitableScenarios(scenarios);
+      setCompatibleItems(compatibleItemsData);
 
-      return { analysisResult, score, status, detectedTags };
+      // Data extraction complete
+
+      return { analysisResult, score, status, detectedTags, scenarios, compatibleItemsData };
     } catch (err) {
       console.error('Error checking item:', err);
       setError('Failed to analyze the outfit. Please try again.');
@@ -124,6 +137,8 @@ export const useAICheck = () => {
     setItemCheckStatus(undefined);
     setExtractedTags(null);
     setRecommendationText('');
+    setSuitableScenarios([]);
+    setCompatibleItems({});
     setError('');
     setErrorType('');
     setErrorDetails('');
@@ -267,6 +282,8 @@ export const useAICheck = () => {
     extractedTags,
     recommendationAction, // Computed from score
     recommendationText,
+    suitableScenarios, // Clean scenarios for display
+    compatibleItems, // Compatible items by category for display
     errorType,
     errorDetails,
     

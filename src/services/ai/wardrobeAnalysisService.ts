@@ -272,6 +272,8 @@ export const wardrobeAnalysisService = {
           score: response.data.score || 5.0,
           feedback: response.data.feedback || 'Could not process the image analysis.',
           recommendationText: response.data.recommendationText,
+          suitableScenarios: response.data.suitableScenarios || [],
+          compatibleItems: response.data.compatibleItems || {},
           error: response.data.error,
           details: response.data.details
         };
@@ -282,7 +284,9 @@ export const wardrobeAnalysisService = {
         analysis: response.data.analysis,
         score: response.data.score,
         feedback: response.data.feedback,
-        recommendationText: response.data.recommendationText
+        recommendationText: response.data.recommendationText,
+        suitableScenarios: response.data.suitableScenarios,
+        compatibleItems: response.data.compatibleItems
       };
     } catch (error: any) {
       console.error('[wardrobeAnalysisService] Error analyzing wardrobe item:', error);
@@ -295,6 +299,8 @@ export const wardrobeAnalysisService = {
           analysis: 'Error analyzing image. The server encountered a problem.',
           score: 5.0,
           feedback: 'The analysis service is temporarily unavailable. Please try again later.',
+          suitableScenarios: [],
+          compatibleItems: {},
           error: 'server_error',
           details: `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`
         };
@@ -305,6 +311,8 @@ export const wardrobeAnalysisService = {
           analysis: 'Error analyzing image. Could not connect to the analysis service.',
           score: 5.0,
           feedback: 'Please check your internet connection and try again.',
+          suitableScenarios: [],
+          compatibleItems: {},
           error: 'network_error',
           details: 'No response received from the server. The service may be down or your connection may be interrupted.'
         };
@@ -314,6 +322,8 @@ export const wardrobeAnalysisService = {
           analysis: 'Error analyzing image. Please try again later.',
           score: 5.0,
           feedback: 'An unexpected error occurred during image analysis.',
+          suitableScenarios: [],
+          compatibleItems: {},
           error: 'unknown_error',
           details: error.message || 'Unknown error occurred'
         };
