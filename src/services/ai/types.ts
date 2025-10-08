@@ -31,6 +31,7 @@ export interface WardrobeItemAnalysis {
   compatibleItems?: { [category: string]: any[] }; // Compatible items by category for popup
   outfitCombinations?: any[]; // Complete outfit recommendations from backend
   seasonScenarioCombinations?: any[]; // Season + scenario completion status from backend
+  coverageGapsWithNoOutfits?: any[]; // Coverage gaps that have 0 outfits available
   error?: string;
   details?: string;
 }

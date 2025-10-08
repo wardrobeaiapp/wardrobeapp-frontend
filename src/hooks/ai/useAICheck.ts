@@ -19,6 +19,7 @@ export const useAICheck = () => {
   const [compatibleItems, setCompatibleItems] = useState<{ [category: string]: any[] }>({});
   const [outfitCombinations, setOutfitCombinations] = useState<any[]>([]);
   const [seasonScenarioCombinations, setSeasonScenarioCombinations] = useState<any[]>([]);
+  const [coverageGapsWithNoOutfits, setCoverageGapsWithNoOutfits] = useState<any[]>([]);
   const [itemSubcategory, setItemSubcategory] = useState('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
@@ -114,23 +115,22 @@ export const useAICheck = () => {
       const outfitCombinationsData = responseData.outfitCombinations || [];
       const seasonScenarioCombinationsData = responseData.seasonScenarioCombinations || [];
 
-      // Clean data extraction complete
-
       setItemCheckResponse(analysisResult);
       setItemCheckScore(score);
       setItemCheckStatus(status);
       setExtractedTags(detectedTags);
       setRecommendationText(response.recommendationText || '');
-      setSuitableScenarios(scenarios);
-      setCompatibleItems(compatibleItemsData);
-      setOutfitCombinations(outfitCombinationsData);
-      setSeasonScenarioCombinations(seasonScenarioCombinationsData);
+      // Extract the separate compatible items arrays
+      setSuitableScenarios(response.suitableScenarios || []);
+      setCompatibleItems(response.compatibleItems || {});
+      setOutfitCombinations(response.outfitCombinations || []);
+      setSeasonScenarioCombinations(response.seasonScenarioCombinations || []);
+      setCoverageGapsWithNoOutfits(response.coverageGapsWithNoOutfits || []);
 
       // Data extraction complete
 
       return { 
         analysisResult, 
-        score, 
         status, 
         detectedTags, 
         scenarios, 
@@ -162,6 +162,7 @@ export const useAICheck = () => {
     setCompatibleItems({});
     setOutfitCombinations([]);
     setSeasonScenarioCombinations([]);
+    setCoverageGapsWithNoOutfits([]);
     setItemSubcategory('');
     setError('');
     setErrorType('');
@@ -310,6 +311,7 @@ export const useAICheck = () => {
     compatibleItems, // Compatible items by category for display
     outfitCombinations, // Complete outfit recommendations
     seasonScenarioCombinations, // Season + scenario completion status
+    coverageGapsWithNoOutfits, // Coverage gaps with 0 outfits
     itemSubcategory, // Item subcategory from form data
     errorType,
     errorDetails,

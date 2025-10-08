@@ -69,6 +69,7 @@ const AIAssistantPage: React.FC = () => {
     compatibleItems,
     outfitCombinations,
     seasonScenarioCombinations,
+    coverageGapsWithNoOutfits,
     itemSubcategory,
     errorType,
     errorDetails,
@@ -273,6 +274,7 @@ const AIAssistantPage: React.FC = () => {
           compatibleItems={compatibleItems}
           outfitCombinations={outfitCombinations}
           seasonScenarioCombinations={seasonScenarioCombinations}
+          coverageGapsWithNoOutfits={coverageGapsWithNoOutfits}
           itemSubcategory={itemSubcategory}
           score={itemCheckScore}
           status={itemCheckStatus}

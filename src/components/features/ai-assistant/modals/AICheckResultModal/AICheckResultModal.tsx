@@ -51,6 +51,7 @@ interface AICheckResultModalProps {
   compatibleItems?: { [category: string]: any[] }; // Compatible items by category
   outfitCombinations?: any[]; // Complete outfit recommendations
   seasonScenarioCombinations?: any[]; // Season + scenario completion status
+  coverageGapsWithNoOutfits?: any[]; // Coverage gaps that have 0 outfits available
   itemSubcategory?: string; // Item subcategory from form data
   score?: number;
   status?: WishlistStatus;
@@ -71,6 +72,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   compatibleItems,
   outfitCombinations = [],
   seasonScenarioCombinations = [],
+  coverageGapsWithNoOutfits = [],
   itemSubcategory = '',
   score,
   status,
@@ -213,7 +215,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                   const displayType = itemType.toLowerCase().replace(/_/g, ' ');
 
                   if (totalOutfits === 0) {
-                    return `Add a few more pieces to create outfits with this ${displayType}`;
+                    return `This ${displayType} doesn't have enough matching pieces in your current wardrobe`;
                   }
                   return `You can make ${totalOutfits} new outfit${totalOutfits !== 1 ? 's' : ''} with this ${displayType}`;
                 })()}
@@ -255,6 +257,30 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                     </IncompleteScenarioItem>
                   ))}
                 </IncompleteScenarios>
+              )}
+              
+              {/* Coverage Gaps With No Outfits */}
+              {coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{
+                    fontWeight: '700',
+                    color: '#dc2626',
+                    marginBottom: '0.5rem',
+                    fontSize: '1rem'
+                  }}>
+                    ⚠️ COVERAGE GAPS CONFIRMED:
+                  </div>
+                  {coverageGapsWithNoOutfits.map((gap: any, index: number) => (
+                    <div key={index} style={{
+                      marginLeft: '1rem',
+                      marginBottom: '0.25rem',
+                      fontSize: '0.9rem',
+                      color: '#6b7280'
+                    }}>
+                      • {gap.description} ({gap.gapType}) - No outfits possible with current wardrobe
+                    </div>
+                  ))}
+                </div>
               )}
             </OutfitAnalysisContainer>
           );

@@ -295,17 +295,12 @@ router.post('/', async (req, res) => {
     
     const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
     
-    // Analyze scenario coverage to get score and objective reason
-    // Pass duplicate analysis results to prioritize duplicate detection in scoring
-    const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
-    const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysisForScore);
-    const objectiveFinalReason = analysisResult.reason;
+    // Note: Scenario coverage scoring will be calculated after outfit generation
+    // to include practical outfit-based adjustments
     
     console.log('=== Simple Analysis Response ===');
     console.log('Response length:', analysisResponse.length, 'characters');
-    console.log('Score from coverage analysis:', analysisResult.score);
     console.log('Claude recommendation:', claudeRecommendation);
-    console.log('Objective reason:', objectiveFinalReason);
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
@@ -354,6 +349,7 @@ router.post('/', async (req, res) => {
     // Generate outfit combinations using season + scenario combinations logic
     let outfitCombinations = [];
     let seasonScenarioCombinations = [];
+    let coverageGapsWithNoOutfits = [];
     
     // Extract combined item data for season + scenario combinations
     const itemDataWithScenarios = {
@@ -384,7 +380,7 @@ router.post('/', async (req, res) => {
           console.log(`📊 Found ${relevantCoverageItems.length} coverage items with gaps and specific season+scenario:`);
           
           relevantCoverageItems.forEach(coverageItem => {
-            const { season, scenarioName, gapType, category } = coverageItem;
+            const { season, scenarioName, gapType, category, gapCount, coveragePercent } = coverageItem;
             
             // Look for matching outfit combinations for this season+scenario
             const matchingOutfitCombos = outfitCombinations.filter(combo => 
@@ -400,6 +396,17 @@ router.post('/', async (req, res) => {
               console.log(`   ✅ Coverage: "${category} for ${season} for ${scenarioName}" (${gapType}) → Found ${totalOutfitsFound} outfit(s)`);
             } else {
               console.log(`   ❌ Coverage: "${category} for ${season} for ${scenarioName}" (${gapType}) → Found 0 outfits despite coverage gap`);
+              
+              // Collect gaps with no outfits for frontend
+              coverageGapsWithNoOutfits.push({
+                category,
+                season,
+                scenarioName,
+                gapType,
+                gapCount: gapCount || 0,
+                coveragePercent: coveragePercent || 0,
+                description: `${category} for ${season} for ${scenarioName}`
+              });
             }
           });
         } else {
@@ -411,7 +418,32 @@ router.post('/', async (req, res) => {
       console.error('❌ Error generating outfit combinations:', error);
       outfitCombinations = [];
       seasonScenarioCombinations = [];
+      coverageGapsWithNoOutfits = [];
     }
+
+    // ===== FINAL SCORING WITH OUTFIT-BASED ADJUSTMENTS =====
+    console.log('\n=== STEP: Final Scoring with Outfit Data ===');
+    
+    // Analyze scenario coverage to get score and objective reason
+    // Pass duplicate analysis results to prioritize duplicate detection in scoring
+    const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
+    
+    // Prepare outfit data for scoring adjustments
+    const outfitDataForScoring = {
+      totalOutfits: outfitCombinations.reduce((sum, combo) => sum + (combo.outfits?.length || 0), 0),
+      coverageGapsWithNoOutfits: coverageGapsWithNoOutfits || []
+    };
+    
+    console.log('📊 Outfit data for scoring:', {
+      totalOutfits: outfitDataForScoring.totalOutfits,
+      gapsWithNoOutfits: outfitDataForScoring.coverageGapsWithNoOutfits.length
+    });
+    
+    const analysisResult = analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysisForScore, outfitDataForScoring);
+    const objectiveFinalReason = analysisResult.reason;
+    
+    console.log('✅ Final score with outfit adjustments:', analysisResult.score);
+    console.log('✅ Final objective reason:', objectiveFinalReason);
 
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
@@ -425,6 +457,7 @@ router.post('/', async (req, res) => {
       compatibleItems: consolidatedCompatibleItems, // Items organized by category for popup
       outfitCombinations: outfitCombinations, // Complete outfit recommendations
       seasonScenarioCombinations: seasonScenarioCombinations, // Season + scenario completion status
+      coverageGapsWithNoOutfits: coverageGapsWithNoOutfits, // Coverage gaps that have 0 outfits available
       
       // TECHNICAL DATA (for processing, not user display)
       itemCharacteristics: extractedCharacteristics,

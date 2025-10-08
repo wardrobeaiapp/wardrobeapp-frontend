@@ -37,15 +37,18 @@ function formatVarietyMessage(varietyModifier) {
 }
 
 /**
- * Analyze scenario coverage to determine initial score based on gap analysis
- * @param {Array} scenarioCoverage - Scenario coverage data
- * @param {string[]} suitableScenarios - Array of suitable scenario names from Claude analysis
- * @param {Object} formData - Form data with category/subcategory info
+ * Analyze scenario coverage data and generate comprehensive score + reason
+ * @param {Array} scenarioCoverage - Coverage data from scenario analysis
+ * @param {Array} suitableScenarios - Scenarios from Claude analysis  
+ * @param {Object} formData - Form data with category, subcategory, etc.
  * @param {Array} userGoals - User goals that affect scoring
  * @param {Object} duplicateAnalysis - Optional duplicate detection results
+ * @param {Object} outfitData - Optional outfit combination data for practical scoring
+ * @param {number} outfitData.totalOutfits - Total number of outfit combinations possible
+ * @param {Array} outfitData.coverageGapsWithNoOutfits - Coverage gaps that have 0 outfits
  * @returns {Object} Analysis results with score and reason data
  */
-function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysis) {
+function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysis, outfitData) {
   // PRIORITY 1: Check for duplicates first
   if (duplicateAnalysis && duplicateAnalysis.duplicate_analysis && duplicateAnalysis.duplicate_analysis.found) {
     const duplicateCount = duplicateAnalysis.duplicate_analysis.count;
@@ -239,6 +242,54 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     // finalScore = initialScore + varietyModifier.modifier;
   }
   
+  // OUTFIT-BASED SCORING ADJUSTMENTS
+  if (outfitData) {
+    const { totalOutfits, coverageGapsWithNoOutfits } = outfitData;
+    let outfitPenalty = 0;
+    
+    console.log('\n🎯 OUTFIT-BASED SCORING ADJUSTMENTS:');
+    
+    // Penalty 1: No outfits at all (major practical issue)
+    if (totalOutfits === 0) {
+      outfitPenalty += 3;
+      console.log(`   ❌ No outfits possible: -3 points (total: ${totalOutfits} outfits)`);
+    } else {
+      console.log(`   ✅ Outfits available: ${totalOutfits} combinations found`);
+    }
+    
+    // Penalty 2: Coverage gaps with no outfits (only when styling utility is significantly limited)
+    // Apply penalty only when item has few outfits AND multiple coverage gaps can't be styled
+    if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
+      // Only penalize if item has limited styling utility (few outfits relative to coverage expectations)
+      const hasLimitedUtility = totalOutfits <= 2 && coverageGapsWithNoOutfits.length >= 2;
+      
+      if (hasLimitedUtility) {
+        outfitPenalty += 2;
+        console.log(`   ⚠️  Coverage gaps with no outfits: -2 points (${coverageGapsWithNoOutfits.length} gaps affected)`);
+        console.log(`   📝  Item has limited styling utility (${totalOutfits} outfits) with multiple unstyleable gaps`);
+        coverageGapsWithNoOutfits.forEach(gap => {
+          console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled`);
+        });
+      } else {
+        console.log(`   ✅ Item has good styling utility (${totalOutfits} outfits) despite ${coverageGapsWithNoOutfits.length} unstyleable coverage gaps`);
+        console.log(`   📝  No penalty applied - item serves its purpose well`);
+        coverageGapsWithNoOutfits.forEach(gap => {
+          console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled (but item still useful)`);
+        });
+      }
+    } else if (totalOutfits === 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
+      console.log(`   ℹ️  Coverage gaps exist but already penalized by "no outfits" penalty`);
+    }
+    
+    if (outfitPenalty > 0) {
+      finalScore = Math.max(1.0, finalScore - outfitPenalty); // Don't go below 1.0
+      console.log(`   📊 Applied outfit penalty: -${outfitPenalty} points`);
+      console.log(`   📊 Adjusted score: ${initialScore} → ${finalScore}`);
+    } else {
+      console.log('   ✅ No outfit-based penalties applied');
+    }
+  }
+  
   // Generate objective final reason
   const objectiveReason = generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals);
   
@@ -246,6 +297,27 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   let finalReason = objectiveReason;
   if (varietyModifier) {
     finalReason += formatVarietyMessage(varietyModifier);
+  }
+  
+  // Add outfit-based messaging if applicable
+  if (outfitData) {
+    const { totalOutfits, coverageGapsWithNoOutfits } = outfitData;
+    
+    if (totalOutfits === 0) {
+      finalReason += " Unfortunately, you don't have the right pieces in your wardrobe to style this item.";
+    } else if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
+      // Only mention coverage gaps if penalty was actually applied (limited styling utility)
+      const hasLimitedUtility = totalOutfits <= 2 && coverageGapsWithNoOutfits.length >= 2;
+      
+      if (hasLimitedUtility) {
+        const gapCount = coverageGapsWithNoOutfits.length;
+        if (gapCount === 1) {
+          finalReason += " However, you're missing some key pieces to style this for all occasions.";
+        } else {
+          finalReason += " However, you're missing several key pieces to style this for all occasions.";
+        }
+      }
+    }
   }
   
   return {
