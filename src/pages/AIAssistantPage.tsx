@@ -59,15 +59,17 @@ const AIAssistantPage: React.FC = () => {
     isFileUpload,
     uploadedFile,
     isLoading: isCheckLoading,
-    error: checkError,
     itemCheckResponse,
     itemCheckScore,
     itemCheckStatus,
     extractedTags,
     recommendationAction,
-    recommendationText: itemRecommendationText,
+    recommendationText,
     suitableScenarios,
     compatibleItems,
+    outfitCombinations,
+    seasonScenarioCombinations,
+    itemSubcategory,
     errorType,
     errorDetails,
 
@@ -143,7 +145,7 @@ const AIAssistantPage: React.FC = () => {
     scenarioOptions,
     isLoading: isRecommendationLoading,
     error: recommendationError,
-    recommendationText,
+    recommendationText: aiRecommendationText,
 
     // Handlers
     setSelectedSeason,
@@ -213,7 +215,7 @@ const AIAssistantPage: React.FC = () => {
                 onCheckItem={handleCheckItem}
                 onOpenWishlistModal={handleOpenWishlistModal}
                 isLoading={isCheckLoading}
-                error={checkError}
+                error={errorType}
                 itemCheckResponse={itemCheckResponse}
                 isFileUpload={isFileUpload}
                 uploadedFile={uploadedFile}
@@ -269,12 +271,15 @@ const AIAssistantPage: React.FC = () => {
           analysisResult={itemCheckResponse}
           suitableScenarios={suitableScenarios}
           compatibleItems={compatibleItems}
+          outfitCombinations={outfitCombinations}
+          seasonScenarioCombinations={seasonScenarioCombinations}
+          itemSubcategory={itemSubcategory}
           score={itemCheckScore}
           status={itemCheckStatus}
           imageUrl={imageLink}
           extractedTags={extractedTags}
           recommendationAction={recommendationAction}
-          recommendationText={itemRecommendationText}
+          recommendationText={recommendationText}
           onAddToWishlist={handleOpenWishlistModal}
           error={errorType}
           errorDetails={errorDetails}

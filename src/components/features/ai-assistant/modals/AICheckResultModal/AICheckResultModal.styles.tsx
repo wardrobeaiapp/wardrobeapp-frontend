@@ -80,6 +80,12 @@ export const RecommendationText = styled.div`
   line-height: 1.4;
 `;
 
+export const RecommendationSubText = styled(RecommendationText)`
+  margin-top: 8px;
+  font-size: 0.9em;
+  opacity: 0.9;
+`;
+
 export const ImageContainer = styled.div`
   margin-bottom: 16px;
   text-align: center;
@@ -110,4 +116,93 @@ export const ScoreValue = styled(DetailValue)`
   display: flex;
   align-items: center;
   gap: 0.25rem;
+`;
+
+/* Outfit Analysis Styles */
+export const OutfitAnalysisContainer = styled.div`
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+`;
+
+export const OutfitAnalysisHeader = styled.div`
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+`;
+
+export const OutfitScenarioContainer = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+export const OutfitScenarioHeader = styled.div`
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+`;
+
+export const OutfitList = styled.div`
+  margin-left: 2rem;
+`;
+
+export const OutfitItem = styled.div`
+  padding: 0.25rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+`;
+
+export const IncompleteScenarios = styled.div`
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+`;
+
+export const IncompleteScenarioItem = styled.div`
+  span {
+    font-weight: 400;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+`;
+
+/* Compatible Items Styles */
+export const CompatibleItemsContainer = styled.div`
+  margin-bottom: 16px;
+`;
+
+export const CompatibleItemsHeader = styled.h4`
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #374151;
+`;
+
+export const CompatibleCategoryContainer = styled.div`
+  margin-bottom: 12px;
+`;
+
+export const CompatibleCategoryTitle = styled.h5`
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  color: #6b7280;
+  text-transform: capitalize;
+`;
+
+export const CompatibleCategoryContent = styled.div`
+  padding-left: 12px;
+`;
+
+export const CompatibleItemsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 8px;
+`;
+
+export const CompatibleItemText = styled.div`
+  font-size: 14px;
+  color: #374151;
+  margin-bottom: 4px;
 `;

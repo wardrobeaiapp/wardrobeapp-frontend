@@ -9,12 +9,28 @@ import {
   RecommendationBox, 
   RecommendationLabel, 
   RecommendationText,
+  RecommendationSubText,
   ImageContainer,
   PreviewImage,
   ErrorLabel,
   ErrorValue,
   ErrorDetails,
-  ScoreValue
+  ScoreValue,
+  OutfitAnalysisContainer,
+  OutfitAnalysisHeader,
+  OutfitScenarioContainer,
+  OutfitScenarioHeader,
+  OutfitList,
+  OutfitItem,
+  IncompleteScenarios,
+  IncompleteScenarioItem,
+  CompatibleItemsContainer,
+  CompatibleItemsHeader,
+  CompatibleCategoryContainer,
+  CompatibleCategoryTitle,
+  CompatibleCategoryContent,
+  CompatibleItemsGrid,
+  CompatibleItemText
 } from './AICheckResultModal.styles';
 import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
@@ -33,6 +49,9 @@ interface AICheckResultModalProps {
   analysisResult: string; // Technical analysis (for debugging, not displayed)
   suitableScenarios?: string[]; // Clean scenarios for display
   compatibleItems?: { [category: string]: any[] }; // Compatible items by category
+  outfitCombinations?: any[]; // Complete outfit recommendations
+  seasonScenarioCombinations?: any[]; // Season + scenario completion status
+  itemSubcategory?: string; // Item subcategory from form data
   score?: number;
   status?: WishlistStatus;
   imageUrl?: string;
@@ -49,13 +68,13 @@ interface AICheckResultModalProps {
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   isOpen,
   onClose,
-  analysisResult,
-  suitableScenarios,
   compatibleItems,
+  outfitCombinations = [],
+  seasonScenarioCombinations = [],
+  itemSubcategory = '',
   score,
   status,
   imageUrl,
-  extractedTags,
   onAddToWishlist,
   onSkip,
   onDecideLater,
@@ -120,57 +139,22 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           </ImageContainer>
         )}
         
-        {/* User-friendly display instead of technical analysis */}
-        {suitableScenarios && suitableScenarios.length > 0 && (
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '16px', color: '#374151' }}>
-              Perfect for:
-            </h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {suitableScenarios.map((scenario, index) => (
-                <span 
-                  key={index}
-                  style={{
-                    background: '#f3f4f6',
-                    padding: '4px 12px',
-                    borderRadius: '16px',
-                    fontSize: '14px',
-                    color: '#374151'
-                  }}
-                >
-                  {scenario}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        
         {compatibleItems && Object.keys(compatibleItems).length > 0 && (
-          <div style={{ marginBottom: '16px' }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#374151' }}>
+          <CompatibleItemsContainer>
+            <CompatibleItemsHeader>
               Works well with:
-            </h4>
+            </CompatibleItemsHeader>
             {Object.entries(compatibleItems).map(([category, items]) => (
               items.length > 0 && (
-                <div key={category} style={{ marginBottom: '12px' }}>
-                  <h5 style={{ 
-                    margin: '0 0 6px 0', 
-                    fontSize: '14px', 
-                    color: '#6b7280',
-                    textTransform: 'capitalize'
-                  }}>
+                <CompatibleCategoryContainer key={category}>
+                  <CompatibleCategoryTitle>
                     {category === 'one_piece' ? 'Dresses' : category}:
-                  </h5>
-                  <div style={{ paddingLeft: '12px' }}>
+                  </CompatibleCategoryTitle>
+                  <CompatibleCategoryContent>
                     {/* Check if we have full item objects with IDs for card display */}
                     {items.some(item => item.id) ? (
                       // Render as popup-style cards when we have full item objects
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', 
-                        gap: '0.75rem', 
-                        marginTop: '8px' 
-                      }}>
+                      <CompatibleItemsGrid>
                         {items.map((item, index) => (
                           <ItemCard key={item.id || index} $isSelected={false}>
                             <ItemImageContainer>
@@ -192,27 +176,89 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                             </ItemContent>
                           </ItemCard>
                         ))}
-                      </div>
+                      </CompatibleItemsGrid>
                     ) : (
                       // Fallback to text when we don't have full item objects
                       <>
                         {items.map((item, index) => (
-                          <div key={index} style={{ 
-                            fontSize: '14px', 
-                            color: '#374151',
-                            marginBottom: '4px'
-                          }}>
+                          <CompatibleItemText key={index}>
                             • {item.name || 'Unnamed item'}
-                          </div>
+                          </CompatibleItemText>
                         ))}
                       </>
                     )}
-                  </div>
-                </div>
+                  </CompatibleCategoryContent>
+                </CompatibleCategoryContainer>
               )
             ))}
-          </div>
+          </CompatibleItemsContainer>
         )}
+
+        {/* Outfit Combinations Section - Backend Logging Format */}
+        {(seasonScenarioCombinations.length > 0 || outfitCombinations.length > 0) && (() => {
+          // Separate complete and incomplete scenarios
+          const incompleteScenarios = seasonScenarioCombinations.filter((combo: any) => !combo.hasItems);
+          
+          // Calculate totals for summary
+          const totalOutfits = outfitCombinations.reduce((sum: number, combo: any) => sum + (combo.outfits?.length || 0), 0);
+          
+          return (
+            <OutfitAnalysisContainer>
+              <OutfitAnalysisHeader>
+                {(() => {
+                  // Use the subcategory directly from form data, with fallback
+                  const itemType = itemSubcategory || 'item';
+                  
+                  // Convert from enum format (e.g., "T_SHIRT") to display format (e.g., "t-shirt")
+                  const displayType = itemType.toLowerCase().replace(/_/g, ' ');
+
+                  if (totalOutfits === 0) {
+                    return `Add a few more pieces to create outfits with this ${displayType}`;
+                  }
+                  return `You can make ${totalOutfits} new outfit${totalOutfits !== 1 ? 's' : ''} with this ${displayType}`;
+                })()}
+              </OutfitAnalysisHeader>
+
+              {/* Complete Scenarios with Outfits */}
+              {outfitCombinations.map((combo: any, index: number) => (
+                <OutfitScenarioContainer key={index}>
+                  <OutfitScenarioHeader>
+                    {(() => {
+                      const season = combo.season?.toLowerCase();
+                      if (season === 'spring' || season === 'fall' || season === 'spring/fall') {
+                        return 'SPRING/FALL';
+                      }
+                      return combo.season?.toUpperCase();
+                    })()} + {combo.scenario?.toUpperCase()}
+                  </OutfitScenarioHeader>
+                  
+                  <OutfitList>
+                    {combo.outfits?.map((outfit: any, outfitIndex: number) => {
+                      const itemNames = outfit.items?.map((item: any) => item.name) || [];
+                      const outfitDescription = itemNames.join(' + ');
+                      return (
+                        <OutfitItem key={outfitIndex}>
+                          {outfitIndex + 1}. {outfitDescription}
+                        </OutfitItem>
+                      );
+                    }) || []}
+                  </OutfitList>
+                </OutfitScenarioContainer>
+              ))}
+
+              {/* Incomplete Scenarios */}
+              {incompleteScenarios.length > 0 && (
+                <IncompleteScenarios>
+                  {incompleteScenarios.map((combo: any, index: number) => (
+                    <IncompleteScenarioItem key={index}>
+                      {combo.combination?.toUpperCase()} <span>- don't have {combo.missingCategories?.join(' or ') || 'items'} to combine with</span> 
+                    </IncompleteScenarioItem>
+                  ))}
+                </IncompleteScenarios>
+              )}
+            </OutfitAnalysisContainer>
+          );
+        })()}
         
         {/* Final Recommendation - Full width, before other details */}
         {recommendationAction && (() => {
@@ -232,9 +278,9 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                 {recommendationAction}
               </RecommendationText>
               {recommendationText && (
-                <RecommendationText style={{ marginTop: '8px', fontSize: '0.9em', opacity: 0.9 }}>
+                <RecommendationSubText>
                   {recommendationText}
-                </RecommendationText>
+                </RecommendationSubText>
               )}
             </RecommendationBox>
           );
@@ -279,7 +325,6 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
               </DetailValue>
             </DetailRow>
           )}
-          
         </ItemDetails>
     </Modal>
   );

@@ -14,9 +14,12 @@ export const useAICheck = () => {
   const [itemCheckScore, setItemCheckScore] = useState<number | undefined>();
   const [itemCheckStatus, setItemCheckStatus] = useState<WishlistStatus | undefined>();
   const [extractedTags, setExtractedTags] = useState<DetectedTags | null>(null);
-  const [recommendationText, setRecommendationText] = useState<string>('');
+  const [recommendationText, setRecommendationText] = useState('');
   const [suitableScenarios, setSuitableScenarios] = useState<string[]>([]);
   const [compatibleItems, setCompatibleItems] = useState<{ [category: string]: any[] }>({});
+  const [outfitCombinations, setOutfitCombinations] = useState<any[]>([]);
+  const [seasonScenarioCombinations, setSeasonScenarioCombinations] = useState<any[]>([]);
+  const [itemSubcategory, setItemSubcategory] = useState('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
 
@@ -87,6 +90,11 @@ export const useAICheck = () => {
         }
       }
 
+      // Store subcategory from formData
+      if (formData?.subcategory) {
+        setItemSubcategory(formData.subcategory);
+      }
+
       // Call Claude API for analysis
       const response = await claudeService.analyzeWardrobeItem(base64Image, detectedTags || undefined, formData, preFilledData);
       analysisResult = response.analysis;
@@ -103,6 +111,8 @@ export const useAICheck = () => {
       const responseData = response as any; // Type-safe access to dynamic API response
       const scenarios = responseData.suitableScenarios || [];
       const compatibleItemsData = responseData.compatibleItems || {};
+      const outfitCombinationsData = responseData.outfitCombinations || [];
+      const seasonScenarioCombinationsData = responseData.seasonScenarioCombinations || [];
 
       // Clean data extraction complete
 
@@ -113,10 +123,21 @@ export const useAICheck = () => {
       setRecommendationText(response.recommendationText || '');
       setSuitableScenarios(scenarios);
       setCompatibleItems(compatibleItemsData);
+      setOutfitCombinations(outfitCombinationsData);
+      setSeasonScenarioCombinations(seasonScenarioCombinationsData);
 
       // Data extraction complete
 
-      return { analysisResult, score, status, detectedTags, scenarios, compatibleItemsData };
+      return { 
+        analysisResult, 
+        score, 
+        status, 
+        detectedTags, 
+        scenarios, 
+        compatibleItemsData,
+        outfitCombinationsData,
+        seasonScenarioCombinationsData
+      };
     } catch (err) {
       console.error('Error checking item:', err);
       setError('Failed to analyze the outfit. Please try again.');
@@ -139,6 +160,9 @@ export const useAICheck = () => {
     setRecommendationText('');
     setSuitableScenarios([]);
     setCompatibleItems({});
+    setOutfitCombinations([]);
+    setSeasonScenarioCombinations([]);
+    setItemSubcategory('');
     setError('');
     setErrorType('');
     setErrorDetails('');
@@ -284,6 +308,9 @@ export const useAICheck = () => {
     recommendationText,
     suitableScenarios, // Clean scenarios for display
     compatibleItems, // Compatible items by category for display
+    outfitCombinations, // Complete outfit recommendations
+    seasonScenarioCombinations, // Season + scenario completion status
+    itemSubcategory, // Item subcategory from form data
     errorType,
     errorDetails,
     

@@ -278,6 +278,8 @@ export const wardrobeAnalysisService = {
           recommendationText: response.data.recommendationText,
           suitableScenarios: response.data.suitableScenarios || [],
           compatibleItems: response.data.compatibleItems || {},
+          outfitCombinations: response.data.outfitCombinations || [],
+          seasonScenarioCombinations: response.data.seasonScenarioCombinations || [],
           error: response.data.error,
           details: response.data.details
         };
@@ -289,8 +291,10 @@ export const wardrobeAnalysisService = {
         score: response.data.score,
         feedback: response.data.feedback,
         recommendationText: response.data.recommendationText,
-        suitableScenarios: response.data.suitableScenarios,
-        compatibleItems: response.data.compatibleItems
+        suitableScenarios: response.data.suitableScenarios || [],
+        compatibleItems: response.data.compatibleItems || {},
+        outfitCombinations: response.data.outfitCombinations || [],
+        seasonScenarioCombinations: response.data.seasonScenarioCombinations || []
       };
     } catch (error: any) {
       console.error('[wardrobeAnalysisService] Error analyzing wardrobe item:', error);
@@ -305,6 +309,8 @@ export const wardrobeAnalysisService = {
           feedback: 'The analysis service is temporarily unavailable. Please try again later.',
           suitableScenarios: [],
           compatibleItems: {},
+          outfitCombinations: [],
+          seasonScenarioCombinations: [],
           error: 'server_error',
           details: `Server responded with status ${error.response.status}: ${JSON.stringify(error.response.data)}`
         };
@@ -317,6 +323,8 @@ export const wardrobeAnalysisService = {
           feedback: 'Please check your internet connection and try again.',
           suitableScenarios: [],
           compatibleItems: {},
+          outfitCombinations: [],
+          seasonScenarioCombinations: [],
           error: 'network_error',
           details: 'No response received from the server. The service may be down or your connection may be interrupted.'
         };
@@ -328,6 +336,8 @@ export const wardrobeAnalysisService = {
           feedback: 'An unexpected error occurred during image analysis.',
           suitableScenarios: [],
           compatibleItems: {},
+          outfitCombinations: [],
+          seasonScenarioCombinations: [],
           error: 'unknown_error',
           details: error.message || 'Unknown error occurred'
         };
