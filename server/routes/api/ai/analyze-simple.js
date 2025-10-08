@@ -5,6 +5,7 @@ const router = express.Router();
 // Import services
 const duplicateDetectionService = require('../../../services/duplicateDetectionService');
 const compatibilityAnalysisService = require('../../../services/compatibilityAnalysisService');
+const { generateOutfitCombinations, createSeasonScenarioCombinations } = require('../../../services/compatibilityAnalysisService');
 
 // Import utilities
 const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
@@ -348,6 +349,31 @@ router.post('/', async (req, res) => {
     console.log('✅ Consolidated compatible items by category:', Object.keys(consolidatedCompatibleItems));
     console.log('✅ Suitable scenarios extracted:', suitableScenarios.length, 'scenarios');
 
+    // ===== OUTFIT COMBINATIONS GENERATOR =====
+    // Generate outfit combinations using season + scenario combinations logic
+    let outfitCombinations = [];
+    let seasonScenarioCombinations = [];
+    
+    // Extract combined item data for season + scenario combinations
+    const itemDataWithScenarios = {
+      ...formData,
+      ...preFilledData,
+      scenarios: suitableScenarios
+    };
+    
+    try {
+      // Create season + scenario combinations with essential categories check
+      seasonScenarioCombinations = createSeasonScenarioCombinations(itemDataWithScenarios, consolidatedCompatibleItems);
+      
+      // Generate outfit combinations for complete scenarios only
+      outfitCombinations = generateOutfitCombinations(itemDataWithScenarios, consolidatedCompatibleItems, seasonScenarioCombinations);
+      
+    } catch (error) {
+      console.error('❌ Error generating outfit combinations:', error);
+      outfitCombinations = [];
+      seasonScenarioCombinations = [];
+    }
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       // MAIN ANALYSIS (required field for frontend popup trigger)
@@ -358,6 +384,8 @@ router.post('/', async (req, res) => {
       recommendationText: objectiveFinalReason, // Human-readable explanation
       suitableScenarios: suitableScenarios,
       compatibleItems: consolidatedCompatibleItems, // Items organized by category for popup
+      outfitCombinations: outfitCombinations, // Complete outfit recommendations
+      seasonScenarioCombinations: seasonScenarioCombinations, // Season + scenario completion status
       
       // TECHNICAL DATA (for processing, not user display)
       itemCharacteristics: extractedCharacteristics,
