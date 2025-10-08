@@ -131,7 +131,7 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       console.log('✅ Compatible complementing items by category:', JSON.stringify(result, null, 2));
       
       // Create season + scenario combinations after compatibility analysis
-      createSeasonScenarioCombinations(itemDataForCompatibility);
+      createSeasonScenarioCombinations(itemDataForCompatibility, result);
       
       return result;
     } else {
@@ -258,9 +258,88 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
 }
 
 /**
- * Create and log season + scenario combinations
+ * Check if we have all essential categories for a complete outfit
  */
-function createSeasonScenarioCombinations(itemData) {
+function checkEssentialCategories(itemData, allCompatibleItems, season) {
+  // Define essential categories based on the item being analyzed
+  const ESSENTIAL_CATEGORIES = {
+    'dress': ['footwear'], // Dress just needs shoes
+    'one_piece': ['footwear'], // One-piece (dress/jumpsuit) just needs shoes
+    'top': ['bottoms', 'footwear'], // Top needs bottoms + shoes  
+    'bottom': ['tops', 'footwear'], // Bottoms need tops + shoes
+    'footwear': ['tops', 'bottoms'], // Shoes need top + bottom
+    'outerwear': [], // Outerwear is layering - doesn't drive requirements
+    'accessory': [] // Accessories don't drive requirements
+  };
+  
+  const itemCategory = itemData.category?.toLowerCase();
+  const requiredCategories = ESSENTIAL_CATEGORIES[itemCategory] || [];
+  
+  // Warn about unmapped categories
+  if (!ESSENTIAL_CATEGORIES.hasOwnProperty(itemCategory)) {
+    console.log(`⚠️  [checkEssentials] Unknown item category: ${itemCategory} - treating as no requirements`);
+  }
+  
+  console.log(`🔍 [checkEssentials] Item category: ${itemCategory}, Required: [${requiredCategories.join(', ')}], Season: ${season}`);
+  console.log(`🔍 [checkEssentials] All compatible items: ${allCompatibleItems.length} items`);
+  
+  // Get items that match this season
+  const seasonItems = allCompatibleItems.filter(item => {
+    const itemSeasons = item.seasons || item.season || [];
+    let matches = false;
+    
+    if (typeof itemSeasons === 'string') {
+      matches = itemSeasons.includes(season) || season.includes(itemSeasons);
+    } else if (Array.isArray(itemSeasons)) {
+      matches = itemSeasons.some(itemSeason => 
+        itemSeason.includes(season) || season.includes(itemSeason)
+      );
+    }
+    
+    if (matches) {
+      console.log(`    ✅ ${item.name} (${item.category}) - seasons: ${JSON.stringify(itemSeasons)}`);
+    }
+    
+    return matches;
+  });
+  
+  console.log(`🔍 [checkEssentials] Items matching season '${season}': ${seasonItems.length} items`);
+  
+  // Check which required categories we have items for
+  const availableCategories = [];
+  const missingCategories = [];
+  
+  requiredCategories.forEach(requiredCategory => {
+    const itemsInCategory = seasonItems.filter(item => 
+      item.category?.toLowerCase() === requiredCategory
+    );
+    
+    if (itemsInCategory.length > 0) {
+      console.log(`    ✅ Found ${requiredCategory}: ${itemsInCategory.map(i => i.name).join(', ')}`);
+      availableCategories.push(requiredCategory);
+    } else {
+      console.log(`    ❌ Missing ${requiredCategory}`);
+      missingCategories.push(requiredCategory);
+    }
+  });
+  
+  // Also track available non-essential categories for display
+  const allAvailableCategories = [...new Set(seasonItems.map(item => item.category?.toLowerCase()).filter(Boolean))];
+  
+  console.log(`🔍 [checkEssentials] Result: hasAllEssentials=${missingCategories.length === 0}, missing=[${missingCategories.join(', ')}]`);
+  
+  return {
+    hasAllEssentials: missingCategories.length === 0,
+    missingCategories,
+    availableCategories: allAvailableCategories,
+    requiredCategories
+  };
+}
+
+/**
+ * Create and log season + scenario combinations with item availability check
+ */
+function createSeasonScenarioCombinations(itemData, compatibleItems) {
   const seasonScenarioCombinations = [];
   
   // Get seasons from itemData
@@ -275,16 +354,60 @@ function createSeasonScenarioCombinations(itemData) {
   }
   
   if (seasons.length > 0 && scenarios.length > 0) {
+    // Flatten compatible items from all categories
+    const allCompatibleItems = [];
+    if (compatibleItems) {
+      Object.values(compatibleItems).forEach(categoryItems => {
+        if (Array.isArray(categoryItems)) {
+          allCompatibleItems.push(...categoryItems);
+        }
+      });
+    }
+    
+    console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS (${seasons.length * scenarios.length} total):`);
+    
     seasons.forEach(season => {
       scenarios.forEach(scenario => {
-        seasonScenarioCombinations.push(`${season} + ${scenario}`);
+        const combination = `${season} + ${scenario}`;
+        
+        // Check essential categories for complete outfit
+        const { hasAllEssentials, missingCategories, availableCategories } = checkEssentialCategories(
+          itemData, allCompatibleItems, season
+        );
+        
+        const status = hasAllEssentials ? '✅' : '❌';
+        const comboIndex = seasonScenarioCombinations.length + 1;
+        
+        let statusMessage;
+        if (hasAllEssentials) {
+          statusMessage = 'COMPLETE';
+        } else if (missingCategories.length > 0) {
+          statusMessage = `MISSING ${missingCategories.join(', ').toUpperCase()}`;
+        } else {
+          statusMessage = 'NO ITEMS';
+        }
+        
+        // Add available categories info if there are some items
+        if (availableCategories.length > 0 && !hasAllEssentials) {
+          statusMessage += ` (has: ${availableCategories.join(', ')})`;
+        }
+        
+        console.log(`  ${comboIndex}) ${combination} ${status} ${statusMessage}`);
+        
+        seasonScenarioCombinations.push({
+          combination,
+          season,
+          scenario,
+          hasItems: hasAllEssentials,
+          missingCategories,
+          availableCategories
+        });
       });
     });
     
-    console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS (${seasonScenarioCombinations.length} total):`);
-    seasonScenarioCombinations.forEach((combo, index) => {
-      console.log(`  ${index + 1}) ${combo}`);
-    });
+    const totalWithItems = seasonScenarioCombinations.filter(combo => combo.hasItems).length;
+    console.log(`\n📊 COVERAGE: ${totalWithItems}/${seasonScenarioCombinations.length} combinations have complete outfits`);
+    
   } else {
     console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS: Cannot create - missing data`);
     console.log(`  - Seasons: ${seasons.length > 0 ? seasons.join(', ') : 'not available'}`);
