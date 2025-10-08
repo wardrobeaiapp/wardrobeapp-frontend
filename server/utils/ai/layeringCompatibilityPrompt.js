@@ -61,8 +61,19 @@ function buildLayeringCompatibilityPrompt(itemData, layeringItems) {
   if (itemData.color) prompt += `- Color: ${itemData.color}\n`;
   if (itemData.seasons) prompt += `- Seasons: ${itemData.seasons.join(', ')}\n`;
   if (itemData.pattern) prompt += `- Pattern: ${itemData.pattern}\n`;
+  if (itemData.material) prompt += `- Material: ${itemData.material}\n`;
+  if (itemData.brand) prompt += `- Brand: ${itemData.brand}\n`;
+  if (itemData.style) prompt += `- Style: ${itemData.style}\n`;
+  if (itemData.silhouette) prompt += `- Silhouette: ${itemData.silhouette}\n`;
   if (itemData.fit) prompt += `- Fit: ${itemData.fit}\n`;
-  if (itemData.sleeve) prompt += `- Sleeves: ${itemData.sleeve}\n`;
+  if (itemData.length) prompt += `- Length: ${itemData.length}\n`;
+  if (itemData.sleeves) prompt += `- Sleeves: ${itemData.sleeves}\n`;
+  if (itemData.neckline) prompt += `- Neckline: ${itemData.neckline}\n`;
+  if (itemData.rise) prompt += `- Rise: ${itemData.rise}\n`;
+  if (itemData.type) prompt += `- Type: ${itemData.type}\n`;
+  if (itemData.heelHeight) prompt += `- Heel Height: ${itemData.heelHeight}\n`;
+  if (itemData.bootHeight) prompt += `- Boot Height: ${itemData.bootHeight}\n`;
+  if (itemData.size) prompt += `- Size: ${itemData.size}\n`;
   
   prompt += '\n**LAYERING ITEMS TO EVALUATE:**\n\n';
   
@@ -72,8 +83,19 @@ function buildLayeringCompatibilityPrompt(itemData, layeringItems) {
       prompt += `**${category.toUpperCase()}** (${items.length} items):\n`;
       items.forEach((item, index) => {
         prompt += `${index + 1}. ${item.name} - ${item.color} (${item.subcategory}`;
+        if (item.brand) prompt += `, ${item.brand}`;
+        if (item.material) prompt += `, ${item.material}`;
+        if (item.style) prompt += `, ${item.style}`;
         if (item.fit) prompt += `, ${item.fit} fit`;
-        if (item.sleeve) prompt += `, ${item.sleeve} sleeves`;
+        if (item.silhouette) prompt += `, ${item.silhouette}`;
+        if (item.length) prompt += `, ${item.length}`;
+        if (item.sleeves) prompt += `, ${item.sleeves} sleeves`;
+        if (item.neckline) prompt += `, ${item.neckline}`;
+        if (item.pattern) prompt += `, ${item.pattern}`;
+        if (item.type) prompt += `, ${item.type}`;
+        if (item.season && item.season.length > 0) {
+          prompt += `, ${item.season.join('/')}`; 
+        }
         prompt += ')\n';
       });
       prompt += '\n';
@@ -87,7 +109,9 @@ function buildLayeringCompatibilityPrompt(itemData, layeringItems) {
   prompt += '• **Color harmony** - Do colors work together in layered looks?\n';
   prompt += '• **Style cohesion** - Do the pieces work together stylistically?\n';
   prompt += '• **Seasonal appropriateness** - Appropriate layering for the same seasons?\n';
-  prompt += '• **Proportions** - Do silhouettes work well when layered?\n\n';
+  prompt += '• **Proportions** - Do silhouettes work well when layered?\n';
+  prompt += '• **Material harmony** - Do fabric weights layer appropriately?\n';
+  prompt += '• **Brand aesthetic** - Do pieces share compatible styling philosophies?\n\n';
   
   prompt += '**PHYSICAL WEARABILITY** - CRITICAL - Consider:\n';
   prompt += '• **Sleeve compatibility** - Can sleeves fit comfortably under/over each other?\n';
@@ -97,9 +121,10 @@ function buildLayeringCompatibilityPrompt(itemData, layeringItems) {
   prompt += '• **Fit compatibility** - Can items physically layer without being too tight?\n';
   prompt += '  * Fitted items under loose items ✓\n';
   prompt += '  * Bulky items under fitted items ❌\n';
-  prompt += '• **Length compatibility** - Do lengths work for layering?\n';
-  prompt += '• **Neckline compatibility** - Can necklines layer appropriately?\n';
-  prompt += '• **Fabric thickness** - Can fabrics layer without being too bulky?\n\n';
+  prompt += '• **Length compatibility** - Do lengths work for layering without awkward proportions?\n';
+  prompt += '• **Neckline compatibility** - Can necklines layer appropriately without bunching?\n';
+  prompt += '• **Fabric thickness** - Can fabrics layer without being too bulky or restrictive?\n';
+  prompt += '• **Material texture** - Do textures complement rather than compete when layered?\n\n';
   
   prompt += '**EXCLUDE items that create:**\n';
   prompt += '• **Physical impossibilities** - Cannot physically wear together\n';
@@ -229,23 +254,14 @@ function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = [])
               if (fullItem) {
                 // Return full item object with all properties needed for cards
                 return {
-                  id: fullItem.id,
-                  name: fullItem.name,
-                  imageUrl: fullItem.imageUrl,
-                  category: fullItem.category,
-                  subcategory: fullItem.subcategory,
-                  color: fullItem.color,
-                  brand: fullItem.brand,
+                  ...fullItem,
                   // Add compatibility type for frontend display
                   compatibilityTypes: ['layering']
                 };
               } else {
-                // Fallback: return text-only object if no match found
-                console.log(`⚠️ No matching item found for: ${itemName}`);
-                return {
-                  name: itemName,
-                  compatibilityTypes: ['layering']
-                };
+                // Skip items that don't match any real wardrobe items - don't create fake items
+                console.log(`⚠️ No matching item found for: "${itemName}" - skipping fake item creation`);
+                return null;
               }
             }).filter(Boolean);
             

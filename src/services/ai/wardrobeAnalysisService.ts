@@ -160,7 +160,7 @@ export const wardrobeAnalysisService = {
         
         stylingContext = [
           ...flattenComplementingItems(stylingContextResult.complementing), 
-          ...stylingContextResult.layering, 
+          // NOTE: Excluding layering items - they're for same-category layering, not cross-category compatibility
           ...stylingContextResult.outerwear
         ] as WardrobeItem[];
         

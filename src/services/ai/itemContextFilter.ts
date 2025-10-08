@@ -30,6 +30,7 @@ export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number,
     
     // Include detailed attributes needed for category-specific duplicate detection
     // Include even if empty string - let the matching functions decide
+    if (item.type !== undefined && item.type !== null) filtered.type = item.type; // Essential for formality/compatibility matching
     if (item.pattern !== undefined && item.pattern !== null) filtered.pattern = item.pattern;
     if (item.neckline !== undefined && item.neckline !== null) filtered.neckline = item.neckline;
     if (item.sleeves !== undefined && item.sleeves !== null) filtered.sleeves = item.sleeves;
@@ -42,7 +43,6 @@ export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number,
     if (includeCardFields) {
       if (item.id) filtered.id = item.id;
       if (item.imageUrl) filtered.imageUrl = item.imageUrl;
-      if (item.brand) filtered.brand = item.brand;
       if (item.scenarios && Array.isArray(item.scenarios)) filtered.scenarios = item.scenarios;
     }
     
@@ -52,7 +52,7 @@ export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number,
     // - dateAdded, updatedAt, imageExpiry: Timestamps irrelevant for analysis
     // - wishlist, wishlistStatus: Status fields not about item attributes
     // - tags, scenarios: Complex objects handled separately
-    // - brand, price, type: Not essential for duplicate detection
+    // - price: Not essential for duplicate detection (but brand now included for style compatibility)
     
     return filtered;
   }).filter(item => Object.keys(item).length > 0); // Remove completely empty items

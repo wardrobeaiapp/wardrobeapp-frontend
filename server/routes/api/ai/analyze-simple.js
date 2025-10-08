@@ -147,6 +147,21 @@ router.post('/', async (req, res) => {
     if (stylingContext && stylingContext.length > 0) {
       const outerwearCount = stylingContext.filter(item => item.category?.toLowerCase() === 'outerwear').length;
       console.log(`  → ${outerwearCount} outerwear items in styling context`);
+      
+      // Debug: Show detailed styling context data for first 3 items
+      console.log('🔍 [analyze-simple] DETAILED STYLING CONTEXT (first 3 items):');
+      stylingContext.slice(0, 3).forEach((item, i) => {
+        console.log(`   ${i+1}. ${item.name} (${item.category}/${item.subcategory}):`);
+        console.log(`      - color: ${item.color}`);
+        console.log(`      - material: ${item.material || 'N/A'}`);
+        console.log(`      - style: ${item.style || 'N/A'}`);
+        console.log(`      - type: ${item.type || 'N/A'}`);
+        console.log(`      - heelHeight: ${item.heelHeight || 'N/A'}`);
+        console.log(`      - bootHeight: ${item.bootHeight || 'N/A'}`);
+        console.log(`      - pattern: ${item.pattern || 'N/A'}`);
+        console.log(`      - silhouette: ${item.silhouette || 'N/A'}`);
+        console.log(`      - season: ${item.season ? item.season.join(', ') : 'N/A'}`);
+      });
     }
     console.log('userGoals:', userGoals);
     console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
@@ -299,6 +314,14 @@ router.post('/', async (req, res) => {
 
     // === UNIFIED COMPATIBILITY ANALYSIS ===
     console.log('\n=== STEP: Unified Compatibility Analysis ===');
+    console.log('🔍 [analyze-simple] DATA BEING PASSED TO COMPATIBILITY SERVICE:');
+    console.log('   - formData:', formData);
+    console.log('   - preFilledData:', preFilledData ? 'YES' : 'NO');
+    console.log('   - extractedCharacteristics keys:', Object.keys(extractedCharacteristics || {}));
+    console.log('   - stylingContext items:', stylingContext ? stylingContext.length : 0);
+    if (stylingContext && stylingContext.length > 0) {
+      console.log('   - stylingContext sample:', stylingContext[0].name, 'fields:', Object.keys(stylingContext[0]));
+    }
     
     const compatibilityResults = await compatibilityAnalysisService.analyzeAllCompatibilities(
       formData, 

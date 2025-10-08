@@ -27,6 +27,19 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   if (itemData.color) prompt += `- Color: ${itemData.color}\n`;
   if (itemData.seasons) prompt += `- Seasons: ${itemData.seasons.join(', ')}\n`;
   if (itemData.pattern) prompt += `- Pattern: ${itemData.pattern}\n`;
+  if (itemData.material) prompt += `- Material: ${itemData.material}\n`;
+  if (itemData.brand) prompt += `- Brand: ${itemData.brand}\n`;
+  if (itemData.style) prompt += `- Style: ${itemData.style}\n`;
+  if (itemData.silhouette) prompt += `- Silhouette: ${itemData.silhouette}\n`;
+  if (itemData.fit) prompt += `- Fit: ${itemData.fit}\n`;
+  if (itemData.length) prompt += `- Length: ${itemData.length}\n`;
+  if (itemData.sleeves) prompt += `- Sleeves: ${itemData.sleeves}\n`;
+  if (itemData.neckline) prompt += `- Neckline: ${itemData.neckline}\n`;
+  if (itemData.rise) prompt += `- Rise: ${itemData.rise}\n`;
+  if (itemData.type) prompt += `- Type: ${itemData.type}\n`;
+  if (itemData.heelHeight) prompt += `- Heel Height: ${itemData.heelHeight}\n`;
+  if (itemData.bootHeight) prompt += `- Boot Height: ${itemData.bootHeight}\n`;
+  if (itemData.size) prompt += `- Size: ${itemData.size}\n`;
   
   prompt += '\n**COMPLEMENTING ITEMS TO EVALUATE:**\n\n';
   
@@ -35,7 +48,21 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
     if (items && items.length > 0) {
       prompt += `**${category.toUpperCase()}** (${items.length} items):\n`;
       items.forEach((item, index) => {
-        prompt += `${index + 1}. ${item.name} - ${item.color} (${item.subcategory})\n`;
+        prompt += `${index + 1}. ${item.name} - ${item.color} (${item.subcategory}`;
+        if (item.brand) prompt += `, ${item.brand}`;
+        if (item.material) prompt += `, ${item.material}`;
+        if (item.style) prompt += `, ${item.style}`;
+        if (item.fit) prompt += `, ${item.fit} fit`;
+        if (item.silhouette) prompt += `, ${item.silhouette}`;
+        if (item.length) prompt += `, ${item.length}`;
+        if (item.sleeves) prompt += `, ${item.sleeves} sleeves`;
+        if (item.neckline) prompt += `, ${item.neckline}`;
+        if (item.pattern) prompt += `, ${item.pattern}`;
+        if (item.type) prompt += `, ${item.type}`;
+        if (item.season && item.season.length > 0) {
+          prompt += `, ${item.season.join('/')}`; 
+        }
+        prompt += ')\n';
       });
       prompt += '\n';
     }
@@ -47,13 +74,19 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   prompt += '• **Style cohesion** - Do the pieces work together stylistically? (casual/formal, modern/classic, etc.)\n';
   prompt += '• **Season appropriateness** - Do the items work for the same seasons?\n';
   prompt += '• **Occasion compatibility** - Would these pieces work for similar scenarios?\n';
-  prompt += '• **Visual balance** - Do textures, patterns, and silhouettes complement each other?\n\n';
+  prompt += '• **Visual balance** - Do textures, patterns, and silhouettes complement each other?\n';
+  prompt += '• **Material compatibility** - Do fabric weights and textures work together?\n';
+  prompt += '• **Fit harmony** - Do the fits create a balanced, intentional look?\n';
+  prompt += '• **Brand aesthetic** - Do the pieces share similar style aesthetics?\n\n';
   
   prompt += 'EXCLUDE items that:\n';
   prompt += '• Create color clashes or muddy combinations\n';
   prompt += '• Mix incompatible style levels (very casual with very formal)\n';
   prompt += '• Are inappropriate for the same seasons\n';
-  prompt += '• Create overwhelming pattern/texture conflicts\n\n';
+  prompt += '• Create overwhelming pattern/texture conflicts\n';
+  prompt += '• Have incompatible fits (e.g., oversized with oversized creating shapelessness)\n';
+  prompt += '• Mix conflicting material weights (heavy wool with sheer fabrics)\n';
+  prompt += '• Create brand aesthetic conflicts (streetwear with preppy, etc.)\n\n';
   
   prompt += '**REQUIRED RESPONSE FORMAT:**\n\n';
   prompt += 'Return your compatibility selections in this exact format:\n\n';
@@ -219,23 +252,14 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
               if (fullItem) {
                 // Return full item object with all properties needed for cards
                 return {
-                  id: fullItem.id,
-                  name: fullItem.name,
-                  imageUrl: fullItem.imageUrl,
-                  category: fullItem.category,
-                  subcategory: fullItem.subcategory,
-                  color: fullItem.color,
-                  brand: fullItem.brand,
+                  ...fullItem,
                   // Add compatibility type for frontend display
                   compatibilityTypes: ['complementing']
                 };
               } else {
-                // Fallback: return text-only object if no match found
-                console.log(`⚠️ No matching item found for: ${itemName} | Available items: ${stylingContext.map(item => item.name).slice(0, 5).join(', ')}...`);
-                return {
-                  name: itemName,
-                  compatibilityTypes: ['complementing']
-                };
+                // Skip items that don't match any real wardrobe items - don't create fake items
+                console.log(`⚠️ No matching item found for: "${itemName}" - skipping fake item creation`);
+                return null;
               }
             }).filter(Boolean);
             

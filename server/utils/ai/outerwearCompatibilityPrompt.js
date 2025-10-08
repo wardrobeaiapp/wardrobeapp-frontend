@@ -64,8 +64,19 @@ function buildOuterwearCompatibilityPrompt(itemData, outerwearItems) {
   if (itemData.color) prompt += `- Color: ${itemData.color}\n`;
   if (itemData.seasons) prompt += `- Seasons: ${itemData.seasons.join(', ')}\n`;
   if (itemData.pattern) prompt += `- Pattern: ${itemData.pattern}\n`;
+  if (itemData.material) prompt += `- Material: ${itemData.material}\n`;
+  if (itemData.brand) prompt += `- Brand: ${itemData.brand}\n`;
+  if (itemData.style) prompt += `- Style: ${itemData.style}\n`;
+  if (itemData.silhouette) prompt += `- Silhouette: ${itemData.silhouette}\n`;
   if (itemData.fit) prompt += `- Fit: ${itemData.fit}\n`;
-  if (itemData.sleeve) prompt += `- Sleeves: ${itemData.sleeve}\n`;
+  if (itemData.length) prompt += `- Length: ${itemData.length}\n`;
+  if (itemData.sleeves) prompt += `- Sleeves: ${itemData.sleeves}\n`;
+  if (itemData.neckline) prompt += `- Neckline: ${itemData.neckline}\n`;
+  if (itemData.rise) prompt += `- Rise: ${itemData.rise}\n`;
+  if (itemData.type) prompt += `- Type: ${itemData.type}\n`;
+  if (itemData.heelHeight) prompt += `- Heel Height: ${itemData.heelHeight}\n`;
+  if (itemData.bootHeight) prompt += `- Boot Height: ${itemData.bootHeight}\n`;
+  if (itemData.size) prompt += `- Size: ${itemData.size}\n`;
   
   prompt += '\n**OUTERWEAR ITEMS TO EVALUATE:**\n\n';
   
@@ -75,6 +86,16 @@ function buildOuterwearCompatibilityPrompt(itemData, outerwearItems) {
       prompt += `**${category.toUpperCase()}** (${items.length} items):\n`;
       items.forEach((item, index) => {
         prompt += `${index + 1}. ${item.name} - ${item.color} (${item.subcategory}`;
+        if (item.brand) prompt += `, ${item.brand}`;
+        if (item.material) prompt += `, ${item.material}`;
+        if (item.style) prompt += `, ${item.style}`;
+        if (item.fit) prompt += `, ${item.fit} fit`;
+        if (item.silhouette) prompt += `, ${item.silhouette}`;
+        if (item.length) prompt += `, ${item.length}`;
+        if (item.sleeves) prompt += `, ${item.sleeves} sleeves`;
+        if (item.neckline) prompt += `, ${item.neckline}`;
+        if (item.pattern) prompt += `, ${item.pattern}`;
+        if (item.type) prompt += `, ${item.type}`;
         if (item.season && item.season.length > 0) {
           prompt += `, ${item.season.join('/')}`; 
         }
@@ -85,10 +106,14 @@ function buildOuterwearCompatibilityPrompt(itemData, outerwearItems) {
   });
   
   prompt += '**ANALYSIS INSTRUCTIONS:**\n';
-  prompt += '- PRIMARY: Find outerwear items that would LOOK GOOD and STYLE WELL with the current item\n';
-  prompt += '- Consider color coordination, style harmony, and aesthetic compatibility\n';
-  prompt += '- Consider seasonal appropriateness and occasion matching\n';
-  prompt += '- SECONDARY: Avoid physical incompatibilities (sleeve conflicts, volume issues, length proportions)\n';
+  prompt += '- **PRIMARY: Find outerwear items that would LOOK GOOD and STYLE WELL with the current item**\n';
+  prompt += '- **Color coordination** - Do colors work harmoniously together?\n';
+  prompt += '- **Style harmony** - Do the pieces share compatible aesthetic levels and style philosophies?\n';
+  prompt += '- **Seasonal appropriateness** - Are both items suitable for the same seasons?\n';
+  prompt += '- **Occasion matching** - Would these pieces work for similar scenarios and formality levels?\n';
+  prompt += '- **Material compatibility** - Do fabric weights and textures complement each other?\n';
+  prompt += '- **Brand aesthetic harmony** - Do the styling philosophies work together?\n';
+  prompt += '- **SECONDARY: Avoid physical incompatibilities** (sleeve conflicts, volume issues, length proportions)\n';
   prompt += '- Focus on pieces that would realistically be worn together and complement each other\n';
   prompt += '- Skip items with significant style conflicts or physical incompatibilities (mention why)\n\n';
   
@@ -181,23 +206,14 @@ function parseOuterwearCompatibilityResponse(claudeResponse, stylingContext = []
               if (fullItem) {
                 // Return full item object with all properties needed for cards
                 return {
-                  id: fullItem.id,
-                  name: fullItem.name,
-                  imageUrl: fullItem.imageUrl,
-                  category: fullItem.category,
-                  subcategory: fullItem.subcategory,
-                  color: fullItem.color,
-                  brand: fullItem.brand,
+                  ...fullItem,
                   // Add compatibility type for frontend display
                   compatibilityTypes: ['outerwear']
                 };
               } else {
-                // Fallback: return text-only object if no match found
-                console.log(`⚠️ No matching item found for: ${itemName}`);
-                return {
-                  name: itemName,
-                  compatibilityTypes: ['outerwear']
-                };
+                // Skip items that don't match any real wardrobe items - don't create fake items
+                console.log(`⚠️ No matching item found for: "${itemName}" - skipping fake item creation`);
+                return null;
               }
             }).filter(Boolean);
             
