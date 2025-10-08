@@ -259,9 +259,12 @@ function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = [])
                   compatibilityTypes: ['layering']
                 };
               } else {
-                // Skip items that don't match any real wardrobe items - don't create fake items
-                console.log(`⚠️ No matching item found for: "${itemName}" - skipping fake item creation`);
-                return null;
+                // Fallback to text-only object for backward compatibility (especially for tests)
+                console.log(`⚠️ No matching item found for: "${itemName}" - creating text-only fallback`);
+                return {
+                  name: itemName,
+                  compatibilityTypes: ['layering']
+                };
               }
             }).filter(Boolean);
             

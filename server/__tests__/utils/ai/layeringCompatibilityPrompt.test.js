@@ -169,7 +169,7 @@ describe('layeringCompatibilityPrompt', () => {
       color: 'white',
       seasons: ['summer', 'spring/fall'],
       fit: 'fitted',
-      sleeve: 'long'
+      sleeves: 'long'
     };
 
     const mockLayeringItems = [
@@ -179,7 +179,7 @@ describe('layeringCompatibilityPrompt', () => {
         subcategory: 'blazer',
         color: 'navy',
         fit: 'fitted',
-        sleeve: 'long'
+        sleeves: 'long'
       },
       {
         name: 'Gray Cardigan',
@@ -187,7 +187,7 @@ describe('layeringCompatibilityPrompt', () => {
         subcategory: 'cardigan',
         color: 'gray',
         fit: 'loose',
-        sleeve: 'long'
+        sleeves: 'long'
       }
     ];
 
@@ -233,7 +233,7 @@ describe('layeringCompatibilityPrompt', () => {
       const detailedItem = {
         ...mockItemData,
         pattern: 'solid',
-        sleeve: 'puffy'
+        sleeves: 'puffy'
       };
 
       const result = buildLayeringCompatibilityPrompt(detailedItem, mockLayeringItems);
@@ -516,7 +516,7 @@ describe('layeringCompatibilityPrompt', () => {
           outerwear: [{ name: 'Green Jacket', compatibilityTypes: ['layering'] }]
         });
         
-        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: Red Silk Shirt'));
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: "Red Silk Shirt"'));
         
         consoleSpy.mockRestore();
       });

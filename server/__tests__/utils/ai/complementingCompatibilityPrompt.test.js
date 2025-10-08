@@ -500,7 +500,7 @@ describe('complementingCompatibilityPrompt', () => {
       });
       
       // Should log warnings for no matches found
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: Pink High Heels'));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No matching item found for: "Pink High Heels"'));
       
       consoleSpy.mockRestore();
     });
