@@ -328,7 +328,8 @@ router.post('/', async (req, res) => {
       preFilledData, 
       extractedCharacteristics, 
       stylingContext, 
-      anthropic
+      anthropic,
+      suitableScenarios
     );
     
     const { 

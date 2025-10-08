@@ -29,9 +29,10 @@ const { isItemSuitableForOuterwear, buildOuterwearCompatibilityPrompt, parseOute
  * @param {Object} extractedCharacteristics - AI-extracted item characteristics
  * @param {Array} stylingContext - Array of existing wardrobe items for compatibility checking
  * @param {Object} anthropic - Anthropic client instance
+ * @param {Array} suitableScenarios - Scenarios the item is suitable for
  * @returns {Object} - Compatibility results for all three types
  */
-async function analyzeAllCompatibilities(formData, preFilledData, extractedCharacteristics, stylingContext, anthropic) {
+async function analyzeAllCompatibilities(formData, preFilledData, extractedCharacteristics, stylingContext, anthropic, suitableScenarios = null) {
   const results = {
     compatibleComplementingItems: null,
     compatibleLayeringItems: null,
@@ -54,7 +55,7 @@ async function analyzeAllCompatibilities(formData, preFilledData, extractedChara
   });
 
   // Extract item data once for all compatibility checks
-  const itemDataForCompatibility = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics);
+  const itemDataForCompatibility = extractItemDataForCompatibility(formData, preFilledData, extractedCharacteristics, suitableScenarios);
 
   // Run all compatibility checks
   results.compatibleComplementingItems = await analyzeComplementingCompatibility(
@@ -128,6 +129,10 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       const result = parseCompatibilityResponse(rawCompatibilityResponse, stylingContext);
       
       console.log('✅ Compatible complementing items by category:', JSON.stringify(result, null, 2));
+      
+      // Create season + scenario combinations after compatibility analysis
+      createSeasonScenarioCombinations(itemDataForCompatibility);
+      
       return result;
     } else {
       console.log('ℹ️ No complementing items found to evaluate');
@@ -249,11 +254,46 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
     }
   } catch (error) {
     console.error('❌ Error in outerwear compatibility checking:', error);
-    // Continue without outerwear compatibility data rather than failing the whole request
-    return null;
   }
 }
 
-module.exports = {
+/**
+ * Create and log season + scenario combinations
+ */
+function createSeasonScenarioCombinations(itemData) {
+  const seasonScenarioCombinations = [];
+  
+  // Get seasons from itemData
+  const seasons = itemData.seasons || [];
+  
+  // Try to get scenarios from multiple sources
+  let scenarios = itemData.scenarios || itemData.suitableScenarios || [];
+  
+  // Handle scenario objects (extract names)
+  if (scenarios.length > 0 && typeof scenarios[0] === 'object') {
+    scenarios = scenarios.map(s => s.name || s);
+  }
+  
+  if (seasons.length > 0 && scenarios.length > 0) {
+    seasons.forEach(season => {
+      scenarios.forEach(scenario => {
+        seasonScenarioCombinations.push(`${season} + ${scenario}`);
+      });
+    });
+    
+    console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS (${seasonScenarioCombinations.length} total):`);
+    seasonScenarioCombinations.forEach((combo, index) => {
+      console.log(`  ${index + 1}) ${combo}`);
+    });
+  } else {
+    console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS: Cannot create - missing data`);
+    console.log(`  - Seasons: ${seasons.length > 0 ? seasons.join(', ') : 'not available'}`);
+    console.log(`  - Scenarios: ${scenarios.length > 0 ? scenarios.join(', ') : 'not available'}`);
+  }
+  
+  return seasonScenarioCombinations;
+}
+
+module.exports = { 
   analyzeAllCompatibilities
 };

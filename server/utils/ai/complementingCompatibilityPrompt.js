@@ -161,8 +161,12 @@ function groupComplementingItemsByCategory(items) {
 
 /**
  * Extract item data from available sources
+ * @param {Object} formData - Form data from user input
+ * @param {Object} preFilledData - Pre-filled wishlist data
+ * @param {Object} imageAnalysisData - Analysis data from image
+ * @param {Array} suitableScenarios - Scenarios the item is suitable for
  */
-function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisData) {
+function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisData, suitableScenarios = null) {
   console.log('[compatibility] Extracting item data from available sources...');
   
   const itemData = {};
@@ -193,6 +197,12 @@ function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisD
     itemData.pattern = imageAnalysisData.pattern;
     itemData.styleLevel = imageAnalysisData.styleLevel;
     itemData.formalityLevel = imageAnalysisData.formalityLevel;
+  }
+  
+  // Add scenarios if provided
+  if (suitableScenarios) {
+    console.log('[compatibility] Adding suitable scenarios');
+    itemData.scenarios = suitableScenarios;
   }
   
   console.log('[compatibility] Final item data:', JSON.stringify(itemData, null, 2));
