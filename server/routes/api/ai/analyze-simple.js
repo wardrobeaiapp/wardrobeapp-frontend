@@ -369,6 +369,44 @@ router.post('/', async (req, res) => {
       // Generate outfit combinations for complete scenarios only
       outfitCombinations = generateOutfitCombinations(itemDataWithScenarios, consolidatedCompatibleItems, seasonScenarioCombinations);
       
+      // Cross-reference coverage analysis with outfit generation results
+      if (scenarioCoverage && scenarioCoverage.length > 0) {
+        console.log('\n🔍 COVERAGE VS OUTFIT GENERATION CROSS-REFERENCE:');
+        
+        // Find coverage items with specific season+scenario and gap types that suggest room for improvement
+        const relevantCoverageItems = scenarioCoverage.filter(item => 
+          item.gapType && ['critical', 'improvement', 'expansion'].includes(item.gapType) &&
+          item.season && item.season !== 'All seasons' &&
+          item.scenarioName && item.scenarioName !== 'All scenarios'
+        );
+        
+        if (relevantCoverageItems.length > 0) {
+          console.log(`📊 Found ${relevantCoverageItems.length} coverage items with gaps and specific season+scenario:`);
+          
+          relevantCoverageItems.forEach(coverageItem => {
+            const { season, scenarioName, gapType, category } = coverageItem;
+            
+            // Look for matching outfit combinations for this season+scenario
+            const matchingOutfitCombos = outfitCombinations.filter(combo => 
+              combo.season && combo.season.toLowerCase() === season.toLowerCase() &&
+              combo.scenario && combo.scenario.toLowerCase() === scenarioName.toLowerCase()
+            );
+            
+            const totalOutfitsFound = matchingOutfitCombos.reduce((sum, combo) => 
+              sum + (combo.outfits ? combo.outfits.length : 0), 0);
+            
+            // Log the cross-reference result
+            if (totalOutfitsFound > 0) {
+              console.log(`   ✅ Coverage: "${category} for ${season} for ${scenarioName}" (${gapType}) → Found ${totalOutfitsFound} outfit(s)`);
+            } else {
+              console.log(`   ❌ Coverage: "${category} for ${season} for ${scenarioName}" (${gapType}) → Found 0 outfits despite coverage gap`);
+            }
+          });
+        } else {
+          console.log('   ℹ️  No specific season+scenario coverage gaps found for cross-reference');
+        }
+      }
+      
     } catch (error) {
       console.error('❌ Error generating outfit combinations:', error);
       outfitCombinations = [];
