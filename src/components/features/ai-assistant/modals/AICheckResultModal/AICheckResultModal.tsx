@@ -30,9 +30,10 @@ import {
   CompatibleCategoryTitle,
   CompatibleCategoryContent,
   CompatibleItemsGrid,
-  CompatibleItemText
+  CompatibleItemText,
+  StatusValue
 } from './AICheckResultModal.styles';
-import { DetailLabel, DetailRow, DetailValue } from '../../../wardrobe/modals/modalCommon.styles';
+import { DetailLabel, DetailRow } from '../../../wardrobe/modals/modalCommon.styles';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 import { 
   ItemCard,
@@ -346,9 +347,9 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           {status && (
             <DetailRow>
               <DetailLabel>Status:</DetailLabel>
-              <DetailValue>
+              <StatusValue $status={status}>
                 {status.replace('_', ' ')}
-              </DetailValue>
+              </StatusValue>
             </DetailRow>
           )}
         </ItemDetails>

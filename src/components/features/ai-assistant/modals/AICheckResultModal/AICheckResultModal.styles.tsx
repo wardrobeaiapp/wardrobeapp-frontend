@@ -206,3 +206,38 @@ export const CompatibleItemText = styled.div`
   color: #374151;
   margin-bottom: 4px;
 `;
+
+/* Status Value with conditional styling */
+export const StatusValue = styled(DetailValue)<{
+  $status?: string;
+}>`
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  
+  /* Conditional styling based on status */
+  ${({ $status }) => {
+    if ($status === 'approved') {
+      return `
+        background-color: #ecfdf5;
+        color: #059669;
+        border: 1px solid #d1fae5;
+      `;
+    } else if ($status === 'potential_issue' || $status === 'potential issue') {
+      return `
+        background-color: #fef2f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+      `;
+    } else {
+      return `
+        background-color: #f9fafb;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+      `;
+    }
+  }}
+`;
