@@ -5,7 +5,8 @@ const router = express.Router();
 // Import services
 const duplicateDetectionService = require('../../../services/duplicateDetectionService');
 const compatibilityAnalysisService = require('../../../services/compatibilityAnalysisService');
-const { generateOutfitCombinations, createSeasonScenarioCombinations } = require('../../../services/compatibilityAnalysisService');
+const { createSeasonScenarioCombinations } = require('../../../services/compatibilityAnalysisService');
+const { generateOutfitCombinations } = require('../../../services/outfitGenerationService');
 
 // Import utilities
 const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
