@@ -76,8 +76,7 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   prompt += '• **Occasion compatibility** - Would these pieces work for similar scenarios?\n';
   prompt += '• **Visual balance** - Do textures, patterns, and silhouettes complement each other?\n';
   prompt += '• **Material compatibility** - Do fabric weights and textures work together?\n';
-  prompt += '• **Fit harmony** - Do the fits create a balanced, intentional look?\n';
-  prompt += '• **Brand aesthetic** - Do the pieces share similar style aesthetics?\n\n';
+  prompt += '• **Fit Harmony** - Do the fits create a balanced, intentional look?\n';
   
   prompt += 'EXCLUDE items that:\n';
   prompt += '• Create color clashes or muddy combinations\n';
@@ -89,13 +88,24 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   prompt += '• Create brand aesthetic conflicts (streetwear with preppy, etc.)\n\n';
   
   prompt += '**REQUIRED RESPONSE FORMAT:**\n\n';
-  prompt += 'Return your compatibility selections in this exact format:\n\n';
+  prompt += 'For each item you evaluate, provide your reasoning. Use this EXACT format:\n\n';
   prompt += '```\n';
-  prompt += 'COMPATIBLE COMPLEMENTING ITEMS:\n';
+  prompt += 'COMPATIBILITY ANALYSIS:\n';
   
   Object.keys(groupedItems).forEach(category => {
     if (groupedItems[category] && groupedItems[category].length > 0) {
-      prompt += `${category}: [list compatible item names, separated by commas]\n`;
+      prompt += `\n**${category.toUpperCase()}:**\n`;
+      groupedItems[category].forEach(item => {
+        prompt += `${item.name}: [COMPATIBLE/EXCLUDED] - [detailed reason why]\n`;
+      });
+    }
+  });
+  
+  prompt += '\nCOMPATIBLE COMPLEMENTING ITEMS:\n';
+  
+  Object.keys(groupedItems).forEach(category => {
+    if (groupedItems[category] && groupedItems[category].length > 0) {
+      prompt += `${category}: [list only COMPATIBLE item names, separated by commas]\n`;
     }
   });
   
@@ -199,8 +209,30 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
   console.log('\n=== 🎯 PARSING COMPATIBILITY RESPONSE ===');
   
   try {
-    // Look for the COMPATIBLE COMPLEMENTING ITEMS section
-    // Capture everything until we hit double newline, triple backticks, or end of string
+    // First, extract and log the detailed analysis
+    const analysisSection = claudeResponse.match(/COMPATIBILITY ANALYSIS:\s*\n?((?:.*\n?)*?)(?=\nCOMPATIBLE COMPLEMENTING ITEMS:|```|$)/im);
+    
+    if (analysisSection && analysisSection[1]) {
+      console.log('\n🔍 DETAILED COMPATIBILITY ANALYSIS:');
+      const analysisText = analysisSection[1].trim();
+      const analysisLines = analysisText.split('\n').filter(line => line.trim());
+      
+      let currentCategory = '';
+      analysisLines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('**') && trimmedLine.endsWith(':**')) {
+          currentCategory = trimmedLine.replace(/\*\*/g, '').replace(':', '');
+          console.log(`\n📂 ${currentCategory}:`);
+        } else if (trimmedLine.includes(': ')) {
+          const [itemName, reasoning] = trimmedLine.split(': ', 2);
+          const isCompatible = reasoning.toUpperCase().startsWith('COMPATIBLE');
+          const status = isCompatible ? '✅ SELECTED' : '❌ EXCLUDED';
+          console.log(`  ${status} ${itemName}: ${reasoning}`);
+        }
+      });
+    }
+    
+    // Then extract the final compatible items list
     const compatibleSection = claudeResponse.match(/COMPATIBLE COMPLEMENTING ITEMS:\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
     
     if (!compatibleSection || !compatibleSection[1]) {
@@ -211,6 +243,8 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     const itemsText = compatibleSection[1].trim();
     const lines = itemsText.split('\n').filter(line => line.trim());
     const compatibleItems = {};
+    
+    console.log('\n📋 FINAL COMPATIBLE ITEMS:');
     
     lines.forEach((line) => {
       // Stop processing if we hit explanatory text (lines that don't follow the category: items format)
