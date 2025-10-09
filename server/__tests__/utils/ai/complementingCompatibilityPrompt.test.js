@@ -570,4 +570,321 @@ describe('complementingCompatibilityPrompt', () => {
       });
     });
   });
+
+  describe('parseCompatibilityResponse - Fallback Parsing (New Functionality)', () => {
+    const mockStylingContext = [
+      {
+        id: '123',
+        name: 'Brown Cardigan',
+        imageUrl: '/uploads/brown-cardigan.jpg',
+        category: 'top',
+        subcategory: 'cardigan',
+        color: 'brown'
+      },
+      {
+        id: '456', 
+        name: 'Burgundy Sweater',
+        imageUrl: '/uploads/burgundy-sweater.jpg',
+        category: 'top',
+        subcategory: 'sweater',
+        color: 'burgundy'
+      },
+      {
+        id: '789',
+        name: 'Black Jacket',
+        imageUrl: '/uploads/black-jacket.jpg',
+        category: 'top',
+        subcategory: 'jacket',
+        color: 'black'
+      },
+      {
+        id: '999',
+        name: 'Pink Shirt',
+        imageUrl: '/uploads/pink-shirt.jpg',
+        category: 'top',
+        subcategory: 'shirt',
+        color: 'pink'
+      }
+    ];
+
+    it('should use fallback parsing when final summary section is missing', () => {
+      // Mock console methods to avoid noise during testing
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        Here's my analysis of the compatibility...
+        
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - The brown color of the cardigan complements the brown color of the heels well, creating a cohesive and harmonious look.
+        Burgundy Sweater: COMPATIBLE - The burgundy color of the sweater works nicely with the brown heels, providing a rich and elegant color combination.
+        Black Jacket: COMPATIBLE - The black jacket can create a chic, monochromatic look when paired with the brown heels.
+        Pink Shirt: EXCLUDED - The pink color of the shirt clashes with the brown heels, creating a disharmonious color combination.
+        
+        These are my recommendations based on style harmony and color coordination.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      // Should have extracted compatible items using fallback parsing
+      expect(result).toEqual({
+        tops: [
+          expect.objectContaining({
+            id: '123',
+            name: 'Brown Cardigan',
+            compatibilityTypes: ['complementing']
+          }),
+          expect.objectContaining({
+            id: '456',
+            name: 'Burgundy Sweater',
+            compatibilityTypes: ['complementing']
+          }),
+          expect.objectContaining({
+            id: '789',
+            name: 'Black Jacket',
+            compatibilityTypes: ['complementing']
+          })
+        ]
+      });
+      
+      // Pink Shirt should be excluded (not in results)
+      const allItemNames = result.tops?.map(item => item.name) || [];
+      expect(allItemNames).not.toContain('Pink Shirt');
+      
+      // Should log fallback usage
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[DEBUG] Trying fallback: extracting from detailed analysis...'));
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] Extracting from detailed analysis section...'));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing with multiple categories', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const extendedStylingContext = [
+        ...mockStylingContext,
+        {
+          id: '111',
+          name: 'Navy Trousers',
+          category: 'bottom',
+          color: 'navy'
+        },
+        {
+          id: '222',
+          name: 'Brown Boots',
+          category: 'footwear',
+          color: 'brown'
+        }
+      ];
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - Great color harmony with brown heels.
+        
+        **BOTTOMS:**
+        Navy Trousers: COMPATIBLE - Navy works well with brown for a classic look.
+        
+        **FOOTWEAR:**
+        Brown Boots: COMPATIBLE - Tone-on-tone brown creates cohesive styling.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, extendedStylingContext);
+      
+      expect(result).toEqual({
+        tops: [expect.objectContaining({
+          id: '123',
+          name: 'Brown Cardigan',
+          compatibilityTypes: ['complementing']
+        })],
+        bottoms: [expect.objectContaining({
+          id: '111', 
+          name: 'Navy Trousers',
+          compatibilityTypes: ['complementing']
+        })],
+        footwear: [expect.objectContaining({
+          id: '222',
+          name: 'Brown Boots', 
+          compatibilityTypes: ['complementing']
+        })]
+      });
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing when detailed analysis section is also missing', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        I cannot provide compatibility analysis for this item.
+        The styles are too different to work together.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result).toEqual({});
+      
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] No detailed analysis section found'));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing with partial name matching', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - Excellent color coordination.
+        Burgundy: COMPATIBLE - Rich color works well.
+        Black: COMPATIBLE - Classic and versatile.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result.tops).toHaveLength(3);
+      
+      // Should match full names from context
+      const itemNames = result.tops.map(item => item.name);
+      expect(itemNames).toContain('Brown Cardigan');
+      expect(itemNames).toContain('Burgundy Sweater'); // Partial match: "Burgundy" -> "Burgundy Sweater"
+      expect(itemNames).toContain('Black Jacket'); // Partial match: "Black" -> "Black Jacket"
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing with mixed compatible and excluded items', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - Perfect color match.
+        Burgundy Sweater: EXCLUDED - Too formal for this casual item.
+        Black Jacket: COMPATIBLE - Versatile and works well.
+        Pink Shirt: EXCLUDED - Color clash issues.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      expect(result.tops).toHaveLength(2);
+      
+      const itemNames = result.tops.map(item => item.name);
+      expect(itemNames).toContain('Brown Cardigan');
+      expect(itemNames).toContain('Black Jacket');
+      expect(itemNames).not.toContain('Burgundy Sweater');
+      expect(itemNames).not.toContain('Pink Shirt');
+      
+      // Should log excluded items
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] Excluded item: Burgundy Sweater'));
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] Excluded item: Pink Shirt'));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing when no matches found in styling context', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Red Blouse: COMPATIBLE - Beautiful color combination.
+        Green Sweater: COMPATIBLE - Nature-inspired pairing.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      // Should return empty since no items matched
+      expect(result).toEqual({});
+      
+      // Should log warnings for items not found
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] No matching item found for: "Red Blouse"'));
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[FALLBACK] No matching item found for: "Green Sweater"'));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle fallback parsing with malformed analysis sections gracefully', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan - Missing colon separator
+        : Missing item name
+        Burgundy Sweater: COMPATIBLE - This should work.
+        
+        **INVALID_CATEGORY:**
+        Some Item: COMPATIBLE - Should be ignored.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      // Should only extract the properly formatted item
+      expect(result.tops).toHaveLength(1);
+      expect(result.tops[0].name).toBe('Burgundy Sweater');
+      
+      // Should not have invalid category
+      expect(result.invalid_category).toBeUndefined();
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should prioritize normal parsing over fallback when both sections exist', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - From detailed analysis.
+        Burgundy Sweater: COMPATIBLE - From detailed analysis.
+        
+        COMPATIBLE COMPLEMENTING ITEMS:
+        tops: Black Jacket
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      // Should use normal parsing (final summary), not fallback
+      expect(result.tops).toHaveLength(1);
+      expect(result.tops[0].name).toBe('Black Jacket');
+      
+      // Should not have used fallback
+      expect(consoleLogSpy).not.toHaveBeenCalledWith(expect.stringContaining('[FALLBACK]'));
+      
+      consoleLogSpy.mockRestore();
+    });
+
+    it('should handle edge case: fallback with empty category names gracefully', () => {
+      const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+      
+      const claudeResponse = `
+        COMPATIBILITY ANALYSIS:
+        
+        ****:
+        Some Item: COMPATIBLE - Empty category name.
+        
+        **TOPS:**
+        Brown Cardigan: COMPATIBLE - This should work.
+      `;
+      
+      const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
+      
+      // Should only extract valid categories and ignore empty category names
+      expect(result.tops).toHaveLength(1);
+      expect(result.tops[0].name).toBe('Brown Cardigan');
+      
+      // Should not create category with empty name
+      expect(result['']).toBeUndefined();
+      
+      consoleLogSpy.mockRestore();
+    });
+  });
 });
