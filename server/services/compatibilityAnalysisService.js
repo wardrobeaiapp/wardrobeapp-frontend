@@ -119,7 +119,7 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       console.log('🤖 Calling Claude for compatibility evaluation...');
       const compatibilityResponse = await anthropic.messages.create({
         model: "claude-3-haiku-20240307",
-        max_tokens: 1024,
+        max_tokens: 2048, // Increased from 1024 to allow for complete response
         messages: [{
           role: "user",
           content: compatibilityPrompt
@@ -128,6 +128,7 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       
       const rawCompatibilityResponse = compatibilityResponse.content[0].text;
       console.log('🎯 Claude compatibility response received');
+      console.log('🎯 [DEBUG] Raw Claude response:', rawCompatibilityResponse);
       
       // Parse compatibility response with full item objects
       const result = parseCompatibilityResponse(rawCompatibilityResponse, stylingContext);

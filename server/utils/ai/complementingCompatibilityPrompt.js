@@ -243,11 +243,28 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     }
     
     // Then extract the final compatible items list
+    console.log('\n🔍 [DEBUG] Searching for COMPATIBLE COMPLEMENTING ITEMS section...');
+    console.log('🔍 [DEBUG] Full response:', claudeResponse);
+    
     const compatibleSection = claudeResponse.match(/COMPATIBLE COMPLEMENTING ITEMS:\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
+    
+    console.log('🔍 [DEBUG] Compatible section match result:', compatibleSection ? `Found: "${compatibleSection[1]?.trim()}"` : 'Not found');
     
     if (!compatibleSection || !compatibleSection[1]) {
       console.log('[compatibility] No compatible items section found in response');
-      return {};
+      // Try alternative patterns that Claude might use
+      console.log('🔍 [DEBUG] Trying alternative patterns...');
+      const altPattern1 = claudeResponse.match(/compatible.*items:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
+      const altPattern2 = claudeResponse.match(/final.*list:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
+      const altPattern3 = claudeResponse.match(/selected.*items:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
+      
+      console.log('🔍 [DEBUG] Alternative pattern 1 (compatible items):', altPattern1 ? 'Found' : 'Not found');
+      console.log('🔍 [DEBUG] Alternative pattern 2 (final list):', altPattern2 ? 'Found' : 'Not found');
+      console.log('🔍 [DEBUG] Alternative pattern 3 (selected items):', altPattern3 ? 'Found' : 'Not found');
+      
+      // FALLBACK: Extract from detailed analysis section if final summary is missing
+      console.log('🔄 [DEBUG] Trying fallback: extracting from detailed analysis...');
+      return extractFromDetailedAnalysis(claudeResponse, stylingContext);
     }
     
     const itemsText = compatibleSection[1].trim();
@@ -322,6 +339,87 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     
   } catch (error) {
     console.error('❌ Error parsing compatibility response:', error);
+    return {};
+  }
+}
+
+/**
+ * Fallback function to extract compatible items from detailed analysis section
+ * Used when Claude doesn't provide the final summary section
+ */
+function extractFromDetailedAnalysis(claudeResponse, stylingContext = []) {
+  console.log('🔄 [FALLBACK] Extracting from detailed analysis section...');
+  
+  try {
+    // Extract the detailed analysis section
+    const analysisSection = claudeResponse.match(/COMPATIBILITY ANALYSIS:\s*\n?((?:.*\n?)*?)(?=\nCOMPATIBLE COMPLEMENTING ITEMS:|```|$)/im);
+    
+    if (!analysisSection || !analysisSection[1]) {
+      console.log('❌ [FALLBACK] No detailed analysis section found');
+      return {};
+    }
+    
+    const analysisText = analysisSection[1].trim();
+    const analysisLines = analysisText.split('\n').filter(line => line.trim());
+    
+    const compatibleItems = {};
+    let currentCategory = '';
+    
+    analysisLines.forEach(line => {
+      const trimmedLine = line.trim();
+      
+      // Check for category headers like "**TOPS:**"
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith(':**')) {
+        currentCategory = trimmedLine.replace(/\*\*/g, '').replace(':', '').toLowerCase();
+        console.log(`📂 [FALLBACK] Processing category: ${currentCategory}`);
+      } 
+      // Check for compatible items like "Brown Cardigan: COMPATIBLE - ..."
+      else if (trimmedLine.includes(': ') && currentCategory) {
+        const [itemName, reasoning] = trimmedLine.split(': ', 2);
+        const isCompatible = reasoning.toUpperCase().includes('COMPATIBLE') && !reasoning.toUpperCase().includes('EXCLUDED');
+        
+        if (isCompatible) {
+          console.log(`  ✅ [FALLBACK] Found compatible item: ${itemName} in ${currentCategory}`);
+          
+          // Find the full item object in styling context
+          const fullItem = stylingContext.find(item => {
+            if (!item.name || !itemName) return false;
+            
+            const itemNameLower = item.name.toLowerCase();
+            const searchNameLower = itemName.toLowerCase();
+            
+            // Try bidirectional partial matching
+            return itemNameLower.includes(searchNameLower) || 
+                   searchNameLower.includes(itemNameLower) ||
+                   // Also try word-by-word matching for better flexibility
+                   searchNameLower.split(' ').every(word => 
+                     word.length > 2 && itemNameLower.includes(word)
+                   );
+          });
+          
+          if (fullItem) {
+            if (!compatibleItems[currentCategory]) {
+              compatibleItems[currentCategory] = [];
+            }
+            compatibleItems[currentCategory].push({
+              ...fullItem,
+              compatibilityTypes: ['complementing']
+            });
+            console.log(`  ✅ [FALLBACK] Matched to full item: ${fullItem.name} (ID: ${fullItem.id})`);
+          } else {
+            console.log(`  ⚠️ [FALLBACK] No matching item found for: "${itemName}"`);
+          }
+        } else if (reasoning.toUpperCase().includes('EXCLUDED')) {
+          console.log(`  ❌ [FALLBACK] Excluded item: ${itemName}`);
+        }
+      }
+    });
+    
+    console.log(`✅ [FALLBACK] Extracted ${Object.keys(compatibleItems).length} categories with compatible items`);
+    return compatibleItems;
+    
+  } catch (error) {
+    console.error('❌ [FALLBACK] Error extracting from detailed analysis:', error);
     return {};
   }
 }
