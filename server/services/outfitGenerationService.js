@@ -1,15 +1,34 @@
 /**
  * Outfit Generation Service
  * 
- * Service for generating complete outfit combinations using compatible items.
+ * Main orchestrator service for generating complete outfit combinations using compatible items.
  * Takes the results from compatibility analysis and creates wearable outfit suggestions.
  * 
  * Key Features:
  * - Only creates outfits for hasAllEssentials=true scenarios
  * - Context-aware outfit building based on item type
- * - Concise logging with Item1 + Item2 + Item3 format
- * - Limits to top 3 outfits per scenario for quality over quantity
+ * - Professional stylist approach with intelligent distribution
+ * - Modular architecture with specialized utility modules
  */
+
+// Import specialized utility modules
+const {
+  buildDressOutfits,
+  buildTopOutfits,
+  buildBottomOutfits,
+  buildFootwearOutfits,
+  buildGeneralOutfits
+} = require('../utils/outfitBuilders');
+
+const {
+  createOutfitSignature,
+  distributeOutfitsIntelligently
+} = require('../utils/outfitDistribution');
+
+const {
+  groupOutfitsByVersatility,
+  displayGroupedOutfits
+} = require('../utils/outfitGrouping');
 
 /**
  * Generate outfit combinations using compatible items for complete scenarios
@@ -135,90 +154,11 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
   return outfitCombinations;
 }
 
-/**
- * Intelligently distribute outfits across scenarios to avoid repetition
- * @param {Array} allGeneratedOutfits - All generated outfits for all scenarios
- * @param {Array} completeScenarios - All complete scenarios
- * @returns {Array} Distributed outfit combinations
- */
-function distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios) {
-  console.log('\n📊 INTELLIGENT OUTFIT DISTRIBUTION:');
-  
-  // Create outfit signatures and track which scenarios they work for
-  const outfitSignatureMap = new Map();
-  
-  allGeneratedOutfits.forEach(scenarioData => {
-    scenarioData.outfits.forEach(outfit => {
-      const signature = createOutfitSignature(outfit);
-      
-      if (!outfitSignatureMap.has(signature)) {
-        outfitSignatureMap.set(signature, {
-          outfit,
-          signature,
-          compatibleScenarios: [],
-          assigned: false
-        });
-      }
-      
-      const outfitData = outfitSignatureMap.get(signature);
-      outfitData.compatibleScenarios.push({
-        combination: scenarioData.combination,
-        season: scenarioData.season,
-        scenario: scenarioData.scenario
-      });
-    });
-  });
-  
-  console.log(`   Found ${outfitSignatureMap.size} unique outfits across all scenarios`);
-  
-  // Distribute outfits intelligently
-  const distributedResults = [];
-  const maxOutfitsPerScenario = 10;
-  
-  completeScenarios.forEach(combo => {
-    const scenarioOutfits = [];
-    const targetKey = combo.combination;
-    
-    // Find outfits that work for this scenario
-    Array.from(outfitSignatureMap.values())
-      .filter(outfitData => 
-        outfitData.compatibleScenarios.some(sc => sc.combination === targetKey)
-      )
-      .sort((a, b) => {
-        // Prioritize outfits that work for fewer scenarios (more exclusive)
-        // Then prioritize unassigned outfits
-        if (a.compatibleScenarios.length !== b.compatibleScenarios.length) {
-          return a.compatibleScenarios.length - b.compatibleScenarios.length;
-        }
-        return a.assigned === b.assigned ? 0 : (a.assigned ? 1 : -1);
-      })
-      .slice(0, maxOutfitsPerScenario)
-      .forEach(outfitData => {
-        scenarioOutfits.push(outfitData.outfit);
-        outfitData.assigned = true;
-      });
-    
-    if (scenarioOutfits.length > 0) {
-      console.log(`   ✅ ${combo.combination.toUpperCase()}: ${scenarioOutfits.length} unique outfits assigned`);
-      scenarioOutfits.forEach((outfit, index) => {
-        const signature = createOutfitSignature(outfit);
-        console.log(`      ${index + 1}. ${signature}`);
-      });
-      
-      distributedResults.push({
-        combination: combo.combination,
-        season: combo.season,
-        scenario: combo.scenario,
-        outfits: scenarioOutfits
-      });
-    }
-  });
-  
-  return distributedResults;
-}
+// Note: distributeOutfitsIntelligently function moved to /utils/outfitDistribution.js
 
 /**
  * Build outfit recommendations based on item type and available compatible items
+ * Routes to appropriate specialized builder functions from outfitBuilders utility
  */
 function buildOutfitRecommendations(itemData, itemsByCategory, season, scenario) {
   const itemCategory = itemData.category?.toLowerCase();
@@ -256,253 +196,15 @@ function buildOutfitRecommendations(itemData, itemsByCategory, season, scenario)
   return outfits;
 }
 
-/**
- * Build dress-based outfit combinations with professional stylist variety
- */
-function buildDressOutfits(itemData, itemsByCategory, season, scenario) {
-  const outfits = [];
-  const footwear = itemsByCategory.footwear || [];
-  const outerwear = itemsByCategory.outerwear || [];
-  const accessories = itemsByCategory.accessory || [];
-  
-  // Essential: dress + footwear
-  footwear.forEach((shoes, shoeIndex) => {
-    const baseItems = [
-      { ...itemData, compatibilityTypes: ['base-item'] },
-      shoes
-    ];
-    
-    // Create the most complete version available
-    let finalOutfit = {
-      type: 'dress-based',
-      items: [...baseItems]
-    };
-    
-    // Add outerwear if available and appropriate for season
-    if (outerwear.length > 0 && (season.includes('fall') || season.includes('winter') || season.includes('spring'))) {
-      const outerwearIndex = shoeIndex % outerwear.length;
-      const jacket = outerwear[outerwearIndex];
-      finalOutfit.items.push(jacket);
-      finalOutfit.type = 'dress-based-layered';
-    }
-    // Otherwise, add accessories if available (for summer/no outerwear)
-    else if (accessories.length > 0) {
-      const accessoryIndex = shoeIndex % accessories.length;
-      const accessory = accessories[accessoryIndex];
-      finalOutfit.items.push(accessory);
-      finalOutfit.type = 'dress-based-accessorized';
-    }
-    
-    outfits.push(finalOutfit);
-  });
-  
-  return outfits;
-}
-
-/**
- * Build top-based outfit combinations with professional stylist variety
- */
-function buildTopOutfits(itemData, itemsByCategory, season, scenario) {
-  const outfits = [];
-  const bottoms = itemsByCategory.bottoms || itemsByCategory.bottom || [];
-  const footwear = itemsByCategory.footwear || [];
-  const outerwear = itemsByCategory.outerwear || [];
-  
-  // Essential: top + bottom + footwear
-  bottoms.forEach((bottom, bottomIndex) => {
-    footwear.forEach((shoes, shoeIndex) => {
-      const baseItems = [
-        { ...itemData, compatibilityTypes: ['base-item'] },
-        bottom,
-        shoes
-      ];
-      
-      // Prefer layered version when outerwear is available
-      if (outerwear.length > 0) {
-        // Use different outerwear pieces for variety
-        const outerwearIndex = (bottomIndex + shoeIndex) % outerwear.length;
-        const jacket = outerwear[outerwearIndex];
-        
-        const layeredOutfit = {
-          type: 'top-based-layered',
-          items: [...baseItems, jacket]
-        };
-        outfits.push(layeredOutfit);
-      } else {
-        // Only create base version if no outerwear available
-        const baseOutfit = {
-          type: 'top-based',
-          items: baseItems
-        };
-        outfits.push(baseOutfit);
-      }
-    });
-  });
-  
-  return outfits;
-}
-
-/**
- * Build bottom-based outfit combinations with professional stylist variety
- */
-function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
-  const outfits = [];
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
-  const footwear = itemsByCategory.footwear || [];
-  const outerwear = itemsByCategory.outerwear || [];
-  
-  // Essential: bottom + top + footwear
-  tops.forEach((top, topIndex) => {
-    footwear.forEach((shoes, shoeIndex) => {
-      const baseItems = [
-        { ...itemData, compatibilityTypes: ['base-item'] },
-        top,
-        shoes
-      ];
-      
-      // Prefer layered version when outerwear is available
-      if (outerwear.length > 0) {
-        // Use different outerwear pieces for variety
-        const outerwearIndex = (topIndex + shoeIndex) % outerwear.length;
-        const jacket = outerwear[outerwearIndex];
-        
-        const layeredOutfit = {
-          type: 'bottom-based-layered',
-          items: [...baseItems, jacket]
-        };
-        outfits.push(layeredOutfit);
-      } else {
-        // Only create base version if no outerwear available
-        const baseOutfit = {
-          type: 'bottom-based',
-          items: baseItems
-        };
-        outfits.push(baseOutfit);
-      }
-    });
-  });
-  
-  return outfits;
-}
-
-/**
- * Build footwear-based outfit combinations
- */
-function buildFootwearOutfits(itemData, itemsByCategory, season, scenario) {
-  const outfits = [];
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
-  const bottoms = itemsByCategory.bottoms || itemsByCategory.bottom || [];
-  
-  // Essential: footwear + top + bottom
-  tops.forEach(top => {
-    bottoms.forEach(bottom => {
-      const outfit = {
-        type: 'footwear-based',
-        items: [
-          { ...itemData, compatibilityTypes: ['base-item'] },
-          top,
-          bottom
-        ]
-      };
-      
-      outfits.push(outfit);
-    });
-  });
-  
-  return outfits;
-}
-
-/**
- * Build general outfit combinations for other item types
- */
-function buildGeneralOutfits(itemData, itemsByCategory, season, scenario) {
-  const outfits = [];
-  
-  // Try to create a basic combination with available items
-  const availableCategories = Object.keys(itemsByCategory);
-  if (availableCategories.length > 0) {
-    const items = [{ ...itemData, compatibilityTypes: ['base-item'] }];
-    
-    // Add one item from each available category (max 4 total items)
-    availableCategories.slice(0, 3).forEach(category => {
-      const categoryItems = itemsByCategory[category];
-      if (categoryItems.length > 0) {
-        items.push(categoryItems[0]);
-      }
-    });
-    
-    outfits.push({
-      type: 'general',
-      items
-    });
-  }
-  
-  return outfits;
-}
-
-/**
- * Create a signature for an outfit based on the items it contains
- * @param {Object} outfit - Outfit object with items array
- * @returns {string} Unique signature for the outfit
- */
-function createOutfitSignature(outfit) {
-  const itemNames = outfit.items.map(item => item.name).sort();
-  return itemNames.join(' + ');
-}
-
-/**
- * Group outfits by their scenario combinations
- * @param {Array} outfitCombinations - Array of outfit combinations
- * @returns {Array} Grouped outfits by scenario combination
- */
-function groupOutfitsByVersatility(outfitCombinations) {
-  const scenarioGroups = new Map();
-  
-  // Group outfits by their scenario combination
-  outfitCombinations.forEach(combo => {
-    const scenarioKey = combo.combination;
-    
-    if (!scenarioGroups.has(scenarioKey)) {
-      scenarioGroups.set(scenarioKey, {
-        scenarioKey,
-        outfits: []
-      });
-    }
-    
-    const group = scenarioGroups.get(scenarioKey);
-    combo.outfits.forEach(outfit => {
-      group.outfits.push(createOutfitSignature(outfit));
-    });
-  });
-  
-  // Convert to array and sort by number of outfits (most versatile first)
-  return Array.from(scenarioGroups.values())
-    .sort((a, b) => b.outfits.length - a.outfits.length);
-}
-
-/**
- * Display grouped outfits in the desired format
- * @param {Array} groupedOutfits - Array of grouped outfit objects
- */
-function displayGroupedOutfits(groupedOutfits) {
-  console.log('\n\n=== 👗 GROUPED OUTFITS BY VERSATILITY ===\n');
-  
-  groupedOutfits.forEach(group => {
-    // Display scenario combination header
-    console.log(group.scenarioKey.toUpperCase());
-    
-    // Display all outfits for this scenario combination
-    group.outfits.forEach(outfitSignature => {
-      console.log(outfitSignature);
-    });
-    
-    console.log(''); // Empty line between groups
-  });
-}
+// Note: All outfit building functions have been moved to specialized utility modules:
+// - buildDressOutfits, buildTopOutfits, etc. → /utils/outfitBuilders.js
+// - createOutfitSignature, distributeOutfitsIntelligently → /utils/outfitDistribution.js
+// - groupOutfitsByVersatility, displayGroupedOutfits → /utils/outfitGrouping.js
 
 module.exports = {
   generateOutfitCombinations,
   buildOutfitRecommendations,
+  // Re-export functions from utility modules for backward compatibility
   buildDressOutfits,
   buildTopOutfits,
   buildBottomOutfits,
