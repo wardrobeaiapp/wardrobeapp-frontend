@@ -305,13 +305,32 @@ function checkEssentialCategories(itemData, allCompatibleItems, season) {
   
   console.log(`🔍 [checkEssentials] Items matching season '${season}': ${seasonItems.length} items`);
   
+  // Helper function to normalize category names for comparison
+  const normalizeCategory = (category) => {
+    const normalized = category?.toLowerCase();
+    // Handle singular/plural mapping
+    const categoryMap = {
+      'top': 'tops',
+      'tops': 'tops', 
+      'bottom': 'bottoms',
+      'bottoms': 'bottoms',
+      'footwear': 'footwear',
+      'accessory': 'accessories',
+      'accessories': 'accessories',
+      'outerwear': 'outerwear'
+    };
+    return categoryMap[normalized] || normalized;
+  };
+
   // Check which required categories we have items for
   const availableCategories = [];
   const missingCategories = [];
   
   requiredCategories.forEach(requiredCategory => {
+    const normalizedRequired = normalizeCategory(requiredCategory);
+    
     const itemsInCategory = seasonItems.filter(item => 
-      item.category?.toLowerCase() === requiredCategory
+      normalizeCategory(item.category) === normalizedRequired
     );
     
     if (itemsInCategory.length > 0) {
@@ -323,8 +342,8 @@ function checkEssentialCategories(itemData, allCompatibleItems, season) {
     }
   });
   
-  // Also track available non-essential categories for display
-  const allAvailableCategories = [...new Set(seasonItems.map(item => item.category?.toLowerCase()).filter(Boolean))];
+  // Also track available non-essential categories for display (normalized)
+  const allAvailableCategories = [...new Set(seasonItems.map(item => normalizeCategory(item.category)).filter(Boolean))];
   
   console.log(`🔍 [checkEssentials] Result: hasAllEssentials=${missingCategories.length === 0}, missing=[${missingCategories.join(', ')}]`);
   
