@@ -9,7 +9,9 @@ const {
   buildTopOutfits,
   buildBottomOutfits,
   buildFootwearOutfits,
-  buildGeneralOutfits
+  buildGeneralOutfits,
+  createOutfitSignature,
+  distributeOutfitsIntelligently
 } = require('../../services/outfitGenerationService');
 
 describe('outfitGenerationService', () => {
@@ -191,7 +193,7 @@ describe('outfitGenerationService', () => {
     });
 
     describe('Concise Logging Format', () => {
-      it('should use Item1 + Item2 + Item3 format', () => {
+      it('should log outfit generation completion', () => {
         const seasonScenarioCombinations = [
           {
             combination: 'summer + Social Outings',
@@ -205,12 +207,9 @@ describe('outfitGenerationService', () => {
 
         generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
 
-        // Should find log entries with + format
-        const logCalls = consoleSpy.mock.calls.flat();
-        const outfitLogEntry = logCalls.find(call => 
-          typeof call === 'string' && call.includes('Test Dress + ') && call.includes(' + ')
-        );
-        expect(outfitLogEntry).toBeDefined();
+        // Should log outfit generation and distribution
+        expect(consoleSpy).toHaveBeenCalledWith('\n📊 INTELLIGENT OUTFIT DISTRIBUTION:');
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('SUMMER + SOCIAL OUTINGS:'));
       });
     });
   });
@@ -227,18 +226,20 @@ describe('outfitGenerationService', () => {
       const bottomData = { name: 'Test Bottom', category: 'bottom' };
       const footwearData = { name: 'Test Shoes', category: 'footwear' };
 
-      const dressResult = buildOutfitRecommendations(dressData, mockItemsByCategory, 'summer', 'Social Outings');
-      const topResult = buildOutfitRecommendations(topData, { ...mockItemsByCategory, bottoms: [{ name: 'Pants' }] }, 'summer', 'Social Outings');
-      const bottomResult = buildOutfitRecommendations(bottomData, { ...mockItemsByCategory, tops: [{ name: 'Shirt' }] }, 'summer', 'Social Outings');
+      // Use summer season without accessories to get base types
+      const dressResult = buildOutfitRecommendations(dressData, { footwear: [{ name: 'Heels' }] }, 'summer', 'Social Outings');
+      const topResult = buildOutfitRecommendations(topData, { bottoms: [{ name: 'Pants' }], footwear: [{ name: 'Shoes' }] }, 'summer', 'Social Outings');
+      const bottomResult = buildOutfitRecommendations(bottomData, { tops: [{ name: 'Shirt' }], footwear: [{ name: 'Shoes' }] }, 'summer', 'Social Outings');
       const footwearResult = buildOutfitRecommendations(footwearData, { tops: [{ name: 'Shirt' }], bottoms: [{ name: 'Pants' }] }, 'summer', 'Social Outings');
 
-      expect(dressResult[0].type).toBe('dress-based');
-      expect(topResult[0].type).toBe('top-based');
-      expect(bottomResult[0].type).toBe('bottom-based');
+      // Expect base types or their complete versions
+      expect(dressResult[0].type).toMatch(/dress-based/);
+      expect(topResult[0].type).toMatch(/top-based/);
+      expect(bottomResult[0].type).toMatch(/bottom-based/);
       expect(footwearResult[0].type).toBe('footwear-based');
     });
 
-    it('should limit results to max 3 outfits per scenario', () => {
+    it('should generate all good outfit combinations (no artificial limits)', () => {
       const itemsByCategory = {
         footwear: [
           { name: 'Heels' }, { name: 'Flats' }, { name: 'Boots' }, 
@@ -253,7 +254,9 @@ describe('outfitGenerationService', () => {
         'Social Outings'
       );
 
-      expect(result.length).toBeLessThanOrEqual(3);
+      // Should generate outfits for each footwear option (5 total)
+      expect(result.length).toBe(5);
+      expect(result.every(outfit => outfit.items.length >= 2)).toBe(true); // dress + shoes minimum
     });
   });
 
@@ -471,6 +474,326 @@ describe('outfitGenerationService', () => {
       const result = buildGeneralOutfits(mockItemData, itemsByCategory, 'summer', 'Beach');
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('Professional Stylist Improvements - Duplication Prevention', () => {
+    const mockItemData = { name: 'White Blouse', category: 'top' };
+
+    it('should create only layered version when outerwear is available', () => {
+      const itemsByCategory = {
+        bottoms: [{ name: 'Black Skirt' }],
+        footwear: [{ name: 'Heels' }],
+        outerwear: [{ name: 'Blazer' }]
+      };
+
+      const result = buildTopOutfits(mockItemData, itemsByCategory, 'fall', 'Office Work');
+
+      // Should create only one outfit per combination (layered version)
+      expect(result).toHaveLength(1);
+      expect(result[0].items).toHaveLength(4); // top + bottom + shoes + outerwear
+      expect(result[0].items.some(item => item.name === 'Blazer')).toBe(true);
+      expect(result[0].type).toBe('top-based-layered');
+
+      // Should NOT create both base and layered versions
+      expect(result.filter(outfit => outfit.type === 'top-based')).toHaveLength(0);
+    });
+
+    it('should create only base version when no outerwear is available', () => {
+      const itemsByCategory = {
+        bottoms: [{ name: 'Black Skirt' }],
+        footwear: [{ name: 'Heels' }]
+        // No outerwear
+      };
+
+      const result = buildTopOutfits(mockItemData, itemsByCategory, 'summer', 'Social Outings');
+
+      expect(result).toHaveLength(1);
+      expect(result[0].items).toHaveLength(3); // top + bottom + shoes only
+      expect(result[0].type).toBe('top-based');
+
+      // Should NOT try to add outerwear
+      expect(result[0].items.some(item => item.category === 'outerwear')).toBe(false);
+    });
+
+    it('should prevent dress outfit duplication', () => {
+      const mockDressData = { name: 'Cocktail Dress', category: 'dress' };
+      const itemsByCategory = {
+        footwear: [{ name: 'Pumps' }],
+        outerwear: [{ name: 'Cardigan' }],
+        accessory: [{ name: 'Clutch' }]
+      };
+
+      const result = buildDressOutfits(mockDressData, itemsByCategory, 'spring', 'Social Outings');
+
+      // Should create only one complete outfit per shoe
+      expect(result).toHaveLength(1);
+      
+      // Should prioritize outerwear over accessories for spring
+      const outfit = result[0];
+      expect(outfit.items.some(item => item.name === 'Cardigan')).toBe(true);
+      expect(outfit.type).toBe('dress-based-layered');
+
+      // Should not create multiple versions (base + layered + accessorized)
+      expect(result.filter(outfit => outfit.type === 'dress-based')).toHaveLength(0);
+    });
+  });
+
+  describe('Professional Variety Algorithm', () => {
+    const mockItemData = { name: 'White T-Shirt', category: 'top' };
+
+    it('should systematically rotate through outerwear pieces for variety', () => {
+      const itemsByCategory = {
+        bottoms: [{ name: 'Jeans', category: 'bottoms' }, { name: 'Skirt', category: 'bottoms' }, { name: 'Trousers', category: 'bottoms' }],
+        footwear: [{ name: 'Sneakers', category: 'footwear' }, { name: 'Boots', category: 'footwear' }, { name: 'Loafers', category: 'footwear' }],
+        outerwear: [{ name: 'Blazer', category: 'outerwear' }, { name: 'Cardigan', category: 'outerwear' }, { name: 'Jacket', category: 'outerwear' }]
+      };
+
+      const result = buildTopOutfits(mockItemData, itemsByCategory, 'fall', 'Casual');
+
+      expect(result).toHaveLength(9); // 3 bottoms × 3 footwear = 9 combinations
+
+      // Should rotate through outerwear systematically using modulo logic
+      const outerwearUsed = result.map(outfit => 
+        outfit.items.find(item => item.name && ['Blazer', 'Cardigan', 'Jacket'].includes(item.name))?.name
+      ).filter(Boolean);
+
+      // Should have variety in outerwear choices (rotation based on indices)
+      const uniqueOuterwear = [...new Set(outerwearUsed)];
+      expect(uniqueOuterwear.length).toBeGreaterThan(1);
+      expect(outerwearUsed.length).toBe(9); // All outfits should have outerwear
+    });
+
+    it('should rotate through accessories for dress outfits', () => {
+      const mockDressData = { name: 'Summer Dress', category: 'dress' };
+      const itemsByCategory = {
+        footwear: [{ name: 'Sandals', category: 'footwear' }, { name: 'Flats', category: 'footwear' }, { name: 'Wedges', category: 'footwear' }],
+        accessory: [{ name: 'Necklace', category: 'accessory' }, { name: 'Bracelet', category: 'accessory' }, { name: 'Earrings', category: 'accessory' }]
+      };
+
+      const result = buildDressOutfits(mockDressData, itemsByCategory, 'summer', 'Social Outings');
+
+      expect(result).toHaveLength(3); // 3 footwear options
+
+      // Each outfit should have an accessory (since it's summer, no outerwear)
+      const accessoriesUsed = result.map(outfit => 
+        outfit.items.find(item => item.name && ['Necklace', 'Bracelet', 'Earrings'].includes(item.name))?.name
+      ).filter(Boolean);
+
+      // Should use accessories systematically with rotation
+      expect(accessoriesUsed.length).toBe(3); // All outfits should have accessories
+      const uniqueAccessories = [...new Set(accessoriesUsed)];
+      expect(uniqueAccessories.length).toBeGreaterThan(1);
+    });
+
+    it('should ensure each compatible item appears in at least one outfit', () => {
+      const itemsByCategory = {
+        bottoms: [{ name: 'Jeans' }, { name: 'Trousers' }, { name: 'Skirt' }],
+        footwear: [{ name: 'Sneakers' }, { name: 'Loafers' }],
+        outerwear: [{ name: 'Blazer' }]
+      };
+
+      const result = buildTopOutfits(mockItemData, itemsByCategory, 'fall', 'Casual');
+
+      // Should have 6 combinations (3 bottoms × 2 footwear)
+      expect(result).toHaveLength(6);
+
+      // Check that all bottoms appear
+      const bottomsUsed = result.map(outfit => outfit.items[1].name);
+      expect(bottomsUsed).toContain('Jeans');
+      expect(bottomsUsed).toContain('Trousers');
+      expect(bottomsUsed).toContain('Skirt');
+
+      // Check that all footwear appears
+      const footwearUsed = result.map(outfit => outfit.items[2].name);
+      expect(footwearUsed).toContain('Sneakers');
+      expect(footwearUsed).toContain('Loafers');
+    });
+  });
+
+  describe('Intelligent Distribution System', () => {
+    it('should create outfit signatures correctly', () => {
+      const outfit1 = {
+        items: [
+          { name: 'White Shirt' },
+          { name: 'Black Pants' },
+          { name: 'Brown Shoes' }
+        ]
+      };
+
+      const outfit2 = {
+        items: [
+          { name: 'Brown Shoes' },
+          { name: 'White Shirt' },
+          { name: 'Black Pants' }
+        ]
+      };
+
+      const signature1 = createOutfitSignature(outfit1);
+      const signature2 = createOutfitSignature(outfit2);
+
+      // Should create identical signatures regardless of order
+      expect(signature1).toBe(signature2);
+      expect(signature1).toBe('Black Pants + Brown Shoes + White Shirt');
+    });
+
+    it('should distribute outfits intelligently across scenarios', () => {
+      const allGeneratedOutfits = [
+        {
+          combination: 'spring/fall + Office Work',
+          season: 'spring/fall',
+          scenario: 'Office Work',
+          outfits: [
+            {
+              items: [
+                { name: 'White Shirt' },
+                { name: 'Black Pants' },
+                { name: 'Brown Shoes' }
+              ]
+            },
+            {
+              items: [
+                { name: 'Blue Blouse' },
+                { name: 'Navy Skirt' },
+                { name: 'Black Heels' }
+              ]
+            }
+          ]
+        },
+        {
+          combination: 'spring/fall + Social Outings',
+          season: 'spring/fall',
+          scenario: 'Social Outings',
+          outfits: [
+            {
+              items: [
+                { name: 'White Shirt' }, // Same outfit as above
+                { name: 'Black Pants' },
+                { name: 'Brown Shoes' }
+              ]
+            },
+            {
+              items: [
+                { name: 'Red Dress' },
+                { name: 'Gold Sandals' }
+              ]
+            }
+          ]
+        }
+      ];
+
+      const completeScenarios = [
+        {
+          combination: 'spring/fall + Office Work',
+          season: 'spring/fall',
+          scenario: 'Office Work'
+        },
+        {
+          combination: 'spring/fall + Social Outings',
+          season: 'spring/fall',
+          scenario: 'Social Outings'
+        }
+      ];
+
+      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+
+      expect(result).toHaveLength(2); // Both scenarios should get results
+
+      // Should distribute outfits across scenarios
+      const allOutfitSignatures = result.flatMap(combo => 
+        combo.outfits.map(outfit => createOutfitSignature(outfit))
+      );
+      
+      // Expect the algorithm to distribute the available outfits
+      expect(allOutfitSignatures.length).toBeGreaterThan(0);
+      expect(allOutfitSignatures.length).toBeLessThanOrEqual(4); // Max 4 outfits from input
+      
+      // Each scenario should get at least one outfit
+      expect(result[0].outfits.length).toBeGreaterThan(0);
+      expect(result[1].outfits.length).toBeGreaterThan(0);
+    });
+
+    it('should respect maximum outfits per scenario limit', () => {
+      // Create more than 10 unique outfits for one scenario
+      const manyOutfits = [];
+      for (let i = 0; i < 15; i++) {
+        manyOutfits.push({
+          items: [
+            { name: `Shirt ${i}` },
+            { name: 'Black Pants' },
+            { name: 'Brown Shoes' }
+          ]
+        });
+      }
+
+      const allGeneratedOutfits = [
+        {
+          combination: 'summer + Social Outings',
+          season: 'summer',
+          scenario: 'Social Outings',
+          outfits: manyOutfits
+        }
+      ];
+
+      const completeScenarios = [
+        {
+          combination: 'summer + Social Outings',
+          season: 'summer',
+          scenario: 'Social Outings'
+        }
+      ];
+
+      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+
+      expect(result).toHaveLength(1);
+      expect(result[0].outfits.length).toBeLessThanOrEqual(10); // Should cap at 10
+    });
+
+    it('should prioritize exclusive outfits over shared ones', () => {
+      const exclusiveOutfit = {
+        items: [{ name: 'Tuxedo' }, { name: 'Dress Shoes' }]
+      };
+
+      const sharedOutfit = {
+        items: [{ name: 'White Shirt' }, { name: 'Black Pants' }]
+      };
+
+      const allGeneratedOutfits = [
+        {
+          combination: 'winter + Formal Events',
+          season: 'winter',
+          scenario: 'Formal Events',
+          outfits: [exclusiveOutfit, sharedOutfit]
+        },
+        {
+          combination: 'winter + Office Work',
+          season: 'winter',
+          scenario: 'Office Work',
+          outfits: [sharedOutfit] // Only shared outfit
+        }
+      ];
+
+      const completeScenarios = [
+        {
+          combination: 'winter + Formal Events',
+          season: 'winter',
+          scenario: 'Formal Events'
+        },
+        {
+          combination: 'winter + Office Work',
+          season: 'winter',
+          scenario: 'Office Work'
+        }
+      ];
+
+      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+
+      // Exclusive outfit should be assigned to its exclusive scenario
+      const formalResult = result.find(r => r.scenario === 'Formal Events');
+      const officeResult = result.find(r => r.scenario === 'Office Work');
+
+      expect(formalResult.outfits.some(o => o.items.some(i => i.name === 'Tuxedo'))).toBe(true);
+      expect(officeResult.outfits.some(o => o.items.some(i => i.name === 'Tuxedo'))).toBe(false);
     });
   });
 
