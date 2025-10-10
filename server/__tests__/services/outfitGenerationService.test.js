@@ -922,5 +922,24 @@ describe('outfitGenerationService', () => {
       // Accessory items should not generate outfit combinations
       expect(result).toHaveLength(0);
     });
+    
+    it('should handle empty compatible items for accessories and outerwear in orchestrator', () => {
+      // This test is for documentation - the actual penalty logic happens in orchestrator
+      // When accessories/outerwear have zero compatible items, they get -2 score penalty
+      
+      // Test case: accessory with no compatible items
+      const emptyCompatibleItems = {};
+      const result = generateOutfitCombinations(
+        { name: 'Strange Accessory', category: 'accessory', seasons: ['summer'] },
+        emptyCompatibleItems, // No compatible items at all
+        []
+      );
+      
+      // No outfits should be generated for accessories regardless
+      expect(result).toHaveLength(0);
+      
+      // Note: The -2 penalty for zero compatible items is handled in outfitAnalysisOrchestrator
+      // when consolidatedCompatibleItems is empty
+    });
   });
 });

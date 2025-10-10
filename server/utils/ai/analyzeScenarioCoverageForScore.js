@@ -244,14 +244,23 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   // OUTFIT-BASED SCORING ADJUSTMENTS
   if (outfitData) {
-    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear } = outfitData;
+    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear, totalCompatibleItems } = outfitData;
     let outfitPenalty = 0;
     
     console.log('\n🎯 OUTFIT-BASED SCORING ADJUSTMENTS:');
     
     // Special case: Accessories and outerwear don't need outfit generation
     if (totalOutfits === -1 || isAccessoryOrOuterwear) {
-      console.log(`   💎/🧥 ACCESSORY/OUTERWEAR: Outfit analysis not applicable - no penalties applied`);
+      console.log(`   💎/🧥 ACCESSORY/OUTERWEAR: Outfit analysis not applicable`);
+      
+      // But still check compatibility - accessories/outerwear need SOME compatible items
+      if (totalCompatibleItems === 0) {
+        outfitPenalty += 2;
+        console.log(`   ❌ No compatible items found: -2 points (total: ${totalCompatibleItems} compatible items)`);
+        console.log(`   📝 Even accessories/outerwear need to work with existing wardrobe pieces`);
+      } else {
+        console.log(`   ✅ Compatible items found: ${totalCompatibleItems} items - no compatibility penalty`);
+      }
     }
     // Penalty 1: No outfits at all (major practical issue) - only for core items
     else if (totalOutfits === 0) {
@@ -307,11 +316,15 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   // Add outfit-based messaging if applicable
   if (outfitData) {
-    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear } = outfitData;
+    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear, totalCompatibleItems } = outfitData;
     
-    // Skip negative messaging for accessories and outerwear - they complement many outfits
+    // Handle messaging for accessories and outerwear
     if (totalOutfits === -1 || isAccessoryOrOuterwear) {
-      // No additional messaging needed for accessories/outerwear
+      // Only add negative messaging if no compatible items found
+      if (totalCompatibleItems === 0) {
+        finalReason += " Unfortunately, this piece doesn't seem to work well with your current wardrobe items.";
+      }
+      // Otherwise no additional messaging needed for accessories/outerwear
     }
     else if (totalOutfits === 0) {
       finalReason += " Unfortunately, you don't have the right pieces in your wardrobe to style this item.";

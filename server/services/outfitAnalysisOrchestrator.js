@@ -42,26 +42,42 @@ function orchestrateOutfitAnalysis({
     scenarios: suitableScenarios
   };
   
-  // Check if this is an accessory or outerwear item - these don't need outfit generation
+  // Check if this is an accessory or outerwear item - these don't need seasonal breakdown
+  // Accessories (jewelry, bags, belts) and outerwear (jackets, blazers) are versatile pieces
+  // that complement MANY different outfits across MULTIPLE seasons and scenarios
   const itemCategory = (formData?.category || preFilledData?.category || '').toLowerCase();
   const isAccessoryOrOuterwear = ['accessory', 'outerwear'].includes(itemCategory);
   
   if (isAccessoryOrOuterwear) {
-    console.log(`💎/🧥 ACCESSORY/OUTERWEAR ITEM: Skipping outfit analysis - these complement existing outfits`);
+    console.log(`💎/🧥 ACCESSORY/OUTERWEAR ITEM: Skipping season+scenario combinations AND outfit analysis`);
+    console.log(`📝 These pieces work across multiple seasons and scenarios - no need for specific combinations`);
     
-    // Calculate scoring without outfit penalties for accessories/outerwear
+    // Check if this accessory/outerwear has any compatible items at all
+    let totalCompatibleItems = 0;
+    if (consolidatedCompatibleItems) {
+      Object.values(consolidatedCompatibleItems).forEach(categoryItems => {
+        if (Array.isArray(categoryItems)) {
+          totalCompatibleItems += categoryItems.length;
+        }
+      });
+    }
+    
+    console.log(`🔗 Compatible items found: ${totalCompatibleItems} total across all categories`);
+    
+    // Calculate scoring without outfit penalties but with compatibility check for accessories/outerwear
     const scoringResults = calculateFinalScoreWithoutOutfitPenalties(
       scenarioCoverage,
       suitableScenarios,
       formData,
       userGoals,
       duplicateResult,
-      itemCategory
+      itemCategory,
+      totalCompatibleItems
     );
     
     return {
       outfitCombinations: [],
-      seasonScenarioCombinations: [],
+      seasonScenarioCombinations: [], // Empty - accessories/outerwear don't need specific combinations
       coverageGapsWithNoOutfits: [],
       analysisResult: scoringResults.analysisResult,
       objectiveFinalReason: scoringResults.objectiveFinalReason
@@ -249,6 +265,7 @@ function calculateFinalScoreWithOutfits(
  * @param {Array} userGoals - User goals
  * @param {Object} duplicateResult - Duplicate detection results
  * @param {string} itemCategory - Item category (accessory or outerwear)
+ * @param {number} totalCompatibleItems - Total number of compatible items found
  * @returns {Object} Scoring results
  */
 function calculateFinalScoreWithoutOutfitPenalties(
@@ -257,23 +274,27 @@ function calculateFinalScoreWithoutOutfitPenalties(
   formData,
   userGoals,
   duplicateResult,
-  itemCategory
+  itemCategory,
+  totalCompatibleItems = 0
 ) {
   // Analyze scenario coverage to get score and objective reason
   // Pass duplicate analysis results to prioritize duplicate detection in scoring
   const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
   
   // For accessories and outerwear, indicate that outfit generation is not applicable
+  // but include compatibility information for penalty assessment
   const outfitDataForScoring = {
     totalOutfits: -1, // Special flag: -1 means "outfit analysis not applicable"
     coverageGapsWithNoOutfits: [], // No outfit gaps for accessories/outerwear
     isAccessoryOrOuterwear: true,
-    itemCategory
+    itemCategory,
+    totalCompatibleItems // Include compatibility info for potential penalty
   };
   
   console.log(`📊 Outfit data for ${itemCategory} scoring:`, {
     message: 'Outfit analysis not applicable for this item type',
-    isAccessoryOrOuterwear: true
+    isAccessoryOrOuterwear: true,
+    compatibleItems: totalCompatibleItems
   });
   
   const analysisResult = analyzeScenarioCoverageForScore(
