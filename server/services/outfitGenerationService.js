@@ -187,6 +187,16 @@ function buildOutfitRecommendations(itemData, itemsByCategory, season, scenario)
       outfits.push(...buildFootwearOutfits(itemData, itemsByCategory, season, scenario));
       break;
       
+    case 'accessory':
+      // Accessories complement existing outfits - don't generate specific outfit combinations
+      console.log('   💎 ACCESSORY ITEM: This piece complements many different outfits in your wardrobe');
+      break;
+      
+    case 'outerwear':  
+      // Outerwear layers over many base outfits - don't generate specific outfit combinations
+      console.log('   🧥 OUTERWEAR ITEM: This layering piece works with many different base outfits');
+      break;
+      
     default:
       // For other items, try to build general combinations
       outfits.push(...buildGeneralOutfits(itemData, itemsByCategory, season, scenario));

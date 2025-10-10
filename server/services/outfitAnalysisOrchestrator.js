@@ -35,17 +35,43 @@ function orchestrateOutfitAnalysis({
 }) {
   console.log('\n=== 👗 OUTFIT ANALYSIS ORCHESTRATOR ===');
   
-  // Initialize results
-  let outfitCombinations = [];
-  let seasonScenarioCombinations = [];
-  let coverageGapsWithNoOutfits = [];
-  
-  // Extract combined item data for season + scenario combinations
+  // Extract combined item data for analysis
   const itemDataWithScenarios = {
     ...formData,
     ...preFilledData,
     scenarios: suitableScenarios
   };
+  
+  // Check if this is an accessory or outerwear item - these don't need outfit generation
+  const itemCategory = (formData?.category || preFilledData?.category || '').toLowerCase();
+  const isAccessoryOrOuterwear = ['accessory', 'outerwear'].includes(itemCategory);
+  
+  if (isAccessoryOrOuterwear) {
+    console.log(`💎/🧥 ACCESSORY/OUTERWEAR ITEM: Skipping outfit analysis - these complement existing outfits`);
+    
+    // Calculate scoring without outfit penalties for accessories/outerwear
+    const scoringResults = calculateFinalScoreWithoutOutfitPenalties(
+      scenarioCoverage,
+      suitableScenarios,
+      formData,
+      userGoals,
+      duplicateResult,
+      itemCategory
+    );
+    
+    return {
+      outfitCombinations: [],
+      seasonScenarioCombinations: [],
+      coverageGapsWithNoOutfits: [],
+      analysisResult: scoringResults.analysisResult,
+      objectiveFinalReason: scoringResults.objectiveFinalReason
+    };
+  }
+  
+  // Initialize results for core items (dress, top, bottom, footwear)
+  let outfitCombinations = [];
+  let seasonScenarioCombinations = [];
+  let coverageGapsWithNoOutfits = [];
   
   try {
     // ===== STEP 1: GENERATE OUTFIT COMBINATIONS =====
@@ -215,8 +241,64 @@ function calculateFinalScoreWithOutfits(
   };
 }
 
+/**
+ * Calculates final score for accessories and outerwear without outfit-based penalties
+ * @param {Array} scenarioCoverage - Coverage analysis data
+ * @param {Array} suitableScenarios - Scenarios from Claude
+ * @param {Object} formData - Form data
+ * @param {Array} userGoals - User goals
+ * @param {Object} duplicateResult - Duplicate detection results
+ * @param {string} itemCategory - Item category (accessory or outerwear)
+ * @returns {Object} Scoring results
+ */
+function calculateFinalScoreWithoutOutfitPenalties(
+  scenarioCoverage,
+  suitableScenarios,
+  formData,
+  userGoals,
+  duplicateResult,
+  itemCategory
+) {
+  // Analyze scenario coverage to get score and objective reason
+  // Pass duplicate analysis results to prioritize duplicate detection in scoring
+  const duplicateAnalysisForScore = duplicateResult ? duplicateResult.duplicateAnalysis : null;
+  
+  // For accessories and outerwear, indicate that outfit generation is not applicable
+  const outfitDataForScoring = {
+    totalOutfits: -1, // Special flag: -1 means "outfit analysis not applicable"
+    coverageGapsWithNoOutfits: [], // No outfit gaps for accessories/outerwear
+    isAccessoryOrOuterwear: true,
+    itemCategory
+  };
+  
+  console.log(`📊 Outfit data for ${itemCategory} scoring:`, {
+    message: 'Outfit analysis not applicable for this item type',
+    isAccessoryOrOuterwear: true
+  });
+  
+  const analysisResult = analyzeScenarioCoverageForScore(
+    scenarioCoverage,
+    suitableScenarios,
+    formData,
+    userGoals,
+    duplicateAnalysisForScore,
+    outfitDataForScoring
+  );
+  
+  const objectiveFinalReason = analysisResult.reason;
+  
+  console.log(`✅ Final score for ${itemCategory} (no outfit penalties):`, analysisResult.score);
+  console.log('✅ Final objective reason:', objectiveFinalReason);
+  
+  return {
+    analysisResult,
+    objectiveFinalReason
+  };
+}
+
 module.exports = {
   orchestrateOutfitAnalysis,
   performCoverageOutfitCrossReference,
-  calculateFinalScoreWithOutfits
+  calculateFinalScoreWithOutfits,
+  calculateFinalScoreWithoutOutfitPenalties
 };

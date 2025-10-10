@@ -850,7 +850,9 @@ describe('outfitGenerationService', () => {
 
     it('should handle compound seasons like "spring/fall"', () => {
       const itemsByCategory = {
-        footwear: [{ name: 'Boots', category: 'footwear', seasons: ['spring/fall'] }]
+        footwear: [{ name: 'Boots', category: 'footwear', seasons: ['spring/fall'] }],
+        tops: [{ name: 'Sweater', category: 'top', seasons: ['fall'] }],
+        bottoms: [{ name: 'Jeans', category: 'bottom', seasons: ['fall'] }]
       };
 
       const seasonScenarioCombinations = [{
@@ -859,16 +861,66 @@ describe('outfitGenerationService', () => {
         scenario: 'Office Work',
         hasItems: true,
         missingCategories: [],
-        availableCategories: ['footwear']
+        availableCategories: ['footwear', 'tops', 'bottoms']
       }];
 
       const result = generateOutfitCombinations(
-        { name: 'Blazer', category: 'outerwear', seasons: ['fall'] },
-        { footwear: itemsByCategory.footwear },
+        { name: 'Boots', category: 'footwear', seasons: ['fall'] },
+        itemsByCategory,
         seasonScenarioCombinations
       );
 
       expect(result[0].outfits[0].items.some(item => item.name === 'Boots')).toBe(true);
+    });
+    
+    it('should not generate outfits for outerwear items', () => {
+      const itemsByCategory = {
+        footwear: [{ name: 'Boots', category: 'footwear' }],
+        tops: [{ name: 'White Shirt', category: 'top' }]
+      };
+
+      const seasonScenarioCombinations = [{
+        combination: 'fall + Office Work',
+        season: 'fall',
+        scenario: 'Office Work',
+        hasItems: true,
+        missingCategories: [],
+        availableCategories: ['footwear', 'tops']
+      }];
+
+      const result = generateOutfitCombinations(
+        { name: 'Blazer', category: 'outerwear', seasons: ['fall'] },
+        itemsByCategory,
+        seasonScenarioCombinations
+      );
+
+      // Outerwear items should not generate outfit combinations
+      expect(result).toHaveLength(0);
+    });
+    
+    it('should not generate outfits for accessory items', () => {
+      const itemsByCategory = {
+        footwear: [{ name: 'Heels', category: 'footwear' }],
+        tops: [{ name: 'Blouse', category: 'top' }]
+      };
+
+      const seasonScenarioCombinations = [{
+        combination: 'summer + Social Outings',
+        season: 'summer',
+        scenario: 'Social Outings',
+        hasItems: true,
+        missingCategories: [],
+        availableCategories: ['footwear', 'tops']
+      }];
+
+      const result = generateOutfitCombinations(
+        { name: 'Gold Necklace', category: 'accessory', seasons: ['summer'] },
+        itemsByCategory,
+        seasonScenarioCombinations
+      );
+
+      // Accessory items should not generate outfit combinations
+      expect(result).toHaveLength(0);
     });
   });
 });

@@ -244,41 +244,47 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   // OUTFIT-BASED SCORING ADJUSTMENTS
   if (outfitData) {
-    const { totalOutfits, coverageGapsWithNoOutfits } = outfitData;
+    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear } = outfitData;
     let outfitPenalty = 0;
     
     console.log('\n🎯 OUTFIT-BASED SCORING ADJUSTMENTS:');
     
-    // Penalty 1: No outfits at all (major practical issue)
-    if (totalOutfits === 0) {
+    // Special case: Accessories and outerwear don't need outfit generation
+    if (totalOutfits === -1 || isAccessoryOrOuterwear) {
+      console.log(`   💎/🧥 ACCESSORY/OUTERWEAR: Outfit analysis not applicable - no penalties applied`);
+    }
+    // Penalty 1: No outfits at all (major practical issue) - only for core items
+    else if (totalOutfits === 0) {
       outfitPenalty += 3;
       console.log(`   ❌ No outfits possible: -3 points (total: ${totalOutfits} outfits)`);
     } else {
       console.log(`   ✅ Outfits available: ${totalOutfits} combinations found`);
     }
     
-    // Penalty 2: Coverage gaps with no outfits (only when styling utility is significantly limited)
-    // Apply penalty only when item has few outfits AND multiple coverage gaps can't be styled
-    if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
-      // Only penalize if item has limited styling utility (few outfits relative to coverage expectations)
-      const hasLimitedUtility = totalOutfits <= 2 && coverageGapsWithNoOutfits.length >= 2;
-      
-      if (hasLimitedUtility) {
-        outfitPenalty += 2;
-        console.log(`   ⚠️  Coverage gaps with no outfits: -2 points (${coverageGapsWithNoOutfits.length} gaps affected)`);
-        console.log(`   📝  Item has limited styling utility (${totalOutfits} outfits) with multiple unstyleable gaps`);
-        coverageGapsWithNoOutfits.forEach(gap => {
-          console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled`);
-        });
-      } else {
-        console.log(`   ✅ Item has good styling utility (${totalOutfits} outfits) despite ${coverageGapsWithNoOutfits.length} unstyleable coverage gaps`);
-        console.log(`   📝  No penalty applied - item serves its purpose well`);
-        coverageGapsWithNoOutfits.forEach(gap => {
-          console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled (but item still useful)`);
-        });
+    // Penalty 2: Coverage gaps with no outfits (only for core items with styling utility issues)
+    // Skip this penalty for accessories and outerwear
+    if (totalOutfits !== -1 && !isAccessoryOrOuterwear) {
+      if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
+        // Only penalize if item has limited styling utility (few outfits relative to coverage expectations)
+        const hasLimitedUtility = totalOutfits <= 2 && coverageGapsWithNoOutfits.length >= 2;
+        
+        if (hasLimitedUtility) {
+          outfitPenalty += 2;
+          console.log(`   ⚠️  Coverage gaps with no outfits: -2 points (${coverageGapsWithNoOutfits.length} gaps affected)`);
+          console.log(`   📝  Item has limited styling utility (${totalOutfits} outfits) with multiple unstyleable gaps`);
+          coverageGapsWithNoOutfits.forEach(gap => {
+            console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled`);
+          });
+        } else {
+          console.log(`   ✅ Item has good styling utility (${totalOutfits} outfits) despite ${coverageGapsWithNoOutfits.length} unstyleable coverage gaps`);
+          console.log(`   📝  No penalty applied - item serves its purpose well`);
+          coverageGapsWithNoOutfits.forEach(gap => {
+            console.log(`      • ${gap.description} (${gap.gapType}) - can't be styled (but item still useful)`);
+          });
+        }
+      } else if (totalOutfits === 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
+        console.log(`   ℹ️  Coverage gaps exist but already penalized by "no outfits" penalty`);
       }
-    } else if (totalOutfits === 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
-      console.log(`   ℹ️  Coverage gaps exist but already penalized by "no outfits" penalty`);
     }
     
     if (outfitPenalty > 0) {
@@ -301,9 +307,13 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   
   // Add outfit-based messaging if applicable
   if (outfitData) {
-    const { totalOutfits, coverageGapsWithNoOutfits } = outfitData;
+    const { totalOutfits, coverageGapsWithNoOutfits, isAccessoryOrOuterwear } = outfitData;
     
-    if (totalOutfits === 0) {
+    // Skip negative messaging for accessories and outerwear - they complement many outfits
+    if (totalOutfits === -1 || isAccessoryOrOuterwear) {
+      // No additional messaging needed for accessories/outerwear
+    }
+    else if (totalOutfits === 0) {
       finalReason += " Unfortunately, you don't have the right pieces in your wardrobe to style this item.";
     } else if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
       // Only mention coverage gaps if penalty was actually applied (limited styling utility)
