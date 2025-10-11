@@ -20,7 +20,7 @@ const {
 
 /**
  * Calculate dynamic max score and applicable weights based on available attributes
- * Includes attributes even if one item is missing data (more forgiving approach)
+ * Only includes attributes that both items have (strict comparison approach)
  */
 function calculateApplicableWeights(weights, newItem, existingItem) {
   let maxScore = 0;
@@ -33,17 +33,17 @@ function calculateApplicableWeights(weights, newItem, existingItem) {
   };
   
   const attributeChecks = [
-    { key: 'color', check: () => hasAttribute(newItem, 'color') || hasAttribute(existingItem, 'color') },
-    { key: 'silhouette', check: () => hasAttribute(newItem, 'silhouette') || hasAttribute(existingItem, 'silhouette') },
-    { key: 'style', check: () => hasAttribute(newItem, 'style') || hasAttribute(existingItem, 'style') },
-    { key: 'material', check: () => hasAttribute(newItem, 'material') || hasAttribute(existingItem, 'material') },
-    { key: 'pattern', check: () => hasAttribute(newItem, 'pattern') || hasAttribute(existingItem, 'pattern') },
-    { key: 'neckline', check: () => hasAttribute(newItem, 'neckline') || hasAttribute(existingItem, 'neckline') },
-    { key: 'sleeves', check: () => hasAttribute(newItem, 'sleeves') || hasAttribute(existingItem, 'sleeves') },
-    { key: 'heelHeight', check: () => hasAttribute(newItem, 'heelHeight') || hasAttribute(existingItem, 'heelHeight') },
-    { key: 'bootHeight', check: () => hasAttribute(newItem, 'bootHeight') || hasAttribute(existingItem, 'bootHeight') },
-    { key: 'rise', check: () => hasAttribute(newItem, 'rise') || hasAttribute(existingItem, 'rise') },
-    { key: 'length', check: () => hasAttribute(newItem, 'length') || hasAttribute(existingItem, 'length') }
+    { key: 'color', check: () => hasAttribute(newItem, 'color') && hasAttribute(existingItem, 'color') },
+    { key: 'silhouette', check: () => hasAttribute(newItem, 'silhouette') && hasAttribute(existingItem, 'silhouette') },
+    { key: 'style', check: () => hasAttribute(newItem, 'style') && hasAttribute(existingItem, 'style') },
+    { key: 'material', check: () => hasAttribute(newItem, 'material') && hasAttribute(existingItem, 'material') },
+    { key: 'pattern', check: () => hasAttribute(newItem, 'pattern') && hasAttribute(existingItem, 'pattern') },
+    { key: 'neckline', check: () => hasAttribute(newItem, 'neckline') && hasAttribute(existingItem, 'neckline') },
+    { key: 'sleeves', check: () => hasAttribute(newItem, 'sleeves') && hasAttribute(existingItem, 'sleeves') },
+    { key: 'heelHeight', check: () => hasAttribute(newItem, 'heelHeight') && hasAttribute(existingItem, 'heelHeight') },
+    { key: 'bootHeight', check: () => hasAttribute(newItem, 'bootHeight') && hasAttribute(existingItem, 'bootHeight') },
+    { key: 'rise', check: () => hasAttribute(newItem, 'rise') && hasAttribute(existingItem, 'rise') },
+    { key: 'length', check: () => hasAttribute(newItem, 'length') && hasAttribute(existingItem, 'length') }
   ];
   
   attributeChecks.forEach(({ key, check }) => {
