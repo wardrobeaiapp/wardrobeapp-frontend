@@ -4,7 +4,7 @@ export const stylingRules: Record<string, {
   tops?: string[];
 }> = {
   't-shirt': {
-    tops: ['cardigan', 'blazer', 'vest']
+    tops: ['cardigan', 'blazer', 'vest', 'shirt'] // Added shirt - can layer shirt over t-shirt
   },
   'shirt': {
     accessories: ['scarf', 'belt', 'bag', 'jewelry', 'watch'],

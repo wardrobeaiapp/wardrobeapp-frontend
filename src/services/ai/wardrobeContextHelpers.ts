@@ -345,14 +345,26 @@ const shouldIncludeInLayeringContext = (item: WardrobeItem, formData: { category
   }
   
   if (newItemCategory === ItemCategory.TOP && itemCategory === ItemCategory.TOP) {
-    // TOP + TOP: Only allow if both have styling rules (cardigan over tee, etc.)
+    // TOP + TOP: Check if one item can layer over the other (cardigan over tee, etc.)
     if (item.subcategory && formData.subcategory) {
       const itemSubcategoryKey = item.subcategory.toLowerCase();
       const newItemSubcategoryKey = formData.subcategory.toLowerCase();
       const itemRules = stylingRules[itemSubcategoryKey];
       const newItemRules = stylingRules[newItemSubcategoryKey];
       
-      return !!itemRules && !!newItemRules;
+      // Debug logging
+      console.log(`[shouldIncludeInLayeringContext] Checking layering: ${itemSubcategoryKey} with ${newItemSubcategoryKey}`);
+      console.log(`[shouldIncludeInLayeringContext] Item rules:`, itemRules);
+      console.log(`[shouldIncludeInLayeringContext] New item rules:`, newItemRules);
+      
+      // Check if existing item can layer over new item
+      const canLayerOver = newItemRules?.tops?.includes(itemSubcategoryKey);
+      // Check if new item can layer over existing item (for cross-recommendations)
+      const canLayerUnder = itemRules?.tops?.includes(newItemSubcategoryKey);
+      
+      console.log(`[shouldIncludeInLayeringContext] canLayerOver: ${canLayerOver}, canLayerUnder: ${canLayerUnder}`);
+      
+      return !!(canLayerOver || canLayerUnder);
     }
   }
   
