@@ -30,10 +30,9 @@ describe('Scenario Names in Final Recommendations', () => {
         []
       );
 
-      // Should include both season and scenario
-      expect(reason).toContain('You have good coverage in one_pieces');
-      expect(reason).toContain('for summer');
-      expect(reason).toContain('for Social Outings');
+      // Should include scenario-based messaging for one_piece items (not category-based)
+      expect(reason).toContain('You have good coverage for Social Outings');
+      expect(reason).toContain('in summer');
       expect(reason).toContain('nice-to-have rather than essential');
     });
 
@@ -57,10 +56,9 @@ describe('Scenario Names in Final Recommendations', () => {
         []
       );
 
-      // Should include scenario and show constraint-aware message
-      expect(reason).toContain('You have good coverage in one_pieces');
-      expect(reason).toContain('for spring/fall');
-      expect(reason).toContain('for Office Work');
+      // Should include scenario-based messaging and show constraint-aware message
+      expect(reason).toContain('You have good coverage for Office Work');
+      expect(reason).toContain('in spring/fall');
       expect(reason).toContain('Maybe skip unless it\'s really special?');
     });
   });

@@ -173,7 +173,7 @@ describe('Scenario Detection and Filtering Integration', () => {
         []
       );
 
-      expect(reason).toContain('You have good coverage in one_pieces for summer for Social Outings');
+      expect(reason).toContain('You have good coverage for Social Outings in summer');
       expect(reason).toContain('nice-to-have rather than essential');
     });
 
@@ -274,7 +274,7 @@ describe('Scenario Detection and Filtering Integration', () => {
       );
 
       // Step 4: Verify complete scenario context in final recommendation
-      expect(finalReason).toContain('You have good coverage in one_pieces for summer for Social Outings');
+      expect(finalReason).toContain('You have good coverage for Social Outings in summer');
       expect(finalReason).toContain('nice-to-have rather than essential');
     });
 

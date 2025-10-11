@@ -106,7 +106,6 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
       break;
       
     case 'expansion':
-      reason = `You have good coverage in ${itemType}`;
       if (relevantCoverage.length > 0) {
         // Find the coverage item with the biggest gap (lowest coverage percentage or highest gap count)
         const prioritizedCoverage = relevantCoverage.sort((a, b) => {
@@ -119,21 +118,44 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
         
         console.log(`📊 EXPANSION GAP DETAIL: ${prioritizedCoverage.scenarioName} - ${itemType} - ${prioritizedCoverage.season || 'all seasons'} (${prioritizedCoverage.gapCount} gaps, ${prioritizedCoverage.coveragePercent}% coverage)`);
         
-        // Check if there are multiple seasons with similar gaps
-        const seasonsWithGaps = relevantCoverage
-          .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
-          .map(item => item.season);
-        
-        if (seasonsWithGaps.length > 1) {
-          // Multiple seasons - show all of them
-          const uniqueSeasons = [...new Set(seasonsWithGaps)];
-          reason += ` for ${uniqueSeasons.join(' and ')}`;
-        } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
-          // Single season
-          reason += ` for ${prioritizedCoverage.season}`;
+        // Special case: one_piece items can be replaced by separates for the same scenario
+        if (itemType === 'one_pieces' || itemType === 'one_piece') {
+          reason = `You have good coverage for ${prioritizedCoverage.scenarioName}`;
+          
+          // Add season info for one_piece scenario-based messaging
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` in ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            reason += ` in ${prioritizedCoverage.season}`;
+          }
+        } else {
+          // Normal case: category-specific coverage makes sense for other items
+          reason = `You have good coverage in ${itemType}`;
+          
+          // Check if there are multiple seasons with similar gaps
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            // Multiple seasons - show all of them
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` for ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            // Single season
+            reason += ` for ${prioritizedCoverage.season}`;
+          }
+          
+          if (prioritizedCoverage.scenarioName !== 'All scenarios') reason += ` for ${prioritizedCoverage.scenarioName}`;
         }
-        
-        if (prioritizedCoverage.scenarioName !== 'All scenarios') reason += ` for ${prioritizedCoverage.scenarioName}`;
+      } else {
+        // Fallback when no coverage data available
+        reason = `You have good coverage in ${itemType}`;
       }
       reason += hasConstraintGoals 
         ? ". Maybe skip unless it's really special?" 
