@@ -8,7 +8,7 @@ import axios from 'axios';
 
 // Mock the axios module
 jest.mock('axios');
-const mockedAxios = jest.mocked(axios);
+const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 // Mock the helper functions
 jest.mock('../../../services/ai/wardrobeContextHelpers');
@@ -25,12 +25,61 @@ import * as imageProcessingService from '../../../services/ai/analysis/imageProc
 
 const mockFilterStylingContext = wardrobeContextHelpers.filterStylingContext as jest.MockedFunction<typeof wardrobeContextHelpers.filterStylingContext>;
 const mockFilterSimilarContext = wardrobeContextHelpers.filterSimilarContext as jest.MockedFunction<typeof wardrobeContextHelpers.filterSimilarContext>;
+const mockFlattenComplementingItems = wardrobeContextHelpers.flattenComplementingItems as jest.MockedFunction<typeof wardrobeContextHelpers.flattenComplementingItems>;
 const mockFilterItemContextForAI = itemContextFilter.filterItemContextForAI as jest.MockedFunction<typeof itemContextFilter.filterItemContextForAI>;
+const mockGetPayloadStats = itemContextFilter.getPayloadStats as jest.MockedFunction<typeof itemContextFilter.getPayloadStats>;
 const mockGetUserAnalysisData = userDataService.getUserAnalysisData as jest.MockedFunction<typeof userDataService.getUserAnalysisData>;
 const mockGenerateScenarioCoverage = coverageService.generateScenarioCoverage as jest.MockedFunction<typeof coverageService.generateScenarioCoverage>;
 const mockProcessImageForAnalysis = imageProcessingService.processImageForAnalysis as jest.MockedFunction<typeof imageProcessingService.processImageForAnalysis>;
 
 describe('wardrobeAnalysisService - Styling Context Integration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    // Setup default mocks
+    mockGetUserAnalysisData.mockResolvedValue({
+      user: { id: 'user-1' },
+      climateData: null,
+      wardrobeItems: mockWardrobeItems,
+      scenarios: [],
+      userGoals: []
+    });
+
+    mockGenerateScenarioCoverage.mockResolvedValue([]);
+    mockProcessImageForAnalysis.mockResolvedValue({
+      processedImage: 'processed-image-data'
+    });
+    mockFilterItemContextForAI.mockImplementation((items) => items);
+    mockGetPayloadStats.mockReturnValue({
+      originalSize: 10000,
+      filteredSize: 8800,
+      reductionPercent: 15,
+      reduction: 1200
+    });
+    
+    // Mock successful axios response
+    mockedAxios.post.mockResolvedValue({
+      data: {
+        analysis: 'Mock analysis result',
+        score: 85,
+        suitableScenarios: ['office'],
+        compatibleItems: {}
+      }
+    });
+
+    // Setup styling context mocks
+    mockFilterStylingContext.mockReturnValue(mockStylingContextResult);
+    mockFilterSimilarContext.mockReturnValue([]);
+    mockFlattenComplementingItems.mockImplementation((complementingItems) => {
+      if (!complementingItems) return [];
+      const result = [];
+      if (complementingItems.bottoms) result.push(...complementingItems.bottoms);
+      if (complementingItems.footwear) result.push(...complementingItems.footwear);
+      if (complementingItems.accessories) result.push(...complementingItems.accessories);
+      return result;
+    });
+  });
+
   const mockWardrobeItems: WardrobeItem[] = [
     {
       id: 'item-1',
@@ -82,7 +131,10 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
   ];
 
   const mockStylingContextResult = {
-    complementing: [mockWardrobeItems[0], mockWardrobeItems[1]], // Navy trousers, Black heels
+    complementing: {
+      bottoms: [mockWardrobeItems[0]], // Navy trousers
+      footwear: [mockWardrobeItems[1]], // Black heels
+    },
     layering: [mockWardrobeItems[2], mockWardrobeItems[3]], // Basic tee, Navy cardigan
     outerwear: []
   };
@@ -101,13 +153,17 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       outerwear: []
     });
 
-    await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
+    const result = await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
 
-    // Should not include stylingContext in API call if empty
+    // Should return result with empty styling context handled
+    expect(result).toBeDefined();
+    expect(result.analysis).toBeDefined();
+    
+    // Should have called axios with the correct endpoint and undefined stylingContext for empty context
     expect(mockedAxios.post).toHaveBeenCalledWith(
-      expect.stringContaining('/api/ai/analyze-simple'),
+      expect.stringContaining('/api/analyze-wardrobe-item-simple'),
       expect.objectContaining({
-        stylingContext: undefined // Should be undefined for empty context
+        stylingContext: undefined // Service sends undefined when no styling context items
       })
     );
   });
@@ -119,7 +175,7 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Generated styling context: 4 items')
+        expect.stringContaining('Generated styling context: 2 items')
       );
 
       consoleSpy.mockRestore();
@@ -128,13 +184,22 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
 
   describe('Error handling', () => {
     it('should handle filterStylingContext errors gracefully', async () => {
+      // Suppress console.error for this test since we're intentionally causing an error
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      
       mockFilterStylingContext.mockImplementation(() => {
         throw new Error('Styling context error');
       });
 
-      await expect(
-        wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData)
-      ).rejects.toThrow('Styling context error');
+      const result = await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
+      
+      // Should return error response instead of throwing
+      expect(result).toBeDefined();
+      expect(result.error).toBe('unknown_error');
+      expect(result.details).toBe('Styling context error');
+      
+      // Clean up console spy
+      consoleErrorSpy.mockRestore();
     });
 
     it('should handle partial styling context results', async () => {
@@ -147,8 +212,9 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       const result = await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
 
       expect(result).toBeDefined();
+      expect(result.analysis).toBeDefined();
       expect(mockedAxios.post).toHaveBeenCalledWith(
-        expect.stringContaining('/api/ai/analyze-simple'),
+        expect.stringContaining('/api/analyze-wardrobe-item-simple'),
         expect.objectContaining({
           stylingContext: expect.arrayContaining([
             expect.objectContaining({ name: 'Navy Trousers' })

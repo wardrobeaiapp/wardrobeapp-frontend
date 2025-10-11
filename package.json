@@ -60,6 +60,11 @@
       "last 1 safari version"
     ]
   },
+  "jest": {
+    "transformIgnorePatterns": [
+      "node_modules/(?!(axios)/)"
+    ]
+  },
   "proxy": "http://localhost:5000",
   "devDependencies": {
     "@fortawesome/fontawesome-common-types": "^7.0.0",
