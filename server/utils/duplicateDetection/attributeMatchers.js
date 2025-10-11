@@ -7,17 +7,21 @@ const { COLOR_FAMILIES, SILHOUETTE_FAMILIES } = require('../../constants/wardrob
 
 /**
  * Generic case-insensitive string matcher
+ * Returns null for missing data (let scoring engine decide), true/false for definitive matches
  */
 function simpleMatch(value1, value2) {
-  if (!value1 || !value2) return false;
+  // If either is missing, return null (neutral - let other attributes decide)
+  if (!value1 || !value2 || value1 === 'undefined' || value2 === 'undefined') return null;
   return value1.toLowerCase() === value2.toLowerCase();
 }
 
 /**
  * Check if two colors are considered matching (case insensitive + color families)
+ * Returns null for missing data (let scoring engine decide), true/false for definitive matches
  */
 function colorsMatch(color1, color2) {
-  if (!color1 || !color2) return false;
+  // If either is missing, return null (neutral - let other attributes decide)  
+  if (!color1 || !color2 || color1 === 'undefined' || color2 === 'undefined') return null;
   if (color1.toLowerCase() === color2.toLowerCase()) return true;
   
   // For color families, find canonical color name first
@@ -43,9 +47,11 @@ function colorsMatch(color1, color2) {
 /**
  * Check if two silhouettes are considered matching
  * Special handling for basic casual tops (t-shirts, tanks)
+ * Returns null for missing data (let scoring engine decide), true/false for definitive matches
  */
 function silhouettesMatch(silhouette1, silhouette2, category, subcategory) {
-  if (!silhouette1 || !silhouette2) return false;
+  // If either is missing, return null (neutral - let other attributes decide)
+  if (!silhouette1 || !silhouette2 || silhouette1 === 'undefined' || silhouette2 === 'undefined') return null;
   if (silhouette1.toLowerCase() === silhouette2.toLowerCase()) return true;
   
   // Special case: For basic casual tops, treat Fitted and Regular as similar

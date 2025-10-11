@@ -27,7 +27,18 @@ const anthropic = new Anthropic({
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
 router.post('/', async (req, res) => {
-  console.log('🚀 ANALYZE SIMPLE ENDPOINT HIT - Request received!');
+  console.log('🚨🚨🚨 ANALYZE SIMPLE ENDPOINT HIT - Request received! 🚨🚨🚨');
+  
+  // Debug raw request body
+  console.log('🔍 RAW REQUEST BODY KEYS:', Object.keys(req.body));
+  console.log('🔍 RAW similarContext in req.body:', req.body.similarContext ? req.body.similarContext.length : 'undefined');
+  if (req.body.similarContext) {
+    console.log('🔍 RAW similarContext items:');
+    req.body.similarContext.forEach((item, i) => {
+      console.log(`   ${i+1}. "${item?.name}" - ${item?.category}/${item?.subcategory}`);
+    });
+  }
+  
   try {
     const { imageBase64, formData, preFilledData, scenarios, scenarioCoverage, similarContext, stylingContext, userGoals, userId } = req.body;
     
@@ -89,10 +100,53 @@ router.post('/', async (req, res) => {
     const base64Data = imageValidation.base64Data;
 
     // === DUPLICATE DETECTION ===
-    console.log('=== STEP: Duplicate Detection ===');
+    console.log('🚨 === DUPLICATE DETECTION START === 🚨');
     console.log('🔍 DEBUG - similarContext count:', similarContext?.length || 0);
+    console.log('🔍 DEBUG - similarContext exists:', !!similarContext);
+    console.log('🔍 DEBUG - formData category:', formData?.category);
+    console.log('🔍 DEBUG - formData subcategory:', formData?.subcategory);
     console.log('🔍 DEBUG - similarContext sample (first 2):', JSON.stringify(similarContext?.slice(0, 2), null, 2));
     console.log('🔍 DEBUG - formData:', JSON.stringify(formData, null, 2));
+    
+    // Enhanced debugging
+    if (similarContext && similarContext.length > 0) {
+      console.log('🔍 DEBUG - ALL similarContext items received from frontend:');
+      similarContext.forEach((item, i) => {
+        console.log(`   ${i+1}. "${item.name}" - category: "${item.category}", subcategory: "${item.subcategory}", color: ${item.color}`);
+      });
+      
+      console.log('🔍 DEBUG - Target category/subcategory from formData:');
+      console.log(`   - category: "${formData.category}"`);
+      console.log(`   - subcategory: "${formData.subcategory}"`);
+      
+      console.log('🔍 DEBUG - Filtering results:');
+      const matchingItems = similarContext.filter(item => {
+        const categoryMatch = item.category?.toLowerCase() === formData.category?.toLowerCase();
+        
+        // More flexible subcategory matching
+        const normalizeSubcategory = (sub) => {
+          if (!sub) return '';
+          return sub.toLowerCase()
+            .replace(/[-\s]/g, '') // Remove hyphens and spaces to normalize "T-Shirt" -> "tshirt"
+            .trim();
+        };
+        
+        const itemSub = normalizeSubcategory(item.subcategory);
+        const formSub = normalizeSubcategory(formData.subcategory);
+        const subcategoryMatch = itemSub === formSub;
+        
+        const passes = categoryMatch && subcategoryMatch;
+        
+        console.log(`   "${item.name}" - cat: ${categoryMatch} (${item.category?.toLowerCase()} vs ${formData.category?.toLowerCase()}), sub: ${subcategoryMatch} (${itemSub} vs ${formSub}) = ${passes ? 'PASS' : 'FAIL'}`);
+        
+        return passes;
+      });
+      
+      console.log(`🔍 DEBUG - Final matching items: ${matchingItems.length} out of ${similarContext.length}`);
+      matchingItems.forEach((item, i) => {
+        console.log(`   ${i+1}. "${item.name}" - color: ${item.color}, style: ${item.style}, silhouette: ${item.silhouette}`);
+      });
+    }
     
     const duplicateResult = await duplicateDetectionService.analyzeWithAI(
       base64Data, formData, similarContext
@@ -107,7 +161,11 @@ router.post('/', async (req, res) => {
       console.log('✅ Duplicate analysis completed');
       console.log('   - Duplicates found:', duplicateResult.duplicateAnalysis.duplicate_analysis.found);
       console.log('   - Count:', duplicateResult.duplicateAnalysis.duplicate_analysis.count);
+      console.log('   - Items:', duplicateResult.duplicateAnalysis.duplicate_analysis.items);
       console.log('   - Severity:', duplicateResult.duplicateAnalysis.duplicate_analysis.severity);
+      console.log('   - Extracted attributes:', duplicateResult.extractedAttributes);
+      console.log('🔍 DEBUG - Generated duplicate prompt section:');
+      console.log(duplicatePromptSection);
     } else {
       console.log('⚠️ Duplicate analysis skipped (insufficient data)');
     }

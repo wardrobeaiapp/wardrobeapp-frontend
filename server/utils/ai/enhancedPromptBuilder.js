@@ -46,33 +46,36 @@ function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData,
       console.log('✅ Final wishlist scenarios:', wishlistScenarios);
     }
     
-    if (isWishlistItem && wishlistScenarios && wishlistScenarios.length > 0) {
-      // WISHLIST ITEM: Validate user's pre-selected scenarios
-      systemPrompt += "\n\n🏷️ WISHLIST ITEM - SCENARIO VALIDATION:";
-      systemPrompt += "\nThe user already selected these scenarios for this wishlist item:";
-      wishlistScenarios.forEach((scenario, index) => {
-        systemPrompt += `\n${index + 1}. ${scenario}`;
-      });
+    // Unified scenario evaluation with conditional formatting
+    const isWishlistValidation = isWishlistItem && wishlistScenarios && wishlistScenarios.length > 0;
+    
+    // Conditional header and scenario listing
+    systemPrompt += isWishlistValidation 
+      ? "\n\n🏷️ WISHLIST ITEM - SCENARIO VALIDATION:\nThe user already selected these scenarios for this wishlist item:"
+      : "\n\nEvaluate suitability for these scenarios:";
+    
+    // Unified scenario listing with conditional source
+    const scenarioList = isWishlistValidation ? wishlistScenarios : scenarios;
+    scenarioList.forEach((scenario, index) => {
+      const scenarioName = isWishlistValidation ? scenario : scenario.name;
+      const scenarioDesc = isWishlistValidation ? '' : (scenario.description ? `: ${scenario.description}` : '');
+      systemPrompt += `\n${index + 1}. ${scenarioName}${scenarioDesc}`;
+    });
+    
+    // Conditional task instructions with shared evaluation criteria
+    if (isWishlistValidation) {
       systemPrompt += "\n\n⚠️ VALIDATION TASK:";
       systemPrompt += "\n- VALIDATE whether this item is actually suitable for the scenarios the user already chose";
       systemPrompt += "\n- List VALIDATED scenarios in a 'SUITABLE SCENARIOS:' section";
-      systemPrompt += "\n- If unsuitable, exclude and explain why";  
+      systemPrompt += "\n- If unsuitable, exclude and explain why";
       systemPrompt += "\n- If NOT suitable: Explain why in the analysis";
       systemPrompt += "\n- Be honest - if the user's choice doesn't match the item, flag it";
-      systemPrompt += "\n- Consider dress codes, formality, and practical reality";
-      
     } else {
-      // REGULAR ITEM: Suggest suitable scenarios
-      systemPrompt += "\n\nEvaluate suitability for these scenarios:";
-      scenarios.forEach((scenario, index) => {
-        systemPrompt += `\n${index + 1}. ${scenario.name}`;
-        if (scenario.description) systemPrompt += `: ${scenario.description}`;
-      });
-      systemPrompt += "\n\nConsider dress codes, formality, practical reality, and styling potential when determining suitability.";
       systemPrompt += "\n\nList ONLY truly suitable scenarios in a 'SUITABLE SCENARIOS:' section. Be realistic about when someone would actually use this item.";
     }
     
-    // Shared output format
+    // Shared evaluation criteria and output format  
+    systemPrompt += "\n\nConsider dress codes, formality, and practical reality" + (isWishlistValidation ? "" : ", and styling potential") + " when determining suitability.";
     systemPrompt += "\n\nNumber them starting from 1 (1., 2., 3., etc.), one scenario per line, no explanations.";
   }
   

@@ -20,24 +20,30 @@ const {
 
 /**
  * Calculate dynamic max score and applicable weights based on available attributes
- * Only counts weights for attributes that exist on BOTH items
+ * Includes attributes even if one item is missing data (more forgiving approach)
  */
 function calculateApplicableWeights(weights, newItem, existingItem) {
   let maxScore = 0;
   const applicableWeights = {};
   
+  // Helper to check if attribute exists and isn't undefined/null
+  const hasAttribute = (item, key) => {
+    const value = item[key];
+    return value !== null && value !== undefined && value !== 'undefined' && value !== '';
+  };
+  
   const attributeChecks = [
-    { key: 'color', check: () => newItem.color && existingItem.color },
-    { key: 'silhouette', check: () => newItem.silhouette && existingItem.silhouette },
-    { key: 'style', check: () => newItem.style && existingItem.style },
-    { key: 'material', check: () => newItem.material && existingItem.material },
-    { key: 'pattern', check: () => newItem.pattern && existingItem.pattern },
-    { key: 'neckline', check: () => newItem.neckline && existingItem.neckline },
-    { key: 'sleeves', check: () => newItem.sleeves && existingItem.sleeves },
-    { key: 'heelHeight', check: () => newItem.heelHeight && existingItem.heelHeight },
-    { key: 'bootHeight', check: () => newItem.bootHeight && existingItem.bootHeight },
-    { key: 'rise', check: () => newItem.rise && existingItem.rise },
-    { key: 'length', check: () => newItem.length && existingItem.length }
+    { key: 'color', check: () => hasAttribute(newItem, 'color') || hasAttribute(existingItem, 'color') },
+    { key: 'silhouette', check: () => hasAttribute(newItem, 'silhouette') || hasAttribute(existingItem, 'silhouette') },
+    { key: 'style', check: () => hasAttribute(newItem, 'style') || hasAttribute(existingItem, 'style') },
+    { key: 'material', check: () => hasAttribute(newItem, 'material') || hasAttribute(existingItem, 'material') },
+    { key: 'pattern', check: () => hasAttribute(newItem, 'pattern') || hasAttribute(existingItem, 'pattern') },
+    { key: 'neckline', check: () => hasAttribute(newItem, 'neckline') || hasAttribute(existingItem, 'neckline') },
+    { key: 'sleeves', check: () => hasAttribute(newItem, 'sleeves') || hasAttribute(existingItem, 'sleeves') },
+    { key: 'heelHeight', check: () => hasAttribute(newItem, 'heelHeight') || hasAttribute(existingItem, 'heelHeight') },
+    { key: 'bootHeight', check: () => hasAttribute(newItem, 'bootHeight') || hasAttribute(existingItem, 'bootHeight') },
+    { key: 'rise', check: () => hasAttribute(newItem, 'rise') || hasAttribute(existingItem, 'rise') },
+    { key: 'length', check: () => hasAttribute(newItem, 'length') || hasAttribute(existingItem, 'length') }
   ];
   
   attributeChecks.forEach(({ key, check }) => {
@@ -52,6 +58,7 @@ function calculateApplicableWeights(weights, newItem, existingItem) {
 
 /**
  * Calculate actual score based on matching attributes
+ * Handles true (full credit), false (no credit), null (partial credit for missing data)
  */
 function calculateMatchScore(applicableWeights, newItem, existingItem) {
   let score = 0;
@@ -71,8 +78,16 @@ function calculateMatchScore(applicableWeights, newItem, existingItem) {
   };
   
   Object.keys(applicableWeights).forEach(key => {
-    if (matchers[key] && matchers[key]()) {
-      score += applicableWeights[key];
+    if (matchers[key]) {
+      const matchResult = matchers[key]();
+      if (matchResult === true) {
+        // Full credit for definite match
+        score += applicableWeights[key];
+      } else if (matchResult === null) {
+        // Partial credit for missing/unknown data (50% weight)
+        score += applicableWeights[key] * 0.5;
+      }
+      // false = no credit (definite mismatch)
     }
   });
   
