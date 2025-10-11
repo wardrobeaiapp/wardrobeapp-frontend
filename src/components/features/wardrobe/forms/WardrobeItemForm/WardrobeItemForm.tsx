@@ -235,7 +235,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 
   return (
     <FormContainer>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} data-testid="wardrobe-item-form">
         {loadedComponents.has('image') ? (
           <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading image upload...</FormSectionLoading>}>
             <ImageUploadSection
