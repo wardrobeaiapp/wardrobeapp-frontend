@@ -242,6 +242,12 @@ export const FeatureGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin: 24px 0;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
 `;
 
 export const FeatureCard = styled.div`
@@ -251,9 +257,19 @@ export const FeatureCard = styled.div`
   padding: 20px;
   text-align: center;
   
+  @media (max-width: 768px) {
+    padding: 16px;
+    border-radius: 6px;
+  }
+  
   .icon {
     font-size: 2rem;
     margin-bottom: 12px;
+    
+    @media (max-width: 768px) {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+    }
   }
   
   h4 {
@@ -261,12 +277,21 @@ export const FeatureCard = styled.div`
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 8px;
+    
+    @media (max-width: 768px) {
+      font-size: 1rem;
+      margin-bottom: 6px;
+    }
   }
   
   p {
     color: #64748b;
     font-size: 0.9rem;
     margin: 0;
+    
+    @media (max-width: 768px) {
+      font-size: 0.85rem;
+    }
   }
 `;
 
@@ -277,8 +302,8 @@ export const DemoStepsList = styled.ol`
   
   li {
     display: flex;
-    align-items: center;
-    margin-bottom: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
     text-align: left;
     
     &:before {
@@ -286,25 +311,56 @@ export const DemoStepsList = styled.ol`
       counter-increment: step-counter;
       background: #4f46e5;
       color: white;
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-right: 12px;
+      margin-right: 16px;
       flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
     }
     
     strong {
       color: #1f2937;
-      margin-right: 4px;
+      font-size: 1rem;
+      line-height: 1.4;
     }
     
     span {
       color: #6b7280;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 768px) {
+      margin-bottom: 24px;
+      
+      &:before {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+        margin-right: 14px;
+      }
+      
+      strong {
+        font-size: 0.95rem;
+      }
+      
+      span {
+        font-size: 0.85rem;
+        margin-top: 2px;
+      }
     }
   }
   
@@ -402,6 +458,12 @@ export const HeroBlock = styled.div`
   margin-bottom: 40px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
+  
+  @media (max-width: 768px) {
+    padding: 32px 24px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+  }
 `;
 
 export const InfoBlock = styled.div`
@@ -412,6 +474,11 @@ export const InfoBlock = styled.div`
   margin-bottom: 32px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   
+  @media (max-width: 768px) {
+    padding: 24px 20px;
+    border-radius: 12px;
+  }
+  
   h2 {
     color: #1f2937;
     font-size: 1.5rem;
@@ -419,6 +486,10 @@ export const InfoBlock = styled.div`
     margin-bottom: 16px;
     text-align: left;
     margin-top: 0;
+    
+    @media (max-width: 768px) {
+      font-size: 1.3rem;
+    }
   }
   
   p {
@@ -426,6 +497,11 @@ export const InfoBlock = styled.div`
     line-height: 1.6;
     margin-bottom: 12px;
     text-align: left;
+    
+    @media (max-width: 768px) {
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
   }
 `;
 
@@ -438,6 +514,11 @@ export const InstructionsBlock = styled.div`
   margin-bottom: 32px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
   
+  @media (max-width: 768px) {
+    padding: 24px 20px;
+    border-radius: 12px;
+  }
+  
   h2 {
     color: #1f2937;
     font-size: 1.5rem;
@@ -445,6 +526,11 @@ export const InstructionsBlock = styled.div`
     margin-bottom: 16px;
     text-align: left;
     margin-top: 0;
+    
+    @media (max-width: 768px) {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+    }
   }
 `;
 

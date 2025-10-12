@@ -154,20 +154,28 @@ const DemoPage: React.FC = () => {
               <h2>📋 Here's what you'll experience:</h2>
               <DemoStepsList>
                 <li>
-                  <strong>Choose a persona</strong>
-                  <span>Pick someone with shopping patterns similar to yours</span>
+                  <div>
+                    <strong>Choose a persona</strong>
+                    <span>Pick someone with shopping patterns similar to yours</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>Explore their real wardrobe</strong>
-                  <span>See their actual items, spending stats, and problems</span>
+                  <div>
+                    <strong>Explore their real wardrobe</strong>
+                    <span>See their actual items, spending stats, and problems</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>Watch AI prevent bad purchases</strong>
-                  <span>See how AI says "no" to items they don't need</span>
+                  <div>
+                    <strong>Watch AI prevent bad purchases</strong>
+                    <span>See how AI says "no" to items they don't need</span>
+                  </div>
                 </li>
                 <li>
-                  <strong>See the transformation</strong>
-                  <span>Real financial savings and wardrobe efficiency gains</span>
+                  <div>
+                    <strong>See the transformation</strong>
+                    <span>Real financial savings and wardrobe efficiency gains</span>
+                  </div>
                 </li>
               </DemoStepsList>
             </InstructionsBlock>
