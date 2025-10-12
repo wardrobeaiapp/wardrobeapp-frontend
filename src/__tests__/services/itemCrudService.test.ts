@@ -1,28 +1,12 @@
 import { addWardrobeItem, getWardrobeItem, getWardrobeItems, updateWardrobeItem, deleteWardrobeItem } from '../../services/wardrobe/items/itemCrudService';
 import { WardrobeItem, Season, WishlistStatus, ItemCategory } from '../../types';
 import { supabase } from '../../services/core';
+import * as itemBaseService from '../../services/wardrobe/items/itemBaseService';
 
-// Mock supabase
+// Mock supabase - we'll set it up properly in beforeEach
 jest.mock('../../services/core', () => ({
   supabase: {
-    from: jest.fn(() => ({
-      insert: jest.fn(() => ({
-        select: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      })),
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          select: jest.fn(() => Promise.resolve({ data: [], error: null }))
-        }))
-      })),
-      delete: jest.fn(() => ({
-        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
-      }))
-    })),
+    from: jest.fn(),
     auth: {
       getUser: jest.fn(() => Promise.resolve({
         data: { user: { id: 'user123' } },
@@ -43,7 +27,53 @@ jest.mock('../../services/wardrobe/scenarioCoverage', () => ({
 jest.mock('../../services/wardrobe/items/itemRelationsService', () => ({
   replaceItemScenarios: jest.fn(),
   getItemScenarios: jest.fn(() => Promise.resolve([])),
-  getBatchItemScenarios: jest.fn(() => Promise.resolve([]))
+  getBatchItemScenarios: jest.fn(() => Promise.resolve(new Map()))
+}));
+
+// Mock the itemBaseService (for getCurrentUserId)
+jest.mock('../../services/wardrobe/items/itemBaseService', () => ({
+  getCurrentUserId: jest.fn().mockResolvedValue('user123'),
+  snakeToCamelCase: jest.fn((obj) => obj),
+  camelToSnakeCase: jest.fn((obj) => obj),
+  handleSupabaseError: jest.fn(),
+  convertToWardrobeItem: jest.fn((dbItem) => {
+    if (!dbItem) return null;
+    // Convert from snake_case database format to camelCase
+    return { 
+      id: dbItem.id || '1',
+      name: dbItem.name || 'Test Item',
+      category: dbItem.category || 'top',
+      subcategory: dbItem.subcategory || 'test',
+      color: dbItem.color,
+      brand: dbItem.brand,
+      userId: dbItem.user_id || 'user123',
+      dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
+      isActive: dbItem.is_active !== false,
+      wishlist: dbItem.wishlist || false,
+      wishlistStatus: dbItem.wishlist_status || 'not_reviewed',
+      scenarios: [] // Will be populated later
+    };
+  }),
+  convertToWardrobeItems: jest.fn((dbItems) => {
+    if (!dbItems || !Array.isArray(dbItems)) return [];
+    return dbItems.map(dbItem => ({
+      id: dbItem.id || '1',
+      name: dbItem.name || 'Test Item',
+      category: dbItem.category || 'top',
+      subcategory: dbItem.subcategory || 'test',
+      color: dbItem.color,
+      brand: dbItem.brand,
+      season: dbItem.season || ['summer'],
+      userId: dbItem.user_id || 'user123',
+      dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
+      isActive: dbItem.is_active !== false,
+      wishlist: dbItem.wishlist || false,
+      wishlistStatus: dbItem.wishlist_status || 'not_reviewed',
+      scenarios: []
+    }));
+  }),
+  TABLE_NAME: 'wardrobe_items',
+  WARDROBE_ITEM_SCENARIOS_TABLE: 'wardrobe_item_scenarios'
 }));
 
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
@@ -51,6 +81,86 @@ const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 describe('itemCrudService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    
+    // Mock getCurrentUserId to return a test user ID
+    jest.spyOn(itemBaseService, 'getCurrentUserId').mockResolvedValue('user123');
+    
+    // Mock convertToWardrobeItem
+    jest.spyOn(itemBaseService, 'convertToWardrobeItem').mockImplementation((dbItem) => {
+      if (!dbItem) return null;
+      return {
+        id: dbItem.id || '1',
+        name: dbItem.name || 'Test Item',
+        category: dbItem.category || 'top',
+        subcategory: dbItem.subcategory || 'test',
+        color: dbItem.color,
+        brand: dbItem.brand,
+        season: dbItem.season || ['summer'],
+        userId: dbItem.user_id || 'user123',
+        dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
+        isActive: dbItem.is_active !== false,
+        wishlist: dbItem.wishlist || false,
+        wishlistStatus: dbItem.wishlist_status || 'not_reviewed',
+        scenarios: []
+      };
+    });
+    
+    // Mock convertToWardrobeItems (for arrays)
+    jest.spyOn(itemBaseService, 'convertToWardrobeItems').mockImplementation((dbItems) => {
+      if (!dbItems || !Array.isArray(dbItems)) return [];
+      return dbItems.map(dbItem => ({
+        id: dbItem.id || '1',
+        name: dbItem.name || 'Test Item',
+        category: dbItem.category || 'top',
+        subcategory: dbItem.subcategory || 'test',
+        color: dbItem.color,
+        brand: dbItem.brand,
+        season: dbItem.season || ['summer'],
+        userId: dbItem.user_id || 'user123',
+        dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
+        isActive: dbItem.is_active !== false,
+        wishlist: dbItem.wishlist || false,
+        wishlistStatus: dbItem.wishlist_status || 'not_reviewed',
+        scenarios: []
+      }));
+    });
+    
+    // Mock getBatchItemScenarios to return a proper Map
+    const { getBatchItemScenarios } = require('../../services/wardrobe/items/itemRelationsService');
+    (getBatchItemScenarios as jest.Mock).mockResolvedValue(new Map());
+    
+    // Reset and reconfigure the supabase mock completely
+    (mockSupabase.from as jest.Mock).mockClear();
+    (mockSupabase.from as jest.Mock).mockImplementation(() => ({
+      insert: jest.fn(() => ({
+        select: jest.fn(() => Promise.resolve({ 
+          data: [{ 
+            id: '1', name: 'Test Item', category: 'top', 
+            user_id: 'user123', created_at: '2024-01-01T00:00:00Z'
+          }], 
+          error: null 
+        }))
+      })),
+      select: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          single: jest.fn(() => Promise.resolve({ 
+            data: { id: '1', name: 'Test Item', category: 'top' }, 
+            error: null 
+          }))
+        }))
+      })),
+      update: jest.fn(() => ({
+        eq: jest.fn(() => ({
+          select: jest.fn(() => Promise.resolve({ 
+            data: [{ id: '1', name: 'Updated Item', category: 'top' }], 
+            error: null 
+          }))
+        }))
+      })),
+      delete: jest.fn(() => ({
+        eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
+      }))
+    }));
   });
 
   describe('addWardrobeItem', () => {
@@ -163,11 +273,8 @@ describe('itemCrudService', () => {
     });
 
     it('should handle authentication errors', async () => {
-      // Mock user not authenticated
-      (mockSupabase.auth.getUser as jest.Mock).mockResolvedValue({
-        data: { user: null },
-        error: null
-      });
+      // Mock getCurrentUserId to return null (no authenticated user)
+      jest.spyOn(itemBaseService, 'getCurrentUserId').mockResolvedValue(null);
 
       await expect(addWardrobeItem(mockItemData)).rejects.toThrow('Authentication required to add wardrobe item');
     });
