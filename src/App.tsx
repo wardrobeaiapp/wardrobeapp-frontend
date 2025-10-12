@@ -14,6 +14,7 @@ import RegisterPage from './pages/RegisterPage';
 import OnboardingPage from './pages/OnboardingPage';
 import WelcomePage from './pages/WelcomePage';
 import TestImageUpload from './pages/TestImageUpload';
+import { DemoPage } from './pages/Demo';
 import Footer from './components/layout/Footer';
 
 const GlobalStyle = createGlobalStyle`
@@ -167,6 +168,7 @@ function App() {
                   <Route path="/welcome" element={<WelcomePage />} />
                   
                   {/* Public routes */}
+                  <Route path="/demo" element={<DemoPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   
