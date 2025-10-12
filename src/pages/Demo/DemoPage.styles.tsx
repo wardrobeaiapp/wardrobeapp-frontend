@@ -39,15 +39,10 @@ export const DemoHeader = styled.div`
 export const StepContent = styled.div`
   max-width: 800px;
   margin: 0 auto;
-  background: white;
-  border-radius: 12px;
-  padding: 40px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  text-align: center;
+  padding: 0 20px;
   
   @media (max-width: 768px) {
-    padding: 20px;
-    margin: 0 10px;
+    padding: 0 10px;
   }
   
   button {
@@ -387,7 +382,6 @@ export const CTAButton = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
-  margin-top: 32px;
   
   &:hover {
     transform: translateY(-1px);
@@ -397,4 +391,64 @@ export const CTAButton = styled.button`
   &:active {
     transform: translateY(0);
   }
+`;
+
+// Separate blocks for better organization
+export const HeroBlock = styled.div`
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 48px 40px;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  text-align: center;
+`;
+
+export const InfoBlock = styled.div`
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  
+  h2 {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: left;
+    margin-top: 0;
+  }
+  
+  p {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+`;
+
+export const InstructionsBlock = styled.div`
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #4f46e5;
+  border-radius: 16px;
+  padding: 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  
+  h2 {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: left;
+    margin-top: 0;
+  }
+`;
+
+export const CTABlock = styled.div`
+  text-align: center;
+  padding: 20px 0;
 `;

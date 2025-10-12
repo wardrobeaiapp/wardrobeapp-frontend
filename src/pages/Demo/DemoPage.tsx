@@ -12,7 +12,11 @@ import {
   DemoStepsList,
   PersonaPreviewGrid,
   PersonaPreviewCard,
-  CTAButton
+  CTAButton,
+  HeroBlock,
+  InfoBlock,
+  InstructionsBlock,
+  CTABlock
 } from './DemoPage.styles';
 
 // Demo step types
@@ -109,13 +113,16 @@ const DemoPage: React.FC = () => {
       case DemoStep.INTRO:
         return (
           <div>
-            <DemoTitle>Stop buying clothes you'll never wear</DemoTitle>
-            <DemoSubtitle>
-              Meet your AI wardrobe assistant that prevents impulse purchases and saves you money
-            </DemoSubtitle>
+            {/* Hero Block - Headers and Titles */}
+            <HeroBlock>
+              <DemoTitle>Stop buying clothes you'll never wear</DemoTitle>
+              <DemoSubtitle>
+                Meet your AI wardrobe assistant that prevents impulse purchases and saves you money
+              </DemoSubtitle>
+            </HeroBlock>
 
-            {/* App Introduction Section */}
-            <IntroSection>
+            {/* Info Block - What it's about */}
+            <InfoBlock>
               <h2>🤖 What is this app?</h2>
               <p>
                 Your AI wardrobe assistant analyzes every potential purchase against your existing wardrobe, 
@@ -140,10 +147,10 @@ const DemoPage: React.FC = () => {
                   <p>End shopping anxiety with data-driven decisions</p>
                 </FeatureCard>
               </FeatureGrid>
-            </IntroSection>
+            </InfoBlock>
 
-            {/* Demo Experience Section */}
-            <IntroSection>
+            {/* Instructions Block - Demo Experience */}
+            <InstructionsBlock>
               <h2>📋 Here's what you'll experience:</h2>
               <DemoStepsList>
                 <li>
@@ -163,14 +170,17 @@ const DemoPage: React.FC = () => {
                   <span>Real financial savings and wardrobe efficiency gains</span>
                 </li>
               </DemoStepsList>
-            </IntroSection>
+            </InstructionsBlock>
 
-            <CTAButton onClick={() => {
-              markStepCompleted(DemoStep.INTRO);
-              goToNextStep();
-            }}>
-              Start Demo Experience
-            </CTAButton>
+            {/* CTA Block - Call to Action */}
+            <CTABlock>
+              <CTAButton onClick={() => {
+                markStepCompleted(DemoStep.INTRO);
+                goToNextStep();
+              }}>
+                Start Demo Experience
+              </CTAButton>
+            </CTABlock>
           </div>
         );
 
