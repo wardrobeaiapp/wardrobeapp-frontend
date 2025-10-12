@@ -54,7 +54,7 @@ export const useScenarioHandling = ({
     };
     
     loadScenarios();
-  }, [editCapsule, setSelectedScenarios]);
+  }, [editCapsule, setSelectedScenarios, user]);
 
   return {
     scenarios,

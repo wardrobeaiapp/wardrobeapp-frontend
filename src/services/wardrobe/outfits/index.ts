@@ -14,15 +14,6 @@ import {
   getItemIdsForOutfit
 } from './outfitItemService';
 
-// Import from outfitsService for backward compatibility
-import {
-  getOutfits,
-  addOutfit,
-  updateOutfit as updateOutfitFromService,
-  deleteOutfit as deleteOutfitFromService,
-  migrateLocalStorageOutfitsToSupabase
-} from './outfitsService';
-
 // Import from new modular services for object creation
 import {
   fetchOutfits,
@@ -33,26 +24,14 @@ import {
 
 import {
   checkOutfitTablesExist,
-  findOutfitsBySeason,
-  findOutfitsByScenario,
-  findOutfitsByItem,
-  findFavoriteOutfits
 } from './outfitQueryService';
 
 import {
   migrateOutfitsToSupabase,
-  checkMigrationStatus
 } from './outfitMigrationService';
 
 import {
   getOutfitItems,
-  getOutfitScenarios,
-  addItemsToOutfit as addItemsToOutfitNew,
-  removeItemsFromOutfit,
-  addScenariosToOutfit,
-  removeScenariosFromOutfit,
-  replaceOutfitItems,
-  replaceOutfitScenarios
 } from './outfitRelationsService';
 
 // Base service exports
