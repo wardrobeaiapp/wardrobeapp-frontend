@@ -15,35 +15,9 @@ import {
   PersonaStep,
   WardrobeStep,
   AICheckStep,
-  ResultsStep,
   WaitlistStep
 } from './steps';
-
-// Demo step types
-export enum DemoStep {
-  INTRO = 'intro',
-  PERSONA = 'persona', 
-  WARDROBE = 'wardrobe',
-  AI_CHECK = 'ai-check',
-  RESULTS = 'results',
-  WAITLIST = 'waitlist'
-}
-
-// Demo step configuration
-export interface DemoStepConfig {
-  id: DemoStep;
-  title: string;
-  required: boolean;
-}
-
-export const DEMO_STEPS: DemoStepConfig[] = [
-  { id: DemoStep.INTRO, title: 'Introduction', required: false },
-  { id: DemoStep.PERSONA, title: 'Choose Your Type', required: true },
-  { id: DemoStep.WARDROBE, title: 'Wardrobe Reality', required: false },
-  { id: DemoStep.AI_CHECK, title: 'AI Prevention', required: false },
-  { id: DemoStep.RESULTS, title: 'The Results', required: false },
-  { id: DemoStep.WAITLIST, title: 'Get Early Access', required: false }
-];
+import { DemoStep, DEMO_STEPS } from './types';
 
 const DemoPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,32 +54,6 @@ const DemoPage: React.FC = () => {
     }
   };
 
-  const goToPreviousStep = () => {
-    const currentIndex = DEMO_STEPS.findIndex(s => s.id === currentStep);
-    if (currentIndex > 0) {
-      goToStep(DEMO_STEPS[currentIndex - 1].id);
-    }
-  };
-
-  // Check if we can progress from current step
-  const canProgress = (): boolean => {
-    switch (currentStep) {
-      case DemoStep.INTRO:
-        return true;
-      case DemoStep.PERSONA:
-        return completedSteps.has(DemoStep.PERSONA);
-      case DemoStep.WARDROBE:
-        return true;
-      case DemoStep.AI_CHECK:
-        return completedSteps.has(DemoStep.AI_CHECK);
-      case DemoStep.RESULTS:
-        return true;
-      case DemoStep.WAITLIST:
-        return false; // Final step
-      default:
-        return false;
-    }
-  };
 
   // Render step progress bar
   const renderStepProgressBar = () => {
@@ -169,14 +117,6 @@ const DemoPage: React.FC = () => {
       case DemoStep.AI_CHECK:
         return (
           <AICheckStep 
-            onNext={goToNextStep}
-            markStepCompleted={markStepCompleted}
-          />
-        );
-
-      case DemoStep.RESULTS:
-        return (
-          <ResultsStep 
             onNext={goToNextStep}
             markStepCompleted={markStepCompleted}
           />

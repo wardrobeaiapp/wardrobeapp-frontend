@@ -6,7 +6,7 @@ import {
   HeroBlock,
   CTABlock
 } from '../DemoPage.styles';
-import { DemoStep } from '../DemoPage';
+import { DemoStep } from '../types';
 
 interface AICheckStepProps {
   onNext: () => void;
@@ -32,7 +32,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
       <CTABlock>
         <p>AI check simulation content will be implemented here...</p>
         <CTAButton onClick={handleNext}>
-          See the Results
+          Get Early Access
         </CTAButton>
       </CTABlock>
     </div>

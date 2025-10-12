@@ -6,7 +6,7 @@ import {
   HeroBlock,
   CTABlock
 } from '../DemoPage.styles';
-import { DemoStep } from '../DemoPage';
+import { DemoStep } from '../types';
 
 interface WaitlistStepProps {
   markStepCompleted: (step: DemoStep) => void;

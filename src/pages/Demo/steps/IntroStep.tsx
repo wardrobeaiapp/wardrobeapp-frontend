@@ -11,7 +11,7 @@ import {
   InstructionsBlock,
   CTABlock
 } from '../DemoPage.styles';
-import { DemoStep } from '../DemoPage';
+import { DemoStep } from '../types';
 
 interface IntroStepProps {
   onNext: () => void;
@@ -82,12 +82,6 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
             <div>
               <strong>Watch AI prevent bad purchases</strong>
               <span>See how AI says "no" to items they don't need</span>
-            </div>
-          </li>
-          <li>
-            <div>
-              <strong>See the transformation</strong>
-              <span>Real financial savings and wardrobe efficiency gains</span>
             </div>
           </li>
         </DemoStepsList>

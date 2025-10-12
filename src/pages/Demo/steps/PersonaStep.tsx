@@ -6,7 +6,7 @@ import {
   PersonaPreviewCard,
   HeroBlock
 } from '../DemoPage.styles';
-import { DemoStep } from '../DemoPage';
+import { DemoStep } from '../types';
 
 interface PersonaStepProps {
   onNext: () => void;
