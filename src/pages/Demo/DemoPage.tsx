@@ -5,7 +5,14 @@ import {
   StepContent,
   DemoHeader,
   DemoTitle,
-  DemoSubtitle
+  DemoSubtitle,
+  IntroSection,
+  FeatureGrid,
+  FeatureCard,
+  DemoStepsList,
+  PersonaPreviewGrid,
+  PersonaPreviewCard,
+  CTAButton
 } from './DemoPage.styles';
 
 // Demo step types
@@ -104,51 +111,140 @@ const DemoPage: React.FC = () => {
           <div>
             <DemoTitle>Stop buying clothes you'll never wear</DemoTitle>
             <DemoSubtitle>
-              Join thousands who've taken control of their wardrobe spending with AI-powered purchase prevention
+              Meet your AI wardrobe assistant that prevents impulse purchases and saves you money
             </DemoSubtitle>
-            <button onClick={() => {
+
+            {/* App Introduction Section */}
+            <IntroSection>
+              <h2>🤖 What is this app?</h2>
+              <p>
+                Your AI wardrobe assistant analyzes every potential purchase against your existing wardrobe, 
+                lifestyle, and goals. Instead of encouraging you to buy more, our AI helps you buy smarter 
+                by preventing unnecessary purchases and maximizing what you already own.
+              </p>
+              
+              <FeatureGrid>
+                <FeatureCard>
+                  <div className="icon">💸</div>
+                  <h4>Financial Control</h4>
+                  <p>Save money by avoiding purchases you'll regret</p>
+                </FeatureCard>
+                <FeatureCard>
+                  <div className="icon">🎯</div>
+                  <h4>Smart Analysis</h4>
+                  <p>AI analyzes compatibility with your lifestyle & wardrobe</p>
+                </FeatureCard>
+                <FeatureCard>
+                  <div className="icon">✨</div>
+                  <h4>Peace of Mind</h4>
+                  <p>End shopping anxiety with data-driven decisions</p>
+                </FeatureCard>
+              </FeatureGrid>
+            </IntroSection>
+
+            {/* Demo Experience Section */}
+            <IntroSection>
+              <h2>📋 Here's what you'll experience:</h2>
+              <DemoStepsList>
+                <li>
+                  <strong>Choose a persona</strong>
+                  <span>Pick someone with shopping patterns similar to yours</span>
+                </li>
+                <li>
+                  <strong>Explore their real wardrobe</strong>
+                  <span>See their actual items, spending stats, and problems</span>
+                </li>
+                <li>
+                  <strong>Watch AI prevent bad purchases</strong>
+                  <span>See how AI says "no" to items they don't need</span>
+                </li>
+                <li>
+                  <strong>See the transformation</strong>
+                  <span>Real financial savings and wardrobe efficiency gains</span>
+                </li>
+              </DemoStepsList>
+            </IntroSection>
+
+            <CTAButton onClick={() => {
               markStepCompleted(DemoStep.INTRO);
               goToNextStep();
             }}>
-              See How It Works
-            </button>
+              Start Demo Experience
+            </CTAButton>
           </div>
         );
 
       case DemoStep.PERSONA:
         return (
           <div>
-            <DemoTitle>What's your overconsumption pattern?</DemoTitle>
-            <DemoSubtitle>Choose the type that sounds most like you:</DemoSubtitle>
+            <DemoTitle>Choose your shopping persona</DemoTitle>
+            <DemoSubtitle>
+              Select the person whose shopping patterns sound most like yours. You'll explore their real wardrobe and see how AI helps them.
+            </DemoSubtitle>
             
-            {/* Persona cards will go here */}
-            <div style={{ display: 'flex', gap: '20px', margin: '40px 0' }}>
-              <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={() => {
-                  markStepCompleted(DemoStep.PERSONA);
-                  goToNextStep();
-                }}>
-                <h3>Impulse Buyer Sarah</h3>
-                <p>Buys 3-4 items weekly, closet overflowing</p>
-              </div>
+            <PersonaPreviewGrid>
+              <PersonaPreviewCard onClick={() => {
+                // TODO: Set selected persona to Sarah
+                markStepCompleted(DemoStep.PERSONA);
+                goToNextStep();
+              }}>
+                <div className="persona-type">Impulse Buyer</div>
+                <h4>Sarah, 28 - Marketing Coordinator</h4>
+                <p>
+                  "I buy 3-4 items weekly and my closet is overflowing. I have so many clothes but feel like I have nothing to wear. 
+                  I know I should stop but I can't resist when I see something cute!"
+                </p>
+                <div className="stats">
+                  <span>78 items owned</span>
+                  <span>Only 23 worn regularly</span>
+                  <span>$2,340/year spent</span>
+                  <span>$23 avg cost/wear</span>
+                </div>
+              </PersonaPreviewCard>
               
-              <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={() => {
-                  markStepCompleted(DemoStep.PERSONA);
-                  goToNextStep();
-                }}>
-                <h3>Sale Hunter Mike</h3>
-                <p>Can't resist discounts, buys "just in case"</p>
-              </div>
+              <PersonaPreviewCard onClick={() => {
+                // TODO: Set selected persona to Mike
+                markStepCompleted(DemoStep.PERSONA);
+                goToNextStep();
+              }}>
+                <div className="persona-type">Sale Hunter</div>
+                <h4>Mike, 35 - Software Developer</h4>
+                <p>
+                  "I can't resist a good deal! I buy things 'just in case' and have tons of clothes with tags still on. 
+                  My problem isn't the quality - it's that I buy for situations that never happen."
+                </p>
+                <div className="stats">
+                  <span>94 items owned</span>
+                  <span>Many unused</span>
+                  <span>$1,890/year spent</span>
+                  <span>$31 avg cost/wear</span>
+                </div>
+              </PersonaPreviewCard>
               
-              <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '8px', cursor: 'pointer' }}
-                onClick={() => {
-                  markStepCompleted(DemoStep.PERSONA);
-                  goToNextStep();
-                }}>
-                <h3>Aspirational Emma</h3>
-                <p>Buys for imaginary lifestyle, not current reality</p>
-              </div>
+              <PersonaPreviewCard onClick={() => {
+                // TODO: Set selected persona to Emma
+                markStepCompleted(DemoStep.PERSONA);
+                goToNextStep();
+              }}>
+                <div className="persona-type">Aspirational</div>
+                <h4>Emma, 32 - Freelance Designer</h4>
+                <p>
+                  "I buy clothes for the person I want to be, not who I am. Fancy pieces sit unworn while I lack basic everyday items. 
+                  I spend too much on 'special occasion' clothes I never wear."
+                </p>
+                <div className="stats">
+                  <span>67 items owned</span>
+                  <span>Basics missing</span>
+                  <span>$3,120/year spent</span>
+                  <span>$41 avg cost/wear</span>
+                </div>
+              </PersonaPreviewCard>
+            </PersonaPreviewGrid>
+            
+            <div style={{ textAlign: 'center', marginTop: '24px', color: '#6b7280' }}>
+              <p>
+                👆 Click any persona to explore their wardrobe and see how AI helps them make better decisions
+              </p>
             </div>
           </div>
         );

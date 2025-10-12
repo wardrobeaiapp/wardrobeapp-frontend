@@ -222,3 +222,179 @@ export const TransformationCard = styled.div`
     }
   }
 `;
+
+export const IntroSection = styled.div`
+  margin-bottom: 48px;
+  
+  h2 {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  
+  p {
+    color: #6b7280;
+    line-height: 1.6;
+    margin-bottom: 12px;
+    text-align: left;
+  }
+`;
+
+export const FeatureGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+`;
+
+export const FeatureCard = styled.div`
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  
+  .icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+  
+  h4 {
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  p {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin: 0;
+  }
+`;
+
+export const DemoStepsList = styled.ol`
+  list-style: none;
+  padding: 0;
+  margin: 24px 0;
+  
+  li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    text-align: left;
+    
+    &:before {
+      content: counter(step-counter);
+      counter-increment: step-counter;
+      background: #4f46e5;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+    
+    strong {
+      color: #1f2937;
+      margin-right: 4px;
+    }
+    
+    span {
+      color: #6b7280;
+    }
+  }
+  
+  counter-reset: step-counter;
+`;
+
+export const PersonaPreviewGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin: 24px 0;
+`;
+
+export const PersonaPreviewCard = styled.div`
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: left;
+  transition: all 0.2s;
+  cursor: pointer;
+  
+  &:hover {
+    border-color: #4f46e5;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+  
+  .persona-type {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  
+  h4 {
+    color: #1f2937;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  
+  p {
+    color: #6b7280;
+    margin-bottom: 12px;
+    line-height: 1.4;
+  }
+  
+  .stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    
+    span {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  }
+`;
+
+export const CTAButton = styled.button`
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 32px;
+  
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+`;
