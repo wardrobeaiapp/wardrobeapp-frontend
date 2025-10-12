@@ -64,7 +64,7 @@ export const wardrobeAnalysisService = {
   async analyzeWardrobeItem(
     imageBase64: string, 
     detectedTags?: any, 
-    formData?: { category?: string; subcategory?: string; seasons?: string[] },
+    formData?: { category?: string; subcategory?: string; seasons?: string[]; color?: string },
     preFilledData?: WardrobeItem
   ): Promise<WardrobeItemAnalysis> {
     try {
@@ -147,7 +147,7 @@ export const wardrobeAnalysisService = {
         // Enhanced formData with color information
         const enhancedFormData = {
           ...formData,
-          color: detectedColor
+          color: detectedColor || formData.color // Only override if we actually detected a color
         };
         
         console.log('[wardrobeAnalysisService] Enhanced formData with color:', enhancedFormData);
@@ -160,7 +160,7 @@ export const wardrobeAnalysisService = {
         
         stylingContext = [
           ...flattenComplementingItems(stylingContextResult.complementing), 
-          // NOTE: Excluding layering items - they're for same-category layering, not cross-category compatibility
+          ...stylingContextResult.layering, // ✅ FIXED: Include layering items for backend layering compatibility check
           ...stylingContextResult.outerwear
         ] as WardrobeItem[];
         

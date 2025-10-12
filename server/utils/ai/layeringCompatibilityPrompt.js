@@ -292,8 +292,6 @@ function getLayeringItemsFromContext(stylingContext, newItemCategory) {
     return [];
   }
   
-  // Filtering layering items from styling context
-  
   // Define what can layer with what
   const layeringMap = {
     'top': ['top', 'outerwear'], // Tops can layer with other tops and outerwear

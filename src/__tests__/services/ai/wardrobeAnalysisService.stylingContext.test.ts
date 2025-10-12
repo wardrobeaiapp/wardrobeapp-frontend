@@ -175,7 +175,7 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       await wardrobeAnalysisService.analyzeWardrobeItem('mock-image-data', undefined, mockFormData);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Generated styling context: 2 items')
+        expect.stringContaining('Generated styling context: 4 items') // Updated: 2 complementing + 2 layering + 0 outerwear = 4 items
       );
 
       consoleSpy.mockRestore();
