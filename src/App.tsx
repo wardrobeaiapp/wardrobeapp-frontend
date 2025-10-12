@@ -145,8 +145,8 @@ const RedirectRoute: React.FC = () => {
 const AppFooter: React.FC = () => {
   const location = useLocation();
   
-  // Hide footer on welcome page as it has its own custom footer
-  if (location.pathname === '/welcome') {
+  // Hide footer on welcome page and demo page
+  if (location.pathname === '/welcome' || location.pathname === '/demo') {
     return null;
   }
   
