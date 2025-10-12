@@ -439,12 +439,12 @@ describe('AICheckResultModal Card Rendering', () => {
         />
       );
 
-      // Should show category headers
-      expect(screen.getByText('footwear:')).toBeInTheDocument();
+      // Should show category headers with user-friendly names
+      expect(screen.getByText('shoes:')).toBeInTheDocument(); // Updated: footwear -> shoes
       expect(screen.getByText('accessories:')).toBeInTheDocument();
       
-      // Should transform one_piece to Dresses
-      expect(screen.getByText('Dresses:')).toBeInTheDocument();
+      // Should transform one_piece to dresses 
+      expect(screen.getByText('dresses:')).toBeInTheDocument(); // Updated: Dresses -> dresses
     });
 
     it('should not customRender Works well with section when no compatible items', () => {

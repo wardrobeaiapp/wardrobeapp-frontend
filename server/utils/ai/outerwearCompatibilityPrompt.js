@@ -180,8 +180,17 @@ function parseOuterwearCompatibilityResponse(claudeResponse, stylingContext = []
         const category = match[1].toLowerCase();
         const itemsStr = match[2].trim();
         
-        if (itemsStr && !['none', '-', 'no items'].includes(itemsStr.toLowerCase())) {
-          const itemNames = itemsStr.split(',').map(item => item.trim()).filter(Boolean);
+        if (itemsStr && !['none', '-', 'no items'].includes(itemsStr.toLowerCase()) && !itemsStr.toLowerCase().includes('n/a') && !itemsStr.toLowerCase().includes('no compatible')) {
+          const itemNames = itemsStr.split(',').map(item => item.trim()).filter(name => {
+            // Filter out N/A responses and "no compatible" messages
+            const nameLower = name.toLowerCase();
+            return name && 
+                   !nameLower.includes('n/a') && 
+                   !nameLower.includes('no compatible') &&
+                   !nameLower.includes('none') &&
+                   !nameLower.includes('no matching') &&
+                   name.length > 0;
+          });
           
           if (itemNames.length > 0) {
             // Match item names to full objects from styling context
