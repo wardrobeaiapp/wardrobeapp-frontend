@@ -1,40 +1,19 @@
 import styled from 'styled-components';
 
-export const DemoPageContainer = styled.div`
+export const DemoPageWrapper = styled.div`
   min-height: 100vh;
+`;
+
+export const DemoPageContainer = styled.div`
+  min-height: calc(100vh - 80px); /* Account for progress bar height */
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  padding: 20px;
+  padding: 32px 20px 20px 20px;
   
   @media (max-width: 768px) {
-    padding: 10px;
+    padding: 24px 10px 10px 10px;
   }
 `;
 
-export const DemoHeader = styled.div`
-  max-width: 800px;
-  margin: 0 auto 40px;
-  text-align: center;
-  
-  button {
-    background: #4f46e5;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-    
-    &:hover {
-      background: #4338ca;
-    }
-    
-    &:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-    }
-  }
-`;
 
 export const StepContent = styled.div`
   max-width: 800px;
@@ -538,3 +517,152 @@ export const CTABlock = styled.div`
   text-align: center;
   padding: 20px 0;
 `;
+
+// Step Progress Bar
+export const StepProgressBar = styled.div`
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 20px 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100vw;
+  position: relative;
+  left: 50%;
+  right: 50%;
+  margin-left: -50vw;
+  margin-right: -50vw;
+  
+  @media (max-width: 768px) {
+    padding: 16px 0;
+  }
+`;
+
+export const StepsContainer = styled.div`
+  width: 100%;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  @media (max-width: 1024px) {
+    justify-content: space-around;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    
+    /* Hide scrollbar but allow scrolling */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0 10px;
+    gap: 10px;
+  }
+  
+  @media (max-width: 640px) {
+    gap: 8px;
+    padding: 0 8px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0 4px;
+    gap: 6px;
+  }
+`;
+
+export const StepItem = styled.div<{ active: boolean; completed: boolean; clickable?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  cursor: ${props => props.clickable ? 'pointer' : 'default'};
+  white-space: nowrap;
+  flex: 1;
+  justify-content: center;
+  
+  @media (max-width: 1024px) {
+    flex: none;
+    flex-shrink: 0;
+    min-width: fit-content;
+  }
+  
+  ${props => props.active && `
+    background: #4f46e5;
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  `}
+  
+  ${props => props.completed && !props.active && `
+    background: #f3f4f6;
+    color: #059669;
+  `}
+  
+  ${props => !props.active && !props.completed && `
+    background: transparent;
+    color: #9ca3af;
+  `}
+  
+  ${props => props.clickable && `
+    &:hover {
+      background: ${props.active ? '#4338ca' : props.completed ? '#e5e7eb' : '#f9fafb'};
+    }
+  `}
+  
+  @media (max-width: 768px) {
+    padding: 6px 8px;
+    gap: 6px;
+    font-size: 0.85rem;
+  }
+`;
+
+export const StepNumber = styled.div<{ active: boolean; completed: boolean }>`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  
+  ${props => props.active && `
+    background: white;
+    color: #4f46e5;
+  `}
+  
+  ${props => props.completed && !props.active && `
+    background: #059669;
+    color: white;
+  `}
+  
+  ${props => !props.active && !props.completed && `
+    background: #e5e7eb;
+    color: #9ca3af;
+  `}
+  
+  @media (max-width: 768px) {
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+  }
+`;
+
+export const StepLabel = styled.span`
+  font-size: 0.9rem;
+  font-weight: 500;
+  
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+  }
+  
+  @media (max-width: 640px) {
+    display: none;
+  }
+`;
+

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
+  DemoPageWrapper,
   DemoPageContainer,
   StepContent,
-  DemoHeader,
   DemoTitle,
   DemoSubtitle,
   IntroSection,
@@ -16,7 +16,12 @@ import {
   HeroBlock,
   InfoBlock,
   InstructionsBlock,
-  CTABlock
+  CTABlock,
+  StepProgressBar,
+  StepsContainer,
+  StepItem,
+  StepNumber,
+  StepLabel
 } from './DemoPage.styles';
 
 // Demo step types
@@ -37,7 +42,7 @@ export interface DemoStepConfig {
 }
 
 export const DEMO_STEPS: DemoStepConfig[] = [
-  { id: DemoStep.INTRO, title: 'The Problem', required: false },
+  { id: DemoStep.INTRO, title: 'Introduction', required: false },
   { id: DemoStep.PERSONA, title: 'Choose Your Type', required: true },
   { id: DemoStep.WARDROBE, title: 'Wardrobe Reality', required: false },
   { id: DemoStep.AI_CHECK, title: 'AI Prevention', required: false },
@@ -105,6 +110,38 @@ const DemoPage: React.FC = () => {
       default:
         return false;
     }
+  };
+
+  // Render step progress bar
+  const renderStepProgressBar = () => {
+    return (
+      <StepProgressBar>
+        <StepsContainer>
+          {DEMO_STEPS.map((step, index) => (
+            <StepItem
+              key={step.id}
+              active={currentStep === step.id}
+              completed={completedSteps.has(step.id)}
+              clickable={completedSteps.has(step.id)}
+              onClick={() => {
+                // Allow navigation to completed steps
+                if (completedSteps.has(step.id)) {
+                  goToStep(step.id);
+                }
+              }}
+            >
+              <StepNumber
+                active={currentStep === step.id}
+                completed={completedSteps.has(step.id)}
+              >
+                {completedSteps.has(step.id) ? '✓' : index + 1}
+              </StepNumber>
+              <StepLabel>{step.title}</StepLabel>
+            </StepItem>
+          ))}
+        </StepsContainer>
+      </StepProgressBar>
+    );
   };
 
   // Render current step content
@@ -358,32 +395,15 @@ const DemoPage: React.FC = () => {
   };
 
   return (
-    <DemoPageContainer>
-      <DemoHeader>
-        <div style={{ marginBottom: '20px' }}>
-          Step {DEMO_STEPS.findIndex(s => s.id === currentStep) + 1} of {DEMO_STEPS.length}
-        </div>
-        
-        {/* Simple step navigation */}
-        <div style={{ marginBottom: '20px' }}>
-          {currentStep !== DemoStep.INTRO && (
-            <button onClick={goToPreviousStep} style={{ marginRight: '10px' }}>
-              ← Previous
-            </button>
-          )}
-          
-          {canProgress() && currentStep !== DemoStep.WAITLIST && (
-            <button onClick={goToNextStep}>
-              Next →
-            </button>
-          )}
-        </div>
-      </DemoHeader>
-
-      <StepContent>
-        {renderCurrentStep()}
-      </StepContent>
-    </DemoPageContainer>
+    <DemoPageWrapper>
+      {renderStepProgressBar()}
+      
+      <DemoPageContainer>
+        <StepContent>
+          {renderCurrentStep()}
+        </StepContent>
+      </DemoPageContainer>
+    </DemoPageWrapper>
   );
 };
 
