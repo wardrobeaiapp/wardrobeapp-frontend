@@ -70,24 +70,24 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
 
       {/* Instructions Block - Demo Experience */}
       <InstructionsBlock>
-        <h2>📋 Here's what you'll experience:</h2>
+        <h2>📋 See how it works in 3 simple steps:</h2>
         <DemoStepsList>
           <li>
             <div>
-              <strong>Choose a persona</strong>
-              <span>Pick someone with shopping patterns similar to yours</span>
+              <strong>Choose Your Demo Persona</strong>
+              <span>Find someone with a lifestyle or shopping habits like yours</span>
             </div>
           </li>
           <li>
             <div>
-              <strong>Explore their real wardrobe</strong>
-              <span>See their actual items, spending stats, and problems</span>
+              <strong>Peek Into Their Organized Closet</strong>
+              <span>Explore their actual wardrobe, budget, and style goals</span>
             </div>
           </li>
           <li>
             <div>
-              <strong>Watch AI prevent bad purchases</strong>
-              <span>See how AI says "no" to items they don't need</span>
+              <strong>See Your Style Advisor Work</strong>
+              <span>Experiment with different items and get instant, data-backed feedback</span>
             </div>
           </li>
         </DemoStepsList>
