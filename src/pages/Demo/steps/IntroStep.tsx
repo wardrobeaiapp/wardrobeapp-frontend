@@ -28,9 +28,9 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
     <div>
       {/* Hero Block - Headers and Titles */}
       <HeroBlock>
-        <DemoTitle>Stop buying clothes you'll never wear</DemoTitle>
+        <DemoTitle>The First App That Tells You What NOT to Buy</DemoTitle>
         <DemoSubtitle>
-          Meet your AI wardrobe assistant that prevents impulse purchases and saves you money
+          Get personalized advice on every potential purchase. Our AI analyzes your wardrobe and lifestyle to show you what works, what doesn't, and why
         </DemoSubtitle>
       </HeroBlock>
 
@@ -38,26 +38,32 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
       <InfoBlock>
         <h2>🛍️ What is this app?</h2>
         <p>
-          Your AI wardrobe assistant analyzes every potential purchase against your existing wardrobe, 
-          lifestyle, and goals. Instead of encouraging you to buy more, our AI helps you buy smarter by 
-          preventing unnecessary purchases and maximizing what you already own.
+          Imagine getting honest feedback before every purchase: does this item truly work with your existing wardrobe, do you already own something similar, does it fit your actual lifestyle?
+        </p>
+        <p>
+          Think of our app as your thoughtful friend in the fitting room. It notices what you might have missed, helping you make confident decisions you won't regret later.
         </p>
         
         <FeatureGrid>
           <FeatureCard>
             <div className="icon">💰</div>
-            <h4>Financial Control</h4>
-            <p>Save money by avoiding purchases you'll regret</p>
+            <h4>Save Your Money</h4>
+            <p>Stop wasting money on clothes you'll never wear. Watch your budget grow as you skip unnecessary purchases.</p>
+          </FeatureCard>
+          <FeatureCard>
+            <div className="icon">🏠</div>
+            <h4>Save Your Space</h4>
+            <p>Reclaim your closet from clutter and chaos. Build a curated collection where every item deserves its place.</p>
           </FeatureCard>
           <FeatureCard>
             <div className="icon">🎯</div>
-            <h4>Smart Analysis</h4>
-            <p>AI analyzes compatibility with your lifestyle & wardrobe</p>
+            <h4>Shop with Certainty</h4>
+            <p>Make every purchase with total confidence. Know you're buying only what works for your life and style.</p>
           </FeatureCard>
           <FeatureCard>
             <div className="icon">😌</div>
-            <h4>Peace of Mind</h4>
-            <p>End shopping anxiety with data-driven decisions</p>
+            <h4>A Wardrobe That Works</h4>
+            <p>Finally have a closet that supports your daily life. Experience the ease of getting dressed when every piece fits your needs.</p>
           </FeatureCard>
         </FeatureGrid>
       </InfoBlock>
