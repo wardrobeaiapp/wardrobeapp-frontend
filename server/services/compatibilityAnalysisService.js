@@ -65,7 +65,7 @@ async function analyzeAllCompatibilities(formData, preFilledData, extractedChara
   results.compatibleComplementingItems = await analyzeComplementingCompatibility(
     itemDataForCompatibility, stylingContext, formData, anthropic
   );
-
+  
   results.compatibleLayeringItems = await analyzeLayeringCompatibility(
     itemDataForCompatibility, extractedCharacteristics, stylingContext, formData, anthropic
   );

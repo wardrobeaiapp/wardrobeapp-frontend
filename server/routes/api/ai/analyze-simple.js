@@ -258,7 +258,7 @@ router.post('/', async (req, res) => {
     console.log('Extracted suitable scenarios:', suitableScenarios);
     console.log('===============================');
 
-    // Extract comprehensive characteristics from the raw response
+    // Extract comprehensive characteristics
     console.log('=== STEP: Extracting Item Characteristics ===');
     const extractedCharacteristics = extractItemCharacteristics(rawAnalysisResponse, analysisScope, preFilledData);
     console.log('🏷️ Extracted characteristics:', extractedCharacteristics);

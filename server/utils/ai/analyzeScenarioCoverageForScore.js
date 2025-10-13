@@ -253,11 +253,18 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     if (totalOutfits === -1 || isAccessoryOrOuterwear) {
       console.log(`   💎/🧥 ACCESSORY/OUTERWEAR: Outfit analysis not applicable`);
       
+      // Check if item is a bag - bags intentionally have no styling context
+      const isBag = formData?.category?.toLowerCase() === 'accessory' && 
+                   formData?.subcategory?.toLowerCase() === 'bag';
+      
       // But still check compatibility - accessories/outerwear need SOME compatible items
-      if (totalCompatibleItems === 0) {
+      // EXCEPT bags - they intentionally have no styling context
+      if (totalCompatibleItems === 0 && !isBag) {
         outfitPenalty += 2;
         console.log(`   ❌ No compatible items found: -2 points (total: ${totalCompatibleItems} compatible items)`);
         console.log(`   📝 Even accessories/outerwear need to work with existing wardrobe pieces`);
+      } else if (isBag) {
+        console.log(`   🎒 BAG: Skipping compatibility penalty - bags intentionally have no styling context`);
       } else {
         console.log(`   ✅ Compatible items found: ${totalCompatibleItems} items - no compatibility penalty`);
       }

@@ -23,7 +23,7 @@ const ACCESSORY_STYLING_CONFIG: Record<string, AccessoryConfig> = {
     tops: TOP_FORMAL_ITEMS
   },
   bag: {
-    categories: [ItemCategory.OUTERWEAR]
+    noContext: true
   },
   jewelry: {
     categories: [ItemCategory.TOP],
