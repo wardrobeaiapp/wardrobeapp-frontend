@@ -30,13 +30,13 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
       <HeroBlock>
         <DemoTitle>The First App That Tells You What NOT to Buy</DemoTitle>
         <DemoSubtitle>
-          Get personalized advice on every potential purchase. Our AI analyzes your wardrobe and lifestyle to show you what works, what doesn't, and why
+          Get personalized advice on every potential purchase. Our AI analyzes your wardrobe and lifestyle to show you what works, what doesn't, and why.
         </DemoSubtitle>
       </HeroBlock>
 
-      {/* Info Block - What is this app? */}
+      {/* Info Block - How It Works? */}
       <InfoBlock>
-        <h2>🛍️ What is this app?</h2>
+        <h2>🛍️ What Does This App Do?</h2>
         <p>
           Imagine getting honest feedback before every purchase: does this item truly work with your existing wardrobe, do you already own something similar, does it fit your actual lifestyle?
         </p>
@@ -96,7 +96,7 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
       {/* CTA Block - Call to Action */}
       <CTABlock>
         <CTAButton onClick={handleGetStarted}>
-          Start Demo Experience
+          Try the Interactive Demo
         </CTAButton>
       </CTABlock>
     </div>

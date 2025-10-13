@@ -15,9 +15,9 @@ export interface DemoStepConfig {
 }
 
 export const DEMO_STEPS: DemoStepConfig[] = [
-  { id: DemoStep.INTRO, title: 'Introduction', required: false },
-  { id: DemoStep.PERSONA, title: 'Choose Your Type', required: true },
-  { id: DemoStep.WARDROBE, title: 'Wardrobe Reality', required: false },
-  { id: DemoStep.AI_CHECK, title: 'AI Prevention', required: false },
+  { id: DemoStep.INTRO, title: 'How It Works', required: false },
+  { id: DemoStep.PERSONA, title: 'Pick a Persona', required: true },
+  { id: DemoStep.WARDROBE, title: 'Explore Their Wardrobe', required: false },
+  { id: DemoStep.AI_CHECK, title: 'Test the AI', required: false },
   { id: DemoStep.WAITLIST, title: 'Get Early Access', required: false }
 ];
