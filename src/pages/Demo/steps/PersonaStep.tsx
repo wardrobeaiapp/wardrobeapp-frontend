@@ -22,96 +22,43 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
   return (
     <div>
       <HeroBlock>
-        <DemoTitle>Choose your shopping persona</DemoTitle>
+        <DemoTitle>Find Your Lifestyle Match</DemoTitle>
         <DemoSubtitle>
-          Pick the person whose shopping patterns sound most like yours. You'll explore their 
-          real wardrobe and see how AI helps them.
+          Choose a persona whose daily life, work, and habits resonate with you. Their needs and scenarios will shape the AI's advice.
         </DemoSubtitle>
       </HeroBlock>
 
       <PersonaPreviewGrid>
         <PersonaPreviewCard onClick={handlePersonaSelect}>
-          <div className="persona-badge impulse">IMPULSE BUYER</div>
-          <h3>Sarah, 28 - Marketing Coordinator</h3>
+          <h3>Emma - Marketing manager</h3>
           <p className="persona-quote">
-            "I buy 3-4 items weekly and my closet is overflowing. I have so many 
-            clothes but feel like I have nothing to wear. I know I should stop but I can't 
-            resist when I see something cute!"
+            Wears business casual outfits for office work and client meetings.
+            Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year.
           </p>
-          <div className="stats-grid">
-            <div className="stat">
-              <span className="number">127</span>
-              <span className="label">items owned</span>
-            </div>
-            <div className="stat">
-              <span className="number">Only 23</span>
-              <span className="label">worn regularly</span>
-            </div>
-            <div className="stat">
-              <span className="number">$2,340/year</span>
-              <span className="label">spent</span>
-            </div>
-            <div className="stat">
-              <span className="number">$23 avg</span>
-              <span className="label">cost/wear</span>
-            </div>
-          </div>
         </PersonaPreviewCard>
 
         <PersonaPreviewCard onClick={handlePersonaSelect}>
-          <div className="persona-badge sale">SALE HUNTER</div>
-          <h3>Mike, 35 - Software Developer</h3>
+          <h3>Maya - Freelance graphic designer</h3>
           <p className="persona-quote">
-            "I can't resist a good deal! I buy things 'just in case' and have tons of 
-            clothes with tags still on. My problem isn't the quality - it's that I buy for 
-            situations that never happen."
+            Needs comfortable home wear that's still presentable for Zoom calls and coworking.
+            Loves exploring local cafés and art galleries, works out at the gym regularly.
           </p>
-          <div className="stats-grid">
-            <div className="stat">
-              <span className="number">94</span>
-              <span className="label">items owned</span>
-            </div>
-            <div className="stat">
-              <span className="number">Many</span>
-              <span className="label">unused</span>
-            </div>
-            <div className="stat">
-              <span className="number">$1,890/year</span>
-              <span className="label">spent</span>
-            </div>
-            <div className="stat">
-              <span className="number">$31 avg</span>
-              <span className="label">cost/wear</span>
-            </div>
-          </div>
         </PersonaPreviewCard>
 
         <PersonaPreviewCard onClick={handlePersonaSelect}>
-          <div className="persona-badge aspirational">ASPIRATIONAL</div>
-          <h3>Emma, 32 - Freelance Designer</h3>
+          <h3>Lisa - Stay-at-home mom</h3>
           <p className="persona-quote">
-            "I buy clothes for the person I want to be, not who I am. I have gorgeous 
-            pieces that don't match my actual lifestyle. I work from home but keep buying 
-            office wear!"
+            Prefers practical clothes that work for both school runs and playground time.
+            Spends time at home with kids, runs errands, occasionally meets friends for coffee.
           </p>
-          <div className="stats-grid">
-            <div className="stat">
-              <span className="number">68</span>
-              <span className="label">items owned</span>
-            </div>
-            <div className="stat">
-              <span className="number">15</span>
-              <span className="label">worn regularly</span>
-            </div>
-            <div className="stat">
-              <span className="number">$2,100/year</span>
-              <span className="label">spent</span>
-            </div>
-            <div className="stat">
-              <span className="number">$45 avg</span>
-              <span className="label">cost/wear</span>
-            </div>
-          </div>
+        </PersonaPreviewCard>
+
+        <PersonaPreviewCard onClick={handlePersonaSelect}>
+          <h3>Zoe - College student</h3>
+          <p className="persona-quote">
+            Rocks casual everyday looks for classes, part-time café job, and hanging out with friends.
+            Goes to parties, concerts, and social events regularly, loves thrifting on weekends.
+          </p>
         </PersonaPreviewCard>
       </PersonaPreviewGrid>
     </div>

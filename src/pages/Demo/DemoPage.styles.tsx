@@ -368,16 +368,8 @@ export const PersonaPreviewCard = styled.div`
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
   
-  .persona-type {
-    background: #fef3c7;
-    color: #92400e;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    display: inline-block;
+  h3 {
+    margin-top: 0;
   }
   
   h4 {
