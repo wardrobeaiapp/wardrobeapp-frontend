@@ -34,6 +34,7 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
           <p className="persona-quote">
             Wears business casual outfits for office work and client meetings.
             Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year.
+            Building a capsule wardrobe and trying to shop more intentionally.
           </p>
         </PersonaPreviewCard>
 
@@ -42,6 +43,7 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
           <p className="persona-quote">
             Needs comfortable home wear that's still presentable for Zoom calls and coworking.
             Loves exploring local cafés and art galleries, works out at the gym regularly.
+            Trying to look more put-together and experiment with her style.
           </p>
         </PersonaPreviewCard>
 
@@ -50,6 +52,7 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
           <p className="persona-quote">
             Prefers practical clothes that work for both school runs and playground time.
             Spends time at home with kids, runs errands, occasionally meets friends for coffee.
+            Wants to save money and make getting dressed faster with two kids.
           </p>
         </PersonaPreviewCard>
 
@@ -58,6 +61,7 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
           <p className="persona-quote">
             Rocks casual everyday looks for classes, part-time café job, and hanging out with friends.
             Goes to parties, concerts, and social events regularly, loves thrifting on weekends.
+            Looking to define her personal style on a student budget.
           </p>
         </PersonaPreviewCard>
       </PersonaPreviewGrid>
