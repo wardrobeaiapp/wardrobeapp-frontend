@@ -123,11 +123,11 @@ export const ItemDetail = styled.div`
   }
 `;
 
-export const TagsContainer = styled.div`
+export const TagsContainer = styled.div<{ $hasButtons?: boolean }>`
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem;
-  margin: 0 0 0.75rem;
+  margin: ${props => props.$hasButtons ? '0 0 0.75rem' : '0'};
 `;
 
 export const Tag = styled.span`

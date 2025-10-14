@@ -61,7 +61,7 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
       <CardContent>
         <ItemName>{item.name}</ItemName>
         {item.season && item.season.length > 0 && (
-          <TagsContainer>
+          <TagsContainer $hasButtons={!!onView}>
             {item.season.flatMap((season) => 
               // Split 'spring/fall' into separate tags for display
               season === 'spring/fall' 
@@ -72,14 +72,13 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
             ))}
           </TagsContainer>
         )}
-        <ButtonContainer>
-          {onView && (
+        {onView && (
+          <ButtonContainer>
             <Button fullWidth onClick={() => onView(item)}>
               View
             </Button>
-          )}
-
-        </ButtonContainer>
+          </ButtonContainer>
+        )}
       </CardContent>
     </Card>
   );
