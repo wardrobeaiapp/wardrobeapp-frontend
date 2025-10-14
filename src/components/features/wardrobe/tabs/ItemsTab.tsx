@@ -78,7 +78,7 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   setSeasonFilter,
   setSearchQuery,
   setScenarioFilter = () => {},
-  onViewItem = () => {},
+  onViewItem,
   onEditItem,
   onDeleteItem
 }) => {
