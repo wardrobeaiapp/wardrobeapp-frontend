@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FaStar } from 'react-icons/fa';
 import { WishlistStatus } from '../../../../../types';
 import { Modal, ModalAction } from '../../../../common/Modal';
@@ -22,6 +22,15 @@ import {
   OutfitScenarioHeader,
   OutfitList,
   OutfitItem,
+  OutfitHeader,
+  OutfitText,
+  ToggleButton,
+  OutfitImagesContainer,
+  OutfitImageGrid,
+  OutfitItemThumbnail,
+  ThumbnailImage,
+  ThumbnailPlaceholder,
+  ThumbnailLabel,
   IncompleteScenarios,
   IncompleteScenarioItem,
   CompatibleItemsContainer,
@@ -86,7 +95,21 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   recommendationAction,
   recommendationText
 }) => {
-  // Clean user interface ready
+  // State for tracking which outfits have expanded images
+  const [expandedOutfits, setExpandedOutfits] = useState<Set<string>>(new Set());
+
+  // Toggle function for outfit image visibility
+  const toggleOutfitImages = (outfitId: string) => {
+    setExpandedOutfits(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(outfitId)) {
+        newSet.delete(outfitId);
+      } else {
+        newSet.add(outfitId);
+      }
+      return newSet;
+    });
+  };
 
   const handleAddToWishlist = () => {
     onAddToWishlist?.();
@@ -284,9 +307,75 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
                     {combo.outfits?.map((outfit: any, outfitIndex: number) => {
                       const itemNames = outfit.items?.map((item: any) => item.name) || [];
                       const outfitDescription = itemNames.join(' + ');
+                      
+                      // Create unique ID for this outfit
+                      const outfitId = `${index}-${outfitIndex}`;
+                      const isExpanded = expandedOutfits.has(outfitId);
+                      
+                      // Check if any items have images to show toggle (including analyzed item from modal)
+                      const hasImages = outfit.items?.some((item: any) => {
+                        // Check if item has imageUrl OR if it's the analyzed item and modal has imageUrl
+                        if (item.imageUrl) return true;
+                        if (imageUrl) {
+                          const isAnalyzedItem = item.type === 'base-item' || 
+                            (item.name && itemNames[0] && item.name === itemNames[0]);
+                          if (isAnalyzedItem) return true;
+                        }
+                        return false;
+                      }) || false;
+                      
                       return (
                         <OutfitItem key={outfitIndex}>
-                          {outfitIndex + 1}. {outfitDescription}
+                          <OutfitHeader>
+                            <OutfitText>
+                              {outfitIndex + 1}. {outfitDescription}
+                            </OutfitText>
+                            {hasImages && (
+                              <ToggleButton
+                                onClick={() => toggleOutfitImages(outfitId)}
+                                title={isExpanded ? "Hide images" : "Show images"}
+                              >
+                                {isExpanded ? '👁️‍🗨️' : '👁️'}
+                              </ToggleButton>
+                            )}
+                          </OutfitHeader>
+                          
+                          {hasImages && (
+                            <OutfitImagesContainer $isExpanded={isExpanded}>
+                              <OutfitImageGrid>
+                                {outfit.items?.map((item: any, itemIndex: number) => {
+                                  // Check if this is the analyzed item and inject the modal's imageUrl
+                                  let itemImageUrl = item.imageUrl;
+                                  if (!itemImageUrl && imageUrl) {
+                                    // Try to match by name or if it's marked as the base item
+                                    const isAnalyzedItem = item.type === 'base-item' || 
+                                      (item.name && itemNames[0] && item.name === itemNames[0]);
+                                    if (isAnalyzedItem) {
+                                      itemImageUrl = imageUrl;
+                                    }
+                                  }
+                                  
+                                  return (
+                                    <OutfitItemThumbnail key={itemIndex}>
+                                      {itemImageUrl ? (
+                                        <ThumbnailImage
+                                          src={itemImageUrl}
+                                          alt={item.name}
+                                          onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                          }}
+                                        />
+                                      ) : (
+                                        <ThumbnailPlaceholder>
+                                          No Image
+                                        </ThumbnailPlaceholder>
+                                      )}
+                                    </OutfitItemThumbnail>
+                                  );
+                                }) || []}
+                              </OutfitImageGrid>
+                            </OutfitImagesContainer>
+                          )}
                         </OutfitItem>
                       );
                     }) || []}

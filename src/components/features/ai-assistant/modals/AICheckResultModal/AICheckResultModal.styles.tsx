@@ -154,6 +154,117 @@ export const OutfitItem = styled.div`
   font-size: 0.9rem;
 `;
 
+export const OutfitHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+`;
+
+export const OutfitText = styled.div`
+  flex: 1;
+  color: #6b7280;
+  font-size: 0.9rem;
+`;
+
+export const ToggleButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  font-size: 0.8rem;
+  color: #9ca3af;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  
+  &:hover {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+export const OutfitImagesContainer = styled.div<{ $isExpanded: boolean }>`
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+  margin-top: ${({ $isExpanded }) => $isExpanded ? '0.5rem' : '0'};
+  max-height: ${({ $isExpanded }) => $isExpanded ? '200px' : '0'};
+  opacity: ${({ $isExpanded }) => $isExpanded ? '1' : '0'};
+`;
+
+export const OutfitImageGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+`;
+
+export const OutfitItemThumbnail = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+export const ThumbnailImage = styled.img`
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  
+  &:hover {
+    border-color: #d1d5db;
+  }
+`;
+
+export const ThumbnailPlaceholder = styled.div`
+  width: 50px;
+  height: 50px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  color: #9ca3af;
+  text-align: center;
+  line-height: 1.1;
+`;
+
+export const ThumbnailLabel = styled.div`
+  font-size: 0.65rem;
+  color: #6b7280;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+`;
+
 export const IncompleteScenarios = styled.div`
   font-weight: 700;
   margin-bottom: 0.5rem;
