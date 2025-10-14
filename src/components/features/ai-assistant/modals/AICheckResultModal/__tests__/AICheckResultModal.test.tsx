@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { ThemeProvider } from 'styled-components';
 import AICheckResultModal from '../AICheckResultModal';
@@ -467,6 +467,265 @@ describe('AICheckResultModal Card Rendering', () => {
       );
 
       expect(screen.queryByText('Works well with:')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Collapsible Outfit Images', () => {
+    const outfitCombinationsWithImages = [
+      {
+        season: 'summer',
+        scenario: 'Social Outings',
+        outfits: [
+          {
+            items: [
+              {
+                name: 'Elegant Plain T-Shirt',
+                type: 'base-item', // Analyzed item marker
+                // No imageUrl - should use modal's imageUrl
+              },
+              {
+                name: 'Black Skirt',
+                imageUrl: '/uploads/black-skirt.jpg',
+              },
+              {
+                name: 'Brown Ankle Boots',
+                imageUrl: '/uploads/brown-boots.jpg',
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const outfitCombinationsWithoutImages = [
+      {
+        season: 'winter',
+        scenario: 'Office Work',
+        outfits: [
+          {
+            items: [
+              {
+                name: 'Blue Sweater',
+                // No imageUrl
+              },
+              {
+                name: 'Gray Pants',
+                // No imageUrl
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    it('should render outfit combinations with text descriptions', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithImages}
+          itemSubcategory="T_SHIRT"
+        />
+      );
+
+      // Should show outfit description text
+      expect(screen.getByText(/1\. Elegant Plain T-Shirt \+ Black Skirt \+ Brown Ankle Boots/)).toBeInTheDocument();
+      
+      // Should show scenario header
+      expect(screen.getByText('SUMMER + SOCIAL OUTINGS')).toBeInTheDocument();
+    });
+
+    it('should show toggle button only when outfit has items with images', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithImages}
+          imageUrl="/uploads/analyzed-tshirt.jpg"
+        />
+      );
+
+      // Should show toggle button (eye icon) when outfit has images
+      const toggleButton = screen.getByRole('button', { name: '👁️' });
+      expect(toggleButton).toBeInTheDocument();
+    });
+
+    it('should NOT show toggle button when outfit has no images', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithoutImages}
+        />
+      );
+
+      // Should NOT show toggle button when no images
+      expect(screen.queryByRole('button', { name: '👁️' })).not.toBeInTheDocument();
+    });
+
+    it('should toggle button icon when clicked', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithImages}
+          imageUrl="/uploads/analyzed-tshirt.jpg"
+        />
+      );
+
+      // Find the toggle button by its emoji content
+      let toggleButton = screen.getByRole('button', { name: '👁️' });
+      expect(toggleButton).toBeInTheDocument();
+
+      // Click to change state
+      fireEvent.click(toggleButton);
+
+      // Button should change to expanded state (different emoji)
+      expect(screen.getByRole('button', { name: '👁️‍🗨️' })).toBeInTheDocument();
+
+      // Click to toggle back
+      const expandedToggleButton = screen.getByRole('button', { name: '👁️‍🗨️' });
+      fireEvent.click(expandedToggleButton);
+
+      // Button should change back to collapsed state
+      expect(screen.getByRole('button', { name: '👁️' })).toBeInTheDocument();
+    });
+
+    it('should render outfit images when expanded', () => {
+      const modalImageUrl = '/uploads/analyzed-tshirt.jpg';
+      
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithImages}
+          imageUrl={modalImageUrl}
+        />
+      );
+
+      // Expand the outfit images
+      const toggleButton = screen.getByRole('button', { name: '👁️' });
+      fireEvent.click(toggleButton);
+
+      // Should show all outfit images including analyzed item from modal props
+      expect(screen.getByAltText('Elegant Plain T-Shirt')).toBeInTheDocument();
+      expect(screen.getByAltText('Black Skirt')).toBeInTheDocument();
+      expect(screen.getByAltText('Brown Ankle Boots')).toBeInTheDocument();
+
+      // Analyzed item should use modal's imageUrl
+      const analyzedItemImage = screen.getByAltText('Elegant Plain T-Shirt');
+      expect(analyzedItemImage).toHaveAttribute('src', modalImageUrl);
+    });
+
+    it('should show placeholder for items without images', () => {
+      const outfitWithMissingImages = [
+        {
+          season: 'summer',
+          scenario: 'Social Outings',
+          outfits: [
+            {
+              items: [
+                {
+                  name: 'Item With Image',
+                  imageUrl: '/uploads/item.jpg',
+                },
+                {
+                  name: 'Item Without Image',
+                  // No imageUrl
+                }
+              ]
+            }
+          ]
+        }
+      ];
+
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitWithMissingImages}
+        />
+      );
+
+      // Expand the outfit images
+      const toggleButton = screen.getByRole('button', { name: '👁️' });
+      fireEvent.click(toggleButton);
+
+      // Should show actual image
+      expect(screen.getByAltText('Item With Image')).toBeInTheDocument();
+      
+      // Should show placeholder for missing image
+      expect(screen.getByText('No Image')).toBeInTheDocument();
+    });
+
+    it('should render multiple outfits with independent toggle buttons', () => {
+      const multipleOutfits = [
+        {
+          season: 'summer',
+          scenario: 'Social Outings',
+          outfits: [
+            {
+              items: [
+                { name: 'Summer Item 1', imageUrl: '/summer1.jpg' },
+                { name: 'Summer Item 2', imageUrl: '/summer2.jpg' }
+              ]
+            }
+          ]
+        },
+        {
+          season: 'winter',
+          scenario: 'Office Work',
+          outfits: [
+            {
+              items: [
+                { name: 'Winter Item 1', imageUrl: '/winter1.jpg' },
+                { name: 'Winter Item 2', imageUrl: '/winter2.jpg' }
+              ]
+            }
+          ]
+        }
+      ];
+
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={multipleOutfits}
+        />
+      );
+
+      // Should have independent toggle buttons for each outfit
+      const toggleButtons = screen.getAllByRole('button', { name: '👁️' });
+      expect(toggleButtons).toHaveLength(2); 
+
+      // Should show scenario headers
+      expect(screen.getByText('SUMMER + SOCIAL OUTINGS')).toBeInTheDocument();
+      expect(screen.getByText('WINTER + OFFICE WORK')).toBeInTheDocument();
+    });
+
+    it('should display outfit count summary correctly', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={outfitCombinationsWithImages}
+          itemSubcategory="T_SHIRT"
+        />
+      );
+
+      // Should show summary with outfit count
+      expect(screen.getByText(/You can make 1 new outfit with this t shirt/)).toBeInTheDocument();
+    });
+
+    it('should show appropriate message when no outfits possible', () => {
+      customRender(
+        <AICheckResultModal
+          {...defaultProps}
+          outfitCombinations={[]}
+          seasonScenarioCombinations={[
+            { combination: 'SUMMER + SOCIAL OUTINGS', hasItems: false, missingCategories: ['footwear'] }
+          ]}
+          itemSubcategory="T_SHIRT"
+        />
+      );
+
+      // Should show no outfits message
+      expect(screen.getByText(/This t shirt doesn't have enough matching pieces/)).toBeInTheDocument();
+      
+      // Should show missing categories
+      expect(screen.getByText(/don't have footwear to combine with/)).toBeInTheDocument();
     });
   });
 });
