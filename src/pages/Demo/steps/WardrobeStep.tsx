@@ -18,6 +18,49 @@ import WishlistTab from '../../../components/features/wardrobe/tabs/WishlistTab'
 import { WishlistStatus } from '../../../types';
 import styled from 'styled-components';
 
+// Custom tabs container (like the real wardrobe)
+const DemoTabsContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+`;
+
+// Custom tab with natural width (using div to avoid button styles)
+const DemoTab = styled.div<{ $active: boolean; $type: string }>`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 12px 16px;
+  background: transparent;
+  color: ${props => props.$active ? '#8b5cf6' : '#6b7280'};
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: ${props => props.$active ? '#8b5cf6' : 'transparent'};
+    transition: background-color 0.2s ease;
+  }
+  
+  &:hover {
+    color: #8b5cf6;
+  }
+  
+  svg {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+`;
+
 // Wide container for wardrobe interface to match real app experience
 const WideContainer = styled.div`
   position: relative;
@@ -111,25 +154,29 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
       {/* Wide container for authentic wardrobe experience */}
       <WideContainer>
         <div>
-          {/* Demo wardrobe tabs - only show Items and Wishlist */}
-          <TabsContainer>
-            <Tab 
+          {/* Demo tabs - ONLY Items and Wishlist with real styling */}
+          <DemoTabsContainer>
+            <DemoTab 
               $active={activeTab === TabType.ITEMS}
               $type="items"
+              role="button"
+              tabIndex={0}
               onClick={() => setActiveTab(TabType.ITEMS)}
             >
               <MdCheckroom />
               Wardrobe Items
-            </Tab>
-            <Tab 
+            </DemoTab>
+            <DemoTab 
               $active={activeTab === TabType.WISHLIST}
               $type="wishlist"
+              role="button"
+              tabIndex={0}
               onClick={() => setActiveTab(TabType.WISHLIST)}
             >
               <MdFavoriteBorder />
               Wishlist
-            </Tab>
-          </TabsContainer>
+            </DemoTab>
+          </DemoTabsContainer>
 
           {/* Render appropriate tab content */}
           {activeTab === TabType.ITEMS && (
