@@ -30,9 +30,9 @@ const PERSONAS: Persona[] = [
   },
   {
     userId: '8a2f9c4e-1b5d-4e7a-9f3c-2d8e5a7b9c1f', 
-    name: 'Maya',
+    name: 'Max',
     title: 'Freelance Graphic Designer',
-    description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together and experiment with her style.'
+    description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together when working from home without overthinking it.'
   },
   {
     userId: 'c5f8d2a9-3e6b-4d7c-8a1f-9e2d5c7b4a6e',

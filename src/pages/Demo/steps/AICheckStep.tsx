@@ -26,15 +26,12 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         <DemoSubtitle>
           Watch how AI analyzes potential purchases and prevents bad decisions
         </DemoSubtitle>
-      </HeroBlock>
-
-      {/* TODO: Add AI check simulation content here */}
-      <CTABlock>
-        <p>AI check simulation content will be implemented here...</p>
         <CTAButton onClick={handleNext}>
           Get Early Access
         </CTAButton>
-      </CTABlock>
+      </HeroBlock>
+      
+      {/* TODO: Add AI check simulation content here */}
     </div>
   );
 };
