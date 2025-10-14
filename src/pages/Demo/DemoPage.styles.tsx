@@ -426,14 +426,14 @@ export const HeroBlock = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 20px;
   padding: 48px 40px;
-  margin-bottom: 40px;
+  margin-bottom: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   text-align: center;
   
   @media (max-width: 768px) {
     padding: 32px 24px;
     border-radius: 16px;
-    margin-bottom: 32px;
+    margin-bottom: 16px;
   }
 `;
 

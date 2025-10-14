@@ -142,12 +142,15 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
 
   return (
     <div>
-      {/* Narrow container for headers */}
+      {/* Header block with integrated action */}
       <HeroBlock>
         <DemoTitle>Explore {personaName}'s Wardrobe</DemoTitle>
         <DemoSubtitle>
           Browse through {personaName}'s real wardrobe items and wishlist
         </DemoSubtitle>
+        <CTAButton onClick={handleNext}>
+          Continue to AI Check
+        </CTAButton>
       </HeroBlock>
 
       {/* Wide container for authentic wardrobe experience */}
@@ -222,13 +225,6 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
           )}
         </div>
       </WideContainer>
-
-      {/* Narrow container for continue button */}
-      <CTABlock>
-        <CTAButton onClick={handleNext}>
-          Continue to AI Check
-        </CTAButton>
-      </CTABlock>
     </div>
   );
 };
