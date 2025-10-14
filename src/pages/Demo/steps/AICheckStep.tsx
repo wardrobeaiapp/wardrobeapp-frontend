@@ -4,7 +4,6 @@ import {
   DemoSubtitle,
   CTAButton,
   HeroBlock,
-  CTABlock
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
 
@@ -22,9 +21,9 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
   return (
     <div>
       <HeroBlock>
-        <DemoTitle>AI Prevention in Action</DemoTitle>
+        <DemoTitle>Test the AI Yourself</DemoTitle>
         <DemoSubtitle>
-          Watch how AI analyzes potential purchases and prevents bad decisions
+          Try "shopping" for different items and see the instant, data-backed feedback it gives.
         </DemoSubtitle>
         <CTAButton onClick={handleNext}>
           Get Early Access

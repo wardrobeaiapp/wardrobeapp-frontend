@@ -4,7 +4,6 @@ import {
   DemoSubtitle,
   CTAButton,
   HeroBlock,
-  CTABlock
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
 import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';

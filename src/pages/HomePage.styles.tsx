@@ -1,6 +1,5 @@
 import styled, { keyframes } from 'styled-components';
 import { theme } from '../styles/theme';
-import { MdCheckroom, MdOutlineStyle, MdOutlineWorkspaces, MdFavoriteBorder } from 'react-icons/md';
 
 export const PageHeader = styled.header`
   display: flex;
