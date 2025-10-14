@@ -6,6 +6,7 @@ import styled from 'styled-components';
 import { formTokens } from '../../../../styles/tokens/forms';
 import { CategoryFilter, SearchFilter, SeasonFilter, ScenarioFilter } from '../shared/Filters';
 import { FiltersContainer } from '../../../../pages/HomePage.styles';
+import { useItemFiltering } from '../../../../hooks/home/useItemFiltering';
 
 const ItemsGrid = styled.div<{ $variant?: string }>`
   display: grid;
@@ -81,38 +82,19 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   onEditItem,
   onDeleteItem
 }) => {
-  // Helper to get the first season if seasonFilter is an array
+  // Use optimized filtering hook instead of duplicate logic
+  const { filteredItems } = useItemFiltering(items, {
+    category: categoryFilter,
+    season: seasonFilter,
+    searchQuery,
+    scenario: scenarioFilter,
+    isWishlist: false // ItemsTab only shows non-wishlist items
+  });
+
+  // Helper for SeasonFilter component - needed for display value
   const getFirstSeason = (season: string | string[]): string => {
     return Array.isArray(season) ? (season[0] || 'all') : season;
   };
-
-  // Memoize the filtered items calculation
-  const filteredItems = React.useMemo(() => {
-    return items.filter(item => {
-      const isNotWishlist = item.wishlist !== true;
-      const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-      
-      // Handle season filter (can be string or string[])
-      const currentSeason = Array.isArray(seasonFilter) ? seasonFilter[0] : seasonFilter;
-      const matchesSeason = currentSeason === 'all' || 
-        (Array.isArray(item.season) 
-          ? item.season.some(s => s === currentSeason)
-          : item.season === currentSeason);
-      
-      // Handle search
-      const searchLower = searchQuery.toLowerCase();
-      const matchesSearch = searchQuery === '' || 
-        item.name.toLowerCase().includes(searchLower) ||
-        (item.brand && item.brand.toLowerCase().includes(searchLower)) ||
-        (item.material && item.material.toLowerCase().includes(searchLower));
-      
-      // Handle scenario filter
-      const matchesScenario = scenarioFilter === 'all' || 
-        (item.scenarios && item.scenarios.includes(scenarioFilter));
-      
-      return isNotWishlist && matchesCategory && matchesSeason && matchesSearch && matchesScenario;
-    });
-  }, [items, categoryFilter, seasonFilter, searchQuery, scenarioFilter]);
 
   // Debug logging - only in development
   if (process.env.NODE_ENV === 'development') {
