@@ -63,9 +63,9 @@ const DemoPage: React.FC = () => {
           {DEMO_STEPS.map((step, index) => (
             <StepItem
               key={step.id}
-              active={currentStep === step.id}
-              completed={completedSteps.has(step.id)}
-              clickable={completedSteps.has(step.id)}
+              $active={currentStep === step.id}
+              $completed={completedSteps.has(step.id)}
+              $clickable={completedSteps.has(step.id)}
               onClick={() => {
                 // Allow navigation to completed steps
                 if (completedSteps.has(step.id)) {
@@ -74,8 +74,8 @@ const DemoPage: React.FC = () => {
               }}
             >
               <StepNumber
-                active={currentStep === step.id}
-                completed={completedSteps.has(step.id)}
+                $active={currentStep === step.id}
+                $completed={completedSteps.has(step.id)}
               >
                 {completedSteps.has(step.id) ? '✓' : index + 1}
               </StepNumber>

@@ -565,14 +565,14 @@ export const StepsContainer = styled.div`
   }
 `;
 
-export const StepItem = styled.div<{ active: boolean; completed: boolean; clickable?: boolean }>`
+export const StepItem = styled.div<{ $active: boolean; $completed: boolean; $clickable?: boolean }>`
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
   border-radius: 8px;
   transition: all 0.2s;
-  cursor: ${props => props.clickable ? 'pointer' : 'default'};
+  cursor: ${props => props.$clickable ? 'pointer' : 'default'};
   white-space: nowrap;
   flex: 1;
   justify-content: center;
@@ -583,25 +583,25 @@ export const StepItem = styled.div<{ active: boolean; completed: boolean; clicka
     min-width: fit-content;
   }
   
-  ${props => props.active && `
+  ${props => props.$active && `
     background: #4f46e5;
     color: white;
     box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
   `}
   
-  ${props => props.completed && !props.active && `
+  ${props => props.$completed && !props.$active && `
     background: #f3f4f6;
     color: #059669;
   `}
   
-  ${props => !props.active && !props.completed && `
+  ${props => !props.$active && !props.$completed && `
     background: transparent;
     color: #9ca3af;
   `}
   
-  ${props => props.clickable && `
+  ${props => props.$clickable && `
     &:hover {
-      background: ${props.active ? '#4338ca' : props.completed ? '#e5e7eb' : '#f9fafb'};
+      background: ${props.$active ? '#4338ca' : props.$completed ? '#e5e7eb' : '#f9fafb'};
     }
   `}
   
@@ -612,7 +612,7 @@ export const StepItem = styled.div<{ active: boolean; completed: boolean; clicka
   }
 `;
 
-export const StepNumber = styled.div<{ active: boolean; completed: boolean }>`
+export const StepNumber = styled.div<{ $active: boolean; $completed: boolean }>`
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -623,17 +623,17 @@ export const StepNumber = styled.div<{ active: boolean; completed: boolean }>`
   font-weight: 600;
   flex-shrink: 0;
   
-  ${props => props.active && `
+  ${props => props.$active && `
     background: white;
     color: #4f46e5;
   `}
   
-  ${props => props.completed && !props.active && `
+  ${props => props.$completed && !props.$active && `
     background: #059669;
     color: white;
   `}
   
-  ${props => !props.active && !props.completed && `
+  ${props => !props.$active && !props.$completed && `
     background: #e5e7eb;
     color: #9ca3af;
   `}
