@@ -34,6 +34,8 @@ interface WishlistTabProps {
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onAddItem?: () => void;
+  hideStatusFilter?: boolean;
+  hideStatusIcon?: boolean;
 }
 
 const WishlistTab: React.FC<WishlistTabProps> = ({
@@ -53,7 +55,9 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   onViewItem,
   onEditItem,
   onDeleteItem,
-  onAddItem
+  onAddItem,
+  hideStatusFilter = false,
+  hideStatusIcon = false
 }) => {
   // Helper to get the first season if seasonFilter is an array
   const getFirstSeason = (season: string | string[]): string => {
@@ -145,21 +149,23 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
             includeAllOption={true}
           />
         </FilterGroup>
-        <FilterGroup>
-          <SelectFilter<WishlistStatus>
-            value={statusFilter === 'all' ? 'all' as const : statusFilter}
-            onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
-            label="Status"
-            id="status-filter"
-            options={[
-              { value: WishlistStatus.APPROVED, label: 'Approved' },
-              { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
-              { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
-            ]}
-            includeAllOption={true}
-            allOptionLabel="All Statuses"
-          />
-        </FilterGroup>
+        {!hideStatusFilter && (
+          <FilterGroup>
+            <SelectFilter<WishlistStatus>
+              value={statusFilter === 'all' ? 'all' as const : statusFilter}
+              onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
+              label="Status"
+              id="status-filter"
+              options={[
+                { value: WishlistStatus.APPROVED, label: 'Approved' },
+                { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
+                { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
+              ]}
+              includeAllOption={true}
+              allOptionLabel="All Statuses"
+            />
+          </FilterGroup>
+        )}
       </FiltersContainer>
 
       {filteredItems.length > 0 ? (
@@ -171,6 +177,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
               onView={onViewItem}
               onEdit={onEditItem}
               onDelete={onDeleteItem}
+              hideStatusIcon={hideStatusIcon}
             />
           ))}
         </ItemsGrid>

@@ -20,9 +20,10 @@ interface WardrobeItemCardProps {
   onView?: (item: WardrobeItem) => void; // New onView prop
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  hideStatusIcon?: boolean;
 }
 
-const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete }) => {
+const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete, hideStatusIcon = false }) => {
   // Use the new hook for instant loading with fallback on expired URLs
   // For backward compatibility, also check for old base64 images
   const isBase64Image = item.imageUrl?.startsWith('data:image/');
@@ -49,7 +50,7 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         )}
         
         {/* Display status icon for wishlist items */}
-        {item.wishlist && (
+        {item.wishlist && !hideStatusIcon && (
           <StatusIcon $status={item.wishlistStatus || WishlistStatus.NOT_REVIEWED}>
             {item.wishlistStatus === WishlistStatus.APPROVED ? '✓' : 
              item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? '!' : '?'}

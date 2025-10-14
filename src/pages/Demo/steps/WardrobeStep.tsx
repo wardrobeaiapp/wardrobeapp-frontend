@@ -11,7 +11,6 @@ import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
 import { getWardrobeItems } from '../../../services/wardrobe/items';
 import { WardrobeItem } from '../../../types';
 import { TabType } from '../../../hooks/home';
-import { TabsContainer, Tab } from '../../../pages/HomePage.styles';
 import { MdCheckroom, MdFavoriteBorder } from 'react-icons/md';
 import ItemsTab from '../../../components/features/wardrobe/tabs/ItemsTab';
 import WishlistTab from '../../../components/features/wardrobe/tabs/WishlistTab';
@@ -217,6 +216,8 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
               onViewItem={undefined}
               onEditItem={handleEditItem}
               onDeleteItem={handleDeleteItem}
+              hideStatusFilter={true}
+              hideStatusIcon={true}
             />
           )}
         </div>
