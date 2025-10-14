@@ -66,7 +66,15 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   } = useWishlistFiltering({ 
     items,
     scenarioFilter,
-    setScenarioFilter
+    setScenarioFilter,
+    categoryFilter,
+    seasonFilter,
+    searchQuery,
+    statusFilter,
+    setCategoryFilter,
+    setSeasonFilter,
+    setSearchQuery,
+    setStatusFilter
   });
   
   const handleSeasonChange = (value: string | string[]) => {
