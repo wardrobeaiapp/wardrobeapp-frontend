@@ -75,24 +75,15 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
         return;
       }
       
-      // Get the current authenticated user
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-      
-      if (authError || !authData.user) {
-        console.error('Error getting authenticated user:', authError);
-        if (isMountedRef.current) {
-          setError('Authentication required to load items');
-          setIsLoading(false);
-        }
-        return;
-      }
+      // Use user from session data instead of making another auth call
+      const userId = sessionData.session.user.id;
       
       // Yield control after auth check
       await yieldToMain();
       if (!isMountedRef.current) return;
       
       // Always attempt to load from the database first with the actual user ID
-      const dbItems = await getWardrobeItems(authData.user.id, false);
+      const dbItems = await getWardrobeItems(userId, false);
       
       if (!isMountedRef.current) return;
       
@@ -121,7 +112,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
               
               if (migrationSuccess && isMountedRef.current) {
                 // If migration was successful, fetch the items again
-                const migratedItems = await getWardrobeItems(authData.user.id, false);
+                const migratedItems = await getWardrobeItems(userId, false);
                 if (isMountedRef.current) {
                   setItems(migratedItems);
                   // Clear localStorage after successful migration

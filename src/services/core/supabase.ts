@@ -35,16 +35,16 @@ export const getSupabase = () => {
       }
     });
 
-    // Add auth state change listener for debugging
+    // Add auth state change listener for debugging - ONLY ONCE when instance is created
     supabaseInstance.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state changed:', event, session);
+      console.log('🔐 Auth state changed:', event, session ? 'Object' : 'null');
+    });
+
+    // Check initial session state - ONLY ONCE when instance is created
+    supabaseInstance.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔍 Current session:', session ? 'Authenticated' : 'Not authenticated');
     });
   }
-  
-  // Get current session for debugging
-  supabaseInstance.auth.getSession().then(({ data: { session } }) => {
-    console.log('🔍 Current session:', session ? 'Authenticated' : 'Not authenticated');
-  });
   
   return supabaseInstance;
 };
