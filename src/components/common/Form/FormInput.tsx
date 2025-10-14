@@ -168,6 +168,10 @@ const InputContainer = styled.div<{ $isFullWidth?: boolean }>`
   display: inline-flex;
   align-items: center;
   width: ${({ $isFullWidth }) => ($isFullWidth ? '100%' : 'auto')};
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 `;
 
 const StyledInput = styled.input<StyledInputProps>`

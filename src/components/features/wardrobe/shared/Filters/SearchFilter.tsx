@@ -17,6 +17,12 @@ const SearchContainer = styled(FormField)`
   max-width: 300px;
   margin: 0;
   
+  @media (max-width: 768px) {
+    min-width: 0;
+    max-width: none;
+    flex: 1;
+  }
+  
   .search-icon {
     position: absolute;
     left: 12px;

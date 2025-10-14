@@ -87,12 +87,50 @@ export const FiltersContainer = styled.div`
   flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 2rem;
+  
+  @media (max-width: 768px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    
+    /* Search takes full width (spans both columns) */
+    > :first-child {
+      grid-column: 1 / -1;
+    }
+    
+    /* Category and Season sit side by side */
+    > :nth-child(2),
+    > :nth-child(3) {
+      grid-column: span 1;
+    }
+    
+    /* Scenario and Status take full width */
+    > :nth-child(n+4) {
+      grid-column: 1 / -1;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    gap: 0.75rem;
+  }
 `;
 
 export const FilterGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 100%;
+  
+  @media (max-width: 768px) {
+    gap: 0.25rem;
+    min-width: 0; /* Allow shrinking in grid */
+    width: 100% !important;
+    
+    /* Ensure search container takes full width */
+    &:first-child {
+      width: 100% !important;
+    }
+  }
 `;
 
 export const Select = styled.select`
@@ -106,6 +144,12 @@ export const Select = styled.select`
   color: #374151;
   cursor: pointer;
   transition: all 0.2s ease;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    min-width: unset;
+    padding: 0.625rem 0.75rem;
+  }
   
   &:hover {
     border-color: #d1d5db;
@@ -123,6 +167,13 @@ export const SearchContainer = styled.div`
   display: flex;
   align-items: center;
   min-width: 200px;
+  
+  @media (max-width: 768px) {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100%;
+    flex: 1;
+  }
 `;
 
 export const SearchInput = styled.input`
@@ -135,6 +186,10 @@ export const SearchInput = styled.input`
   font-weight: 400;
   color: #374151;
   transition: all 0.2s ease;
+  
+  @media (max-width: 768px) {
+    padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+  }
   
   &::placeholder {
     color: #9ca3af;
