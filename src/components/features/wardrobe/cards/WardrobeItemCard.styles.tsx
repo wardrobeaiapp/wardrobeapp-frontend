@@ -82,6 +82,15 @@ export const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  
+  /* Tighter spacing for mobile 2-column layout */
+  @media (max-width: 640px) {
+    padding: 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.5rem;
+  }
 `;
 
 export const ItemName = styled.h3`
@@ -95,6 +104,17 @@ export const ItemName = styled.h3`
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  
+  /* Smaller text for mobile 2-column layout */
+  @media (max-width: 640px) {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.875rem;
+    margin: 0 0 0.375rem;
+  }
 `;
 
 export const ItemDetails = styled.div`
@@ -128,6 +148,15 @@ export const TagsContainer = styled.div<{ $hasButtons?: boolean }>`
   flex-wrap: wrap;
   gap: 0.25rem;
   margin: ${props => props.$hasButtons ? '0 0 0.75rem' : '0'};
+  
+  /* Tighter spacing for mobile 2-column layout */
+  @media (max-width: 640px) {
+    margin: ${props => props.$hasButtons ? '0 0 0.5rem' : '0'};
+  }
+  
+  @media (max-width: 480px) {
+    margin: ${props => props.$hasButtons ? '0 0 0.375rem' : '0'};
+  }
 `;
 
 export const Tag = styled.span`
@@ -148,4 +177,15 @@ export const ButtonContainer = styled.div`
   gap: 0.75rem;
   margin-top: auto;
   padding-top: 0.5rem;
+  
+  /* Tighter spacing for mobile 2-column layout */
+  @media (max-width: 640px) {
+    gap: 0.5rem;
+    padding-top: 0.375rem;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 0.375rem;
+    padding-top: 0.25rem;
+  }
 `;

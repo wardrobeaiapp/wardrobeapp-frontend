@@ -222,8 +222,8 @@ export const ItemsGrid = styled.div<{ $variant?: 'items' | 'default' }>`
   padding: 0.5rem 0;
   
   @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
     padding: 0.25rem 0;
   }
   

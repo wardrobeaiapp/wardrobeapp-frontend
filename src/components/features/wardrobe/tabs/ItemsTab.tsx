@@ -13,6 +13,18 @@ const ItemsGrid = styled.div<{ $variant?: string }>`
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: ${formTokens.spacing.lg};
   margin-top: ${formTokens.spacing.lg};
+  
+  /* 2 columns on mobile for better space utilization */
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${formTokens.spacing.md};
+    margin-top: ${formTokens.spacing.md};
+  }
+  
+  @media (max-width: 480px) {
+    gap: ${formTokens.spacing.sm};
+    margin-top: ${formTokens.spacing.sm};
+  }
 `;
 
 const EmptyState = styled.div`
