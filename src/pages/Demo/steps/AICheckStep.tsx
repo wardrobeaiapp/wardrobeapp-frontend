@@ -1,11 +1,99 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { FaSearch } from 'react-icons/fa';
+import styled from 'styled-components';
 import {
   DemoTitle,
   DemoSubtitle,
   CTAButton,
   HeroBlock,
 } from '../DemoPage.styles';
+import {
+  AICard,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardIcon,
+} from '../../../pages/AIAssistantPage.styles';
+import Button from '../../../components/common/Button';
 import { DemoStep } from '../types';
+
+// Demo-specific ButtonGroup with proper styling to override global styles
+const DemoButtonGroup = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  margin-top: auto;
+  
+  /* Override global button styles with higher specificity - target by position */
+  button {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
+    font-weight: 600 !important;
+    border-radius: 0.5rem !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    border: 1px solid transparent !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.875rem !important;
+    min-height: 40px !important;
+    flex: 1 !important;
+  }
+  
+  /* First button (Select from Wishlist) - Secondary outlined */
+  button:first-child {
+    background-color: transparent !important;
+    color: #6b7280 !important;
+    border: 1px solid #d1d5db !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #f9fafb !important;
+      border-color: #9ca3af !important;
+    }
+    
+    &:active:not(:disabled) {
+      background-color: #f3f4f6 !important;
+    }
+  }
+  
+  /* Second button (Start AI Check) - Primary */
+  button:last-child {
+    background-color: #8b5cf6 !important;
+    color: #ffffff !important;
+    border: 1px solid #8b5cf6 !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #7c3aed !important;
+      border-color: #7c3aed !important;
+    }
+    
+    &:active:not(:disabled) {
+      background-color: #6d28d9 !important;
+      border-color: #6d28d9 !important;
+    }
+    
+    &:disabled {
+      opacity: 0.7 !important;
+      cursor: not-allowed !important;
+      pointer-events: none !important;
+    }
+  }
+  
+  @media (max-width: 640px) {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    button {
+      flex: none !important;
+      width: 100% !important;
+    }
+  }
+`;
 
 interface AICheckStepProps {
   onNext: () => void;
@@ -13,9 +101,25 @@ interface AICheckStepProps {
 }
 
 const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleNext = () => {
     markStepCompleted(DemoStep.AI_CHECK);
     onNext();
+  };
+
+  const handleSelectFromWishlist = () => {
+    // Demo functionality - could show a mock wishlist selection
+    alert('In the real app, this would open your wishlist to select an item for AI analysis.');
+  };
+
+  const handleStartAICheck = () => {
+    // Demo functionality - simulate AI check
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      alert('Demo AI Check complete! In the real app, you would see detailed analysis and recommendations.');
+    }, 2000);
   };
 
   return (
@@ -30,7 +134,42 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         </CTAButton>
       </HeroBlock>
       
-      {/* TODO: Add AI check simulation content here */}
+      {/* AI Check Form - Simplified for Demo */}
+      <AICard>
+        <CardContent>
+          <CardHeader>
+            <CardIcon className="check">
+              <FaSearch size={20} />
+            </CardIcon>
+            <div>
+              <CardTitle>AI Check</CardTitle>
+              <CardDescription>
+                Get instant feedback on the clothing item you want to buy
+              </CardDescription>
+            </div>
+          </CardHeader>
+          
+          {/* Action Buttons */}
+          <DemoButtonGroup>
+            <Button 
+              variant="secondary" 
+              outlined 
+              onClick={handleSelectFromWishlist}
+              fullWidth
+            >
+              Select from Wishlist
+            </Button>
+            <Button 
+              variant="primary" 
+              onClick={handleStartAICheck}
+              disabled={isLoading}
+              fullWidth
+            >
+              {isLoading ? 'Analyzing...' : 'Start AI Check'}
+            </Button>
+          </DemoButtonGroup>
+        </CardContent>
+      </AICard>
     </div>
   );
 };
