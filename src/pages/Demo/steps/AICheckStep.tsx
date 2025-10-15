@@ -231,7 +231,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
             <Button 
               variant="primary" 
               onClick={handleStartAICheck}
-              disabled={isLoading}
+              disabled={isLoading || !selectedItem}
               fullWidth
             >
               {isLoading ? 'Analyzing...' : 'Start AI Check'}
