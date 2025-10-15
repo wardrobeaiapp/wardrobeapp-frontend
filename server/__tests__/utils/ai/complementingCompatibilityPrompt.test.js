@@ -629,7 +629,7 @@ describe('complementingCompatibilityPrompt', () => {
       
       // Should have extracted compatible items using fallback parsing
       expect(result).toEqual({
-        tops: [
+        top: [
           expect.objectContaining({
             id: '123',
             name: 'Brown Cardigan',
@@ -694,12 +694,12 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse, extendedStylingContext);
       
       expect(result).toEqual({
-        tops: [expect.objectContaining({
+        top: [expect.objectContaining({
           id: '123',
           name: 'Brown Cardigan',
           compatibilityTypes: ['complementing']
         })],
-        bottoms: [expect.objectContaining({
+        bottom: [expect.objectContaining({
           id: '111', 
           name: 'Navy Trousers',
           compatibilityTypes: ['complementing']
@@ -745,10 +745,10 @@ describe('complementingCompatibilityPrompt', () => {
       
       const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
       
-      expect(result.tops).toHaveLength(3);
+      expect(result.top).toHaveLength(3);
       
       // Should match full names from context
-      const itemNames = result.tops.map(item => item.name);
+      const itemNames = result.top.map(item => item.name);
       expect(itemNames).toContain('Brown Cardigan');
       expect(itemNames).toContain('Burgundy Sweater'); // Partial match: "Burgundy" -> "Burgundy Sweater"
       expect(itemNames).toContain('Black Jacket'); // Partial match: "Black" -> "Black Jacket"
@@ -771,9 +771,9 @@ describe('complementingCompatibilityPrompt', () => {
       
       const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
       
-      expect(result.tops).toHaveLength(2);
+      expect(result.top).toHaveLength(2);
       
-      const itemNames = result.tops.map(item => item.name);
+      const itemNames = result.top.map(item => item.name);
       expect(itemNames).toContain('Brown Cardigan');
       expect(itemNames).toContain('Black Jacket');
       expect(itemNames).not.toContain('Burgundy Sweater');
@@ -827,8 +827,8 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
       
       // Should only extract the properly formatted item
-      expect(result.tops).toHaveLength(1);
-      expect(result.tops[0].name).toBe('Burgundy Sweater');
+      expect(result.top).toHaveLength(1);
+      expect(result.top[0].name).toBe('Burgundy Sweater');
       
       // Should not have invalid category
       expect(result.invalid_category).toBeUndefined();
@@ -878,8 +878,8 @@ describe('complementingCompatibilityPrompt', () => {
       const result = parseCompatibilityResponse(claudeResponse, mockStylingContext);
       
       // Should only extract valid categories and ignore empty category names
-      expect(result.tops).toHaveLength(1);
-      expect(result.tops[0].name).toBe('Brown Cardigan');
+      expect(result.top).toHaveLength(1);
+      expect(result.top[0].name).toBe('Brown Cardigan');
       
       // Should not create category with empty name
       expect(result['']).toBeUndefined();
