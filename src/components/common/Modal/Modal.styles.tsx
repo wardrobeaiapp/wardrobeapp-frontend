@@ -14,6 +14,12 @@ export const ModalBackdrop = styled.div`
   z-index: 1000;
   animation: backdropFadeIn 0.2s ease-out;
 
+  /* Remove padding on mobile for full-screen modals */
+  @media (max-width: 768px) {
+    padding: 0;
+    align-items: flex-start;
+  }
+
   @keyframes backdropFadeIn {
     from {
       opacity: 0;
@@ -31,6 +37,12 @@ export const ModalContainer = styled.div`
   width: 100%;
   min-height: 100vh;
   padding: 1rem;
+  
+  /* Remove padding on mobile for full-screen effect */
+  @media (max-width: 768px) {
+    padding: 0;
+    align-items: flex-start;
+  }
 `;
 
 export const ModalContent = styled.div<{ size?: 'sm' | 'md' | 'lg' | 'xl' }>`
@@ -57,6 +69,17 @@ export const ModalContent = styled.div<{ size?: 'sm' | 'md' | 'lg' | 'xl' }>`
     }
   }}
 
+  /* Full-screen on mobile for better UX */
+  @media (max-width: 768px) {
+    max-width: 100vw !important;
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+    margin: 0;
+    animation: modalSlideInMobile 0.3s ease-out;
+  }
+
   @keyframes modalSlideIn {
     from {
       opacity: 0;
@@ -65,6 +88,17 @@ export const ModalContent = styled.div<{ size?: 'sm' | 'md' | 'lg' | 'xl' }>`
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes modalSlideInMobile {
+    from {
+      opacity: 0;
+      transform: translateY(100px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 `;
@@ -82,6 +116,7 @@ export const ModalHeader = styled.div`
   /* Mobile responsive adjustments */
   @media (max-width: 768px) {
     padding: 1rem 1rem 0.75rem 1rem;
+    border-radius: 0; /* No border radius for full-screen modal */
   }
   
   @media (max-width: 480px) {
@@ -157,6 +192,7 @@ export const ModalFooter = styled.div`
     padding: 0.75rem 1rem 1rem 1rem;
     flex-direction: column;
     gap: 0.5rem;
+    border-radius: 0; /* No border radius for full-screen modal */
     
     button {
       width: 100%;
