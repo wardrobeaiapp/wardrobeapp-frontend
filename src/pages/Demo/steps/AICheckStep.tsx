@@ -17,10 +17,11 @@ import {
 } from '../../../pages/AIAssistantPage.styles';
 import Button from '../../../components/common/Button';
 import WishlistSelectionModal from '../../../components/features/ai-assistant/modals/WishlistSelectionModal/WishlistSelectionModal';
+import AICheckResultModal from '../../../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
 import { DemoStep } from '../types';
 import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
 import { getWardrobeItems } from '../../../services/wardrobe/items';
-import { WardrobeItem } from '../../../types';
+import { WardrobeItem, WishlistStatus } from '../../../types';
 
 // Demo-specific ButtonGroup with proper styling to override global styles
 const DemoButtonGroup = styled.div`
@@ -107,6 +108,7 @@ interface AICheckStepProps {
 const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
+  const [isAIResultModalOpen, setIsAIResultModalOpen] = useState(false);
   const [selectedPersona, setSelectedPersona] = useState<SelectedPersona | null>(null);
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
@@ -145,13 +147,45 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
   };
 
   const handleStartAICheck = () => {
-    // Demo functionality - simulate AI check
+    // Demo functionality - simulate AI check loading then show result modal
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      const itemName = selectedItem ? selectedItem.name : 'the selected item';
-      alert(`Demo AI Check complete for ${itemName}! In the real app, you would see detailed analysis and recommendations.`);
+      setIsAIResultModalOpen(true);
     }, 2000);
+  };
+
+  // Mock data for demo AI check result
+  const mockAICheckData = {
+    score: 85,
+    status: WishlistStatus.APPROVED,
+    recommendationAction: "RECOMMEND" as const,
+    recommendationText: "Great choice! This item would be a perfect addition to your wardrobe.",
+    suitableScenarios: ["Work", "Casual", "Weekend"],
+    compatibleItems: {
+      "Bottoms": [
+        { name: "Black Dress Pants", category: "PANTS" },
+        { name: "Dark Wash Jeans", category: "PANTS" },
+        { name: "Navy Chinos", category: "PANTS" }
+      ],
+      "Outerwear": [
+        { name: "Navy Blazer", category: "JACKET" },
+        { name: "Denim Jacket", category: "JACKET" }
+      ]
+    },
+    outfitCombinations: [
+      {
+        name: "Professional Look",
+        items: ["Elegant Plain T-Shirt", "Black Dress Pants", "Navy Blazer"],
+        occasion: "Work"
+      },
+      {
+        name: "Casual Weekend",
+        items: ["Elegant Plain T-Shirt", "Dark Wash Jeans", "Denim Jacket"],
+        occasion: "Casual"
+      }
+    ],
+    imageUrl: selectedItem?.imageUrl || undefined
   };
 
   return (
@@ -212,6 +246,34 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         onClose={() => setIsWishlistModalOpen(false)}
         items={wardrobeItems}
         onSelectItem={handleWishlistItemSelect}
+      />
+
+      {/* AI Check Result Modal */}
+      <AICheckResultModal
+        isOpen={isAIResultModalOpen}
+        onClose={() => setIsAIResultModalOpen(false)}
+        analysisResult="Demo analysis complete"
+        score={mockAICheckData.score}
+        status={mockAICheckData.status}
+        recommendationAction={mockAICheckData.recommendationAction}
+        recommendationText={mockAICheckData.recommendationText}
+        suitableScenarios={mockAICheckData.suitableScenarios}
+        compatibleItems={mockAICheckData.compatibleItems}
+        outfitCombinations={mockAICheckData.outfitCombinations}
+        imageUrl={mockAICheckData.imageUrl}
+        onAddToWishlist={() => {
+          // Demo functionality - just show message
+          alert('Demo: Item would be added to wishlist in real app!');
+          setIsAIResultModalOpen(false);
+        }}
+        onSkip={() => {
+          // Demo functionality - just close modal
+          setIsAIResultModalOpen(false);
+        }}
+        onDecideLater={() => {
+          // Demo functionality - just close modal
+          setIsAIResultModalOpen(false);
+        }}
       />
     </div>
   );
