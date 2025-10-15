@@ -58,6 +58,7 @@ interface AICheckResultModalProps {
   errorDetails?: string; // Detailed error message
   recommendationAction?: string; // "SKIP" / "RECOMMEND" / "MAYBE"
   recommendationText?: string; // Human-readable explanation
+  hideActions?: boolean; // Hide action buttons (for demo mode)
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -77,7 +78,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   error,
   errorDetails,
   recommendationAction,
-  recommendationText
+  recommendationText,
+  hideActions = false
 }) => {
 
   const handleAddToWishlist = () => {
@@ -95,7 +97,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
     onClose();
   };
 
-  const actions: ModalAction[] = [
+  // Only create actions if not hiding them (for demo mode)
+  const actions: ModalAction[] = hideActions ? [] : [
     {
       label: 'Add to wishlist',
       onClick: handleAddToWishlist,

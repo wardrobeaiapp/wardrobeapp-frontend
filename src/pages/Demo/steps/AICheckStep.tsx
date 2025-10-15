@@ -248,7 +248,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         onSelectItem={handleWishlistItemSelect}
       />
 
-      {/* AI Check Result Modal */}
+      {/* AI Check Result Modal - No action buttons for demo */}
       <AICheckResultModal
         isOpen={isAIResultModalOpen}
         onClose={() => setIsAIResultModalOpen(false)}
@@ -261,19 +261,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         compatibleItems={mockAICheckData.compatibleItems}
         outfitCombinations={mockAICheckData.outfitCombinations}
         imageUrl={mockAICheckData.imageUrl}
-        onAddToWishlist={() => {
-          // Demo functionality - just show message
-          alert('Demo: Item would be added to wishlist in real app!');
-          setIsAIResultModalOpen(false);
-        }}
-        onSkip={() => {
-          // Demo functionality - just close modal
-          setIsAIResultModalOpen(false);
-        }}
-        onDecideLater={() => {
-          // Demo functionality - just close modal
-          setIsAIResultModalOpen(false);
-        }}
+        hideActions={true}
       />
     </div>
   );
