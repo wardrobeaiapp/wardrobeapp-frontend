@@ -12,6 +12,80 @@ const FiltersContainer = styled(StyledFiltersContainer)<{ $layout?: 'horizontal'
   margin-bottom: ${formTokens.spacing.xl};
   width: 100%;
   align-items: flex-end;
+  
+  /* Mobile-specific overrides for better responsive behavior */
+  @media (max-width: 768px) {
+    /* Force vertical layout on mobile */
+    > div {
+      flex-direction: column !important;
+      gap: 0.75rem !important; /* Tighter spacing like wardrobe page */
+    }
+    
+    /* Search container adjustments - target multiple possible containers */
+    > div > div:first-child,
+    .search-container,
+    [data-testid="search-container"],
+    div[style*="flex"] > div:first-child {
+      min-width: 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+      flex: 1 1 100% !important;
+      margin-bottom: 0 !important;
+      
+      /* Target the actual search input field */
+      input {
+        width: 100% !important;
+      }
+      
+      /* Target form field wrapper */
+      > div {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        
+        /* Target input container */
+        .form-input-container,
+        div {
+          width: 100% !important;
+        }
+      }
+    }
+    
+    /* Filter group adjustments - keep Category and Season in same row */
+    > div > div:last-child {
+      width: 100% !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      gap: 0.75rem !important;
+      
+      /* Category and Season in same row (first two filters) */
+      > div:nth-child(1), > div:nth-child(2) {
+        flex: 1 1 calc(50% - 0.375rem) !important;
+        min-width: calc(50% - 0.375rem) !important;
+        margin-bottom: 0 !important;
+      }
+      
+      /* Color filter takes full width (third filter) */
+      > div:nth-child(3), > div:nth-child(n+4) {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+        margin-bottom: 0 !important;
+        
+        &:not(:last-child) {
+          margin-bottom: 0.5rem !important;
+        }
+      }
+    }
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: ${formTokens.spacing.lg};
+    
+    /* Even tighter spacing on small mobile */
+    > div > div:last-child > div {
+      margin-bottom: 0 !important;
+    }
+  }
 `;
 
 const SearchContainer = styled(FormField)`

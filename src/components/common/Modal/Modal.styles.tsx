@@ -78,6 +78,15 @@ export const ModalHeader = styled.div`
   background-color: white;
   border-radius: 12px 12px 0 0;
   flex-shrink: 0;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    padding: 1rem 1rem 0.75rem 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.75rem 0.75rem 0.5rem 0.75rem;
+  }
 `;
 
 export const ModalTitle = styled.h2`
@@ -85,6 +94,11 @@ export const ModalTitle = styled.h2`
   font-weight: 700;
   color: #1f2937;
   margin: 0;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    font-size: 1.125rem;
+  }
 `;
 
 export const CloseButton = styled.button`
@@ -117,6 +131,15 @@ export const ModalBody = styled.div`
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.75rem;
+  }
 `;
 
 export const ModalFooter = styled.div`
@@ -128,4 +151,19 @@ export const ModalFooter = styled.div`
   background-color: white;
   border-radius: 0 0 12px 12px;
   flex-shrink: 0;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    padding: 0.75rem 1rem 1rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    button {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.5rem 0.75rem 0.75rem 0.75rem;
+  }
 `;

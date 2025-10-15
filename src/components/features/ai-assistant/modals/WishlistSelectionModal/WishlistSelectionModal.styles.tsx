@@ -15,6 +15,10 @@ export const EmptyState = styled.div`
 // Search and Filter Styles
 export const FilterSection = styled.div`
   padding-bottom: 1.5rem;
+  
+  @media (max-width: 480px) {
+    padding-bottom: 0;
+  }
 `;
 
 export const SearchContainer = styled.div`
@@ -134,4 +138,10 @@ export const ItemsFoundText = styled.div`
   font-size: 0.875rem;
   color: #6b7280;
   font-weight: 500;
+  margin-top: 1rem;
+  
+  @media (max-width: 768px) {
+    margin-top: 0.5rem;
+    text-align: center;
+  }
 `;
