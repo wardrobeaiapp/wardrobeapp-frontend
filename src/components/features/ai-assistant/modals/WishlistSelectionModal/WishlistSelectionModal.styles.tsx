@@ -142,6 +142,7 @@ export const ItemsFoundText = styled.div`
   
   @media (max-width: 768px) {
     margin-top: 0.5rem;
+    margin-bottom: 1rem;
     text-align: center;
   }
 `;

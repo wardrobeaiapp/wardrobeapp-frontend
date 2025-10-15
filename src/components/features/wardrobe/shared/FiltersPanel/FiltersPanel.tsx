@@ -94,6 +94,13 @@ const SearchContainer = styled(FormField)`
   max-width: 300px;
   margin: 0;
   
+  /* Remove width constraints on mobile for full-width search */
+  @media (max-width: 768px) {
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
+  }
+  
   .form-input-container {
     position: relative;
     width: 100%;

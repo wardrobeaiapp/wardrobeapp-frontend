@@ -6,6 +6,18 @@ export const ItemsGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
+  
+  /* 2 columns on mobile for better space utilization */
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
 `;
 
 // Use transient props with $ prefix to prevent isSelected from being forwarded to the DOM
@@ -22,6 +34,16 @@ export const ItemCard = styled.div<{ $isSelected: boolean }>`
     border-color: ${props => props.$isSelected ? '#4f46e5' : '#d1d5db'};
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
+  
+  /* Optimize card spacing for mobile 2-column layout */
+  @media (max-width: 768px) {
+    padding: 0.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.375rem;
+    border-radius: 0.25rem;
+  }
 `;
 
 export const ItemImage = styled.img`
@@ -36,6 +58,12 @@ export const ItemName = styled.div`
   font-weight: 500;
   font-size: 0.875rem;
   margin-bottom: 0.25rem;
+  
+  /* Slightly smaller text for mobile 2-column layout */
+  @media (max-width: 768px) {
+    font-size: 0.8125rem;
+    margin-bottom: 0.1875rem;
+  }
 `;
 
 export const ItemCategory = styled.div`
@@ -103,6 +131,15 @@ export const PlaceholderImage = styled.div`
 
 export const ItemContent = styled.div`
   padding-top: 0.75rem;
+  
+  /* Tighter spacing for mobile 2-column layout */
+  @media (max-width: 768px) {
+    padding-top: 0.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding-top: 0.375rem;
+  }
 `;
 
 export const ItemDetail = styled.div`
@@ -126,6 +163,15 @@ export const SelectionIndicator = styled.div`
   font-size: 0.75rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 2;
+  
+  /* Slightly smaller indicator for mobile cards */
+  @media (max-width: 768px) {
+    width: 1.25rem;
+    height: 1.25rem;
+    top: 0.375rem;
+    right: 0.375rem;
+    font-size: 0.6875rem;
+  }
 `;
 
 export const ResultsCount = styled.div`
