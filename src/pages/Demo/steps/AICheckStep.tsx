@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import styled from 'styled-components';
 import {
@@ -16,7 +16,11 @@ import {
   CardIcon,
 } from '../../../pages/AIAssistantPage.styles';
 import Button from '../../../components/common/Button';
+import WishlistSelectionModal from '../../../components/features/ai-assistant/modals/WishlistSelectionModal/WishlistSelectionModal';
 import { DemoStep } from '../types';
+import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
+import { getWardrobeItems } from '../../../services/wardrobe/items';
+import { WardrobeItem } from '../../../types';
 
 // Demo-specific ButtonGroup with proper styling to override global styles
 const DemoButtonGroup = styled.div`
@@ -102,6 +106,29 @@ interface AICheckStepProps {
 
 const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
+  const [selectedPersona, setSelectedPersona] = useState<SelectedPersona | null>(null);
+  const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
+  const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
+
+  useEffect(() => {
+    const persona = getSelectedPersona();
+    setSelectedPersona(persona);
+    
+    if (persona) {
+      loadWardrobeData(persona.userId);
+    }
+  }, []);
+
+  const loadWardrobeData = async (userId: string) => {
+    try {
+      const items = await getWardrobeItems(userId);
+      setWardrobeItems(items);
+      console.log(`Loaded ${items.length} items for wishlist selection`);
+    } catch (err: any) {
+      console.error('Error loading wardrobe data:', err);
+    }
+  };
 
   const handleNext = () => {
     markStepCompleted(DemoStep.AI_CHECK);
@@ -109,8 +136,12 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
   };
 
   const handleSelectFromWishlist = () => {
-    // Demo functionality - could show a mock wishlist selection
-    alert('In the real app, this would open your wishlist to select an item for AI analysis.');
+    setIsWishlistModalOpen(true);
+  };
+
+  const handleWishlistItemSelect = (item: WardrobeItem) => {
+    setSelectedItem(item);
+    setIsWishlistModalOpen(false);
   };
 
   const handleStartAICheck = () => {
@@ -118,7 +149,8 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      alert('Demo AI Check complete! In the real app, you would see detailed analysis and recommendations.');
+      const itemName = selectedItem ? selectedItem.name : 'the selected item';
+      alert(`Demo AI Check complete for ${itemName}! In the real app, you would see detailed analysis and recommendations.`);
     }, 2000);
   };
 
@@ -127,7 +159,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
       <HeroBlock>
         <DemoTitle>Test the AI Yourself</DemoTitle>
         <DemoSubtitle>
-          Try "shopping" for different items and see the instant, data-backed feedback it gives.
+          Try "shopping" for different items from {selectedPersona?.name || 'the selected persona'}'s wishlist and see the instant, data-backed feedback it gives.
         </DemoSubtitle>
         <CTAButton onClick={handleNext}>
           Get Early Access
@@ -157,7 +189,10 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
               onClick={handleSelectFromWishlist}
               fullWidth
             >
-              Select from Wishlist
+              {selectedItem ? 
+                `Selected: ${selectedItem.name.length > 20 ? selectedItem.name.slice(0, 20) + '...' : selectedItem.name}` : 
+                'Select from Wishlist'
+              }
             </Button>
             <Button 
               variant="primary" 
@@ -170,6 +205,14 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
           </DemoButtonGroup>
         </CardContent>
       </AICard>
+
+      {/* Wishlist Selection Modal */}
+      <WishlistSelectionModal
+        isOpen={isWishlistModalOpen}
+        onClose={() => setIsWishlistModalOpen(false)}
+        items={wardrobeItems}
+        onSelectItem={handleWishlistItemSelect}
+      />
     </div>
   );
 };
