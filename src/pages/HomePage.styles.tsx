@@ -6,15 +6,68 @@ export const PageHeader = styled.header`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
 `;
 
 export const HeaderContent = styled.div`
   margin-bottom: 0;
+  
+  /* Mobile typography adjustments */
+  h1 {
+    @media (max-width: 768px) {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+  
+  p {
+    @media (max-width: 768px) {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    
+    @media (max-width: 480px) {
+      font-size: 0.8125rem;
+    }
+  }
 `;
 
 export const ButtonsContainer = styled.div`
   display: flex;
   gap: 0.5rem;
+  
+  /* Mobile responsive layout */
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.75rem;
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 export const MarkCompleteContainer = styled.div`
@@ -24,6 +77,16 @@ export const MarkCompleteContainer = styled.div`
   gap: 4px;
   height: 100%;
   justify-content: flex-start;
+  
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 0.5rem;
+  }
 `;
 
 export const MarkCompleteText = styled.span`
@@ -32,12 +95,34 @@ export const MarkCompleteText = styled.span`
   text-align: center;
   max-width: 200px;
   line-height: 1.2;
+  
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    text-align: left;
+    max-width: 100%;
+    font-size: 0.6875rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 0.625rem;
+  }
 `;
 
 export const TabsContainer = styled.div`
   display: flex;
   border-bottom: 1px solid #e5e7eb;
   margin-bottom: 2rem;
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  @media (max-width: 480px) {
+    margin-bottom: 1rem;
+  }
 `;
 
 // Tab button with icon and active state
@@ -59,6 +144,7 @@ export const Tab = styled.button<TabProps>`
   font-size: 14px;
   cursor: pointer;
   transition: color 0.2s ease;
+  white-space: nowrap;
   
   &::after {
     content: '';
@@ -78,6 +164,28 @@ export const Tab = styled.button<TabProps>`
   svg {
     margin-right: 8px;
     font-size: 16px;
+  }
+  
+  /* Mobile responsive adjustments */
+  @media (max-width: 768px) {
+    padding: 10px 12px;
+    font-size: 13px;
+    gap: 6px;
+    
+    svg {
+      margin-right: 6px;
+      font-size: 14px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    padding: 8px 10px;
+    font-size: 12px;
+    
+    svg {
+      margin-right: 4px;
+      font-size: 12px;
+    }
   }
 `;
 
