@@ -115,17 +115,6 @@ const ItemsTab = React.memo<ItemsTabProps>(({
     return Array.isArray(season) ? (season[0] || 'all') : season;
   };
 
-  // Debug logging - only in development
-  if (process.env.NODE_ENV === 'development') {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useEffect(() => {
-      console.log('[ItemsTab] Render', { 
-        totalItems: items.length,
-        filteredCount: filteredItems.length,
-        filters: { categoryFilter, seasonFilter, searchQuery }
-      });
-    }, [items.length, filteredItems.length, categoryFilter, seasonFilter, searchQuery]);
-  }
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);

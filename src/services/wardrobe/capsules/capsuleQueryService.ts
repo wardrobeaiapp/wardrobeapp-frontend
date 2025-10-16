@@ -19,29 +19,12 @@ import {
  * Fetch all capsules from the database
  */
 export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
-  // Only log if we haven't logged in the last 500ms (handles React StrictMode double renders)
-  const now = Date.now();
-  const shouldLog = now - cacheState.lastQueryLogTime > 500;
-  
-  if (shouldLog) {
-    console.log('ud83dudd0d [DATABASE] Fetching fresh capsules data from database');
-    cacheState.lastQueryLogTime = now;
-  }
-  
   try {
     // Get the current user
     const user = await getCurrentUser();
     
-    if (shouldLog) {
-      console.log('ud83dudc64 [DATABASE] User authentication:', { authenticated: !!user });
-    }
-    
     // Check if we're in guest mode
     const isGuestMode = !user && isGuestModeEnabled();
-    
-    if (shouldLog) {
-      console.log('ud83dudd11 [DATABASE] Guest mode:', isGuestMode);
-    }
 
     // Define the expected database capsule type with null values from the database
     interface DBCapsule {
@@ -67,21 +50,10 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
     
     // If in guest mode, explicitly filter for guest user_id
     if (isGuestMode) {
-      if (shouldLog) {
-        console.log('ud83dudc64 [DATABASE] Filtering for guest user');
-      }
       query = query.eq('user_id', 'guest');
     }
 
     const { data, error } = await query as { data: DBCapsule[] | null; error: any };
-
-    // Log query results if we should be logging
-    if (shouldLog) {
-      console.log('ud83dudcc2 [DATABASE] Query results:', { 
-        resultCount: data?.length || 0, 
-        hasError: !!error 
-      });
-    }
 
     if (error) {
       // Always log errors, even if shouldLog is false
@@ -91,9 +63,6 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
 
     // If no capsules found, return empty array
     if (!data || data.length === 0) {
-      if (shouldLog) {
-        console.log('ud83dudd0d [DATABASE] No capsules found in database');
-      }
       return [];
     }
 
@@ -205,10 +174,6 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
     cacheState.capsulesCache.data = dbCapsules;
     cacheState.capsulesCache.timestamp = Date.now();
     
-    if (shouldLog) {
-      console.log('ud83dudd04 [CACHE] Updated cache with fresh data, items:', dbCapsules.length);
-    }
-    
     return dbCapsules;
   } catch (error) {
     // Always log errors
@@ -216,9 +181,6 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
     
     // Try to get capsules from local storage as fallback in guest mode
     const guestModeEnabled = isGuestModeEnabled();
-    if (guestModeEnabled && shouldLog) {
-      console.log('ud83dudcbe [FALLBACK] Attempting to load capsules from local storage');
-    }
     
     if (guestModeEnabled) {
       try {
@@ -246,13 +208,9 @@ export async function fetchCapsulesFromDB(): Promise<Capsule[]> {
       }
     }
     
-    // Update cache with empty array
+    // Always set empty cache on error to prevent stale data
     cacheState.capsulesCache.data = [];
     cacheState.capsulesCache.timestamp = Date.now();
-    
-    if (shouldLog) {
-      console.log('ud83dudcbe [CACHE] Updated cache with empty array due to error');
-    }
     
     return [];
   }

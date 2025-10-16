@@ -95,10 +95,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>
   ): Promise<OutfitExtended | null> => {
     try {
-      console.log('[WardrobeContext.updateOutfit] Starting update for outfit:', id);
-      console.log('[WardrobeContext.updateOutfit] Updates received:', updates);
-      console.log('[WardrobeContext.updateOutfit] Scenarios in updates:', updates.scenarios);
-      
       const currentOutfit = outfits.find((o: OutfitExtended) => o.id === id);
       if (!currentOutfit) return null;
       
@@ -112,9 +108,6 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         // Include scenarioNames if present
         ...(updates.scenarioNames && { scenarioNames: updates.scenarioNames }),
       };
-      
-      console.log('[WardrobeContext.updateOutfit] Prepared updateData:', updateData);
-      console.log('[WardrobeContext.updateOutfit] Scenarios in updateData:', updateData.scenarios);
       
       // Call the update function with proper types
       const updatedOutfit = await updateOutfitHook(id, updateData);
@@ -265,7 +258,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     const handleItemDeleted = (event: Event) => {
       const customEvent = event as CustomEvent<{ updatedOutfits: OutfitExtended[] }>;
       if (customEvent.detail?.updatedOutfits) {
-        console.log('Item deleted, outfits may need refresh');
+        // Outfits may need refresh
       }
     };
     

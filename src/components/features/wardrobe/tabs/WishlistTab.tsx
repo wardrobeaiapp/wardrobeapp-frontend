@@ -94,19 +94,6 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
     setScenarioFilter(value);
   };
   
-  // Debug logging
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[WishlistTab] Items received:', items.length);
-      console.log('[WishlistTab] Filtered wishlist items:', filteredItems.length);
-      console.log('[WishlistTab] Active filters:', { 
-        categoryFilter, 
-        seasonFilter, 
-        statusFilter,
-        searchQuery 
-      });
-    }
-  }, [items.length, filteredItems.length, categoryFilter, seasonFilter, statusFilter, searchQuery]);
 
   if (isLoading) {
     return (

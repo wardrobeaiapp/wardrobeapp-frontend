@@ -20,17 +20,7 @@ import { PageHeader, HeaderContent } from './HomePage.styles';
 import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
-  // Data loading hooks with proper null handling
-  const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
-  const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
-  const { capsules: capsulesData = null, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
-  
-  // Provide default empty arrays for null data
-  const allItems = itemsData || [];
-  const outfits = outfitsData || [];
-  const capsules = capsulesData || [];
-  
-  // Tab and filter state management
+  // Tab and filter state management (needed early)
   const { 
     activeTab, 
     setActiveTab,
@@ -47,42 +37,55 @@ const HomePage: React.FC = () => {
     setSearchQuery,
     setScenarioFilter
   } = useTabState(TabType.ITEMS);
+
+  // Data loading hooks with proper null handling  
+  const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
+  const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
+  const { capsules: capsulesData = null, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
   
-  // Get filtered items using the useItemFiltering hook
-  const { filteredItems, itemCount } = useItemFiltering(allItems, {
+  // Provide default empty arrays for null data
+  const allItems = itemsData || [];
+  const outfits = outfitsData || [];
+  const capsules = capsulesData || [];
+  
+  // Memoize filter options to prevent unnecessary recalculations
+  const itemFilterOptions = useMemo(() => ({
     category: categoryFilter,
     season: seasonFilter,
     searchQuery,
     wishlistStatus: statusFilter,
     isWishlist: activeTab === TabType.WISHLIST
-  });
+  }), [categoryFilter, seasonFilter, searchQuery, statusFilter, activeTab]);
 
-  // Get filtered outfits using the useOutfitFiltering hook
-  const { filteredOutfits: filteredOutfitsList, outfitCount } = useOutfitFiltering(outfits, {
-    season: seasonFilter,
-    scenario: scenarioFilter,
-    searchQuery: activeTab === TabType.OUTFITS ? searchQuery : ''
-  });
+  // Defer heavy filtering operations until data is actually loaded
+  const { filteredItems, itemCount } = useItemFiltering(
+    isLoadingItems ? [] : allItems, 
+    itemFilterOptions
+  );
 
-  // Get filtered capsules using the useCapsuleFiltering hook
-  const { filteredCapsules: filteredCapsulesList, capsuleCount } = useCapsuleFiltering(capsules, {
-    season: seasonFilter,
-    scenario: scenarioFilter,
-    searchQuery: activeTab === TabType.CAPSULES ? searchQuery : ''
-  });
+  // Only filter outfits when data is loaded and tab is active (reduces initial blocking)
+  const { filteredOutfits: filteredOutfitsList, outfitCount } = useOutfitFiltering(
+    (isLoadingOutfits || activeTab !== TabType.OUTFITS) ? [] : outfits, 
+    {
+      season: seasonFilter,
+      scenario: scenarioFilter,
+      searchQuery: activeTab === TabType.OUTFITS ? searchQuery : ''
+    }
+  );
+
+  // Only filter capsules when data is loaded and tab is active (reduces initial blocking)
+  const { filteredCapsules: filteredCapsulesList, capsuleCount } = useCapsuleFiltering(
+    (isLoadingCapsules || activeTab !== TabType.CAPSULES) ? [] : capsules, 
+    {
+      season: seasonFilter,
+      scenario: scenarioFilter,
+      searchQuery: activeTab === TabType.CAPSULES ? searchQuery : ''
+    }
+  );
   
   // Get modal state - lifted up to share with both TabActions and HomePageModals
   const modalState = useModalState();
   
-  // Debug logging for modal state
-  React.useEffect(() => {
-    console.log('[HomePage] Modal state:', {
-      isAddModalOpen: modalState.isAddModalOpen,
-      isViewItemModalOpen: modalState.isViewItemModalOpen,
-      isViewOutfitModalOpen: modalState.isViewOutfitModalOpen,
-      isViewCapsuleModalOpen: modalState.isViewCapsuleModalOpen,
-    });
-  }, [modalState.isAddModalOpen, modalState.isViewItemModalOpen, modalState.isViewOutfitModalOpen, modalState.isViewCapsuleModalOpen]);
   
   // Get data handlers from useHomePageData and tab actions from useTabActions
   // Moved above the conditional return to follow React's Rules of Hooks
@@ -119,8 +122,13 @@ const HomePage: React.FC = () => {
 
   // Get modal state directly from useModalState - moved above conditional return
   
-  // Get the appropriate list based on active tab
+  // Get the appropriate list based on active tab - optimized with early returns for loading states
   const currentItems = useMemo(() => {
+    // Return empty array during loading to prevent unnecessary processing
+    if (isLoadingItems && (activeTab === TabType.ITEMS || activeTab === TabType.WISHLIST)) return [];
+    if (isLoadingOutfits && activeTab === TabType.OUTFITS) return [];
+    if (isLoadingCapsules && activeTab === TabType.CAPSULES) return [];
+    
     switch (activeTab) {
       case TabType.ITEMS:
         return filteredItems;
@@ -129,11 +137,11 @@ const HomePage: React.FC = () => {
       case TabType.CAPSULES:
         return filteredCapsulesList;
       case TabType.WISHLIST:
-        return filteredItems.filter(item => item.wishlist);
+        return filteredItems; // Already filtered by useItemFiltering with isWishlist: true
       default:
         return [];
     }
-  }, [activeTab, filteredItems, filteredOutfitsList, filteredCapsulesList]);
+  }, [activeTab, filteredItems, filteredOutfitsList, filteredCapsulesList, isLoadingItems, isLoadingOutfits, isLoadingCapsules]);
 
   // Show loading state while initial data is being loaded
   if (!initialLoadComplete) {

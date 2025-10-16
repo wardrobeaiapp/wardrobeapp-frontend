@@ -16,8 +16,13 @@ export const useMockDataStatus = (items: WardrobeItem[], disabled = false) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Skip all processing when disabled
+    if (disabled) {
+      return;
+    }
+
     const checkMockData = async () => {
-      if (!items || items.length === 0 || disabled) {
+      if (!items || items.length === 0) {
         setMockStatus({});
         return;
       }
