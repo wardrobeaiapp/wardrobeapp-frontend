@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
+import Header from '../components/layout/Header/Header';
 import {
   useAICheck,
   useAIRecommendation,
@@ -10,7 +11,6 @@ import {
 } from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
 import type { WardrobeItem } from '../types';
-import PageHeader from '../components/layout/Header/Header';
 import AIHistoryDashboard from '../components/features/ai-assistant/AIHistoryDashboard/AIHistoryDashboard';
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
@@ -214,7 +214,7 @@ const AIAssistantPage: React.FC = () => {
 
   return (
     <>
-      <PageHeader title="AI Assistant" />
+      <Header />
       <PageContainer>
         {showFullHistory ? (
           <AIHistoryDashboard

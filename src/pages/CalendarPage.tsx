@@ -86,7 +86,7 @@ const CalendarPage: React.FC = () => {
   
   return (
     <>
-      <Header title="Outfit Calendar" />
+      <Header />
       <PageContainer>
         <PageHeader 
           title="Outfit Calendar"

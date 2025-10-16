@@ -87,9 +87,9 @@ const Header: React.FC<HeaderProps> = ({
         <>
           {!isOnboarding && (
             <Nav>
-              <NavLink to="/" $active={isActive('/')}>My Wardrobe</NavLink>
-              <NavLink to="/calendar" $active={isActive('/calendar')}>Calendar</NavLink>
-              <NavLink to="/ai-assistant" $active={isActive('/ai-assistant')}>AI Assistant</NavLink>
+              <NavLink to="/" $active={isActive('/')} onClick={() => console.log('🏠 My Wardrobe clicked')}>My Wardrobe</NavLink>
+              <NavLink to="/calendar" $active={isActive('/calendar')} onClick={() => console.log('📅 Calendar clicked')}>Calendar</NavLink>
+              <NavLink to="/ai-assistant" $active={isActive('/ai-assistant')} onClick={() => console.log('🎯 AI Assistant clicked')}>AI Assistant</NavLink>
             </Nav>
           )}
 

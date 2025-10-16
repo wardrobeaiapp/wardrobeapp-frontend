@@ -141,6 +141,8 @@ const RedirectRoute: React.FC = () => {
   return <Navigate to={isAuthenticated ? "/" : "/welcome"} replace />;
 };
 
+
+
 // Footer component with route-based variant logic
 const AppFooter: React.FC = () => {
   const location = useLocation();
