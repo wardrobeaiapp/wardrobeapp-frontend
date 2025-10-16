@@ -1,5 +1,6 @@
 import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
+import { supabase } from '../services/core';
 import Header from '../components/layout/Header/Header';
 import {
   useAICheck,
@@ -147,25 +148,33 @@ const AIAssistantPage: React.FC = () => {
     }
 
     try {
-      const response = await fetch('/api/ai-analysis-mocks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          wardrobe_item_id: selectedWishlistItem.id,
-          analysis_data: mockData,
-          user_id: selectedWishlistItem.userId
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to save mock data');
+      // Get authenticated user from Supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
       }
 
-      const result = await response.json();
-      console.log('Mock data saved successfully:', result);
+      console.log('💾 Saving analysis as mock for item:', selectedWishlistItem.id, 'user:', user.id);
+      
+      // Save directly to Supabase (like wardrobe items)
+      const { data, error } = await supabase
+        .from('ai_analysis_mocks')
+        .upsert({
+          wardrobe_item_id: selectedWishlistItem.id,
+          analysis_data: mockData,
+          created_from_real_analysis: true,
+          created_by: user.id,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'wardrobe_item_id'
+        });
+
+      if (error) {
+        console.error('Supabase error saving mock:', error);
+        throw new Error(error.message || 'Failed to save mock data');
+      }
+
+      console.log('✅ Mock data saved successfully via Supabase:', data);
     } catch (error) {
       console.error('Error saving mock data:', error);
       throw error; // Re-throw to trigger error state in modal

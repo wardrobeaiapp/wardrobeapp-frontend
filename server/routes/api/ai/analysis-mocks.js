@@ -1,5 +1,6 @@
 const express = require('express');
 const { createClient } = require('@supabase/supabase-js');
+const auth = require('../../../middleware/auth');
 
 const router = express.Router();
 
@@ -30,7 +31,7 @@ if (!supabaseUrl || !supabaseKey) {
 // @route   POST /api/ai-analysis-mocks
 // @desc    Save AI analysis result as mock data for demo use
 // @access  Private (requires authentication)
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     // Check if Supabase is configured
     if (!supabaseConfigured) {
@@ -40,7 +41,8 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const { wardrobe_item_id, analysis_data, user_id } = req.body;
+    const { wardrobe_item_id, analysis_data } = req.body;
+    const user_id = req.user.id; // Get user ID from authenticated token
     
     console.log('Saving AI analysis mock:', {
       wardrobe_item_id,
@@ -62,11 +64,7 @@ router.post('/', async (req, res) => {
       });
     }
     
-    if (!user_id) {
-      return res.status(400).json({ 
-        error: 'user_id is required' 
-      });
-    }
+    // user_id now comes from authenticated token, so no need to validate
 
     // For mock data, we don't strictly need to verify wardrobe item existence
     // since it's just for demo/testing purposes. Let's make this optional.

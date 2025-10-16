@@ -208,8 +208,15 @@ export const login = async (userData: LoginData): Promise<AuthResponse> => {
     }
     
     // Store session token in localStorage
-    if (authData.session) {
+    if (authData.session && authData.session.access_token) {
+      console.log('🔐 Storing Supabase access token in localStorage:', authData.session.access_token.substring(0, 50) + '...');
       localStorage.setItem('token', authData.session.access_token);
+      
+      // Verify token was stored
+      const storedToken = localStorage.getItem('token');
+      console.log('🔐 Token verification - stored successfully:', !!storedToken);
+    } else {
+      console.warn('🔐 No session or access_token in login response:', authData);
     }
     
     // Return formatted response
