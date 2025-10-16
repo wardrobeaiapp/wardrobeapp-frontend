@@ -7,6 +7,7 @@ import { formTokens } from '../../../../styles/tokens/forms';
 import { CategoryFilter, SearchFilter, SeasonFilter, ScenarioFilter } from '../shared/Filters';
 import { FiltersContainer } from '../../../../pages/HomePage.styles';
 import { useItemFiltering } from '../../../../hooks/home/useItemFiltering';
+import { useMockDataStatus } from '../../../../hooks/ai';
 
 const ItemsGrid = styled.div<{ $variant?: string }>`
   display: grid;
@@ -103,6 +104,9 @@ const ItemsTab = React.memo<ItemsTabProps>(({
     isWishlist: false // ItemsTab only shows non-wishlist items
   });
 
+  // Check which items have saved mock data
+  const { hasMockData } = useMockDataStatus(filteredItems);
+
   // Helper for SeasonFilter component - needed for display value
   const getFirstSeason = (season: string | string[]): string => {
     return Array.isArray(season) ? (season[0] || 'all') : season;
@@ -184,6 +188,8 @@ const ItemsTab = React.memo<ItemsTabProps>(({
                   onView={onViewItem}
                   onEdit={() => onEditItem(item.id)}
                   onDelete={() => onDeleteItem(item.id)}
+                  hasMockData={hasMockData(item.id)}
+                  showAIBadge={true}
                 />
               ))}
             </ItemsGrid>

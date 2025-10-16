@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter, ScenarioFilter } from '../shared/Filters';
 import { WardrobeItem, WishlistStatus } from '../../../../types';
 import { useWishlistFiltering } from '../../../../hooks/home/useWishlistFiltering';
+import { useMockDataStatus } from '../../../../hooks/ai';
 import {
   FiltersContainer,
   ItemsGrid,
@@ -79,6 +80,9 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
     setSearchQuery,
     setStatusFilter
   });
+
+  // Check which items have saved mock data
+  const { hasMockData } = useMockDataStatus(filteredItems);
   
   const handleSeasonChange = (value: string | string[]) => {
     setSeasonFilter(value);
@@ -167,6 +171,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
               onEdit={onEditItem}
               onDelete={onDeleteItem}
               hideStatusIcon={hideStatusIcon}
+              hasMockData={hasMockData(item.id)}
+              showAIBadge={true}
             />
           ))}
         </ItemsGrid>

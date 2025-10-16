@@ -77,6 +77,41 @@ export const StatusIcon = styled.div<{ $status: WishlistStatus }>`
   border: 2px solid white;
 `;
 
+export const AIBadge = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, ${theme.colors.purple[500]} 0%, ${theme.colors.purple[600]} 100%);
+  box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+  border: 2px solid white;
+  
+  /* AI sparkle effect */
+  &::before {
+    content: '✨';
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    font-size: 8px;
+    animation: sparkle 2s infinite;
+  }
+  
+  @keyframes sparkle {
+    0%, 100% { opacity: 0.7; transform: scale(0.8) rotate(0deg); }
+    50% { opacity: 1; transform: scale(1) rotate(180deg); }
+  }
+`;
+
 export const CardContent = styled.div`
   padding: 1rem;
   display: flex;

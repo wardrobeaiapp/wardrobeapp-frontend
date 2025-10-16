@@ -2,7 +2,6 @@ import { supabase } from '../core';
 import type { 
   AIAnalysisMockRecord, 
   AIMockQueryFilters, 
-  mockDataHelpers 
 } from '../../types/aiAnalysisMocks';
 import { mockDataHelpers as mockHelpers } from '../../types/aiAnalysisMocks';
 

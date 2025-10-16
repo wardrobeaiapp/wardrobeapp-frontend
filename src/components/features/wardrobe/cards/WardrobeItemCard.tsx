@@ -6,6 +6,7 @@ import {
   ItemImage,
   PlaceholderImage,
   StatusIcon,
+  AIBadge,
   CardContent,
   ItemName,
   ButtonContainer,
@@ -21,9 +22,11 @@ interface WardrobeItemCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   hideStatusIcon?: boolean;
+  hasMockData?: boolean; // Whether the item has saved AI analysis data
+  showAIBadge?: boolean; // Whether to show AI badge (wardrobe page only, not demo)
 }
 
-const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete, hideStatusIcon = false }) => {
+const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdit, onDelete, hideStatusIcon = false, hasMockData = false, showAIBadge = false }) => {
   // Use the new hook for instant loading with fallback on expired URLs
   // For backward compatibility, also check for old base64 images
   const isBase64Image = item.imageUrl?.startsWith('data:image/');
@@ -55,6 +58,13 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
             {item.wishlistStatus === WishlistStatus.APPROVED ? '✓' : 
              item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? '!' : '?'}
           </StatusIcon>
+        )}
+        
+        {/* Display AI badge for items with saved analysis data (wardrobe page only) */}
+        {showAIBadge && hasMockData && (
+          <AIBadge title="AI analysis data saved">
+            🤖
+          </AIBadge>
         )}
       </ImageContainer>
       
