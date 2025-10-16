@@ -16,7 +16,7 @@ export const useCapsulesData = () => {
     if (capsules) {
       actions.setData(capsules);
     }
-  }, [capsules, actions]);
+  }, [capsules, actions.setData]);
 
   return {
     capsules: state.data,
