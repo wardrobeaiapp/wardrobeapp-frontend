@@ -4,7 +4,6 @@ import { WardrobeItem, WishlistStatus } from '../../../../types';
 import { useWishlistFiltering } from '../../../../hooks/home/useWishlistFiltering';
 import {
   FiltersContainer,
-  FilterGroup,
   ItemsGrid,
   EmptyState,
   EmptyStateTitle,
@@ -123,48 +122,38 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   return (
     <>
       <FiltersContainer>
-        <FilterGroup>
-          <SearchFilter
-            value={searchQuery}
-            onChange={setSearchQuery}
-            placeholder="Search wishlist..."
-          />
-        </FilterGroup>
-        <FilterGroup>
-          <CategoryFilter
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-          />
-        </FilterGroup>
-        <FilterGroup>
-          <SeasonFilter
-            value={getFirstSeason(seasonFilter)}
-            onChange={handleSeasonChange}
-          />
-        </FilterGroup>
-        <FilterGroup>
-          <ScenarioFilter
-            value={scenarioFilter}
-            onChange={handleScenarioChange}
-            includeAllOption={true}
-          />
-        </FilterGroup>
+        <SearchFilter
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search wishlist..."
+        />
+        <CategoryFilter
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+        />
+        <SeasonFilter
+          value={getFirstSeason(seasonFilter)}
+          onChange={handleSeasonChange}
+        />
+        <ScenarioFilter
+          value={scenarioFilter}
+          onChange={handleScenarioChange}
+          includeAllOption={true}
+        />
         {!hideStatusFilter && (
-          <FilterGroup>
-            <SelectFilter<WishlistStatus>
-              value={statusFilter === 'all' ? 'all' as const : statusFilter}
-              onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
-              label="Status"
-              id="status-filter"
-              options={[
-                { value: WishlistStatus.APPROVED, label: 'Approved' },
-                { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
-                { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
-              ]}
-              includeAllOption={true}
-              allOptionLabel="All Statuses"
-            />
-          </FilterGroup>
+          <SelectFilter<WishlistStatus>
+            value={statusFilter === 'all' ? 'all' as const : statusFilter}
+            onChange={(value) => setStatusFilter(value === 'all' ? 'all' : value)}
+            label="Status"
+            id="status-filter"
+            options={[
+              { value: WishlistStatus.APPROVED, label: 'Approved' },
+              { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
+              { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
+            ]}
+            includeAllOption={true}
+            allOptionLabel="All Statuses"
+          />
         )}
       </FiltersContainer>
 

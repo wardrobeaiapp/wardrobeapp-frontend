@@ -226,16 +226,25 @@ export const FilterGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  width: 100%;
+  flex: 1;
+  min-width: 150px;
+  
+  /* All filters get equal space for better balance */
+  &:first-child {
+    flex: 1;
+    min-width: 180px;
+  }
   
   @media (max-width: 768px) {
     gap: 0.25rem;
     min-width: 0; /* Allow shrinking in grid */
     width: 100% !important;
+    flex: none; /* Reset flex for grid layout */
     
     /* Ensure search container takes full width */
     &:first-child {
       width: 100% !important;
+      flex: none; /* Reset flex for grid layout */
     }
   }
 `;
