@@ -39,7 +39,10 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "npm run test:frontend && npm run test:backend",
+    "test:frontend": "react-scripts test --watchAll=false",
+    "test:backend": "cd server && npm test",
+    "test:watch": "react-scripts test",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

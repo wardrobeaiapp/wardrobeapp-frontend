@@ -17,7 +17,15 @@ const { extractItemCharacteristics } = require('../../../utils/ai/characteristic
 const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 const { consolidateCompatibilityResults } = require('../../../utils/ai/compatibilityResultsUtils');
 
-// Initialize Claude client
+// Check and initialize Claude client
+console.log('🔑 ANTHROPIC_API_KEY status:', process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET');
+console.log('🔑 ANTHROPIC_API_KEY length:', process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0);
+
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('❌ ANTHROPIC_API_KEY environment variable is not set!');
+  console.error('💡 Please check your .env file in the project root');
+}
+
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
@@ -28,6 +36,16 @@ const anthropic = new Anthropic({
 // @access  Public
 router.post('/', async (req, res) => {
   console.log('🚨🚨🚨 ANALYZE SIMPLE ENDPOINT HIT - Request received! 🚨🚨🚨');
+  
+  // Check if API key is available before processing
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.error('❌ Cannot process AI analysis: ANTHROPIC_API_KEY is not set');
+    return res.status(503).json({
+      error: 'AI analysis service unavailable',
+      details: 'Anthropic API key is not configured. Please check server configuration.',
+      success: false
+    });
+  }
   
   // Debug raw request body
   console.log('🔍 RAW REQUEST BODY KEYS:', Object.keys(req.body));

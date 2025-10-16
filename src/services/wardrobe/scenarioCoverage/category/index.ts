@@ -1,5 +1,5 @@
 import { WardrobeItem, Scenario, Season, ItemCategory } from '../../../../types';
-import { ALL_SEASONS, CategoryCoverage } from './types';
+import { ALL_SEASONS } from './types';
 import { calculateCategoryCoverage } from './calculations';
 import { saveCategoryCoverage } from './database';
 

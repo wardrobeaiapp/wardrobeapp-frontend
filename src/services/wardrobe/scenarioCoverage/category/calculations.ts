@@ -1,7 +1,7 @@
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
 import { CategoryNeeds, CategoryCoverage } from './types';
 import { Scenario } from '../../../scenarios/types';
-import { detectLifestyleType, getLifestyleTargets, getOuterwearTargets, getLifestyleMultiplier, analyzeAndLogLifestyle, LifestyleAnalysis } from '../lifestyle/lifestyleDetectionService';
+import { getLifestyleTargets, getOuterwearTargets, getLifestyleMultiplier, analyzeAndLogLifestyle, LifestyleAnalysis } from '../lifestyle/lifestyleDetectionService';
 
 // Performance optimization: Cache lifestyle analysis to avoid redundant calculations
 let lifestyleCache: { scenarioKey: string; result: LifestyleAnalysis } | null = null;
@@ -229,7 +229,6 @@ function getAccessorySubcategory(item: WardrobeItem): string {
  * Define which accessory subcategories are seasonal vs non-seasonal
  */
 const SEASONAL_ACCESSORY_SUBCATEGORIES = ['Scarf', 'Hat', 'Tights', 'Socks'];
-const NON_SEASONAL_ACCESSORY_SUBCATEGORIES = ['Bag', 'Belt', 'Jewelry', 'Watch', 'Sunglasses'];
 const ALL_SEASONS_VALUE = 'all_seasons' as Season; // Special season value for non-seasonal accessories
 
 /**

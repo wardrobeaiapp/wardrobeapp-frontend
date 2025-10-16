@@ -180,7 +180,6 @@ const AIAssistantPage: React.FC = () => {
     scenarioOptions,
     isLoading: isRecommendationLoading,
     error: recommendationError,
-    recommendationText: aiRecommendationText,
 
     // Handlers
     setSelectedSeason,

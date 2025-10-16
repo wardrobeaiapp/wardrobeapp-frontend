@@ -19,7 +19,7 @@ import {
 export const checkOutfitTablesExist = async (): Promise<boolean> => {
   try {
     // Try to fetch a single record from outfits table to see if it exists
-    const { count, error } = await supabase
+    const { error } = await supabase
       .from(OUTFITS_TABLE)
       .select('*', { count: 'exact', head: true });
     

@@ -10,8 +10,8 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 // Import fetch for making HTTP requests
 const fetch = require('node-fetch');
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from project root
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 // Initialize Express app
 const app = express();
