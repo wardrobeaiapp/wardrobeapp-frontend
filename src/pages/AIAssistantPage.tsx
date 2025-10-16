@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
 import { supabase } from '../services/core';
+import { mockDataHelpers } from '../types/aiAnalysisMocks';
 import Header from '../components/layout/Header/Header';
 import {
   useAICheck,
@@ -156,12 +157,16 @@ const AIAssistantPage: React.FC = () => {
 
       console.log('💾 Saving analysis as mock for item:', selectedWishlistItem.id, 'user:', user.id);
       
-      // Save directly to Supabase (like wardrobe items)
+      // Extract optimized fields using helper function
+      const optimizedFields = mockDataHelpers.extractOptimizedFields(mockData);
+      
+      // Save with optimized structure to Supabase
       const { data, error } = await supabase
         .from('ai_analysis_mocks')
         .upsert({
           wardrobe_item_id: selectedWishlistItem.id,
-          analysis_data: mockData,
+          ...optimizedFields,
+          // Metadata
           created_from_real_analysis: true,
           created_by: user.id,
           updated_at: new Date().toISOString()
