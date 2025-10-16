@@ -36,6 +36,7 @@ interface WishlistTabProps {
   onAddItem?: () => void;
   hideStatusFilter?: boolean;
   hideStatusIcon?: boolean;
+  disableMockDataCheck?: boolean;
 }
 
 const WishlistTab: React.FC<WishlistTabProps> = ({
@@ -57,7 +58,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   onDeleteItem,
   onAddItem,
   hideStatusFilter = false,
-  hideStatusIcon = false
+  hideStatusIcon = false,
+  disableMockDataCheck = false
 }) => {
   // Helper to get the first season if seasonFilter is an array
   const getFirstSeason = (season: string | string[]): string => {
@@ -81,8 +83,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
     setStatusFilter
   });
 
-  // Check which items have saved mock data
-  const { hasMockData } = useMockDataStatus(filteredItems);
+  // Check which items have saved mock data (disabled in demo mode)
+  const { hasMockData } = useMockDataStatus(filteredItems, disableMockDataCheck);
   
   const handleSeasonChange = (value: string | string[]) => {
     setSeasonFilter(value);

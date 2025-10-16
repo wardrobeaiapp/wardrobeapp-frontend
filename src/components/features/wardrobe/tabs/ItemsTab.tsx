@@ -74,6 +74,8 @@ interface ItemsTabProps {
   onEditItem: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onAddItem?: () => void;
+  // Demo mode
+  disableMockDataCheck?: boolean; // Disable AI mock data checking (for demo)
 }
 
 const ItemsTab = React.memo<ItemsTabProps>(({
@@ -93,7 +95,8 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   setScenarioFilter = () => {},
   onViewItem,
   onEditItem,
-  onDeleteItem
+  onDeleteItem,
+  disableMockDataCheck = false
 }) => {
   // Use optimized filtering hook instead of duplicate logic
   const { filteredItems } = useItemFiltering(items, {
@@ -104,8 +107,8 @@ const ItemsTab = React.memo<ItemsTabProps>(({
     isWishlist: false // ItemsTab only shows non-wishlist items
   });
 
-  // Check which items have saved mock data
-  const { hasMockData } = useMockDataStatus(filteredItems);
+  // Check which items have saved mock data (disabled in demo mode)
+  const { hasMockData } = useMockDataStatus(filteredItems, disableMockDataCheck);
 
   // Helper for SeasonFilter component - needed for display value
   const getFirstSeason = (season: string | string[]): string => {

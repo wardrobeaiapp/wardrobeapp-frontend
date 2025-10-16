@@ -197,6 +197,7 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
               onViewItem={undefined}
               onEditItem={handleEditItem}
               onDeleteItem={handleDeleteItem}
+              disableMockDataCheck={true}
             />
           )}
 
@@ -220,6 +221,7 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
               onDeleteItem={handleDeleteItem}
               hideStatusFilter={true}
               hideStatusIcon={true}
+              disableMockDataCheck={true}
             />
           )}
         </div>

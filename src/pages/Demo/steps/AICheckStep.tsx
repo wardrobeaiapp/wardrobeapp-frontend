@@ -22,6 +22,7 @@ import { DemoStep } from '../types';
 import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
 import { getWardrobeItems } from '../../../services/wardrobe/items';
 import { WardrobeItem, WishlistStatus } from '../../../types';
+import { aiAnalysisMocksService } from '../../../services/ai/aiAnalysisMocksService';
 
 // Demo-specific ButtonGroup with proper styling to override global styles
 const DemoButtonGroup = styled.div`
@@ -112,6 +113,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
   const [selectedPersona, setSelectedPersona] = useState<SelectedPersona | null>(null);
   const [wardrobeItems, setWardrobeItems] = useState<WardrobeItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<WardrobeItem | null>(null);
+  const [aiCheckData, setAiCheckData] = useState<any>(null);
 
   useEffect(() => {
     const persona = getSelectedPersona();
@@ -146,47 +148,107 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
     setIsWishlistModalOpen(false);
   };
 
-  const handleStartAICheck = () => {
-    // Demo functionality - simulate AI check loading then show result modal
+  const handleStartAICheck = async () => {
+    if (!selectedItem) return;
+    
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsAIResultModalOpen(true);
-    }, 2000);
+    
+    try {
+      // 🤖 Check for existing saved mock data
+      console.log('🔍 Demo: Checking for saved mock data for item:', selectedItem.id);
+      const existingMockData = await aiAnalysisMocksService.getMockAnalysis(selectedItem.id);
+      
+      let resultData;
+      
+      if (existingMockData) {
+        console.log('✅ Demo: Found saved mock data! Using real AI analysis results');
+        
+        // Reconstruct the analysis data from saved mock
+        const reconstructedData = aiAnalysisMocksService.reconstructMockData(existingMockData);
+        
+        resultData = {
+          score: existingMockData.compatibility_score || 0,
+          status: existingMockData.wishlist_status === 'approved' ? WishlistStatus.APPROVED :
+                  existingMockData.wishlist_status === 'potential_issue' ? WishlistStatus.POTENTIAL_ISSUE :
+                  WishlistStatus.NOT_REVIEWED,
+          recommendationAction: existingMockData.recommendation_action || 'RECOMMEND',
+          recommendationText: reconstructedData.recommendationText || 'Analysis from saved data',
+          suitableScenarios: existingMockData.suitable_scenarios || [],
+          compatibleItems: reconstructedData.compatibleItems || {},
+          outfitCombinations: reconstructedData.outfitCombinations || [],
+          seasonScenarioCombinations: reconstructedData.seasonScenarioCombinations || [],
+          coverageGapsWithNoOutfits: reconstructedData.coverageGapsWithNoOutfits || [],
+          imageUrl: selectedItem.imageUrl,
+          usingMockData: true // Flag to indicate we're using real saved data
+        };
+      } else {
+        console.log('❌ Demo: No saved mock data found, using demo fallback data');
+        
+        // Use fallback demo data
+        resultData = {
+          score: 85,
+          status: WishlistStatus.APPROVED,
+          recommendationAction: "RECOMMEND" as const,
+          recommendationText: "Great choice! This item would be a perfect addition to your wardrobe.",
+          suitableScenarios: ["Work", "Casual", "Weekend"],
+          compatibleItems: {
+            "Bottoms": [
+              { name: "Black Dress Pants", category: "PANTS" },
+              { name: "Dark Wash Jeans", category: "PANTS" },
+              { name: "Navy Chinos", category: "PANTS" }
+            ],
+            "Outerwear": [
+              { name: "Navy Blazer", category: "JACKET" },
+              { name: "Denim Jacket", category: "JACKET" }
+            ]
+          },
+          outfitCombinations: [
+            {
+              name: "Professional Look",
+              items: ["Elegant Plain T-Shirt", "Black Dress Pants", "Navy Blazer"],
+              occasion: "Work"
+            },
+            {
+              name: "Casual Weekend",
+              items: ["Elegant Plain T-Shirt", "Dark Wash Jeans", "Denim Jacket"],
+              occasion: "Casual"
+            }
+          ],
+          imageUrl: selectedItem.imageUrl,
+          usingMockData: false // Using demo fallback data
+        };
+      }
+      
+      setAiCheckData(resultData);
+      
+      // Simulate loading time for better UX
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsAIResultModalOpen(true);
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Error checking for mock data:', error);
+      // Fall back to demo data on error
+      setAiCheckData({
+        score: 85,
+        status: WishlistStatus.APPROVED,
+        recommendationAction: "RECOMMEND" as const,
+        recommendationText: "Great choice! This item would be a perfect addition to your wardrobe.",
+        suitableScenarios: ["Work", "Casual", "Weekend"],
+        compatibleItems: {},
+        outfitCombinations: [],
+        imageUrl: selectedItem.imageUrl,
+        usingMockData: false
+      });
+      
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsAIResultModalOpen(true);
+      }, 1500);
+    }
   };
 
-  // Mock data for demo AI check result
-  const mockAICheckData = {
-    score: 85,
-    status: WishlistStatus.APPROVED,
-    recommendationAction: "RECOMMEND" as const,
-    recommendationText: "Great choice! This item would be a perfect addition to your wardrobe.",
-    suitableScenarios: ["Work", "Casual", "Weekend"],
-    compatibleItems: {
-      "Bottoms": [
-        { name: "Black Dress Pants", category: "PANTS" },
-        { name: "Dark Wash Jeans", category: "PANTS" },
-        { name: "Navy Chinos", category: "PANTS" }
-      ],
-      "Outerwear": [
-        { name: "Navy Blazer", category: "JACKET" },
-        { name: "Denim Jacket", category: "JACKET" }
-      ]
-    },
-    outfitCombinations: [
-      {
-        name: "Professional Look",
-        items: ["Elegant Plain T-Shirt", "Black Dress Pants", "Navy Blazer"],
-        occasion: "Work"
-      },
-      {
-        name: "Casual Weekend",
-        items: ["Elegant Plain T-Shirt", "Dark Wash Jeans", "Denim Jacket"],
-        occasion: "Casual"
-      }
-    ],
-    imageUrl: selectedItem?.imageUrl || undefined
-  };
 
   return (
     <div>
@@ -248,21 +310,28 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         onSelectItem={handleWishlistItemSelect}
       />
 
-      {/* AI Check Result Modal - No action buttons for demo */}
-      <AICheckResultModal
-        isOpen={isAIResultModalOpen}
-        onClose={() => setIsAIResultModalOpen(false)}
-        analysisResult="Demo analysis complete"
-        score={mockAICheckData.score}
-        status={mockAICheckData.status}
-        recommendationAction={mockAICheckData.recommendationAction}
-        recommendationText={mockAICheckData.recommendationText}
-        suitableScenarios={mockAICheckData.suitableScenarios}
-        compatibleItems={mockAICheckData.compatibleItems}
-        outfitCombinations={mockAICheckData.outfitCombinations}
-        imageUrl={mockAICheckData.imageUrl}
-        hideActions={true}
-      />
+      {/* AI Check Result Modal - Using dynamic data from database or demo fallback */}
+      {aiCheckData && (
+        <AICheckResultModal
+          isOpen={isAIResultModalOpen}
+          onClose={() => setIsAIResultModalOpen(false)}
+          analysisResult={aiCheckData.usingMockData ? "Real AI Analysis Results" : "Demo analysis complete"}
+          score={aiCheckData.score}
+          status={aiCheckData.status}
+          recommendationAction={aiCheckData.recommendationAction}
+          recommendationText={aiCheckData.usingMockData ? 
+            `🎯 This is real AI analysis data that was previously saved! ${aiCheckData.recommendationText}` : 
+            aiCheckData.recommendationText
+          }
+          suitableScenarios={aiCheckData.suitableScenarios}
+          compatibleItems={aiCheckData.compatibleItems}
+          outfitCombinations={aiCheckData.outfitCombinations}
+          seasonScenarioCombinations={aiCheckData.seasonScenarioCombinations}
+          coverageGapsWithNoOutfits={aiCheckData.coverageGapsWithNoOutfits}
+          imageUrl={aiCheckData.imageUrl}
+          hideActions={true}
+        />
+      )}
     </div>
   );
 };

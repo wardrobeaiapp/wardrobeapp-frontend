@@ -10,14 +10,14 @@ interface MockDataStatus {
  * Hook to check which items have saved AI analysis mock data
  * Efficiently batches requests to avoid overwhelming the database
  */
-export const useMockDataStatus = (items: WardrobeItem[]) => {
+export const useMockDataStatus = (items: WardrobeItem[], disabled = false) => {
   const [mockStatus, setMockStatus] = useState<MockDataStatus>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const checkMockData = async () => {
-      if (!items || items.length === 0) {
+      if (!items || items.length === 0 || disabled) {
         setMockStatus({});
         return;
       }
@@ -57,7 +57,7 @@ export const useMockDataStatus = (items: WardrobeItem[]) => {
     };
 
     checkMockData();
-  }, [items]);
+  }, [items, disabled]);
 
   return {
     mockStatus,
