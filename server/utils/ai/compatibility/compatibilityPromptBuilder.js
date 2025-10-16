@@ -65,8 +65,8 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
     }
   });
 
-  prompt += '\nCOMPATIBILITY ANALYSIS:\n';
-  prompt += 'For each category, analyze each item considering:\n';
+  prompt += '\nEVALUATION CRITERIA:\n';
+  prompt += 'Consider these factors when selecting compatible items:\n';
   prompt += '- **Color harmony**: Do the colors work together harmoniously?\n';
   prompt += '- **Style cohesion**: Do the style levels match appropriately?\n';
   prompt += '- **Season appropriateness**: Are both items suitable for the same seasons?\n';
@@ -76,22 +76,18 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   prompt += '- **Pattern mixing rules**: If patterns are involved, do they follow good mixing principles?\n';
   prompt += '- **Practical wearability**: Would someone actually wear these together in real life?\n';
 
+  prompt += '\nREQUIRED RESPONSE FORMAT:\n';
+  prompt += 'For each item listed above, respond with COMPATIBLE or NOT_COMPATIBLE:\n\n';
+  
   Object.keys(itemsByCategory).forEach(category => {
     const items = itemsByCategory[category];
     if (items && items.length > 0) {
-      prompt += `\n**${category}:**\n`;
-      items.forEach((item) => {
-        prompt += `- ${item.name}: [Analyze compatibility and provide reasoning]\n`;
+      prompt += `**${category.toUpperCase()}:**\n`;
+      items.forEach((item, index) => {
+        prompt += `${index + 1}. ${item.name}: [COMPATIBLE or NOT_COMPATIBLE]\n`;
       });
+      prompt += '\n';
     }
-  });
-
-  prompt += '\nREQUIRED RESPONSE FORMAT:\n';
-  prompt += 'COMPATIBLE COMPLEMENTING ITEMS:\n';
-  prompt += 'List only the items that would work well, organized by category:\n';
-  
-  Object.keys(itemsByCategory).forEach(category => {
-    prompt += `${category}: [List compatible items from this category, comma-separated, or "none"]\n`;
   });
 
   prompt += '\nIMPORTANT:\n';

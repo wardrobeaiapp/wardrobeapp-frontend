@@ -1,421 +1,138 @@
 /**
- * Compatibility response parsing utilities
- * Handles parsing Claude's compatibility analysis responses and matching item names to objects
+ * Simple compatibility response parsing utilities
+ * Works with YES/NO format instead of parsing messy text lists
  */
 
 /**
- * Parse Claude's compatibility response and match names to full item objects
- * @param {string} claudeResponse - Claude's response text
- * @param {Array} stylingContext - Full item objects for matching
+ * Parse Claude's YES/NO compatibility responses directly from styling context
+ * @param {string} claudeResponse - Claude's response text  
+ * @param {Array} stylingContext - Full item objects we asked about
  * @returns {Object} - Compatible items organized by category with full objects
  */
 function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
   console.log('\n=== 🎯 PARSING COMPATIBILITY RESPONSE ===');
   
-  try {
-    // First, extract and log the detailed analysis
-    const analysisSection = claudeResponse.match(/COMPATIBILITY ANALYSIS:\s*\n?((?:.*\n?)*?)(?=\nCOMPATIBLE COMPLEMENTING ITEMS:|```|$)/im);
-    
-    if (analysisSection && analysisSection[1]) {
-      console.log('\n🔍 DETAILED COMPATIBILITY ANALYSIS:');
-      const analysisText = analysisSection[1].trim();
-      const analysisLines = analysisText.split('\n').filter(line => line.trim());
-      
-      let currentCategory = '';
-      analysisLines.forEach(line => {
-        const trimmedLine = line.trim();
-        if (trimmedLine.startsWith('**') && trimmedLine.endsWith(':**')) {
-          currentCategory = trimmedLine.replace(/\*\*/g, '').replace(':', '');
-          console.log(`\n📂 ${currentCategory}:`);
-        } else if (trimmedLine.includes(': ')) {
-          const [itemName, reasoning] = trimmedLine.split(': ', 2);
-          const isCompatible = reasoning.toUpperCase().startsWith('COMPATIBLE');
-          const status = isCompatible ? '✅ SELECTED' : '❌ EXCLUDED';
-          console.log(`  ${status} ${itemName}: ${reasoning}`);
-        }
-      });
-    }
-    
-    // Then extract the final compatible items list
-    console.log('\n🔍 [DEBUG] Searching for COMPATIBLE COMPLEMENTING ITEMS section...');
-    console.log('🔍 [DEBUG] Full response:', claudeResponse);
-    
-    // Try multiple patterns to handle truncated headers
-    // Use more inclusive pattern that captures until ANALYSIS or end of response
-    let compatibleSection = claudeResponse.match(/COMPATIBLE COMPLEMENTING ITEMS:\s*\n?([\s\S]*?)(?=\n\s*ANALYSIS|\n\s*```|$)/i);
-    
-    // Fallback for truncated header (missing 'C' at beginning)
-    if (!compatibleSection) {
-      console.log('🔍 [DEBUG] Trying pattern for truncated header (missing C)...');
-      compatibleSection = claudeResponse.match(/OMPATIBLE COMPLEMENTING ITEMS:\s*\n?([\s\S]*?)(?=\n\s*ANALYSIS|\n\s*```|$)/i);
-    }
-    
-    // Additional fallback patterns
-    if (!compatibleSection) {
-      console.log('🔍 [DEBUG] Trying more flexible patterns...');
-      compatibleSection = claudeResponse.match(/[CO]?MPATIBLE.*ITEMS:\s*\n?([\s\S]*?)(?=\n\s*ANALYSIS|\n\s*```|$)/i);
-    }
-    
-    console.log('🔍 [DEBUG] Compatible section match result:', compatibleSection ? `Found: "${compatibleSection[1]?.trim()}"` : 'Not found');
-    
-    if (!compatibleSection || !compatibleSection[1]) {
-      console.log('[compatibility] No compatible items section found in response');
-      // Try alternative patterns that Claude might use
-      console.log('🔍 [DEBUG] Trying alternative patterns...');
-      const altPattern1 = claudeResponse.match(/compatible.*items:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
-      const altPattern2 = claudeResponse.match(/final.*list:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
-      const altPattern3 = claudeResponse.match(/selected.*items:?\s*\n?((?:.*\n?)*?)(?=\n\n|```|$)/im);
-      
-      console.log('🔍 [DEBUG] Alternative pattern 1 (compatible items):', altPattern1 ? 'Found' : 'Not found');
-      console.log('🔍 [DEBUG] Alternative pattern 2 (final list):', altPattern2 ? 'Found' : 'Not found');
-      console.log('🔍 [DEBUG] Alternative pattern 3 (selected items):', altPattern3 ? 'Found' : 'Not found');
-      
-      // FALLBACK: Extract from detailed analysis section if final summary is missing
-      console.log('🔄 [DEBUG] Trying fallback: extracting from detailed analysis...');
-      return extractFromDetailedAnalysis(claudeResponse, stylingContext);
-    }
-    
-    const itemsText = compatibleSection[1].trim();
-    const lines = itemsText.split('\n').filter(line => line.trim());
-    const compatibleItems = {};
-    
-    console.log('📋 [DEBUG] Parsing compatible items section with', lines.length, 'lines');
-    
-    let currentCategory = null;
-    
-    lines.forEach((line, lineIndex) => {
-      // Stop processing if we hit explanatory text (lines that are PURELY reasoning, not mixed with items)
-      // Only filter lines that don't have category: format and are pure reasoning
-      const isReasoningOnlyLine = !line.match(/^\s*\w+:\s/) && (
-        line.toLowerCase().includes('these items') || 
-        line.toLowerCase().includes('because') || 
-        line.toLowerCase().includes('analysis') ||
-        (line.toLowerCase().includes('the selected items') && !line.includes(':')) ||
-        (line.toLowerCase().includes('selected items consider') && !line.includes(':')) ||
-        (line.toLowerCase().includes('these combinations') && !line.includes(':')) ||
-        (line.toLowerCase().includes('would create') && !line.includes(':')) ||
-        (line.toLowerCase().includes('well-balanced') && !line.includes(':')) ||
-        (line.toLowerCase().includes('reasoning:'))
-      );
-      
-      if (isReasoningOnlyLine) {
-        console.log(`🚫 [DEBUG] Filtering out pure reasoning line: "${line.trim()}"`);
-        return;
-      }
-      
-      // Check if this is a category header (e.g., "footwear:" or "footwear: items")
-      const categoryMatch = line.match(/^\s*(\w+):\s*(.*)$/i);
-      if (categoryMatch) {
-        const category = categoryMatch[1].toLowerCase();
-        const itemsStr = categoryMatch[2].trim();
-        
-        if (itemsStr && itemsStr !== 'none' && itemsStr !== '-' && !itemsStr.toLowerCase().includes('n/a') && !itemsStr.toLowerCase().includes('no compatible')) {
-          // Single-line format: "category: items"
-          processItemsForCategory(category, itemsStr, stylingContext, compatibleItems);
-        } else if (itemsStr === '' || !itemsStr) {
-          // Multi-line format: "category:" followed by items on next line(s)
-          currentCategory = category;
-        } else {
-          console.log(`📋 [DEBUG] Skipping category "${category}" - no valid items or marked as none`);
-        }
-      } else if (currentCategory && line.trim()) {
-        // This might be items for the previous category
-        // Handle both "item1, item2" format and "- Item: explanation" format
-        const lineContent = line.trim();
-        
-        // Check if this is a new category header (would override currentCategory)
-        const isNewCategory = lineContent.match(/^\s*\w+:\s*(.*)$/i) && !lineContent.startsWith('-');
-        
-        if (!isNewCategory && lineContent && lineContent !== 'none' && lineContent !== '-' && 
-            !lineContent.toLowerCase().includes('n/a') && !lineContent.toLowerCase().includes('no compatible')) {
-          
-          // If we haven't processed this category yet, process it now
-          if (!compatibleItems[currentCategory]) {
-            processItemsForCategory(currentCategory, lineContent, stylingContext, compatibleItems);
-          } else {
-            // If we already have items for this category, this might be additional items
-            // Append to existing items
-            const additionalItemsStr = lineContent;
-            processItemsForCategory(currentCategory, additionalItemsStr, stylingContext, compatibleItems);
-          }
-        }
-        
-        // Don't reset currentCategory yet - we might have more items coming
-        // Only reset when we hit a new category or reasoning text
-        if (isNewCategory) {
-          currentCategory = null;
-        }
-      }
-    });
-    
-    // Helper function to process items for a category
-    function processItemsForCategory(category, itemsStr, stylingContext, compatibleItems) {
-      // First, try to extract just the actual items before any reasoning starts
-      // Look for patterns that indicate reasoning text and cut off there
-      let cleanItemsStr = itemsStr;
-      
-      // Split by common reasoning starters and take only the first part
-      const reasoningStarters = [
-        'The selected items consider',
-        'These items were chosen',
-        'Reasoning:',
-        'because',
-        'would create',
-        'These combinations'
-      ];
-      
-      for (const starter of reasoningStarters) {
-        const reasoningIndex = cleanItemsStr.toLowerCase().indexOf(starter.toLowerCase());
-        if (reasoningIndex !== -1) {
-          cleanItemsStr = cleanItemsStr.substring(0, reasoningIndex).trim();
-          console.log(`✂️ [DEBUG] Trimmed reasoning text starting with "${starter}"`);
-          break;
-        }
-      }
-      
-      // Also handle the case where items are listed with dashes and detailed explanations
-      // Extract just the item names from "- ItemName: explanation" format
-      if (cleanItemsStr.includes('-') && cleanItemsStr.includes(':')) {
-        const itemMatches = cleanItemsStr.match(/- ([^:]+):/g);
-        if (itemMatches) {
-          cleanItemsStr = itemMatches.map(match => match.replace(/^- /, '').replace(/:$/, '')).join(', ');
-          console.log(`📝 [DEBUG] Extracted item names from detailed format: "${cleanItemsStr}"`);
-        }
-      }
-      const itemNames = cleanItemsStr.split(',').map(item => item.trim()).filter(name => {
-        // Filter out N/A responses and "no compatible" messages
-        const nameLower = name.toLowerCase();
-        
-        // Filter out reasoning text patterns that might be comma-separated
-        if (nameLower.includes('selected items consider') ||
-            nameLower.includes('color harmony') ||
-            nameLower.includes('harmonize nicely') ||
-            nameLower.includes('style cohesion') ||
-            nameLower.includes('season appropriateness') ||
-            nameLower.includes('seasonal appropriateness') ||
-            nameLower.includes('occasion compatibility') ||
-            nameLower.includes('proportion and silhouette') ||
-            nameLower.includes('material compatibility') ||
-            nameLower.includes('practical wearability') ||
-            nameLower.includes('these combinations') ||
-            nameLower.includes('would create') ||
-            nameLower.includes('well-balanced') ||
-            nameLower.includes('stylish outfits') ||
-            nameLower.includes('suitable for') ||
-            nameLower.includes('intended use') ||
-            nameLower.includes('because') ||
-            nameLower.includes('analysis') ||
-            nameLower.includes('reasoning') ||
-            nameLower.includes('also harmonize') ||
-            nameLower.includes('colors also') ||
-            nameLower.includes('brown colors') ||
-            nameLower.includes('white top') ||
-            nameLower.includes('aligning with') ||
-            nameLower.includes('stated seasonal') ||
-            nameLower.includes('appropriateness of') ||
-            nameLower.includes('of the top') ||
-            nameLower.includes('the top.') ||
-            nameLower.includes('while stylish') ||
-            nameLower.includes('and stylish') ||
-            nameLower.includes('stylish and') ||
-            nameLower.includes('is stylish') ||
-            nameLower.includes('being stylish') ||
-            name.startsWith('- The ') ||
-            name.startsWith('- This ') ||
-            name.startsWith('- These ') ||
-            name.endsWith('of the top.') ||
-            name.endsWith('appropriateness.') ||
-            name.endsWith('stylish') ||
-            name.endsWith('and stylish') ||
-            /^[a-z\s]+ing\s+with\s+the/.test(nameLower) ||  // Patterns like "aligning with the..."
-            /appropriateness\s+of\s+(the\s+)?/.test(nameLower) ||  // "appropriateness of the..."
-            /^(while|and|being|is)\s+/.test(nameLower) ||  // Starting with conjunctions/articles
-            (name.length > 50 && !name.includes(' - ') && !name.includes('(')) ||  // Long descriptive text without item separators
-            (name.length < 15 && !name.includes(' ') && !/[A-Z]/.test(name) && name.includes('stylish')) ) {  // Short reasoning fragments like "while stylish"
-          console.log(`🚫 [DEBUG] Filtering out reasoning fragment: "${name}"`);
-          return false;
-        }
-        
-        return name && 
-               !nameLower.includes('n/a') && 
-               !nameLower.includes('no compatible') &&
-               !nameLower.includes('none') &&
-               !nameLower.includes('no matching') &&
-               name.length > 0;
-      });
-      
-      if (itemNames.length > 0) {
-        // Match item names to full objects from styling context
-        const fullItemObjects = itemNames.map(itemName => {
-          // Find matching item in styling context by name
-          // Use flexible matching: either full name contains partial name, or vice versa
-          const fullItem = stylingContext.find(item => {
-            if (!item.name || !itemName) return false;
-            
-            const itemNameLower = item.name.toLowerCase().trim();
-            const searchNameLower = itemName.toLowerCase().trim();
-            
-            // Try exact match first
-            if (itemNameLower === searchNameLower) {
-              return true;
-            }
-            
-            // Try bidirectional partial matching
-            if (itemNameLower.includes(searchNameLower) || searchNameLower.includes(itemNameLower)) {
-              return true;
-            }
-            
-            // Also try word-by-word matching for better flexibility
-            const words = searchNameLower.split(' ').filter(word => word.length > 2);
-            if (words.length > 0 && words.every(word => itemNameLower.includes(word))) {
-              return true;
-            }
-            
-            return false;
-          });
-          
-          if (fullItem) {
-            // Return full item object with all properties needed for cards
-            return {
-              ...fullItem,
-              // Add compatibility type for frontend display
-              compatibilityTypes: ['complementing']
-            };
-          } else {
-            // Create fallback object for unmatched items
-            console.log(`No matching item found for: "${itemName}" - creating fallback object`);
-            return {
-              name: itemName,
-              compatibilityTypes: ['complementing']
-            };
-          }
-        }).filter(Boolean);
-        
-        if (fullItemObjects.length > 0) {
-          // Accumulate items instead of overwriting
-          if (!compatibleItems[category]) {
-            compatibleItems[category] = fullItemObjects;
-          } else {
-            // Append to existing items, avoiding duplicates
-            const existingIds = new Set(compatibleItems[category].map(item => item.id || item.name));
-            const newItems = fullItemObjects.filter(item => !existingIds.has(item.id || item.name));
-            compatibleItems[category] = [...compatibleItems[category], ...newItems];
-          }
-        }
-      } else {
-        console.log(`  Skipping category "${category}" - no valid items or marked as none`);
-      }
-    }
-    
-    console.log('✅ Parsed', Object.keys(compatibleItems).length, 'categories with', Object.values(compatibleItems).reduce((sum, items) => sum + items.length, 0), 'total compatible items');
-    
-    return compatibleItems;
-    
-  } catch (error) {
-    console.error('❌ Error parsing compatibility response:', error);
+  if (!claudeResponse || typeof claudeResponse !== 'string') {
+    console.log('❌ Invalid Claude response provided');
     return {};
   }
+  
+  if (!stylingContext || !Array.isArray(stylingContext)) {
+    console.log('⚠️ No styling context provided');
+    return {};
+  }
+
+  console.log(`🔍 Processing ${stylingContext.length} styling context items`);
+  
+  const result = {};
+  let totalCompatible = 0;
+
+  // Parse Claude's YES/NO responses for each item
+  stylingContext.forEach(item => {
+    if (!item.name) return;
+    
+    const itemName = item.name;
+    const category = item.category?.toLowerCase() || 'other';
+    
+    // Look for this specific item in Claude's response
+    // Pattern: "ItemName: COMPATIBLE" or "ItemName: NOT_COMPATIBLE"
+    let regex = new RegExp(`${escapeRegExp(itemName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)`, 'i');
+    let match = claudeResponse.match(regex);
+    
+    // If no exact match, try partial matching (Claude might use shorter names)
+    if (!match) {
+      // Strategy 1: Try prefix matching - "Brown Ankle: COMPATIBLE" for "Brown Ankle Boots"
+      const words = itemName.split(' ');
+      if (words.length > 1) {
+        // Try matching with just first few words
+        for (let i = Math.max(1, words.length - 1); i >= 1; i--) {
+          const partialName = words.slice(0, i).join(' ');
+          const partialRegex = new RegExp(`${escapeRegExp(partialName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)`, 'i');
+          const partialMatch = claudeResponse.match(partialRegex);
+          if (partialMatch) {
+            match = partialMatch;
+            break;
+          }
+        }
+      }
+
+      // Strategy 2: Try substring matching - "Suede Handbag: COMPATIBLE" for "Black Suede Handbag"
+      if (!match) {
+        // Look for patterns in Claude's response and see if they're substrings of our item name
+        const responseLines = claudeResponse.split('\n').filter(line => line.trim());
+        for (const line of responseLines) {
+          const lineMatch = line.match(/^([^:]+):\s*(COMPATIBLE|NOT_COMPATIBLE)/i);
+          if (lineMatch) {
+            const claudeItemName = lineMatch[1].trim();
+            const status = lineMatch[2];
+            
+            // Check if Claude's name matches our item name (multiple strategies)
+            if (claudeItemName.length > 2) {
+              // Strategy A: Direct substring match
+              if (itemName.toLowerCase().includes(claudeItemName.toLowerCase())) {
+                match = [lineMatch[0], status];
+                break;
+              }
+              
+              // Strategy B: Word-by-word matching for cases like "Brown Boots" matching "Brown Leather Boots"
+              const claudeWords = claudeItemName.toLowerCase().split(/\s+/);
+              const itemWords = itemName.toLowerCase().split(/\s+/);
+              
+              // Check if all Claude's words appear in our item name
+              const allWordsMatch = claudeWords.every(claudeWord => 
+                itemWords.some(itemWord => itemWord.includes(claudeWord) || claudeWord.includes(itemWord))
+              );
+              
+              if (allWordsMatch && claudeWords.length >= 2) { // Require at least 2 words for safety
+                match = [lineMatch[0], status];
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    if (match && match[1].toUpperCase() === 'COMPATIBLE') {
+      // This item is compatible! Add it to results
+      if (!result[category]) {
+        result[category] = [];
+      }
+      
+      result[category].push({
+        ...item, // Keep ALL original item data!
+        compatibilityTypes: ['complementing']
+      });
+      
+      totalCompatible++;
+      console.log(`✅ ${itemName} → COMPATIBLE`);
+    } else if (match) {
+      console.log(`❌ ${itemName} → NOT_COMPATIBLE`);
+    } else {
+      console.log(`⚠️ ${itemName} → No clear response found`);
+    }
+  });
+
+  // Sort items within each category for consistency
+  Object.keys(result).forEach(category => {
+    result[category].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  });
+
+  console.log(`✅ Parsed ${Object.keys(result).length} categories with ${totalCompatible} total compatible items`);
+  
+  // Log summary by category
+  Object.entries(result).forEach(([category, items]) => {
+    console.log(`   ${category}: ${items.length} items (${items.map(item => item.name).join(', ')})`);
+  });
+
+  return result;
 }
 
-/**
- * Fallback function to extract compatible items from detailed analysis section
- * Used when Claude doesn't provide the final summary section
- */
-function extractFromDetailedAnalysis(claudeResponse, stylingContext = []) {
-  console.log('🔄 [FALLBACK] Extracting from detailed analysis section...');
-  
-  try {
-    // Extract the detailed analysis section - use more inclusive pattern
-    const analysisSection = claudeResponse.match(/COMPATIBILITY ANALYSIS:\s*\n?([\s\S]*?)(?=\n\s*COMPATIBLE COMPLEMENTING ITEMS:|\n\s*```|$)/i);
-    
-    if (!analysisSection || !analysisSection[1]) {
-      console.log('❌ [FALLBACK] No detailed analysis section found');
-      return {};
-    }
-    
-    const analysisText = analysisSection[1].trim();
-    const analysisLines = analysisText.split('\n').filter(line => line.trim());
-    const compatibleItems = {};
-    
-    let currentCategory = '';
-    
-    analysisLines.forEach(line => {
-      const trimmedLine = line.trim();
-      
-      // Check if this is a category header  
-      if (trimmedLine.startsWith('**') && trimmedLine.match(/:\*\*\s*$/)) {
-        let categoryName = trimmedLine.replace(/\*\*/g, '').replace(/:\s*$/, '').toLowerCase();
-        
-        // Normalize category names (plural to singular)
-        if (categoryName === 'accessories') categoryName = 'accessory';
-        if (categoryName === 'tops') categoryName = 'top';
-        if (categoryName === 'bottoms') categoryName = 'bottom';
-        if (categoryName === 'shoes') categoryName = 'footwear';
-        
-        currentCategory = categoryName;
-        console.log(`📂 [FALLBACK] Processing category: ${currentCategory}`);
-        return;
-      }
-      
-      // Check if this is an item analysis line
-      if (currentCategory && trimmedLine.includes(': ')) {
-        const [itemName, reasoning] = trimmedLine.split(': ', 2);
-        const cleanItemName = itemName.replace(/^[-*]\s*/, '').trim();
-        
-        // Check if the reasoning indicates compatibility
-        const reasoningUpper = reasoning.toUpperCase();
-        const isCompatible = reasoningUpper.startsWith('COMPATIBLE') || 
-                           reasoningUpper.includes('WORKS WELL') ||
-                           reasoningUpper.includes('GOOD MATCH') ||
-                           reasoningUpper.includes('SUITABLE');
-        
-        if (isCompatible && cleanItemName) {
-          console.log(`✅ [FALLBACK] Found compatible item: ${cleanItemName} in ${currentCategory}`);
-          
-          // Try to match with full item from styling context
-          const fullItem = stylingContext.find(item => {
-            if (!item.name || !cleanItemName) return false;
-            
-            const itemNameLower = item.name.toLowerCase();
-            const searchNameLower = cleanItemName.toLowerCase();
-            
-            return itemNameLower.includes(searchNameLower) || 
-                   searchNameLower.includes(itemNameLower);
-          });
-          
-          if (fullItem) {
-            if (!compatibleItems[currentCategory]) {
-              compatibleItems[currentCategory] = [];
-            }
-            compatibleItems[currentCategory].push({
-              ...fullItem,
-              compatibilityTypes: ['complementing']
-            });
-          } else {
-            // Log that item wasn't found (for test compatibility)
-            console.log(`🔄 [FALLBACK] No matching item found for: "${cleanItemName}"`);
-          }
-          // Don't create fallback objects for unmatched items in fallback parsing
-          // This maintains backward compatibility with existing tests
-        } else {
-          // Log excluded items for test compatibility
-          if (cleanItemName) {
-            console.log(`🔄 [FALLBACK] Excluded item: ${cleanItemName}`);
-          }
-        }
-      }
-    });
-    
-    console.log('🔄 [FALLBACK] Extracted compatible items:', Object.keys(compatibleItems));
-    return compatibleItems;
-    
-  } catch (error) {
-    console.error('❌ [FALLBACK] Error extracting from detailed analysis:', error);
-    return {};
-  }
+// Helper function to escape regex special characters
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 module.exports = {
-  parseCompatibilityResponse,
-  extractFromDetailedAnalysis
+  parseCompatibilityResponse
 };

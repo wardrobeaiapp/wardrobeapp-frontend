@@ -151,6 +151,19 @@ app.use('/api/migrate-data', require('./routes/dataMigration'));
 app.use('/api/analyze-wardrobe-item-simple', require('./routes/api/ai/analyze-simple'));
 app.use('/api/ai-analysis-mocks', require('./routes/api/ai/analysis-mocks'));
 
+// Check Supabase configuration on startup
+const checkSupabaseConfig = () => {
+  const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+  const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+  
+  console.log('🗂️ Supabase Configuration Check:');
+  console.log('  ✅ URL configured:', !!supabaseUrl);
+  console.log('  ✅ API Key configured:', !!supabaseKey);
+  console.log('  ✅ Analysis Mocks route: /api/ai-analysis-mocks');
+};
+
+checkSupabaseConfig();
+
 // Debug in-memory users
 console.log('In-memory users at startup:', global.inMemoryUsers);
 

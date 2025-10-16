@@ -4,8 +4,8 @@ const { createClient } = require('@supabase/supabase-js');
 const router = express.Router();
 
 // Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
 
 let supabase = null;
 let supabaseConfigured = false;
@@ -42,7 +42,8 @@ router.post('/', async (req, res) => {
     console.log('Saving AI analysis mock:', {
       wardrobe_item_id,
       user_id,
-      analysis_data_keys: analysis_data ? Object.keys(analysis_data) : null
+      analysis_data_keys: analysis_data ? Object.keys(analysis_data) : null,
+      analysis_data_size: analysis_data ? JSON.stringify(analysis_data).length : 0
     });
     
     // Validate required fields
@@ -65,6 +66,7 @@ router.post('/', async (req, res) => {
     }
 
     // Verify the wardrobe item belongs to the user
+    console.log('Verifying wardrobe item ownership...');
     const { data: wardrobeItem, error: itemError } = await supabase
       .from('wardrobe_items')
       .select('id, user_id')
@@ -72,13 +74,25 @@ router.post('/', async (req, res) => {
       .eq('user_id', user_id)
       .single();
     
-    if (itemError || !wardrobeItem) {
+    if (itemError) {
+      console.error('Error verifying wardrobe item:', itemError);
+      return res.status(404).json({ 
+        error: 'Wardrobe item verification failed',
+        details: itemError.message
+      });
+    }
+    
+    if (!wardrobeItem) {
+      console.log('Wardrobe item not found or access denied');
       return res.status(404).json({ 
         error: 'Wardrobe item not found or access denied' 
       });
     }
+    
+    console.log('Wardrobe item verified successfully');
 
     // Insert or update the mock data (upsert)
+    console.log('Attempting to save analysis mock to database...');
     const { data: mockData, error: mockError } = await supabase
       .from('ai_analysis_mocks')
       .upsert(
@@ -96,10 +110,17 @@ router.post('/', async (req, res) => {
       );
 
     if (mockError) {
-      console.error('Error saving analysis mock:', mockError);
+      console.error('Error saving analysis mock:', {
+        error: mockError,
+        code: mockError.code,
+        message: mockError.message,
+        details: mockError.details,
+        hint: mockError.hint
+      });
       return res.status(500).json({ 
         error: 'Failed to save analysis mock',
-        details: mockError.message 
+        details: mockError.message,
+        code: mockError.code
       });
     }
 

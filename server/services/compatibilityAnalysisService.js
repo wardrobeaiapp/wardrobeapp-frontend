@@ -18,6 +18,7 @@
 
 // Import compatibility utilities
 const { buildCompatibilityCheckingPrompt, extractItemDataForCompatibility, parseCompatibilityResponse } = require('../utils/ai/complementingCompatibilityPrompt');
+const { getCompatibleItems } = require('./algorithmicCompatibilityService');
 const { isItemSuitableForLayering, buildLayeringCompatibilityPrompt, parseLayeringCompatibilityResponse, getLayeringItemsFromContext } = require('../utils/ai/layeringCompatibilityPrompt');
 const { isItemSuitableForOuterwear, buildOuterwearCompatibilityPrompt, parseOuterwearCompatibilityResponse, getOuterwearItemsFromContext } = require('../utils/ai/outerwearCompatibilityPrompt');
 
@@ -128,7 +129,7 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       
       const rawCompatibilityResponse = compatibilityResponse.content[0].text;
       console.log('🎯 Claude compatibility response received');
-      console.log('🎯 [DEBUG] Raw Claude response:', rawCompatibilityResponse);
+      console.log('🎯 [DEBUG] Response length:', rawCompatibilityResponse?.length || 0, 'characters');
       
       // Parse compatibility response with full item objects
       const result = parseCompatibilityResponse(rawCompatibilityResponse, stylingContext);
