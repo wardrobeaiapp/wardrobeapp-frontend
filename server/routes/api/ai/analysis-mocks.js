@@ -7,17 +7,36 @@ const router = express.Router();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase configuration for ai-analysis-mocks');
-}
+let supabase = null;
+let supabaseConfigured = false;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Missing Supabase configuration for ai-analysis-mocks - routes will return errors');
+  supabaseConfigured = false;
+} else {
+  try {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    supabaseConfigured = true;
+    console.log('Supabase client initialized for ai-analysis-mocks');
+  } catch (error) {
+    console.error('Failed to initialize Supabase client for ai-analysis-mocks:', error);
+    supabaseConfigured = false;
+  }
+}
 
 // @route   POST /api/ai-analysis-mocks
 // @desc    Save AI analysis result as mock data for demo use
 // @access  Private (requires authentication)
 router.post('/', async (req, res) => {
   try {
+    // Check if Supabase is configured
+    if (!supabaseConfigured) {
+      return res.status(503).json({ 
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
     const { wardrobe_item_id, analysis_data, user_id } = req.body;
     
     console.log('Saving AI analysis mock:', {
@@ -106,6 +125,14 @@ router.post('/', async (req, res) => {
 // @access  Public (for demo use)
 router.get('/:itemId', async (req, res) => {
   try {
+    // Check if Supabase is configured
+    if (!supabaseConfigured) {
+      return res.status(503).json({ 
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
     const { itemId } = req.params;
     
     console.log('Fetching analysis mock for item:', itemId);
@@ -163,6 +190,14 @@ router.get('/:itemId', async (req, res) => {
 // @access  Public (for demo use)
 router.post('/check-multiple', async (req, res) => {
   try {
+    // Check if Supabase is configured
+    if (!supabaseConfigured) {
+      return res.status(503).json({ 
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
     const { item_ids } = req.body;
     
     console.log('Checking mock availability for items:', item_ids?.length || 0);

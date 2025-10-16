@@ -133,7 +133,18 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
       // Parse compatibility response with full item objects
       const result = parseCompatibilityResponse(rawCompatibilityResponse, stylingContext);
       
-      console.log('✅ Compatible complementing items by category:', JSON.stringify(result, null, 2));
+      // Log summary instead of full JSON dump to avoid flooding logs
+      const categoryCount = Object.keys(result).length;
+      const totalItems = Object.values(result).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
+      console.log(`✅ Found ${totalItems} compatible items across ${categoryCount} categories`);
+      
+      // Optional: detailed summary by category
+      Object.entries(result).forEach(([category, items]) => {
+        if (Array.isArray(items) && items.length > 0) {
+          const itemNames = items.map(item => item.name).join(', ');
+          console.log(`   ${category}: ${items.length} items (${itemNames})`);
+        }
+      });
       
       // Create season + scenario combinations after compatibility analysis
       createSeasonScenarioCombinations(itemDataForCompatibility, result);
@@ -184,7 +195,10 @@ async function analyzeLayeringCompatibility(itemDataForLayering, extractedCharac
         
         // Parse the response to extract compatible items with full objects
         const compatibleItems = parseLayeringCompatibilityResponse(rawResponse, stylingContext);
-        console.log('✅ Parsed compatible layering items:', JSON.stringify(compatibleItems, null, 2));
+        // Log summary of layering items instead of full JSON
+        const layeringCategoryCount = Object.keys(compatibleItems).length;
+        const layeringTotalItems = Object.values(compatibleItems).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
+        console.log(`✅ Found ${layeringTotalItems} compatible layering items across ${layeringCategoryCount} categories`);
         
         return compatibleItems;
       } else {
@@ -246,7 +260,10 @@ async function analyzeOuterwearCompatibility(itemDataForOuterwear, extractedChar
         // Parse outerwear compatibility response with full item objects
         const result = parseOuterwearCompatibilityResponse(rawOuterwearResponse, stylingContext);
         
-        console.log('✅ Compatible outerwear items by category:', JSON.stringify(result, null, 2));
+        // Log summary of outerwear items instead of full JSON
+        const outerwearCategoryCount = Object.keys(result).length;
+        const outerwearTotalItems = Object.values(result).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
+        console.log(`✅ Found ${outerwearTotalItems} compatible outerwear items across ${outerwearCategoryCount} categories`);
         return result;
       } else {
         console.log('🚫 [outerwear] No outerwear items found to evaluate - returning null');

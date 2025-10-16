@@ -84,8 +84,22 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     let currentCategory = null;
     
     lines.forEach((line, lineIndex) => {
-      // Stop processing if we hit explanatory text (lines that don't follow the category: items format)
-      if (line.toLowerCase().includes('these items') || line.toLowerCase().includes('because') || line.toLowerCase().includes('analysis')) {
+      // Stop processing if we hit explanatory text (lines that are PURELY reasoning, not mixed with items)
+      // Only filter lines that don't have category: format and are pure reasoning
+      const isReasoningOnlyLine = !line.match(/^\s*\w+:\s/) && (
+        line.toLowerCase().includes('these items') || 
+        line.toLowerCase().includes('because') || 
+        line.toLowerCase().includes('analysis') ||
+        (line.toLowerCase().includes('the selected items') && !line.includes(':')) ||
+        (line.toLowerCase().includes('selected items consider') && !line.includes(':')) ||
+        (line.toLowerCase().includes('these combinations') && !line.includes(':')) ||
+        (line.toLowerCase().includes('would create') && !line.includes(':')) ||
+        (line.toLowerCase().includes('well-balanced') && !line.includes(':')) ||
+        (line.toLowerCase().includes('reasoning:'))
+      );
+      
+      if (isReasoningOnlyLine) {
+        console.log(`🚫 [DEBUG] Filtering out pure reasoning line: "${line.trim()}"`);
         return;
       }
       
@@ -104,22 +118,124 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
         } else {
           console.log(`📋 [DEBUG] Skipping category "${category}" - no valid items or marked as none`);
         }
-      } else if (currentCategory && line.trim() && !line.trim().includes(':')) {
-        // This might be the items line for the previous category
-        const itemsStr = line.trim();
+      } else if (currentCategory && line.trim()) {
+        // This might be items for the previous category
+        // Handle both "item1, item2" format and "- Item: explanation" format
+        const lineContent = line.trim();
         
-        if (itemsStr && itemsStr !== 'none' && itemsStr !== '-' && !itemsStr.toLowerCase().includes('n/a') && !itemsStr.toLowerCase().includes('no compatible')) {
-          processItemsForCategory(currentCategory, itemsStr, stylingContext, compatibleItems);
+        // Check if this is a new category header (would override currentCategory)
+        const isNewCategory = lineContent.match(/^\s*\w+:\s*(.*)$/i) && !lineContent.startsWith('-');
+        
+        if (!isNewCategory && lineContent && lineContent !== 'none' && lineContent !== '-' && 
+            !lineContent.toLowerCase().includes('n/a') && !lineContent.toLowerCase().includes('no compatible')) {
+          
+          // If we haven't processed this category yet, process it now
+          if (!compatibleItems[currentCategory]) {
+            processItemsForCategory(currentCategory, lineContent, stylingContext, compatibleItems);
+          } else {
+            // If we already have items for this category, this might be additional items
+            // Append to existing items
+            const additionalItemsStr = lineContent;
+            processItemsForCategory(currentCategory, additionalItemsStr, stylingContext, compatibleItems);
+          }
         }
-        currentCategory = null; // Reset after processing
+        
+        // Don't reset currentCategory yet - we might have more items coming
+        // Only reset when we hit a new category or reasoning text
+        if (isNewCategory) {
+          currentCategory = null;
+        }
       }
     });
     
     // Helper function to process items for a category
     function processItemsForCategory(category, itemsStr, stylingContext, compatibleItems) {
-      const itemNames = itemsStr.split(',').map(item => item.trim()).filter(name => {
+      // First, try to extract just the actual items before any reasoning starts
+      // Look for patterns that indicate reasoning text and cut off there
+      let cleanItemsStr = itemsStr;
+      
+      // Split by common reasoning starters and take only the first part
+      const reasoningStarters = [
+        'The selected items consider',
+        'These items were chosen',
+        'Reasoning:',
+        'because',
+        'would create',
+        'These combinations'
+      ];
+      
+      for (const starter of reasoningStarters) {
+        const reasoningIndex = cleanItemsStr.toLowerCase().indexOf(starter.toLowerCase());
+        if (reasoningIndex !== -1) {
+          cleanItemsStr = cleanItemsStr.substring(0, reasoningIndex).trim();
+          console.log(`✂️ [DEBUG] Trimmed reasoning text starting with "${starter}"`);
+          break;
+        }
+      }
+      
+      // Also handle the case where items are listed with dashes and detailed explanations
+      // Extract just the item names from "- ItemName: explanation" format
+      if (cleanItemsStr.includes('-') && cleanItemsStr.includes(':')) {
+        const itemMatches = cleanItemsStr.match(/- ([^:]+):/g);
+        if (itemMatches) {
+          cleanItemsStr = itemMatches.map(match => match.replace(/^- /, '').replace(/:$/, '')).join(', ');
+          console.log(`📝 [DEBUG] Extracted item names from detailed format: "${cleanItemsStr}"`);
+        }
+      }
+      const itemNames = cleanItemsStr.split(',').map(item => item.trim()).filter(name => {
         // Filter out N/A responses and "no compatible" messages
         const nameLower = name.toLowerCase();
+        
+        // Filter out reasoning text patterns that might be comma-separated
+        if (nameLower.includes('selected items consider') ||
+            nameLower.includes('color harmony') ||
+            nameLower.includes('harmonize nicely') ||
+            nameLower.includes('style cohesion') ||
+            nameLower.includes('season appropriateness') ||
+            nameLower.includes('seasonal appropriateness') ||
+            nameLower.includes('occasion compatibility') ||
+            nameLower.includes('proportion and silhouette') ||
+            nameLower.includes('material compatibility') ||
+            nameLower.includes('practical wearability') ||
+            nameLower.includes('these combinations') ||
+            nameLower.includes('would create') ||
+            nameLower.includes('well-balanced') ||
+            nameLower.includes('stylish outfits') ||
+            nameLower.includes('suitable for') ||
+            nameLower.includes('intended use') ||
+            nameLower.includes('because') ||
+            nameLower.includes('analysis') ||
+            nameLower.includes('reasoning') ||
+            nameLower.includes('also harmonize') ||
+            nameLower.includes('colors also') ||
+            nameLower.includes('brown colors') ||
+            nameLower.includes('white top') ||
+            nameLower.includes('aligning with') ||
+            nameLower.includes('stated seasonal') ||
+            nameLower.includes('appropriateness of') ||
+            nameLower.includes('of the top') ||
+            nameLower.includes('the top.') ||
+            nameLower.includes('while stylish') ||
+            nameLower.includes('and stylish') ||
+            nameLower.includes('stylish and') ||
+            nameLower.includes('is stylish') ||
+            nameLower.includes('being stylish') ||
+            name.startsWith('- The ') ||
+            name.startsWith('- This ') ||
+            name.startsWith('- These ') ||
+            name.endsWith('of the top.') ||
+            name.endsWith('appropriateness.') ||
+            name.endsWith('stylish') ||
+            name.endsWith('and stylish') ||
+            /^[a-z\s]+ing\s+with\s+the/.test(nameLower) ||  // Patterns like "aligning with the..."
+            /appropriateness\s+of\s+(the\s+)?/.test(nameLower) ||  // "appropriateness of the..."
+            /^(while|and|being|is)\s+/.test(nameLower) ||  // Starting with conjunctions/articles
+            (name.length > 50 && !name.includes(' - ') && !name.includes('(')) ||  // Long descriptive text without item separators
+            (name.length < 15 && !name.includes(' ') && !/[A-Z]/.test(name) && name.includes('stylish')) ) {  // Short reasoning fragments like "while stylish"
+          console.log(`🚫 [DEBUG] Filtering out reasoning fragment: "${name}"`);
+          return false;
+        }
+        
         return name && 
                !nameLower.includes('n/a') && 
                !nameLower.includes('no compatible') &&
@@ -176,7 +292,15 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
         }).filter(Boolean);
         
         if (fullItemObjects.length > 0) {
-          compatibleItems[category] = fullItemObjects;
+          // Accumulate items instead of overwriting
+          if (!compatibleItems[category]) {
+            compatibleItems[category] = fullItemObjects;
+          } else {
+            // Append to existing items, avoiding duplicates
+            const existingIds = new Set(compatibleItems[category].map(item => item.id || item.name));
+            const newItems = fullItemObjects.filter(item => !existingIds.has(item.id || item.name));
+            compatibleItems[category] = [...compatibleItems[category], ...newItems];
+          }
         }
       } else {
         console.log(`  Skipping category "${category}" - no valid items or marked as none`);

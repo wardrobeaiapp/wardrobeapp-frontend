@@ -9,6 +9,7 @@ import {
   type CheckStatus
 } from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
+import type { WardrobeItem } from '../types';
 import PageHeader from '../components/layout/Header/Header';
 import AIHistoryDashboard from '../components/features/ai-assistant/AIHistoryDashboard/AIHistoryDashboard';
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
@@ -25,7 +26,7 @@ import { CardsContainer } from './AIAssistantPage.styles';
 const AIAssistantPage: React.FC = () => {
   const { items } = useWardrobe();
   const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
-  const [selectedWishlistItem, setSelectedWishlistItem] = useState<import('../types').WardrobeItem | null>(null);
+  const [selectedWishlistItem, setSelectedWishlistItem] = useState<WardrobeItem | null>(null);
 
   // Modal hooks - Must be declared before they're used in other handlers
   const {
@@ -135,6 +136,39 @@ const AIAssistantPage: React.FC = () => {
       handleFileUploadRaw(event.target.files[0]);
       // Clear selected wishlist item when user uploads a new file
       setSelectedWishlistItem(null);
+    }
+  };
+
+  // Handler for saving analysis result as mock data
+  const handleSaveMock = async (mockData: any) => {
+    if (!selectedWishlistItem) {
+      console.error('Cannot save mock: no wardrobe item selected');
+      throw new Error('No wardrobe item selected');
+    }
+
+    try {
+      const response = await fetch('/api/ai-analysis-mocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wardrobe_item_id: selectedWishlistItem.id,
+          analysis_data: mockData,
+          user_id: selectedWishlistItem.userId
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || 'Failed to save mock data');
+      }
+
+      const result = await response.json();
+      console.log('Mock data saved successfully:', result);
+    } catch (error) {
+      console.error('Error saving mock data:', error);
+      throw error; // Re-throw to trigger error state in modal
     }
   };
 
@@ -287,6 +321,10 @@ const AIAssistantPage: React.FC = () => {
           errorDetails={errorDetails}
           onSkip={handleResetCheck}
           onDecideLater={handleCloseCheckResultModal}
+          // New props for save as mock functionality
+          selectedWishlistItem={selectedWishlistItem}
+          showSaveMock={true}
+          onSaveMock={handleSaveMock}
         />
       )}
 

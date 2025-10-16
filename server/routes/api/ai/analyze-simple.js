@@ -73,7 +73,7 @@ router.post('/', async (req, res) => {
       });
     }
     console.log('userGoals:', userGoals);
-    console.log('preFilledData:', preFilledData ? JSON.stringify(preFilledData, null, 2) : 'none');
+    console.log('preFilledData:', preFilledData ? `has ${Object.keys(preFilledData).length} fields` : 'none');
     console.log('userId:', userId);
     
     // Calculate total payload size
@@ -101,51 +101,20 @@ router.post('/', async (req, res) => {
 
     // === DUPLICATE DETECTION ===
     console.log('🚨 === DUPLICATE DETECTION START === 🚨');
-    console.log('🔍 DEBUG - similarContext count:', similarContext?.length || 0);
-    console.log('🔍 DEBUG - similarContext exists:', !!similarContext);
-    console.log('🔍 DEBUG - formData category:', formData?.category);
-    console.log('🔍 DEBUG - formData subcategory:', formData?.subcategory);
-    console.log('🔍 DEBUG - similarContext sample (first 2):', JSON.stringify(similarContext?.slice(0, 2), null, 2));
-    console.log('🔍 DEBUG - formData:', JSON.stringify(formData, null, 2));
+    console.log('🔍 DEBUG - similarContext:', similarContext ? `${similarContext.length} items` : 'none');
+    console.log('🔍 DEBUG - formData:', `${formData?.name} (${formData?.category}/${formData?.subcategory})`);
     
-    // Enhanced debugging
+    // Enhanced debugging - show summary only
     if (similarContext && similarContext.length > 0) {
-      console.log('🔍 DEBUG - ALL similarContext items received from frontend:');
-      similarContext.forEach((item, i) => {
-        console.log(`   ${i+1}. "${item.name}" - category: "${item.category}", subcategory: "${item.subcategory}", color: ${item.color}`);
-      });
+      const categoryMatches = similarContext.filter(item => 
+        item.category?.toLowerCase() === formData.category?.toLowerCase()
+      ).length;
+      const subcategoryMatches = similarContext.filter(item => 
+        item.subcategory?.toLowerCase() === formData.subcategory?.toLowerCase()
+      ).length;
       
-      console.log('🔍 DEBUG - Target category/subcategory from formData:');
-      console.log(`   - category: "${formData.category}"`);
-      console.log(`   - subcategory: "${formData.subcategory}"`);
-      
-      console.log('🔍 DEBUG - Filtering results:');
-      const matchingItems = similarContext.filter(item => {
-        const categoryMatch = item.category?.toLowerCase() === formData.category?.toLowerCase();
-        
-        // More flexible subcategory matching
-        const normalizeSubcategory = (sub) => {
-          if (!sub) return '';
-          return sub.toLowerCase()
-            .replace(/[-\s]/g, '') // Remove hyphens and spaces to normalize "T-Shirt" -> "tshirt"
-            .trim();
-        };
-        
-        const itemSub = normalizeSubcategory(item.subcategory);
-        const formSub = normalizeSubcategory(formData.subcategory);
-        const subcategoryMatch = itemSub === formSub;
-        
-        const passes = categoryMatch && subcategoryMatch;
-        
-        console.log(`   "${item.name}" - cat: ${categoryMatch} (${item.category?.toLowerCase()} vs ${formData.category?.toLowerCase()}), sub: ${subcategoryMatch} (${itemSub} vs ${formSub}) = ${passes ? 'PASS' : 'FAIL'}`);
-        
-        return passes;
-      });
-      
-      console.log(`🔍 DEBUG - Final matching items: ${matchingItems.length} out of ${similarContext.length}`);
-      matchingItems.forEach((item, i) => {
-        console.log(`   ${i+1}. "${item.name}" - color: ${item.color}, style: ${item.style}, silhouette: ${item.silhouette}`);
-      });
+      console.log(`🔍 DEBUG - Target: "${formData.category}/${formData.subcategory}"`);
+      console.log(`🔍 DEBUG - Matches: ${categoryMatches} category, ${subcategoryMatches} subcategory`);
     }
     
     const duplicateResult = await duplicateDetectionService.analyzeWithAI(

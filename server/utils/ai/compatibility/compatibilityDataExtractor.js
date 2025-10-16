@@ -105,7 +105,8 @@ function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisD
     itemData.scenarios = suitableScenarios;
   }
   
-  console.log('[compatibility] Final item data:', JSON.stringify(itemData, null, 2));
+  // Log summary of item data instead of full JSON dump
+  console.log(`[compatibility] Final item data: ${itemData.name} (${itemData.category}) - ${itemData.seasons?.length || 0} seasons, ${itemData.scenarios?.length || 0} scenarios`);
   return itemData;
 }
 

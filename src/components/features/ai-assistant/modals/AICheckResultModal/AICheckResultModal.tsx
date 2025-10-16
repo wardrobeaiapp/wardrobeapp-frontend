@@ -1,6 +1,6 @@
-import React from 'react';
-import { FaStar } from 'react-icons/fa';
-import { WishlistStatus } from '../../../../../types';
+import React, { useState } from 'react';
+import { FaStar, FaSave } from 'react-icons/fa';
+import { WishlistStatus, WardrobeItem } from '../../../../../types';
 import { Modal, ModalAction } from '../../../../common/Modal';
 import {
   ItemDetails,
@@ -59,11 +59,17 @@ interface AICheckResultModalProps {
   recommendationAction?: string; // "SKIP" / "RECOMMEND" / "MAYBE"
   recommendationText?: string; // Human-readable explanation
   hideActions?: boolean; // Hide action buttons (for demo mode)
+  // New props for saving as mock
+  selectedWishlistItem?: WardrobeItem | null; // The wardrobe item being analyzed
+  showSaveMock?: boolean; // Whether to show Save as Mock button (only on AI Assistant page)
+  onSaveMock?: (mockData: any) => void; // Callback for saving mock data
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   isOpen,
   onClose,
+  analysisResult,
+  suitableScenarios,
   compatibleItems,
   outfitCombinations = [],
   seasonScenarioCombinations = [],
@@ -72,6 +78,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   score,
   status,
   imageUrl,
+  extractedTags,
   onAddToWishlist,
   onSkip,
   onDecideLater,
@@ -79,8 +86,13 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   errorDetails,
   recommendationAction,
   recommendationText,
-  hideActions = false
+  hideActions = false,
+  selectedWishlistItem,
+  showSaveMock = false,
+  onSaveMock
 }) => {
+  const [isSavingMock, setIsSavingMock] = useState(false);
+  const [mockSaveStatus, setMockSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const handleAddToWishlist = () => {
     onAddToWishlist?.();
@@ -97,6 +109,55 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
     onClose();
   };
 
+  const handleSaveMock = async () => {
+    if (!selectedWishlistItem || !onSaveMock) {
+      console.error('Cannot save mock: missing wardrobe item or callback');
+      return;
+    }
+
+    setIsSavingMock(true);
+    setMockSaveStatus('idle');
+
+    try {
+      // Prepare the analysis data to save as mock
+      const mockData = {
+        compatibility: {
+          score: score || 0,
+          reasons: suitableScenarios || []
+        },
+        compatibleItems: compatibleItems || {},
+        outfitCombinations: outfitCombinations || [],
+        seasonScenarioCombinations: seasonScenarioCombinations || [],
+        coverageGapsWithNoOutfits: coverageGapsWithNoOutfits || [],
+        itemSubcategory: itemSubcategory || '',
+        status: status || WishlistStatus.NOT_REVIEWED,
+        extractedTags: extractedTags || null,
+        recommendationAction: recommendationAction || '',
+        recommendationText: recommendationText || '',
+        analysisResult: analysisResult || '',
+        error: error || null,
+        errorDetails: errorDetails || null
+      };
+
+      console.log('Saving analysis as mock for item:', selectedWishlistItem.id, mockData);
+      
+      await onSaveMock(mockData);
+      setMockSaveStatus('success');
+      
+      // Reset success status after 3 seconds
+      setTimeout(() => setMockSaveStatus('idle'), 3000);
+      
+    } catch (error) {
+      console.error('Error saving mock:', error);
+      setMockSaveStatus('error');
+      
+      // Reset error status after 5 seconds
+      setTimeout(() => setMockSaveStatus('idle'), 5000);
+    } finally {
+      setIsSavingMock(false);
+    }
+  };
+
   // Only create actions if not hiding them (for demo mode)
   const actions: ModalAction[] = hideActions ? [] : [
     {
@@ -105,6 +166,27 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       variant: 'primary',
       fullWidth: true
     },
+    // Add Save as Mock button only when showSaveMock is true (AI Assistant page only)
+    ...(showSaveMock ? [{
+      label: isSavingMock 
+        ? 'Saving...' 
+        : mockSaveStatus === 'success' 
+          ? '✓ Saved as Mock' 
+          : mockSaveStatus === 'error' 
+            ? '✗ Save Failed' 
+            : !selectedWishlistItem
+              ? '💾 Save as Mock (Select item first)'
+              : '💾 Save as Mock',
+      onClick: handleSaveMock,
+      variant: mockSaveStatus === 'success' 
+        ? 'primary' 
+        : mockSaveStatus === 'error' 
+          ? 'secondary' 
+          : 'secondary',
+      fullWidth: true,
+      outlined: true,
+      disabled: isSavingMock || mockSaveStatus === 'success' || !selectedWishlistItem
+    } as ModalAction] : []),
     {
       label: 'Dismiss',
       onClick: handleSkip,
