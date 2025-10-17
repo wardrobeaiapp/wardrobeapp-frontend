@@ -20,6 +20,7 @@ import WishlistSelectionModal from '../../../components/features/ai-assistant/mo
 import AICheckResultModal from '../../../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
 import { DemoStep } from '../types';
 import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
+import { getDemoWardrobeItems, isDemoUser } from '../services/demoWardrobeService';
 import { getWardrobeItems } from '../../../services/wardrobe/items';
 import { WardrobeItem, WishlistStatus } from '../../../types';
 import { aiAnalysisMocksService } from '../../../services/ai/aiAnalysisMocksService';
@@ -111,9 +112,13 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
 
   const loadWardrobeData = async (userId: string) => {
     try {
-      const items = await getWardrobeItems(userId);
+      // Use demo service for demo users (with public access), regular service for authenticated users
+      const items = isDemoUser(userId) 
+        ? await getDemoWardrobeItems(userId)
+        : await getWardrobeItems(userId);
+      
       setWardrobeItems(items);
-      console.log(`Loaded ${items.length} items for wishlist selection`);
+      console.log(`🎭 Demo: Loaded ${items.length} items for wishlist selection`);
     } catch (err: any) {
       console.error('Error loading wardrobe data:', err);
     }

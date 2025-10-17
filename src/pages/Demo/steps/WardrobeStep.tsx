@@ -7,6 +7,7 @@ import {
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
 import { getSelectedPersona, SelectedPersona } from '../utils/personaUtils';
+import { getDemoWardrobeItems, isDemoUser } from '../services/demoWardrobeService';
 import { getWardrobeItems } from '../../../services/wardrobe/items';
 import { WardrobeItem } from '../../../types';
 import { TabType } from '../../../hooks/home';
@@ -117,9 +118,13 @@ const WardrobeStep: React.FC<WardrobeStepProps> = ({ onNext, markStepCompleted }
     setError(null);
     
     try {
-      const items = await getWardrobeItems(userId); // Load all items
+      // Use demo service for demo users (with public access), regular service for authenticated users
+      const items = isDemoUser(userId) 
+        ? await getDemoWardrobeItems(userId)
+        : await getWardrobeItems(userId);
+      
       setWardrobeItems(items);
-      console.log(`Loaded ${items.length} items for ${userId}`);
+      console.log(`🎭 Demo: Loaded ${items.length} items for ${userId}`);
     } catch (err: any) {
       console.error('Error loading wardrobe data:', err);
       setError(err.message || 'Failed to load wardrobe data');
