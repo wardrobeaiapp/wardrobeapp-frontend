@@ -108,48 +108,35 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
       <HeroBlock>
         <DemoTitle>Get Early Access</DemoTitle>
         <DemoSubtitle>
-          Be among the first to transform your wardrobe with AI-powered insights. 
-          Join thousands who are already on the waitlist for smarter fashion choices.
+          Join the waitlist to be the first to experience the full app.
         </DemoSubtitle>
       </HeroBlock>
 
       <InfoBlock>
-        <h2>🚀 What You'll Get with WardrobeAI</h2>
+        <h2>🚀 This Is Just The Beginning</h2>
         <FeatureGrid>
           <FeatureCard>
-            <div className="icon">🧠</div>
-            <h4>Smart Wardrobe Analysis</h4>
-            <p>AI-powered analysis identifies gaps, duplicates, and optimization opportunities in your wardrobe collection.</p>
-          </FeatureCard>
-          
-          <FeatureCard>
-            <div className="icon">✨</div>
-            <h4>Personalized Outfit Suggestions</h4>
-            <p>Get curated outfit combinations based on your style preferences, weather, and upcoming occasions.</p>
-          </FeatureCard>
-          
-          <FeatureCard>
-            <div className="icon">📱</div>
-            <h4>Digital Wardrobe Management</h4>
-            <p>Organize and categorize all your clothing items with photos, tags, and smart organization features.</p>
-          </FeatureCard>
-          
-          <FeatureCard>
-            <div className="icon">🌱</div>
-            <h4>Sustainable Fashion Insights</h4>
-            <p>Reduce fashion waste by maximizing the use of existing items and making conscious purchase decisions.</p>
-          </FeatureCard>
-          
-          <FeatureCard>
             <div className="icon">🎯</div>
-            <h4>Scenario-Based Planning</h4>
-            <p>Plan outfits for specific scenarios like work, social events, or travel with AI-curated suggestions.</p>
+            <h4>Your Personal Shopping Strategy</h4>
+            <p>Go beyond single checks. Set long-term purchase limits (e.g., "1 item per month") and track your progress.</p>
           </FeatureCard>
           
           <FeatureCard>
-            <div className="icon">📊</div>
-            <h4>Style Analytics</h4>
-            <p>Discover your style patterns, color preferences, and get insights on how to enhance your personal brand.</p>
+            <div className="icon">📈</div>
+            <h4>Total Financial Clarity</h4>
+            <p>See exactly what you're saving and spending on clothes over time. Turn abstract goals into tangible results.</p>
+          </FeatureCard>
+          
+          <FeatureCard>
+            <div className="icon">🔍</div>
+            <h4>Your Wardrobe's Missing Pieces</h4>
+            <p>Not sure what to buy? Get AI-powered recommendations on exactly which items would best complement your existing closet.</p>
+          </FeatureCard>
+          
+          <FeatureCard>
+            <div className="icon">👗</div>
+            <h4>Effortless Outfit Planning</h4>
+            <p>Create and save full outfits or entire seasonal capsules in seconds from your digital wardrobe. Plan your looks directly in the calendar.</p>
           </FeatureCard>
         </FeatureGrid>
       </InfoBlock>
