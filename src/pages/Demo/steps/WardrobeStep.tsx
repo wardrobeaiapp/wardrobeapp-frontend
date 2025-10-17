@@ -32,7 +32,7 @@ const DemoTab = styled.div<{ $active: boolean; $type: string }>`
   gap: 8px;
   padding: 12px 16px;
   background: transparent;
-  color: ${props => props.$active ? '#8b5cf6' : '#6b7280'};
+  color: ${props => props.$active ? '#4f46e5' : '#6b7280'};
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -45,12 +45,12 @@ const DemoTab = styled.div<{ $active: boolean; $type: string }>`
     left: 0;
     right: 0;
     height: 2px;
-    background-color: ${props => props.$active ? '#8b5cf6' : 'transparent'};
+    background-color: ${props => props.$active ? '#4f46e5' : 'transparent'};
     transition: background-color 0.2s ease;
   }
   
   &:hover {
-    color: #8b5cf6;
+    color: #4f46e5;
   }
   
   svg {

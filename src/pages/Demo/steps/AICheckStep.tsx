@@ -69,18 +69,18 @@ const DemoButtonGroup = styled.div`
   
   /* Second button (Start AI Check) - Primary */
   button:last-child {
-    background-color: #8b5cf6 !important;
+    background-color: #4f46e5 !important;
     color: #ffffff !important;
-    border: 1px solid #8b5cf6 !important;
+    border: 1px solid #4f46e5 !important;
     
     &:hover:not(:disabled) {
-      background-color: #7c3aed !important;
-      border-color: #7c3aed !important;
+      background-color: #4338ca !important;
+      border-color: #4338ca !important;
     }
     
     &:active:not(:disabled) {
-      background-color: #6d28d9 !important;
-      border-color: #6d28d9 !important;
+      background-color: #3730a3 !important;
+      border-color: #3730a3 !important;
     }
     
     &:disabled {
