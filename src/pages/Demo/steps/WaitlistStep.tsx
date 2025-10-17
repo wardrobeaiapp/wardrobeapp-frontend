@@ -136,7 +136,7 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
           <FeatureCard>
             <div className="icon">👗</div>
             <h4>Effortless Outfit Planning</h4>
-            <p>Create and save full outfits or entire seasonal capsules in seconds from your digital wardrobe. Plan your looks directly in the calendar.</p>
+            <p>Create and save full outfits or entire seasonal capsules from your digital wardrobe. Plan your looks directly in the calendar.</p>
           </FeatureCard>
         </FeatureGrid>
       </InfoBlock>
@@ -146,16 +146,8 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
           Join the Waitlist
         </h2>
         <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '32px', lineHeight: '1.6' }}>
-          Enter your email to get notified when WardrobeAI launches. Early access members will get:
+          Enter your email to get notified when WardrobeAI launches and be the first to experience smarter shopping.
         </p>
-        <div style={{ textAlign: 'left', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px' }}>
-          <ul style={{ color: '#4b5563', fontSize: '1rem', lineHeight: '1.8' }}>
-            <li>✅ <strong>Free premium features</strong> for the first 3 months</li>
-            <li>✅ <strong>Priority support</strong> and direct feedback channel</li>
-            <li>✅ <strong>Exclusive tutorials</strong> and styling tips</li>
-            <li>✅ <strong>Early access</strong> to new AI features</li>
-          </ul>
-        </div>
 
         <form onSubmit={handleJoinWaitlist} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
