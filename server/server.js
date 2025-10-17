@@ -150,6 +150,7 @@ app.use('/api/capsules', require('./routes/capsules'));
 app.use('/api/migrate-data', require('./routes/dataMigration'));
 app.use('/api/analyze-wardrobe-item-simple', require('./routes/api/ai/analyze-simple'));
 app.use('/api/ai-analysis-mocks', require('./routes/api/ai/analysis-mocks'));
+app.use('/api/waitlist', require('./routes/waitlist'));
 
 // Check Supabase configuration on startup
 const checkSupabaseConfig = () => {
