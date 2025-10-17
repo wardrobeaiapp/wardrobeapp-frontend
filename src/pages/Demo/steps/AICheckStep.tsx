@@ -31,26 +31,6 @@ const DemoButtonGroup = styled.div`
   gap: 0.75rem;
   margin-top: auto;
   
-  /* Override global button styles with higher specificity - target by position */
-  button {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif !important;
-    font-weight: 600 !important;
-    border-radius: 0.5rem !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
-    border: 1px solid transparent !important;
-    text-decoration: none !important;
-    white-space: nowrap !important;
-    padding: 0.5rem 1rem !important;
-    font-size: 0.875rem !important;
-    min-height: 40px !important;
-    flex: 1 !important;
-  }
-  
   /* First button (Select from Wishlist) - Secondary outlined */
   button:first-child {
     background-color: transparent !important;
@@ -60,10 +40,12 @@ const DemoButtonGroup = styled.div`
     &:hover:not(:disabled) {
       background-color: #f9fafb !important;
       border-color: #9ca3af !important;
+      transform: translateY(-1px) !important;
     }
     
     &:active:not(:disabled) {
       background-color: #f3f4f6 !important;
+      transform: translateY(0) !important;
     }
   }
   
@@ -76,11 +58,14 @@ const DemoButtonGroup = styled.div`
     &:hover:not(:disabled) {
       background-color: #4338ca !important;
       border-color: #4338ca !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3) !important;
     }
     
     &:active:not(:disabled) {
       background-color: #3730a3 !important;
       border-color: #3730a3 !important;
+      transform: translateY(0) !important;
     }
     
     &:disabled {
