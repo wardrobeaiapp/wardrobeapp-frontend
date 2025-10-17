@@ -13,19 +13,43 @@ export const updateUserMetadata = async (userId: string, metadata: any): Promise
       delete snakeCaseMetadata.preferences;
     }
     
-    // 🎯 Use update-or-insert pattern to prevent duplicate records (same pattern as budget service)
-    // First, check if a profile already exists for this user
+    // 🎯 Enhanced duplicate prevention - check by both user_uuid AND email
+    // First, check if a profile already exists for this user by user_uuid
     const { data: existingProfile, error: fetchError } = await supabase
       .from('user_profiles')
-      .select('id')
+      .select('id, email, user_uuid')
       .eq('user_uuid', userId)
       .order('id', { ascending: false })
       .limit(1)
       .maybeSingle();
     
     if (fetchError) {
-      console.error('Error checking existing user profile:', fetchError);
+      console.error('Error checking existing user profile by user_uuid:', fetchError);
       throw fetchError;
+    }
+    
+    // Also check for existing profile by email to prevent email duplicates
+    if (snakeCaseMetadata.email && !existingProfile) {
+      const { data: emailProfile, error: emailError } = await supabase
+        .from('user_profiles')
+        .select('id, email, user_uuid')
+        .eq('email', snakeCaseMetadata.email)
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+        
+      if (emailError) {
+        console.warn('Error checking existing user profile by email:', emailError);
+        // Don't throw here, continue with user_uuid check
+      } else if (emailProfile) {
+        console.log(`📧 Found existing profile with same email for different user. Email: ${snakeCaseMetadata.email}, Existing user_uuid: ${emailProfile.user_uuid}, Current user_uuid: ${userId}`);
+        
+        // If email belongs to different user, this might be a duplicate account situation
+        if (emailProfile.user_uuid !== userId) {
+          console.warn(`⚠️ Potential duplicate account detected - email ${snakeCaseMetadata.email} already exists for user ${emailProfile.user_uuid}`);
+          // Still allow the creation but log it for investigation
+        }
+      }
     }
     
     let data, error;

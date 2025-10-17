@@ -8,7 +8,7 @@ import type {
   TemporaryUser
 } from '../../types/auth.types';
 
-// Helper function to create user profile
+// Helper function to create user profile with better duplicate prevention
 export const createUserProfile = async (userId: string, userData: RegisterData): Promise<void> => {
   try {
     debugLog('Creating user profile for user ID:', userId);
@@ -23,43 +23,30 @@ export const createUserProfile = async (userId: string, userData: RegisterData):
     debugLog('Creating user profile with session:', 
       sessionData.session.access_token.substring(0, 10) + '...');
     
-    // Try direct insert first
-    const { data: directInsertData, error: directInsertError } = await supabase
-      .from('user_profiles')
-      .insert({
-        user_uuid: userId,
-        name: userData.name,
-        email: userData.email,
-        profile_completed: false,
-        onboarding_completed: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-      
-    if (directInsertError) {
-      debugLog('Direct insert error:', directInsertError);
-      // Fall back to the normal method if direct insert fails
-      debugLog('Falling back to updateUserMetadata...');
-      
-      // Create a clean profile object without password
-      const { password, ...cleanUserData } = userData;
-      
-      await updateUserMetadata(userId, {
-        name: cleanUserData.name,
-        email: cleanUserData.email,
-        profileCompleted: false,
-        onboardingCompleted: false,
-        created_at: new Date().toISOString()
-      });
-    } else {
-      debugLog('Direct insert successful:', directInsertData);
-    }
+    // Use updateUserMetadata which has better duplicate prevention logic
+    // instead of trying direct insert first
+    const { password, ...cleanUserData } = userData;
+    
+    await updateUserMetadata(userId, {
+      name: cleanUserData.name,
+      email: cleanUserData.email,
+      profileCompleted: false,
+      onboardingCompleted: false,
+      created_at: new Date().toISOString()
+    });
+    
+    debugLog('Profile creation successful via updateUserMetadata');
   } catch (insertError: any) {
     console.error('Error during profile creation:', insertError);
-    // Continue with registration even if profile creation fails
-    // We can handle this later when the user logs in
+    
+    // If it's a unique constraint violation, log it but don't fail
+    if (insertError.message && insertError.message.includes('duplicate key value violates unique constraint')) {
+      console.log(`Profile already exists for user ${userId} - this is expected and safe`);
+    } else {
+      // Continue with registration even if profile creation fails
+      // We can handle this later when the user logs in
+      console.warn('Profile creation failed, but continuing with registration');
+    }
   }
 };
 
