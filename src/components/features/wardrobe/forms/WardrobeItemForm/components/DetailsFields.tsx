@@ -3,6 +3,7 @@ import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } fr
 import { ItemCategory, Season, Scenario } from '../../../../../../types';
 import ScenarioSelector from '../../../shared/ScenarioSelector/ScenarioSelector';
 import { supabase } from '../../../../../../services/core';
+import { useSupabaseAuth } from '../../../../../../context/SupabaseAuthContext';
 import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, getPatternOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
 interface DetailsFieldsProps {
@@ -83,6 +84,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   // State for scenarios
   const [availableScenarios, setAvailableScenarios] = useState<Scenario[]>([]);
   const [isLoadingScenarios, setIsLoadingScenarios] = useState(true);
+  const { user, isAuthenticated } = useSupabaseAuth();
 
   // Fetch scenarios when component mounts
   useEffect(() => {
@@ -90,28 +92,39 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
       try {
         setIsLoadingScenarios(true);
         
+        // 🔒 SECURITY FIX: Only fetch scenarios for the authenticated user
+        if (!isAuthenticated || !user?.id) {
+          console.warn('[DetailsFields] No authenticated user - cannot fetch scenarios');
+          setAvailableScenarios([]);
+          return;
+        }
+        
         const { data, error } = await supabase
           .from('scenarios')
           .select('*')
+          .eq('user_id', user.id) // 🚨 CRITICAL FIX: Filter by user_id to prevent data leakage
           .order('name', { ascending: true });
           
         if (error) {
           console.error('[DetailsFields] Error fetching scenarios:', error);
+          setAvailableScenarios([]);
           return;
         }
         
         if (data) {
+          console.log(`[DetailsFields] Successfully fetched ${data.length} scenarios for user ${user.id}`);
           setAvailableScenarios(data as unknown as Scenario[]);
         }
       } catch (error) {
         console.error('[DetailsFields] Unexpected error fetching scenarios:', error);
+        setAvailableScenarios([]);
       } finally {
         setIsLoadingScenarios(false);
       }
     };
     
     fetchScenarios();
-  }, []);
+  }, [isAuthenticated, user?.id]); // Re-fetch when auth state changes
   
   // Show silhouette field based on category and subcategory
   const shouldShowSilhouette = category && 

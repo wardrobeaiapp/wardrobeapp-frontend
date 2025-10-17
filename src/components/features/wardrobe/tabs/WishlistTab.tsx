@@ -37,6 +37,7 @@ interface WishlistTabProps {
   hideStatusFilter?: boolean;
   hideStatusIcon?: boolean;
   disableMockDataCheck?: boolean;
+  allowUnauthenticated?: boolean;
 }
 
 const WishlistTab: React.FC<WishlistTabProps> = ({
@@ -59,7 +60,8 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   onAddItem,
   hideStatusFilter = false,
   hideStatusIcon = false,
-  disableMockDataCheck = false
+  disableMockDataCheck = false,
+  allowUnauthenticated = false
 }) => {
   // Helper to get the first season if seasonFilter is an array
   const getFirstSeason = (season: string | string[]): string => {
@@ -132,6 +134,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
           value={scenarioFilter}
           onChange={handleScenarioChange}
           includeAllOption={true}
+          allowUnauthenticated={allowUnauthenticated}
         />
         {!hideStatusFilter && (
           <SelectFilter<WishlistStatus>

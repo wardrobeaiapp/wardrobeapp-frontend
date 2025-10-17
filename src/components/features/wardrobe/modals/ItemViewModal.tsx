@@ -3,6 +3,7 @@ import { WardrobeItem } from '../../../../types';
 import { useWardrobe } from '../../../../context/WardrobeContext';
 import { Modal, ModalAction } from '../../../common/Modal';
 import { supabase } from '../../../../services/core';
+import { useSupabaseAuth } from '../../../../context/SupabaseAuthContext';
 // Import shared modal styles
 import {
   DetailRow,
@@ -26,6 +27,7 @@ interface ScenarioDisplayProps {
 const ScenarioDisplay: React.FC<ScenarioDisplayProps> = ({ scenarios }) => {
   const [scenarioNames, setScenarioNames] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user, isAuthenticated } = useSupabaseAuth();
   
   useEffect(() => {
     const fetchScenarioNames = async () => {
@@ -35,17 +37,27 @@ const ScenarioDisplay: React.FC<ScenarioDisplayProps> = ({ scenarios }) => {
         return;
       }
       
+      // 🔒 SECURITY CHECK: Ensure user is authenticated before fetching scenario names
+      if (!isAuthenticated || !user?.id) {
+        console.warn('[ScenarioDisplay] No authenticated user - cannot fetch scenario names');
+        setScenarioNames([]);
+        setIsLoading(false);
+        return;
+      }
+      
       try {
         setIsLoading(true);
         
-        // Fetch scenarios by their IDs
+        // 🔒 SECURITY FIX: Fetch scenarios by their IDs AND filter by user_id to prevent data leakage
         const { data, error } = await supabase
           .from('scenarios')
           .select('name')
-          .in('id', scenarios);
+          .in('id', scenarios)
+          .eq('user_id', user.id); // 🚨 CRITICAL FIX: Ensure scenarios belong to current user
           
         if (error) {
           console.error('[ScenarioDisplay] Error fetching scenario names:', error);
+          setScenarioNames([]);
           setIsLoading(false);
           return;
         }
@@ -53,17 +65,19 @@ const ScenarioDisplay: React.FC<ScenarioDisplayProps> = ({ scenarios }) => {
         if (data) {
           // Extract names from the data
           const names = data.map(scenario => scenario.name as string);
+          console.log(`[ScenarioDisplay] Successfully fetched ${names.length} scenario names for user ${user.id}`);
           setScenarioNames(names);
         }
       } catch (error) {
         console.error('[ScenarioDisplay] Unexpected error:', error);
+        setScenarioNames([]);
       } finally {
         setIsLoading(false);
       }
     };
     
     fetchScenarioNames();
-  }, [scenarios]);
+  }, [scenarios, isAuthenticated, user?.id]); // Re-fetch when scenarios or auth state changes
   
   if (isLoading) {
     return <span>Loading...</span>;

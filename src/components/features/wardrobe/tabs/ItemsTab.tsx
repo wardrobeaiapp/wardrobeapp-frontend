@@ -76,6 +76,7 @@ interface ItemsTabProps {
   onAddItem?: () => void;
   // Demo mode
   disableMockDataCheck?: boolean; // Disable AI mock data checking (for demo)
+  allowUnauthenticated?: boolean; // For demo mode - allows fetching scenarios without authentication
 }
 
 const ItemsTab = React.memo<ItemsTabProps>(({
@@ -96,7 +97,8 @@ const ItemsTab = React.memo<ItemsTabProps>(({
   onViewItem,
   onEditItem,
   onDeleteItem,
-  disableMockDataCheck = false
+  disableMockDataCheck = false,
+  allowUnauthenticated = false
 }) => {
   // Use optimized filtering hook instead of duplicate logic
   const { filteredItems } = useItemFiltering(items, {
@@ -145,6 +147,7 @@ const ItemsTab = React.memo<ItemsTabProps>(({
               value={scenarioFilter || 'all'}
               onChange={setScenarioFilter}
               includeAllOption={true}
+              allowUnauthenticated={allowUnauthenticated}
             />
           )}
       </FiltersContainer>
