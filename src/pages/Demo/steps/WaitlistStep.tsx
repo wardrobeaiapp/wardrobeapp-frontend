@@ -2,12 +2,20 @@ import React, { useState } from 'react';
 import {
   DemoTitle,
   DemoSubtitle,
-  CTAButton,
   HeroBlock,
-  CTABlock,
   InfoBlock,
   FeatureGrid,
-  FeatureCard
+  FeatureCard,
+  SuccessEmoji,
+  SuccessMessage,
+  WaitlistTitle,
+  WaitlistDescription,
+  WaitlistForm,
+  InputContainer,
+  EmailInput,
+  SubmitButton,
+  ErrorMessage,
+  PrivacyText
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
 
@@ -90,14 +98,14 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
     return (
       <div>
         <HeroBlock>
-          <div style={{ fontSize: '4rem', marginBottom: '24px' }}>🎉</div>
+          <SuccessEmoji>🎉</SuccessEmoji>
           <DemoTitle>You're on the list!</DemoTitle>
           <DemoSubtitle>
             Thank you for joining our waitlist. We'll notify you as soon as WardrobeAI is ready for early access.
           </DemoSubtitle>
-          <p style={{ color: '#059669', fontWeight: '600', fontSize: '1.1rem', marginTop: '20px' }}>
+          <SuccessMessage>
             Check your email for confirmation details
-          </p>
+          </SuccessMessage>
         </HeroBlock>
       </div>
     );
@@ -142,19 +150,20 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
       </InfoBlock>
 
       <HeroBlock>
-        <h2 style={{ fontSize: '2rem', marginBottom: '16px', color: '#1f2937' }}>
+        <WaitlistTitle>
           Join the Waitlist
-        </h2>
-        <p style={{ fontSize: '1.1rem', color: '#6b7280', marginBottom: '32px', lineHeight: '1.6' }}>
+        </WaitlistTitle>
+        <WaitlistDescription>
           Enter your email to get notified when WardrobeAI launches and be the first to experience smarter shopping.
-        </p>
+        </WaitlistDescription>
 
-        <form onSubmit={handleJoinWaitlist} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <input
+        <WaitlistForm onSubmit={handleJoinWaitlist}>
+          <InputContainer>
+            <EmailInput
               type="email"
               placeholder="Enter your email address"
               value={email}
+              $hasError={submitStatus === 'error'}
               onChange={(e) => {
                 setEmail(e.target.value);
                 if (submitStatus === 'error') {
@@ -163,47 +172,26 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
                 }
               }}
               disabled={isSubmitting}
-              style={{
-                padding: '16px 20px',
-                border: submitStatus === 'error' ? '2px solid #dc2626' : '2px solid #e5e7eb',
-                borderRadius: '12px',
-                fontSize: '16px',
-                width: '320px',
-                maxWidth: '100%',
-                outline: 'none',
-                transition: 'all 0.2s'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#4f46e5';
-                e.target.style.boxShadow = '0 0 0 3px rgba(79, 70, 229, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = submitStatus === 'error' ? '#dc2626' : '#e5e7eb';
-                e.target.style.boxShadow = 'none';
-              }}
             />
-            <CTAButton 
+            <SubmitButton 
               type="submit" 
               disabled={isSubmitting}
-              style={{
-                opacity: isSubmitting ? 0.7 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer'
-              }}
+              $isSubmitting={isSubmitting}
             >
               {isSubmitting ? 'Joining...' : 'Join Waitlist'}
-            </CTAButton>
-          </div>
+            </SubmitButton>
+          </InputContainer>
           
           {submitStatus === 'error' && (
-            <p style={{ color: '#dc2626', fontSize: '0.9rem', margin: '8px 0 0', textAlign: 'center' }}>
+            <ErrorMessage>
               {errorMessage}
-            </p>
+            </ErrorMessage>
           )}
           
-          <p style={{ fontSize: '0.85rem', color: '#9ca3af', margin: '8px 0 0', textAlign: 'center' }}>
+          <PrivacyText>
             We respect your privacy. No spam, unsubscribe anytime.
-          </p>
-        </form>
+          </PrivacyText>
+        </WaitlistForm>
       </HeroBlock>
     </div>
   );

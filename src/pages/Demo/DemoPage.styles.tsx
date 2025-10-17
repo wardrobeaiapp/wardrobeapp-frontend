@@ -658,3 +658,84 @@ export const StepLabel = styled.span`
   }
 `;
 
+// Waitlist-specific styled components
+export const SuccessEmoji = styled.div`
+  font-size: 4rem;
+  margin-bottom: 24px;
+`;
+
+export const SuccessMessage = styled.p`
+  color: #059669;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 20px;
+`;
+
+export const WaitlistTitle = styled.h2`
+  font-size: 2rem;
+  margin-bottom: 16px;
+  color: #1f2937;
+`;
+
+export const WaitlistDescription = styled.p`
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin-bottom: 32px;
+  line-height: 1.6;
+`;
+
+export const WaitlistForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+`;
+
+export const InputContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+export const EmailInput = styled.input<{ $hasError: boolean }>`
+  padding: 16px 20px;
+  border: 2px solid ${props => props.$hasError ? '#dc2626' : '#e5e7eb'};
+  border-radius: 12px;
+  font-size: 16px;
+  width: 320px;
+  max-width: 100%;
+  outline: none;
+  transition: all 0.2s;
+  
+  &:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+`;
+
+export const SubmitButton = styled(CTAButton)<{ $isSubmitting: boolean }>`
+  opacity: ${props => props.$isSubmitting ? 0.7 : 1};
+  cursor: ${props => props.$isSubmitting ? 'not-allowed' : 'pointer'};
+`;
+
+export const ErrorMessage = styled.p`
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin: 8px 0 0;
+  text-align: center;
+`;
+
+export const PrivacyText = styled.p`
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 8px 0 0;
+  text-align: center;
+`;
+
