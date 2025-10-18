@@ -13,8 +13,9 @@ import {
   FollowUpOptionsContainer
 } from './OnboardingCardComponents.styles';
 import Button from '../../common/Button';
-import { leisureActivityOptions, frequencyOptions, questionTexts, periodOptions, formalEventsPeriodOptions } from '../../../data/onboardingOptions';
+import { leisureActivityOptions, frequencyOptions, questionTexts, periodOptions } from '../../../data/onboardingOptions';
 import { SharedStyledTextArea } from './SharedOnboardingComponents.styles';
+import { getFrequencyLimits } from '../../../utils/frequencyValidation';
 
 interface LeisureActivitiesStepProps {
   leisureActivities: string[];
@@ -23,8 +24,6 @@ interface LeisureActivitiesStepProps {
   outdoorPeriod: string;
   socialFrequency: number;
   socialPeriod: string;
-  formalEventsFrequency: number;
-  formalEventsPeriod: string;
   travelFrequency: string;
   handleLeisureActivityToggle: (activityId: string) => void;
   handleOtherLeisureActivityDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -32,8 +31,6 @@ interface LeisureActivitiesStepProps {
   handleOutdoorPeriodChange: (period: string) => void;
   handleSocialFrequencyChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSocialPeriodChange: (period: string) => void;
-  handleFormalEventsFrequencyChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleFormalEventsPeriodChange: (period: string) => void;
   handleTravelFrequencyChange: (frequency: string) => void;
 }
 
@@ -44,8 +41,6 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
   outdoorPeriod,
   socialFrequency,
   socialPeriod,
-  formalEventsFrequency,
-  formalEventsPeriod,
   travelFrequency,
   handleLeisureActivityToggle,
   handleOtherLeisureActivityDescriptionChange,
@@ -53,8 +48,6 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
   handleOutdoorPeriodChange,
   handleSocialFrequencyChange,
   handleSocialPeriodChange,
-  handleFormalEventsFrequencyChange,
-  handleFormalEventsPeriodChange,
   handleTravelFrequencyChange
 }) => {
   // Using leisure activity options and period options from central data file
@@ -97,6 +90,7 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
                     <FrequencyInput
                       type="number"
                       min="0"
+                      max={getFrequencyLimits(outdoorPeriod).max}
                       value={outdoorFrequency.toString()}
                       onChange={handleOutdoorFrequencyChange}
                     />
@@ -127,6 +121,7 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
                     <FrequencyInput
                       type="number"
                       min="0"
+                      max={getFrequencyLimits(socialPeriod).max}
                       value={socialFrequency.toString()}
                       onChange={handleSocialFrequencyChange}
                     />

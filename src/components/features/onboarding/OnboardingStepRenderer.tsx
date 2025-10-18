@@ -43,8 +43,6 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
     outdoorPeriod,
     socialFrequency,
     socialPeriod,
-    formalEventsFrequency,
-    formalEventsPeriod,
     travelFrequency,
     preferredStyles,
     comfortVsStyleValue,
@@ -73,8 +71,6 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
     handleOutdoorPeriodChange,
     handleSocialFrequencyChange,
     handleSocialPeriodChange,
-    handleFormalEventsFrequencyChange,
-    handleFormalEventsPeriodChange,
     handleTravelFrequencyChange,
     handleOtherLeisureActivityDescriptionChange,
     handleComfortVsStyleChange,
@@ -116,8 +112,6 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           outdoorPeriod={outdoorPeriod}
           socialFrequency={socialFrequency}
           socialPeriod={socialPeriod}
-          formalEventsFrequency={formalEventsFrequency}
-          formalEventsPeriod={formalEventsPeriod}
           travelFrequency={travelFrequency}
           handleLeisureActivityToggle={onboardingState.handleLeisureActivityToggle}
           handleOtherLeisureActivityDescriptionChange={handleOtherLeisureActivityDescriptionChange}
@@ -125,8 +119,6 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           handleOutdoorPeriodChange={handleOutdoorPeriodChange}
           handleSocialFrequencyChange={handleSocialFrequencyChange}
           handleSocialPeriodChange={handleSocialPeriodChange}
-          handleFormalEventsFrequencyChange={handleFormalEventsFrequencyChange}
-          handleFormalEventsPeriodChange={handleFormalEventsPeriodChange}
           handleTravelFrequencyChange={handleTravelFrequencyChange}
         />
       );
@@ -194,8 +186,6 @@ const OnboardingStepRenderer: React.FC<OnboardingStepRendererProps> = ({
           leisureActivities={leisureActivities}
           socialFrequency={socialFrequency}
           socialPeriod={socialPeriod}
-          formalEventsFrequency={formalEventsFrequency}
-          formalEventsPeriod={formalEventsPeriod}
           outdoorFrequency={outdoorFrequency}
           outdoorPeriod={outdoorPeriod}
           travelFrequency={travelFrequency}

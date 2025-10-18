@@ -26,8 +26,6 @@ export const generateScenariosFromLifestyle = (
   leisureActivities: string[],
   socialFrequency: number,
   socialPeriod: string,
-  formalEventsFrequency: number,
-  formalEventsPeriod: string,
   outdoorFrequency: number,
   outdoorPeriod: string,
   travelFrequency: string,

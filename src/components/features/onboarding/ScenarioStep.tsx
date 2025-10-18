@@ -7,8 +7,6 @@ interface ScenarioStepProps {
   leisureActivities: string[];
   socialFrequency: number;
   socialPeriod: string;
-  formalEventsFrequency: number;
-  formalEventsPeriod: string;
   outdoorFrequency: number;
   outdoorPeriod: string;
   travelFrequency: string;
@@ -28,8 +26,6 @@ const ScenarioStep: React.FC<ScenarioStepProps> = ({
   leisureActivities,
   socialFrequency,
   socialPeriod,
-  formalEventsFrequency,
-  formalEventsPeriod,
   outdoorFrequency,
   outdoorPeriod,
   travelFrequency,
@@ -49,8 +45,6 @@ const ScenarioStep: React.FC<ScenarioStepProps> = ({
     leisureActivities,
     socialFrequency,
     socialPeriod,
-    formalEventsFrequency,
-    formalEventsPeriod,
     outdoorFrequency,
     outdoorPeriod,
     travelFrequency,

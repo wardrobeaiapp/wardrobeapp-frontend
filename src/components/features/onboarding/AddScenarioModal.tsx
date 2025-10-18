@@ -3,6 +3,7 @@ import { periodOptions } from '../../../data/onboardingOptions';
 import { Modal, ModalAction } from '../../common/Modal';
 import { Form, FormField, FormInput, FormSelect } from '../../common/Form';
 import styled from 'styled-components';
+import { getFrequencyLimits, validateFrequency } from '../../../utils/frequencyValidation';
 
 // Simple styled components for frequency controls
 const FrequencyControls = styled.div`
@@ -105,11 +106,24 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
   };
 
   const handleNewFrequencyValueChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setNewFrequencyValue(e.target.value);
+    const value = Number(e.target.value);
+    if (!isNaN(value)) {
+      const validatedValue = validateFrequency(value, newFrequencyPeriod);
+      setNewFrequencyValue(validatedValue.toString());
+    }
   };
 
   const handleNewFrequencyPeriodChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setNewFrequencyPeriod(e.target.value);
+    const newPeriod = e.target.value;
+    setNewFrequencyPeriod(newPeriod);
+    // Validate current frequency against new period limits
+    const currentValue = Number(newFrequencyValue);
+    if (!isNaN(currentValue)) {
+      const validatedValue = validateFrequency(currentValue, newPeriod);
+      if (validatedValue !== currentValue) {
+        setNewFrequencyValue(validatedValue.toString());
+      }
+    }
   };
 
   const handleModalSubmit = () => {
@@ -169,6 +183,7 @@ const AddScenarioModal: React.FC<AddScenarioModalProps> = ({
             <FrequencyInput 
               type="number" 
               min="1"
+              max={getFrequencyLimits(newFrequencyPeriod).max}
               id="frequencyValue"
               value={newFrequencyValue}
               onChange={handleNewFrequencyValueChange}

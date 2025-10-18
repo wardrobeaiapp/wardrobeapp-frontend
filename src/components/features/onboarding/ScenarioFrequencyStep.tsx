@@ -4,6 +4,7 @@ import { StepTitle, StepDescription } from '../../../pages/OnboardingPage.styles
 import { FaLaptop, FaHome, FaWalking, FaUsers, FaCalendarAlt, FaTrashAlt, FaPlus, FaEdit } from 'react-icons/fa';
 import Button from '../../common/Button';
 import AddScenarioModal from './AddScenarioModal';
+import { getFrequencyLimits, validateFrequency } from '../../../utils/frequencyValidation';
 import {
   PageContainer,
   ScenarioList,
@@ -113,7 +114,9 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
     const updatedScenarios = localScenarios.map(scenario => {
       if (scenario.id === id) {
         const { period } = parseFrequency(scenario.frequency);
-        return { ...scenario, frequency: `${value} ${period}` };
+        const numValue = Number(value);
+        const validatedValue = !isNaN(numValue) ? validateFrequency(numValue, period) : 1;
+        return { ...scenario, frequency: `${validatedValue} ${period}` };
       }
       return scenario;
     });
@@ -125,8 +128,10 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
     const updatedScenarios = localScenarios.map(scenario => {
       if (scenario.id === id) {
         const { value } = parseFrequency(scenario.frequency);
+        const numValue = Number(value);
+        const validatedValue = !isNaN(numValue) ? validateFrequency(numValue, period) : 1;
         // Use the period ID directly from periodOptions
-        return { ...scenario, frequency: `${value} ${period}` };
+        return { ...scenario, frequency: `${validatedValue} ${period}` };
       }
       return scenario;
     });
@@ -248,6 +253,7 @@ const ScenarioFrequencyStep: React.FC<ScenarioFrequencyStepProps> = ({
                     <FrequencyInput 
                       type="number" 
                       min="1"
+                      max={getFrequencyLimits(period || 'week').max}
                       value={value}
                       onChange={(e) => handleFrequencyValueChange(scenario.id, e.target.value)}
                     />

@@ -211,8 +211,6 @@ export const useOnboardingNavigation = (onboardingState: OnboardingStateHook) =>
             onboardingState.leisureActivities,
             onboardingState.socialFrequency,
             onboardingState.socialPeriod,
-            onboardingState.formalEventsFrequency,
-            onboardingState.formalEventsPeriod,
             onboardingState.outdoorFrequency,
             onboardingState.outdoorPeriod,
             onboardingState.travelFrequency,

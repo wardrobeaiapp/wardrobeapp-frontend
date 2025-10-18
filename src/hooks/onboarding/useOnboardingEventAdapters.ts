@@ -1,5 +1,6 @@
 import React from 'react';
 import { OnboardingStateHook } from './useOnboardingState';
+import { validateFrequency } from '../../utils/frequencyValidation';
 
 /**
  * Custom hook to create event adapter functions for the onboarding state
@@ -20,8 +21,6 @@ export const useOnboardingEventAdapters = (onboardingState: OnboardingStateHook)
     setOutdoorPeriod,
     setSocialFrequency,
     setSocialPeriod,
-    setFormalEventsFrequency,
-    setFormalEventsPeriod,
     setTravelFrequency,
     handleOtherLeisureActivityDescriptionChange,
     setComfortVsStyleValue,
@@ -140,35 +139,37 @@ export const useOnboardingEventAdapters = (onboardingState: OnboardingStateHook)
   const handleOutdoorFrequencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     if (!isNaN(value)) {
-      setOutdoorFrequency(value);
+      const validatedValue = validateFrequency(value, onboardingState.outdoorPeriod);
+      setOutdoorFrequency(validatedValue);
     }
   };
   
   const handleOutdoorPeriodChange = (value: string) => {
     setOutdoorPeriod(value);
+    // Validate current frequency against new period limits
+    const validatedFrequency = validateFrequency(onboardingState.outdoorFrequency, value);
+    if (validatedFrequency !== onboardingState.outdoorFrequency) {
+      setOutdoorFrequency(validatedFrequency);
+    }
   };
   
   const handleSocialFrequencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = Number(e.target.value);
     if (!isNaN(value)) {
-      setSocialFrequency(value);
+      const validatedValue = validateFrequency(value, onboardingState.socialPeriod);
+      setSocialFrequency(validatedValue);
     }
   };
   
   const handleSocialPeriodChange = (value: string) => {
     setSocialPeriod(value);
-  };
-  
-  const handleFormalEventsFrequencyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    if (!isNaN(value)) {
-      setFormalEventsFrequency(value);
+    // Validate current frequency against new period limits
+    const validatedFrequency = validateFrequency(onboardingState.socialFrequency, value);
+    if (validatedFrequency !== onboardingState.socialFrequency) {
+      setSocialFrequency(validatedFrequency);
     }
   };
   
-  const handleFormalEventsPeriodChange = (value: string) => {
-    setFormalEventsPeriod(value);
-  };
   
   const handleTravelFrequencyChange = (value: string) => {
     setTravelFrequency(value);
@@ -234,8 +235,6 @@ export const useOnboardingEventAdapters = (onboardingState: OnboardingStateHook)
     handleOutdoorPeriodChange,
     handleSocialFrequencyChange,
     handleSocialPeriodChange,
-    handleFormalEventsFrequencyChange,
-    handleFormalEventsPeriodChange,
     handleTravelFrequencyChange,
     handleComfortVsStyleChange,
     handleClassicVsTrendyChange,
