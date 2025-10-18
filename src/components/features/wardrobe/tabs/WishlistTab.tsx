@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { SearchFilter, CategoryFilter, SeasonFilter, SelectFilter, ScenarioFilter } from '../shared/Filters';
 import { WardrobeItem, WishlistStatus } from '../../../../types';
 import { useWishlistFiltering } from '../../../../hooks/home/useWishlistFiltering';

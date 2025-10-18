@@ -263,7 +263,7 @@ export const tryLegacyApiFallback = async (
   data?: any
 ): Promise<any> => {
   try {
-    const headers = getAuthHeaders();
+    const headers = await getAuthHeaders();
     const options: any = { method, headers };
     
     if (data) {

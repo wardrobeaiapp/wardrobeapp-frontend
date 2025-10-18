@@ -8,11 +8,7 @@ import { supabase } from '../../../services/core';
 import {
   OUTFITS_TABLE,
   OUTFIT_ITEMS_TABLE,
-  OUTFIT_SCENARIOS_TABLE,
-  API_URL,
-  getAuthHeaders,
-  apiRequest,
-  convertToOutfits,
+  convertToOutfit,
   handleError,
   getCurrentUserId
 } from './outfitBaseService';
@@ -23,26 +19,33 @@ import { replaceOutfitScenarios } from './outfitRelationsService';
  */
 export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
   try {
+    console.log('[outfitService] fetchOutfitsFromSupabase: Getting current user...');
     // Get current user
     const userId = await getCurrentUserId();
+    console.log('[outfitService] fetchOutfitsFromSupabase: User ID:', userId);
     
     // Fetch outfits from Supabase
+    console.log('[outfitService] fetchOutfitsFromSupabase: Querying Supabase...');
     const { data, error } = await supabase
       .from(OUTFITS_TABLE)
       .select('*')
       .eq('user_uuid', userId);
+    
+    console.log('[outfitService] fetchOutfitsFromSupabase: Supabase response - data:', data, 'error:', error);
       
     if (error) {
-      return handleError('fetching outfits', error);
+      console.error('[outfitService] fetchOutfitsFromSupabase: Supabase error detected:', error);
+      // Return empty array instead of throwing error to allow fallback to legacy API
+      return [];
     }
     
-    // Convert Supabase data format to app's Outfit format
-    const outfitsWithoutItems = convertToOutfits(data || []);
-    
-    // For each outfit, fetch its items and scenarios from join tables
+    // Convert Supabase data format to app's Outfit format and fetch related data
     const outfitsWithRelations = await Promise.all(
-      outfitsWithoutItems.map(async (outfit) => {
+      (data || []).map(async (outfitData) => {
         try {
+          // Convert base outfit data
+          const outfit = convertToOutfit(outfitData);
+          
           // Get items for this outfit from the join table
           const { data: itemsData, error: itemsError } = await supabase
             .from(OUTFIT_ITEMS_TABLE)
@@ -54,21 +57,15 @@ export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
             console.warn('[outfitService] Error fetching outfit items:', itemsError);
           }
           
-          // Extract item IDs
-          const itemIds = itemsData ? itemsData.map(item => String(item.item_id)) : [];
+          // Extract item IDs from join table, fallback to items array from main table
+          const itemIds = itemsData && itemsData.length > 0 
+            ? itemsData.map(item => String(item.item_id))
+            : (Array.isArray(outfitData.items) ? outfitData.items.map(id => String(id)) : []);
           
-          // Get scenarios for this outfit from the join table
-          const { data: scenariosData, error: scenariosError } = await supabase
-            .from(OUTFIT_SCENARIOS_TABLE)
-            .select('scenario_id')
-            .eq('outfit_id', outfit.id as string);
-          
-          if (scenariosError) {
-            console.warn('[outfitService] Error fetching outfit scenarios:', scenariosError);
-          }
-          
-          // Extract scenario IDs
-          const scenarioIds = scenariosData ? scenariosData.map(item => String(item.scenario_id)) : [];
+          // Scenarios are stored directly in the outfits table, not in a separate join table
+          const scenarioIds = Array.isArray(outfitData.scenarios) 
+            ? outfitData.scenarios.map(id => String(id))
+            : [];
           
           // Return outfit with items and scenarios
           return {
@@ -78,14 +75,23 @@ export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
           };
         } catch (error) {
           console.warn('[outfitService] Error processing outfit relations:', error);
-          return outfit; // Return outfit with empty arrays
+          // Return basic outfit with empty arrays if processing fails
+          const basicOutfit = convertToOutfit(outfitData);
+          return {
+            ...basicOutfit,
+            items: [],
+            scenarios: []
+          };
         }
       })
     );
     
+    console.log('[outfitService] fetchOutfitsFromSupabase: Successfully processed', outfitsWithRelations.length, 'outfits');
     return outfitsWithRelations as Outfit[];
   } catch (error) {
     console.error('[outfitService] Error in fetchOutfitsFromSupabase:', error);
+    console.error('[outfitService] Error details:', (error as Error).message);
+    // Return empty array instead of throwing error to allow fallback to legacy API
     return [];
   }
 };
@@ -284,29 +290,16 @@ export const deleteOutfitInSupabase = async (id: string): Promise<void> => {
   }
 };
 
-// Public API functions with fallback to legacy API
+// Public API functions using pure Supabase (like wardrobe items)
 
 /**
- * Fetch outfits with fallback to legacy API
+ * Fetch outfits using Supabase
  */
 export const fetchOutfits = async (): Promise<Outfit[]> => {
   try {
-    // Try to fetch from Supabase first
+    // Use pure Supabase like wardrobe items do - no legacy API fallback needed
     const outfits = await fetchOutfitsFromSupabase();
-    
-    // If we got outfits from Supabase, return them
-    if (outfits && outfits.length > 0) {
-      return outfits;
-    }
-    
-    // If no outfits, try legacy API
-    const authHeaders = getAuthHeaders();
-    const legacyOutfits = await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
-    
-    return legacyOutfits.map(outfit => ({
-      ...outfit,
-      scenarioNames: outfit.scenarioNames || []
-    }));
+    return outfits;
   } catch (error) {
     console.error('[outfitService] Error fetching outfits:', error);
     return [];
@@ -314,88 +307,42 @@ export const fetchOutfits = async (): Promise<Outfit[]> => {
 };
 
 /**
- * Create outfit with fallback to legacy API
+ * Create outfit using Supabase
  */
 export const createOutfit = async (outfit: Omit<Outfit, 'id' | 'dateCreated'>): Promise<Outfit> => {
-  try {
-    // Create a copy of the outfit without modifying scenarioNames
-    const outfitWithScenarios = {
-      ...outfit
-    };
-    
-    // Try to create in Supabase first
-    const newOutfit = await createOutfitInSupabase(outfitWithScenarios);
-    return newOutfit;
-  } catch (error) {
-    console.error('[outfitService] Error creating outfit in Supabase:', error);
-    // Fallback to API
-    const options = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(outfit)
-    };
-    
-    const response = await apiRequest(`${API_URL}/outfits`, options);
-    return response as Outfit;
-  }
+  // Use pure Supabase like wardrobe items do - no legacy API fallback needed
+  const newOutfit = await createOutfitInSupabase(outfit);
+  return newOutfit;
 };
 
 /**
- * Update outfit with fallback to legacy API
+ * Update outfit using Supabase
  */
 export const updateOutfit = async (id: string, outfit: Partial<Outfit>): Promise<void> => {
-  try {
-    console.log('[outfitCrudService.updateOutfit] Starting update for outfit:', id);
-    console.log('[outfitCrudService.updateOutfit] Received outfit data:', outfit);
-    console.log('[outfitCrudService.updateOutfit] Scenarios in outfit data:', outfit.scenarios);
-    
-    // Make sure scenarios are properly passed through, even if undefined
-    const updateData = {
-      ...outfit,
-      // Ensure scenarios are included and properly typed
-      scenarios: Array.isArray(outfit.scenarios) ? outfit.scenarios : (outfit.scenarios || []),
-      // Ensure scenarioNames is properly set if it exists
-      ...(outfit.scenarioNames !== undefined && { scenarioNames: outfit.scenarioNames || [] })
-    };
-    
-    console.log('[outfitCrudService.updateOutfit] Prepared updateData:', updateData);
-    console.log('[outfitCrudService.updateOutfit] Scenarios in updateData:', updateData.scenarios);
-    
-    // Try to update in Supabase first
-    await updateOutfitInSupabase(id, updateData);
-  } catch (error) {
-    console.error('[outfitService] Error updating outfit in Supabase:', error);
-    // Fallback to legacy API
-    const authHeaders = getAuthHeaders();
-    const options = {
-      method: 'PUT',
-      headers: {
-        ...authHeaders,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(outfit)
-    };
-    await apiRequest(`${API_URL}/outfits/${id}`, options);
-  }
+  console.log('[outfitCrudService.updateOutfit] Starting update for outfit:', id);
+  console.log('[outfitCrudService.updateOutfit] Received outfit data:', outfit);
+  console.log('[outfitCrudService.updateOutfit] Scenarios in outfit data:', outfit.scenarios);
+  
+  // Make sure scenarios are properly passed through, even if undefined
+  const updateData = {
+    ...outfit,
+    // Ensure scenarios are included and properly typed
+    scenarios: Array.isArray(outfit.scenarios) ? outfit.scenarios : (outfit.scenarios || []),
+    // Ensure scenarioNames is properly set if it exists
+    ...(outfit.scenarioNames !== undefined && { scenarioNames: outfit.scenarioNames || [] })
+  };
+  
+  console.log('[outfitCrudService.updateOutfit] Prepared updateData:', updateData);
+  console.log('[outfitCrudService.updateOutfit] Scenarios in updateData:', updateData.scenarios);
+  
+  // Use pure Supabase like wardrobe items do - no legacy API fallback needed
+  await updateOutfitInSupabase(id, updateData);
 };
 
 /**
- * Delete outfit with fallback to legacy API
+ * Delete outfit using Supabase
  */
 export const deleteOutfit = async (id: string): Promise<void> => {
-  try {
-    // Try to delete from Supabase first
-    await deleteOutfitInSupabase(id);
-  } catch (error) {
-    console.error('[outfitService] Error deleting outfit from Supabase:', error);
-    // Fallback to legacy API
-    const authHeaders = getAuthHeaders();
-    const options = {
-      method: 'DELETE',
-      headers: authHeaders
-    };
-    await apiRequest(`${API_URL}/outfits/${id}`, options);
-  }
+  // Use pure Supabase like wardrobe items do - no legacy API fallback needed
+  await deleteOutfitInSupabase(id);
 };

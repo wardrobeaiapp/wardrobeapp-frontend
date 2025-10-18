@@ -39,7 +39,7 @@ export const migrateOutfitsToSupabase = async (): Promise<boolean> => {
     }
     
     // Fetch outfits from legacy API
-    const authHeaders = getAuthHeaders();
+    const authHeaders = await getAuthHeaders();
     const legacyOutfits = await apiRequest<Outfit[]>(`${API_URL}/outfits`, { headers: authHeaders });
     
     if (!legacyOutfits || legacyOutfits.length === 0) {

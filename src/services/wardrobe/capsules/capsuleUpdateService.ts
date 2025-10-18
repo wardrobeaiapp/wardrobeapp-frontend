@@ -135,7 +135,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
         
         // Then try to fetch the updated capsule
         try {
-          const headers = getAuthHeaders();
+          const headers = await getAuthHeaders();
           const updatedCapsule = await apiRequest<Capsule>(`${API_URL}/capsules/${id}`, { headers });
           return updatedCapsule;
         } catch (fetchError) {

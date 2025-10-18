@@ -32,7 +32,7 @@ export const tryLegacyApiStrategy = async (
       console.log(`\ud83d\udd0d [LEGACY] Attempting ${method} operation via legacy API:`, endpoint);
     }
     
-    const headers = getAuthHeaders();
+    const headers = await getAuthHeaders();
     const options: any = { method, headers };
     
     if (data && (method === 'POST' || method === 'PUT')) {

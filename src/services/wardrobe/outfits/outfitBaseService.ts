@@ -17,14 +17,27 @@ export const API_URL = '/api';
 /**
  * Get auth headers for fetch requests
  */
-export const getAuthHeaders = (): HeadersInit => {
-  const token = localStorage.getItem('token');
+export const getAuthHeaders = async (): Promise<HeadersInit> => {
   const headers: HeadersInit = {
     'Content-Type': 'application/json'
   };
   
-  if (token) {
-    headers['x-auth-token'] = token;
+  try {
+    // Get the current session from Supabase (this is how authentication works in this app)
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('[outfitService] Session error:', sessionError);
+      return headers;
+    }
+    
+    if (sessionData?.session?.access_token) {
+      // Use the Supabase access token as the auth token for legacy API
+      headers['x-auth-token'] = sessionData.session.access_token;
+    }
+    
+  } catch (error) {
+    console.error('[outfitService] Error getting session:', error);
   }
   
   return headers;

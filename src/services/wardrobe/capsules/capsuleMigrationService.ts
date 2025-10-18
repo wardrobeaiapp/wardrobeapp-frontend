@@ -119,7 +119,7 @@ export const migrateCapsulesToSupabase = async (capsules: Capsule[]): Promise<vo
 export const fetchCapsulesFromLegacyApi = async (): Promise<Capsule[]> => {
   try {
     console.log('🔍 [LEGACY] Attempting to fetch capsules from legacy API');
-    const headers = getAuthHeaders();
+    const headers = await getAuthHeaders();
     const legacyCapsules = await apiRequest<Capsule[]>(`${API_URL}/capsules`, { headers });
     
     console.log('✅ [LEGACY] Successfully fetched capsules from legacy API:', { count: legacyCapsules.length });
