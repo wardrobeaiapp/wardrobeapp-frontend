@@ -1,48 +1,11 @@
-import React, { ChangeEvent, useMemo, useState, useEffect } from 'react';
+import React, { ChangeEvent } from 'react';
 import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
-import { ItemCategory, Season, Scenario } from '../../../../../../types';
+import { Season } from '../../../../../../types';
 import ScenarioSelector from '../../../shared/ScenarioSelector/ScenarioSelector';
-import { supabase } from '../../../../../../services/core';
-import { useSupabaseAuth } from '../../../../../../context/SupabaseAuthContext';
-import { getSilhouetteOptions, getSleeveOptions, getStyleOptions, getLengthOptions, getRiseOptions, getNecklineOptions, getHeelHeightOptions, getBootHeightOptions, getTypeOptions, getPatternOptions, AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
+import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
 
-interface DetailsFieldsProps {
-  material: string;
-  onMaterialChange: (material: string) => void;
-  brand: string;
-  onBrandChange: (brand: string) => void;
-  price: string;
-  onPriceChange: (price: string) => void;
-  pattern: string;
-  onPatternChange: (pattern: string) => void;
-  silhouette: string;
-  onSilhouetteChange: (silhouette: string) => void;
-  length: string;
-  onLengthChange: (length: string) => void;
-  sleeves: string;
-  onSleeveChange: (sleeve: string) => void;
-  style: string;
-  onStyleChange: (style: string) => void;
-  rise: string;
-  onRiseChange: (rise: string) => void;
-  neckline: string;
-  onNecklineChange: (neckline: string) => void;
-  heelHeight: string;
-  onHeelHeightChange: (heelHeight: string) => void;
-  bootHeight: string;
-  onBootHeightChange: (bootHeight: string) => void;
-  type: string;
-  onTypeChange: (type: string) => void;
-  scenarios: string[];
-  onScenarioToggle: (scenarioId: string) => void;
-  seasons: Season[];
-  onToggleSeason: (season: Season) => void;
-  isWishlistItem: boolean;
-  onWishlistToggle: (isWishlist: boolean) => void;
-  category: ItemCategory | '';
-  subcategory: string;
-  errors: { [key: string]: string };
-}
+// Import extracted utilities and types
+import { DetailsFieldsProps, getFieldVisibility, useFormOptions, useScenarios } from '../utils';
 
 export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   material,
@@ -81,118 +44,10 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   subcategory,
   errors
 }) => {
-  // State for scenarios
-  const [availableScenarios, setAvailableScenarios] = useState<Scenario[]>([]);
-  const [isLoadingScenarios, setIsLoadingScenarios] = useState(true);
-  const { user, isAuthenticated } = useSupabaseAuth();
-
-  // Fetch scenarios when component mounts
-  useEffect(() => {
-    const fetchScenarios = async () => {
-      try {
-        setIsLoadingScenarios(true);
-        
-        // 🔒 SECURITY FIX: Only fetch scenarios for the authenticated user
-        if (!isAuthenticated || !user?.id) {
-          console.warn('[DetailsFields] No authenticated user - cannot fetch scenarios');
-          setAvailableScenarios([]);
-          return;
-        }
-        
-        const { data, error } = await supabase
-          .from('scenarios')
-          .select('*')
-          .eq('user_id', user.id) // 🚨 CRITICAL FIX: Filter by user_id to prevent data leakage
-          .order('name', { ascending: true });
-          
-        if (error) {
-          console.error('[DetailsFields] Error fetching scenarios:', error);
-          setAvailableScenarios([]);
-          return;
-        }
-        
-        if (data) {
-          console.log(`[DetailsFields] Successfully fetched ${data.length} scenarios for user ${user.id}`);
-          setAvailableScenarios(data as unknown as Scenario[]);
-        }
-      } catch (error) {
-        console.error('[DetailsFields] Unexpected error fetching scenarios:', error);
-        setAvailableScenarios([]);
-      } finally {
-        setIsLoadingScenarios(false);
-      }
-    };
-    
-    fetchScenarios();
-  }, [isAuthenticated, user?.id]); // Re-fetch when auth state changes
-  
-  // Show silhouette field based on category and subcategory
-  const shouldShowSilhouette = category && 
-    ![ItemCategory.ACCESSORY, ItemCategory.FOOTWEAR, ItemCategory.OTHER].includes(category as ItemCategory) &&
-    // For BOTTOM category, only show for specific subcategories
-    (category !== ItemCategory.BOTTOM || 
-     (subcategory && !['leggings'].includes(subcategory.toLowerCase())));
-  
-  // Show length field for BOTTOM category with specific subcategories and ONE_PIECE with dress
-  const shouldShowLength = (category === ItemCategory.BOTTOM && 
-    subcategory && 
-    ['jeans', 'trousers', 'shorts', 'skirt'].includes(subcategory.toLowerCase())) ||
-    (category === ItemCategory.ONE_PIECE && 
-     subcategory && 
-     subcategory.toLowerCase() === 'dress') ||
-    category === ItemCategory.OUTERWEAR;
-
-  // Show sleeves field based on category and subcategory
-  const shouldShowSleeves = (category === ItemCategory.ONE_PIECE && subcategory && !['overall'].includes(subcategory.toLowerCase())) || 
-    (category === ItemCategory.TOP && 
-     subcategory && 
-     ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()));
-
-  // Show style field based on category and subcategory
-  const shouldShowStyle = category && 
-    ![ItemCategory.ACCESSORY, ItemCategory.OTHER].includes(category as ItemCategory);
-  
-
-  // Show neckline field for specific subcategories
-  const shouldShowNeckline = subcategory && 
-    ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'cardigan', 'jumpsuit', 'romper'].includes(subcategory.toLowerCase());
-
-  // Show rise field only for BOTTOM category
-  const shouldShowRise = category === ItemCategory.BOTTOM;
-  
-  // Show heel height field for footwear
-  const shouldShowHeelHeight = category === ItemCategory.FOOTWEAR && 
-    subcategory && 
-    ['heels', 'boots', 'sandals', 'flats', 'formal shoes'].includes(subcategory.toLowerCase());
-    
-  // Show boot height field for boots subcategory
-  const shouldShowBootHeight = category === ItemCategory.FOOTWEAR && 
-    subcategory && 
-    subcategory.toLowerCase() === 'boots';
-    
-  // Show type field for specific subcategories
-  const shouldShowType = (category === ItemCategory.FOOTWEAR && subcategory && 
-    ['boots', 'formal shoes'].includes(subcategory.toLowerCase())) ||
-    (category === ItemCategory.ACCESSORY && subcategory && 
-    ['bag', 'jewelry'].includes(subcategory.toLowerCase())) ||
-    (category === ItemCategory.OUTERWEAR && subcategory && 
-    ['jacket', 'coat'].includes(subcategory.toLowerCase()));
-
-  // Memoize expensive option calculations
-  const silhouetteOptions = useMemo(() => 
-    category ? getSilhouetteOptions(category, subcategory) : [], 
-    [category, subcategory]
-  );
-  
-  const lengthOptions = useMemo(() => getLengthOptions(subcategory), [subcategory]);
-  const sleeveOptions = useMemo(() => getSleeveOptions(), []);
-  const styleOptions = useMemo(() => getStyleOptions(), []);
-  const riseOptions = useMemo(() => getRiseOptions(), []);
-  const necklineOptions = useMemo(() => getNecklineOptions(), []);
-  const heelHeightOptions = useMemo(() => getHeelHeightOptions(), []);
-  const bootHeightOptions = useMemo(() => getBootHeightOptions(), []);
-  const typeOptions = useMemo(() => getTypeOptions(category, subcategory), [category, subcategory]);
-  const patternOptions = useMemo(() => getPatternOptions(), []);
+  // Use extracted hooks for cleaner logic
+  const { scenarios: availableScenarios, isLoading: isLoadingScenarios } = useScenarios();
+  const fieldVisibility = getFieldVisibility(category, subcategory);
+  const formOptions = useFormOptions(category, subcategory);
   
   
   
@@ -218,7 +73,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             isFullWidth
           >
             <option value="">Select a pattern (optional)</option>
-            {patternOptions.map((option: string) => (
+            {formOptions.patternOptions.map((option: string) => (
               <option key={option} value={option}>
                 {option}
               </option>
@@ -226,7 +81,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
           </FormSelect>
         </FormField>
 
-        {shouldShowSilhouette && (
+        {fieldVisibility.shouldShowSilhouette && (
             <FormField label="Silhouette" error={errors.silhouette}>
               <FormSelect
                 value={silhouette}
@@ -235,14 +90,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select silhouette</option>
-                {silhouetteOptions.map(option => (
+                {formOptions.silhouetteOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowLength && (
+          {fieldVisibility.shouldShowLength && (
             <FormField label="Length" error={errors.length}>
               <FormSelect
                 value={length}
@@ -251,14 +106,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select length</option>
-                {lengthOptions.map(option => (
+                {formOptions.lengthOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowSleeves && (
+          {fieldVisibility.shouldShowSleeves && (
             <FormField label="Sleeves" error={errors.sleeves}>
               <FormSelect
                 value={sleeves}
@@ -267,14 +122,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select sleeves</option>
-                {sleeveOptions.map(option => (
+                {formOptions.sleeveOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowStyle && (
+          {fieldVisibility.shouldShowStyle && (
             <FormField label="Style" error={errors.style}>
               <FormSelect
                 value={style}
@@ -283,14 +138,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select style</option>
-                {styleOptions.map(option => (
+                {formOptions.styleOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowNeckline && (
+          {fieldVisibility.shouldShowNeckline && (
             <FormField label="Neckline" error={errors.neckline}>
               <FormSelect
                 value={neckline}
@@ -299,14 +154,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select neckline</option>
-                {necklineOptions.map(option => (
+                {formOptions.necklineOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowRise && (
+          {fieldVisibility.shouldShowRise && (
             <FormField label="Rise" error={errors.rise}>
               <FormSelect
                 value={rise}
@@ -315,14 +170,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select rise</option>
-                {riseOptions.map(option => (
+                {formOptions.riseOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
 
-          {shouldShowHeelHeight && (
+          {fieldVisibility.shouldShowHeelHeight && (
             <FormField label="Heel Height" error={errors.heelHeight}>
               <FormSelect
                 value={heelHeight}
@@ -331,7 +186,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select heel height</option>
-                {heelHeightOptions.map(option => (
+                {formOptions.heelHeightOptions.map((option: string) => (
                   <option key={option} value={option}>
                     {option.charAt(0).toUpperCase() + option.slice(1)}
                   </option>
@@ -340,7 +195,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
             </FormField>
           )}
           
-          {shouldShowBootHeight && (
+          {fieldVisibility.shouldShowBootHeight && (
             <FormField label="Boot Height" error={errors.bootHeight}>
               <FormSelect
                 value={bootHeight}
@@ -349,14 +204,14 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select boot height</option>
-                {bootHeightOptions.map(option => (
+                {formOptions.bootHeightOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
             </FormField>
           )}
           
-          {shouldShowType && (
+          {fieldVisibility.shouldShowType && (
             <FormField label="Type" error={errors.type}>
               <FormSelect
                 value={type}
@@ -365,7 +220,7 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
                 isFullWidth
               >
                 <option value="">Select type</option>
-                {typeOptions.map(option => (
+                {formOptions.typeOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>
