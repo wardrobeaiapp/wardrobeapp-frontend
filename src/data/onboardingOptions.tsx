@@ -448,7 +448,6 @@ export const leisureActivityOptions = [
   { id: 'light-outdoor', label: 'I go for walks or light outdoor activity', icon: <FaWalking />, bgColor: '#e6f4ea', iconColor: '#34a853', description: 'Casual outdoor activities' },
   { id: 'social', label: 'I go out (restaurants, social events)', icon: <FaUtensils />, bgColor: '#ffebee', iconColor: '#f06292', description: 'Social dining and events' },
   { id: 'travel', label: 'I travel regularly', icon: <FaPlane />, bgColor: '#fff8e1', iconColor: '#fbbc04', description: 'Business or leisure travel' },
-  { id: 'formal-events', label: 'I attend professional / formal events', icon: <FaBriefcase />, bgColor: '#f3e8fd', iconColor: '#a142f4', description: 'Business meetings and formal occasions' },
   { id: 'other', label: 'Other', icon: <FaEllipsisH />, bgColor: '#f5f5f5', iconColor: '#9e9e9e', description: 'Describe your specific activities' }
 ];
 

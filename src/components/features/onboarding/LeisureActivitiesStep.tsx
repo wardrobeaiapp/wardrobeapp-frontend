@@ -146,36 +146,6 @@ const LeisureActivitiesStep: React.FC<LeisureActivitiesStepProps> = ({
               </FollowUpQuestionContainer>
             )}
             
-            {/* Conditional follow-up question for formal events frequency */}
-            {activity.id === 'formal-events' && leisureActivities.includes('formal-events') && (
-              <FollowUpQuestionContainer>
-                <FollowUpQuestionTitle>
-                  {questionTexts.formalEventsFrequency.title}
-                </FollowUpQuestionTitle>
-                <FollowUpOptionsContainer>
-                  <FrequencyControls>
-                    <FrequencyInput
-                      type="number"
-                      min="0"
-                      value={formalEventsFrequency.toString()}
-                      onChange={handleFormalEventsFrequencyChange}
-                    />
-                    <span>times</span>
-                    <FrequencySelect
-                      value={formalEventsPeriod}
-                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFormalEventsPeriodChange(e.target.value)}
-                    >
-                      {formalEventsPeriodOptions.map(option => (
-                        <option key={option.id} value={option.id}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </FrequencySelect>
-                  </FrequencyControls>
-                </FollowUpOptionsContainer>
-              </FollowUpQuestionContainer>
-            )}
-            
             {/* Conditional follow-up question for travel frequency */}
             {activity.id === 'travel' && leisureActivities.includes('travel') && (
               <FollowUpQuestionContainer>

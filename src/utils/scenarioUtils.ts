@@ -270,16 +270,6 @@ export const generateScenariosFromLifestyle = (
     });
   }
 
-  // Day to night scenario removed
-
-  if (leisureActivities.includes('formal-events') && formalEventsFrequency > 0) {
-    scenarios.push({
-      id: uuidv4(),
-      name: 'Formal Events',
-      frequency: `${formalEventsFrequency} times per ${formalEventsPeriod}`
-    });
-  }
-
   // Add default scenarios if none were created
   if (scenarios.length === 0) {
     scenarios.push(
