@@ -11,7 +11,7 @@ export const getFieldVisibility = (
   category: ItemCategory | '', 
   subcategory: string
 ): FieldVisibilityConfig => {
-  const subcategoryLower = subcategory.toLowerCase();
+  const subcategoryLower = subcategory ? subcategory.toLowerCase() : '';
   
   return {
     // Show silhouette field based on category and subcategory
