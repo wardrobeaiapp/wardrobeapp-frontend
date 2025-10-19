@@ -56,7 +56,8 @@ class DuplicateDetectionService {
         pattern: formData.pattern,
         neckline: formData.neckline,
         sleeves: formData.sleeves,
-        material: formData.material
+        material: formData.material,
+        details: formData.details
       };
 
       const allContextItems = similarContext || [];

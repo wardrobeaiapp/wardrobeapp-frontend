@@ -87,6 +87,7 @@ router.post('/', async (req, res) => {
         console.log(`      - bootHeight: ${item.bootHeight || 'N/A'}`);
         console.log(`      - pattern: ${item.pattern || 'N/A'}`);
         console.log(`      - silhouette: ${item.silhouette || 'N/A'}`);
+        console.log(`      - details: ${item.details || 'N/A'}`);
         console.log(`      - season: ${item.season ? item.season.join(', ') : 'N/A'}`);
       });
     }
