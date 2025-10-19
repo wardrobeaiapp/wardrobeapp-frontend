@@ -1,7 +1,24 @@
+/**
+ * Refactored useWardrobeItemsDB hook
+ * Focused on state management with extracted utilities for better maintainability
+ */
+
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { WardrobeItem, WishlistStatus } from '../../../types';
-import { getWardrobeItems, migrateLocalStorageItemsToSupabase, addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
-import { supabase } from '../../../services/core';
+import { WardrobeItem } from '../../../types';
+import { addWardrobeItem, updateWardrobeItem, deleteWardrobeItem } from '../../../services/wardrobe/items';
+
+// Import extracted utilities
+import { loadWardrobeItems } from './utils/dataLoader';
+import { handleImageUpload } from './utils/imageUploadUtils';
+import { 
+  createOptimisticItem,
+  addOptimisticItem,
+  updateOptimisticItem,
+  removeOptimisticItem,
+  replaceOptimisticItem,
+  revertOptimisticUpdate,
+  restoreDeletedItem
+} from './utils/optimisticUpdates';
 
 interface UseWardrobeItemsDBReturn {
   items: WardrobeItem[];
@@ -15,6 +32,7 @@ interface UseWardrobeItemsDBReturn {
 }
 
 export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardrobeItemsDBReturn => {
+  // State management
   const [items, setItems] = useState<WardrobeItem[]>(initialItems);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,124 +40,23 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
   // Use a ref to track if the component is mounted
   const isMountedRef = useRef<boolean>(true);
 
-  // Utility function to yield control back to the main thread
-  const yieldToMain = () => {
-    return new Promise(resolve => {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => resolve(undefined), { timeout: 50 });
-      } else {
-        setTimeout(() => resolve(undefined), 0);
-      }
-    });
-  };
-
-  // Async function to parse localStorage without blocking
-  const parseLocalStorageAsync = async (key: string): Promise<any[]> => {
-    return new Promise(resolve => {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-          const data = localStorage.getItem(key);
-          resolve(data ? JSON.parse(data) : []);
-        }, { timeout: 100 });
-      } else {
-        setTimeout(() => {
-          const data = localStorage.getItem(key);
-          resolve(data ? JSON.parse(data) : []);
-        }, 0);
-      }
-    });
-  };
-
-  // Memoize the loadItems function to prevent recreation on every render
+  // Load items from database with localStorage fallback and migration
   const loadItems = useCallback(async () => {
     if (!isMountedRef.current) return;
     
     setIsLoading(true);
     setError(null);
     
-    try {
-      // Check if we have a session first to avoid AuthSessionMissingError
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      // Yield control after session check
-      await yieldToMain();
-      
-      if (!isMountedRef.current) return;
-      
-      if (!sessionData.session || !sessionData.session.user) {
-        // No active session - user is not authenticated
-        if (isMountedRef.current) {
-          setItems([]);
-          setIsLoading(false);
-        }
-        return;
-      }
-      
-      // Use user from session data instead of making another auth call
-      const userId = sessionData.session.user.id;
-      
-      // Yield control after auth check
-      await yieldToMain();
-      if (!isMountedRef.current) return;
-      
-      // Always attempt to load from the database first with the actual user ID
-      const dbItems = await getWardrobeItems(userId, false);
-      
-      if (!isMountedRef.current) return;
-      
-      if (dbItems && dbItems.length > 0) {
-        setItems(dbItems);
-        return;
-      }
-      
-      // If no items in database, check localStorage asynchronously
-      const localStorageItems = await parseLocalStorageAsync('wardrobe-items-guest');
-      
-      if (!isMountedRef.current) return;
-      
-      if (localStorageItems.length > 0) {
-        // Show local items immediately for better UX
-        setItems(localStorageItems);
-        setIsLoading(false);
-        
-        // Defer migration to idle time to avoid blocking
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(async () => {
-            if (!isMountedRef.current) return;
-            
-            try {
-              const migrationSuccess = await migrateLocalStorageItemsToSupabase();
-              
-              if (migrationSuccess && isMountedRef.current) {
-                // If migration was successful, fetch the items again
-                const migratedItems = await getWardrobeItems(userId, false);
-                if (isMountedRef.current) {
-                  setItems(migratedItems);
-                  // Clear localStorage after successful migration
-                  localStorage.removeItem('wardrobe-items-guest');
-                }
-              }
-            } catch (migrationError) {
-              console.error('Background migration failed:', migrationError);
-              // Keep using localStorage items if migration fails
-            }
-          }, { timeout: 5000 });
-        }
-        return;
-      }
-    } catch (error) {
-      console.error('Error loading items:', error);
-      if (isMountedRef.current) {
-        setError('Failed to load items');
-      }
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-      }
+    const { items: loadedItems, error: loadError } = await loadWardrobeItems(isMountedRef);
+    
+    if (isMountedRef.current) {
+      setItems(loadedItems);
+      setError(loadError);
+      setIsLoading(false);
     }
   }, []);
 
-  // Load items from database on component mount
+  // Load items on component mount
   useEffect(() => {
     isMountedRef.current = true;
     loadItems();
@@ -150,101 +67,40 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     };
   }, [loadItems]);
 
-  // Add a new item with optimistic updates
+  // Add a new item with optimistic updates and image upload
   const addItem = useCallback(async (item: Omit<WardrobeItem, 'id'>, file?: File): Promise<WardrobeItem | null> => {
     if (!isMountedRef.current) return null;
     
     setIsLoading(true);
     
-    // Create a temporary ID for optimistic update
-    const tempId = `temp-${Date.now()}`;
-    const optimisticItem: WardrobeItem = {
-      ...item,
-      id: tempId,
-      dateAdded: new Date().toISOString(),
-      wishlistStatus: WishlistStatus.NOT_REVIEWED,
-      silhouette: item.silhouette || '',
-      length: item.length || '',
-      sleeves: item.sleeves || 'SHORT',
-      style: item.style || 'casual',
-      rise: item.rise || undefined,
-      neckline: item.neckline || undefined,
-      season: item.season || [],
-      scenarios: item.scenarios || [],
-      wishlist: item.wishlist || false,
-      tags: item.tags || {}
-    };
-    
-    // Optimistically add the item to the UI
-    setItems(prevItems => [...prevItems, optimisticItem]);
+    // Create optimistic item and add to UI immediately
+    const optimisticItem = createOptimisticItem(item);
+    setItems(prevItems => addOptimisticItem(prevItems, optimisticItem));
     
     try {
-      let finalImageUrl = item.imageUrl;
+      // Handle image upload if needed
+      const { imageUrl: finalImageUrl } = await handleImageUpload(file, item.imageUrl);
       
-      // Handle file upload if we have a file or if imageUrl is a blob URL
-      if (file || (item.imageUrl && item.imageUrl.startsWith('blob:'))) {
-        console.log('HOOK: Uploading file to storage before saving item...');
-        
-        try {
-          if (file) {
-            // Upload the file directly
-            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
-            
-            // Get file extension
-            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-            
-            // Convert file to blob and upload
-            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-            finalImageUrl = await saveImageToStorage(filePath, blob);
-            
-            console.log('HOOK: File uploaded successfully to:', finalImageUrl);
-          } else if (item.imageUrl && item.imageUrl.startsWith('blob:')) {
-            // Handle blob URL - fetch it and upload to storage
-            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
-            
-            // Fetch the blob from the blob URL
-            const response = await fetch(item.imageUrl);
-            const blob = await response.blob();
-            
-            // Determine file extension from blob type
-            const fileExt = blob.type?.split('/')[1]?.toLowerCase() || 'jpg';
-            
-            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-            finalImageUrl = await saveImageToStorage(filePath, blob);
-            
-            console.log('HOOK: Blob URL uploaded successfully to:', finalImageUrl);
-            
-            // Clean up the blob URL to prevent memory leaks
-            URL.revokeObjectURL(item.imageUrl);
-          }
-        } catch (uploadError) {
-          console.error('HOOK: Error uploading image:', uploadError);
-          // Continue with the original imageUrl if upload fails
-          console.log('HOOK: Continuing with original imageUrl due to upload error');
-        }
-      }
-      
-      // Ensure scenarios is set before passing to addWardrobeItem
-      const itemWithScenarios = {
+      // Prepare item for database with uploaded image URL
+      const itemWithFinalImage = {
         ...item,
-        imageUrl: finalImageUrl, // Use the uploaded URL or fallback to original
+        imageUrl: finalImageUrl,
         scenarios: item.scenarios || []
       };
-      console.log('HOOK: About to add wardrobe item with scenarios:', itemWithScenarios.scenarios);
+      
+      console.log('HOOK: About to add wardrobe item with scenarios:', itemWithFinalImage.scenarios);
       console.log('HOOK: Final imageUrl:', finalImageUrl);
-      const newItem = await addWardrobeItem(itemWithScenarios);
+      
+      const newItem = await addWardrobeItem(itemWithFinalImage);
       
       if (isMountedRef.current) {
         if (newItem) {
-          // Replace the optimistic item with the actual item from the server
-          setItems(prevItems => 
-            prevItems.map(i => i.id === tempId ? newItem : i)
-          );
+          // Replace optimistic item with actual item from server
+          setItems(prevItems => replaceOptimisticItem(prevItems, optimisticItem.id, newItem));
           return newItem;
         }
         // If no item was returned, remove the optimistic update
-        setItems(prevItems => prevItems.filter(i => i.id !== tempId));
+        setItems(prevItems => removeOptimisticItem(prevItems, optimisticItem.id));
         return null;
       }
       return null;
@@ -252,7 +108,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       console.error('Error adding item:', error);
       // Remove the optimistic update on error
       if (isMountedRef.current) {
-        setItems(prevItems => prevItems.filter(i => i.id !== tempId));
+        setItems(prevItems => removeOptimisticItem(prevItems, optimisticItem.id));
       }
       throw error;
     } finally {
@@ -262,7 +118,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     }
   }, []);
 
-  // Update an existing item with optimistic updates
+  // Update an existing item with optimistic updates and image upload
   const updateItem = useCallback(async (id: string, updates: Partial<WardrobeItem>, file?: File): Promise<WardrobeItem | null> => {
     if (!isMountedRef.current) return null;
     
@@ -273,60 +129,18 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       throw new Error('Item not found');
     }
     
-    // Optimistically update the UI
-    const optimisticUpdate = { ...currentItem, ...updates };
-    setItems(prevItems => 
-      prevItems.map(item => item.id === id ? optimisticUpdate : item)
-    );
+    // Apply optimistic update to UI immediately
+    setItems(prevItems => updateOptimisticItem(prevItems, id, updates));
     
     try {
-      let finalUpdates = { ...updates };
+      // Handle image upload if needed
+      const { imageUrl: finalImageUrl } = await handleImageUpload(file, updates.imageUrl);
       
-      // Handle file upload if we have a file or if imageUrl is a blob URL
-      if (file || (updates.imageUrl && updates.imageUrl.startsWith('blob:'))) {
-        console.log('HOOK: Uploading file to storage before updating item...');
-        
-        try {
-          if (file) {
-            // Upload the file directly
-            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
-            
-            // Get file extension
-            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-            
-            // Convert file to blob and upload
-            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-            const uploadedImageUrl = await saveImageToStorage(filePath, blob);
-            
-            finalUpdates.imageUrl = uploadedImageUrl;
-            console.log('HOOK: File uploaded successfully to:', uploadedImageUrl);
-          } else if (updates.imageUrl && updates.imageUrl.startsWith('blob:')) {
-            // Handle blob URL - fetch it and upload to storage
-            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
-            
-            // Fetch the blob from the blob URL
-            const response = await fetch(updates.imageUrl);
-            const blob = await response.blob();
-            
-            // Determine file extension from blob type
-            const fileExt = blob.type?.split('/')[1]?.toLowerCase() || 'jpg';
-            
-            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-            const uploadedImageUrl = await saveImageToStorage(filePath, blob);
-            
-            finalUpdates.imageUrl = uploadedImageUrl;
-            console.log('HOOK: Blob URL uploaded successfully to:', uploadedImageUrl);
-            
-            // Clean up the blob URL to prevent memory leaks
-            URL.revokeObjectURL(updates.imageUrl);
-          }
-        } catch (uploadError) {
-          console.error('HOOK: Error uploading image during update:', uploadError);
-          // Continue with the original imageUrl if upload fails
-          console.log('HOOK: Continuing with original imageUrl due to upload error');
-        }
-      }
+      // Prepare final updates with uploaded image URL
+      const finalUpdates = { 
+        ...updates,
+        ...(finalImageUrl !== updates.imageUrl && { imageUrl: finalImageUrl })
+      };
       
       console.log('HOOK: Final updates:', finalUpdates);
       const updatedItem = await updateWardrobeItem(id, finalUpdates);
@@ -334,15 +148,11 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       if (isMountedRef.current) {
         if (updatedItem) {
           // Update with server response
-          setItems(prevItems => 
-            prevItems.map(item => item.id === id ? updatedItem : item)
-          );
+          setItems(prevItems => updateOptimisticItem(prevItems, id, updatedItem));
           return updatedItem;
         }
         // If no updated item from server, revert to current item
-        setItems(prevItems => 
-          prevItems.map(item => item.id === id ? currentItem : item)
-        );
+        setItems(prevItems => revertOptimisticUpdate(prevItems, id, currentItem));
         return null;
       }
       return null;
@@ -350,9 +160,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       console.error('Error updating item:', error);
       // Revert to original item on error
       if (isMountedRef.current) {
-        setItems(prevItems => 
-          prevItems.map(item => item.id === id ? currentItem : item)
-        );
+        setItems(prevItems => revertOptimisticUpdate(prevItems, id, currentItem));
       }
       throw error;
     } finally {
@@ -374,7 +182,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     }
     
     // Optimistically remove the item from the UI
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
+    setItems(prevItems => removeOptimisticItem(prevItems, id));
     
     try {
       await deleteWardrobeItem(id);
@@ -383,13 +191,9 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       console.error('Error deleting item:', error);
       // Revert the optimistic update on error
       if (isMountedRef.current) {
-        setItems(prevItems => {
-          // Only add back if not already present
-          const exists = prevItems.some(item => item.id === id);
-          return exists ? prevItems : [...prevItems, itemToDelete];
-        });
+        setItems(prevItems => restoreDeletedItem(prevItems, itemToDelete));
       }
-      throw error; // Re-throw to allow error handling in the component
+      throw error;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);
