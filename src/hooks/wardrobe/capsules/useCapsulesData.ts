@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Capsule } from '../../types';
-import useDataLoading from '../core/useDataLoading';
-import { useCapsules } from './capsules/useCapsules';
+import { Capsule } from '../../../types';
+import useDataLoading from '../../core/useDataLoading';
+import { useCapsules } from './useCapsules';
 
 export const useCapsulesData = () => {
   const { 

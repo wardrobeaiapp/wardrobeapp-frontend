@@ -7,9 +7,9 @@ import { useTabActions } from '../hooks/home/useTabActions';
 import { useInitialDataLoading } from '../hooks/core/useInitialDataLoading';
 import { useTabState, TabType } from '../hooks/home/useTabState';
 import { useModalState } from '../hooks/home/useModalState';
-import { useWardrobeItems } from '../hooks/wardrobe/useWardrobeItems';
-import { useOutfitsData } from '../hooks/wardrobe/useOutfitsData';
-import { useCapsulesData } from '../hooks/wardrobe/useCapsulesData';
+import { useWardrobeItemsData } from '../hooks/wardrobe/items/useWardrobeItemsData';
+import { useOutfitsData } from '../hooks/wardrobe/outfits/useOutfitsData';
+import { useCapsulesData } from '../hooks/wardrobe/capsules/useCapsulesData';
 import { useItemFiltering } from '../hooks/home/useItemFiltering';
 import { useOutfitFiltering } from '../hooks/home/useOutfitFiltering';
 import { useCapsuleFiltering } from '../hooks/home/useCapsuleFiltering';
@@ -39,7 +39,7 @@ const HomePage: React.FC = () => {
   } = useTabState(TabType.ITEMS);
 
   // Data loading hooks with proper null handling  
-  const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItems();
+  const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItemsData();
   const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
   const { capsules: capsulesData = null, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
   

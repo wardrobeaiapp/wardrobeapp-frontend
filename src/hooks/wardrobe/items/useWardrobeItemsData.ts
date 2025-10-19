@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { useWardrobe } from '../../context/WardrobeContext';
-import useDataLoading from '../core/useDataLoading';
-import { WardrobeItem } from '../../types';
+import { useWardrobe } from '../../../context/WardrobeContext';
+import useDataLoading from '../../core/useDataLoading';
+import { WardrobeItem } from '../../../types';
 
-export const useWardrobeItems = () => {
+export const useWardrobeItemsData = () => {
   const { items } = useWardrobe();
   const [state, actions] = useDataLoading<WardrobeItem[]>([]);
 

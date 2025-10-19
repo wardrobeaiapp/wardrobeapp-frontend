@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { Outfit } from '../../types';
-import useDataLoading from '../core/useDataLoading';
-import { useOutfits } from './outfits/useOutfits';
+import { Outfit } from '../../../types';
+import useDataLoading from '../../core/useDataLoading';
+import { useOutfits } from './useOutfits';
 
 export const useOutfitsData = () => {
   const { outfits, isLoading, error } = useOutfits([]);
