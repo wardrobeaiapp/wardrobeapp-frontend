@@ -35,7 +35,7 @@ interface WardrobeContextState {
   outfits: OutfitExtended[];
   capsules: Capsule[];
   addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
-  updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
+  updateItem: (id: string, updates: Partial<WardrobeItem>, file?: File) => Promise<WardrobeItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
   addOutfit: (outfit: Omit<OutfitExtended, 'id' | 'dateCreated'>) => Promise<OutfitExtended | null>;
   updateOutfit: (id: string, updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>) => Promise<OutfitExtended | null>;

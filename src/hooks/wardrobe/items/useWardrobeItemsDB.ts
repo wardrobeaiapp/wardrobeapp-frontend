@@ -9,7 +9,7 @@ interface UseWardrobeItemsDBReturn {
   isLoading: boolean;
   error: string | null;
   addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
-  updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
+  updateItem: (id: string, updates: Partial<WardrobeItem>, file?: File) => Promise<WardrobeItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
   refreshItems: () => Promise<void>;
 }
@@ -179,12 +179,60 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     setItems(prevItems => [...prevItems, optimisticItem]);
     
     try {
+      let finalImageUrl = item.imageUrl;
+      
+      // Handle file upload if we have a file or if imageUrl is a blob URL
+      if (file || (item.imageUrl && item.imageUrl.startsWith('blob:'))) {
+        console.log('HOOK: Uploading file to storage before saving item...');
+        
+        try {
+          if (file) {
+            // Upload the file directly
+            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
+            
+            // Get file extension
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            
+            // Convert file to blob and upload
+            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+            finalImageUrl = await saveImageToStorage(filePath, blob);
+            
+            console.log('HOOK: File uploaded successfully to:', finalImageUrl);
+          } else if (item.imageUrl && item.imageUrl.startsWith('blob:')) {
+            // Handle blob URL - fetch it and upload to storage
+            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
+            
+            // Fetch the blob from the blob URL
+            const response = await fetch(item.imageUrl);
+            const blob = await response.blob();
+            
+            // Determine file extension from blob type
+            const fileExt = blob.type?.split('/')[1]?.toLowerCase() || 'jpg';
+            
+            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+            finalImageUrl = await saveImageToStorage(filePath, blob);
+            
+            console.log('HOOK: Blob URL uploaded successfully to:', finalImageUrl);
+            
+            // Clean up the blob URL to prevent memory leaks
+            URL.revokeObjectURL(item.imageUrl);
+          }
+        } catch (uploadError) {
+          console.error('HOOK: Error uploading image:', uploadError);
+          // Continue with the original imageUrl if upload fails
+          console.log('HOOK: Continuing with original imageUrl due to upload error');
+        }
+      }
+      
       // Ensure scenarios is set before passing to addWardrobeItem
       const itemWithScenarios = {
         ...item,
+        imageUrl: finalImageUrl, // Use the uploaded URL or fallback to original
         scenarios: item.scenarios || []
       };
       console.log('HOOK: About to add wardrobe item with scenarios:', itemWithScenarios.scenarios);
+      console.log('HOOK: Final imageUrl:', finalImageUrl);
       const newItem = await addWardrobeItem(itemWithScenarios);
       
       if (isMountedRef.current) {
@@ -215,7 +263,7 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
   }, []);
 
   // Update an existing item with optimistic updates
-  const updateItem = useCallback(async (id: string, updates: Partial<WardrobeItem>): Promise<WardrobeItem | null> => {
+  const updateItem = useCallback(async (id: string, updates: Partial<WardrobeItem>, file?: File): Promise<WardrobeItem | null> => {
     if (!isMountedRef.current) return null;
     
     setIsLoading(true);
@@ -232,7 +280,56 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     );
     
     try {
-      const updatedItem = await updateWardrobeItem(id, updates);
+      let finalUpdates = { ...updates };
+      
+      // Handle file upload if we have a file or if imageUrl is a blob URL
+      if (file || (updates.imageUrl && updates.imageUrl.startsWith('blob:'))) {
+        console.log('HOOK: Uploading file to storage before updating item...');
+        
+        try {
+          if (file) {
+            // Upload the file directly
+            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
+            
+            // Get file extension
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+            
+            // Convert file to blob and upload
+            const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+            const uploadedImageUrl = await saveImageToStorage(filePath, blob);
+            
+            finalUpdates.imageUrl = uploadedImageUrl;
+            console.log('HOOK: File uploaded successfully to:', uploadedImageUrl);
+          } else if (updates.imageUrl && updates.imageUrl.startsWith('blob:')) {
+            // Handle blob URL - fetch it and upload to storage
+            const { uploadImageBlob, saveImageToStorage } = await import('../../../services/core/imageService');
+            
+            // Fetch the blob from the blob URL
+            const response = await fetch(updates.imageUrl);
+            const blob = await response.blob();
+            
+            // Determine file extension from blob type
+            const fileExt = blob.type?.split('/')[1]?.toLowerCase() || 'jpg';
+            
+            const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
+            const uploadedImageUrl = await saveImageToStorage(filePath, blob);
+            
+            finalUpdates.imageUrl = uploadedImageUrl;
+            console.log('HOOK: Blob URL uploaded successfully to:', uploadedImageUrl);
+            
+            // Clean up the blob URL to prevent memory leaks
+            URL.revokeObjectURL(updates.imageUrl);
+          }
+        } catch (uploadError) {
+          console.error('HOOK: Error uploading image during update:', uploadError);
+          // Continue with the original imageUrl if upload fails
+          console.log('HOOK: Continuing with original imageUrl due to upload error');
+        }
+      }
+      
+      console.log('HOOK: Final updates:', finalUpdates);
+      const updatedItem = await updateWardrobeItem(id, finalUpdates);
       
       if (isMountedRef.current) {
         if (updatedItem) {

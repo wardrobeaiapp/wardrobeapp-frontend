@@ -3,7 +3,7 @@ import { WardrobeItem } from '../../types';
 
 type UseItemManagementProps = {
   addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
-  updateItem: (id: string, updates: Partial<WardrobeItem>) => Promise<WardrobeItem | null>;
+  updateItem: (id: string, updates: Partial<WardrobeItem>, file?: File) => Promise<WardrobeItem | null>;
   deleteItem: (id: string) => Promise<boolean>;
   setActiveTab?: (tab: any) => void;
 };
@@ -104,7 +104,7 @@ export const useItemManagement = ({
     }
   }, [addItem, setActiveTab]);
 
-  const handleSubmitEdit = useCallback(async (updates: Partial<WardrobeItem>) => {
+  const handleSubmitEdit = useCallback(async (updates: Partial<WardrobeItem>, file?: File) => {
     if (!currentItemId) {
       console.error('No item selected for editing');
       return;
@@ -119,7 +119,7 @@ export const useItemManagement = ({
     }
 
     try {
-      await updateItem(currentItemId, updates);
+      await updateItem(currentItemId, updates, file);
     } catch (error) {
       console.error('Error updating item:', error);
       // If there's an error, we could optionally reopen the modal
