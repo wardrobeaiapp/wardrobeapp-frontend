@@ -71,6 +71,7 @@ router.post('/', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      details,
       season: season || [],
       scenarios: scenarios || [],
       wishlist: wishlist === true || wishlist === 'true', // Handle boolean conversion
@@ -121,6 +122,7 @@ router.put('/:id', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      details,
       season, 
       scenarios,
       wishlist,
@@ -159,6 +161,7 @@ router.put('/:id', auth, async (req, res) => {
       heelHeight: heelHeight !== undefined ? heelHeight : global.inMemoryWardrobeItems[itemIndex].heelHeight,
       bootHeight: bootHeight !== undefined ? bootHeight : global.inMemoryWardrobeItems[itemIndex].bootHeight,
       type: type !== undefined ? type : global.inMemoryWardrobeItems[itemIndex].type,
+      details: details !== undefined ? details : global.inMemoryWardrobeItems[itemIndex].details,
       season: season !== undefined ? season : global.inMemoryWardrobeItems[itemIndex].season,
       scenarios: scenarios !== undefined ? scenarios : global.inMemoryWardrobeItems[itemIndex].scenarios,
       wishlist: wishlist !== undefined ? (wishlist === true || wishlist === 'true') : global.inMemoryWardrobeItems[itemIndex].wishlist,

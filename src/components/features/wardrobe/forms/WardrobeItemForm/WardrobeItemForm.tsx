@@ -186,6 +186,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       heelHeight: formData.heelHeight,
       bootHeight: formData.bootHeight,
       type: formData.type,
+      details: formData.details,
       rise: formData.rise,
       imageUrl: finalImageUrl, // Add image URL to the item
       scenarios: formData.scenarios, // Add scenarios field
@@ -312,6 +313,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             onBootHeightChange={formState.setBootHeight}
             type={formState.type}
             onTypeChange={formState.setType}
+            details={formState.details}
+            onDetailsChange={formState.setDetails}
             scenarios={formState.scenarios}
             onScenarioToggle={formState.toggleScenario}
             seasons={formState.seasons}

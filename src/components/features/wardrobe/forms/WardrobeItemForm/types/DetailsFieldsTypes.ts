@@ -39,6 +39,10 @@ export interface DetailsFieldsProps {
   type: string;
   onTypeChange: (type: string) => void;
   
+  // Additional details (styling notes)
+  details: string;
+  onDetailsChange: (details: string) => void;
+  
   // Scenarios and seasons
   scenarios: string[];
   onScenarioToggle: (scenarioId: string) => void;

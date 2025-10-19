@@ -23,6 +23,7 @@ export interface WardrobeItemFormData {
   heelHeight?: string;
   bootHeight?: string;
   type?: string;
+  details?: string;
   seasons: Season[];
   scenarios: string[]; // Array of scenario IDs
   isWishlistItem: boolean;
@@ -64,6 +65,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
   const [heelHeight, setHeelHeight] = useState(initialItem?.heelHeight || '');
   const [bootHeight, setBootHeight] = useState(initialItem?.bootHeight || '');
   const [type, setType] = useState(initialItem?.type || '');
+  const [details, setDetails] = useState(initialItem?.details || '');
   const [seasons, setSeasons] = useState<Season[]>(initialItem?.season || []);
   const [isWishlistItem, setIsWishlistItem] = useState(initialItem?.wishlist ?? defaultWishlist);
   const [imageUrl, setImageUrl] = useState(initialItem?.imageUrl || '');
@@ -188,6 +190,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         (category === ItemCategory.OUTERWEAR && subcategory && 
         ['jacket', 'coat'].includes(subcategory.toLowerCase())))
         ? type || undefined : undefined,
+      details: details || undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
         ? style || undefined : undefined,
       seasons,
@@ -221,6 +224,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setHeelHeight('');
     setBootHeight('');
     setType('');
+    setDetails('');
     setSeasons([]);
     setScenarios([]);
     setIsWishlistItem(defaultWishlist);
@@ -271,6 +275,8 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
     setBootHeight,
     type,
     setType,
+    details,
+    setDetails,
     seasons,
     toggleSeason,
     scenarios,

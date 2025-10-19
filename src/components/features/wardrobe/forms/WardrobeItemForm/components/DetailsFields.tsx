@@ -1,5 +1,5 @@
 import React, { ChangeEvent } from 'react';
-import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect } from '../../../../../../components/common/Form';
+import { FormField, FormInput, FormRow, Checkbox, CheckboxGroup, FormSelect, FormTextarea } from '../../../../../../components/common/Form';
 import { Season } from '../../../../../../types';
 import ScenarioSelector from '../../../shared/ScenarioSelector/ScenarioSelector';
 import { AVAILABLE_SEASONS, getSeasonDisplayName } from '../utils/formHelpers';
@@ -34,6 +34,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onBootHeightChange,
   type,
   onTypeChange,
+  details,
+  onDetailsChange,
   scenarios,
   onScenarioToggle,
   seasons,
@@ -250,6 +252,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
           />
         </FormField>
       </FormRow>
+
+      {/* Additional Details section */}
+      <FormField 
+        label="Additional Details" 
+        error={errors.details}
+        style={{ marginTop: '1.5rem' }}
+      >
+        <FormTextarea
+          value={details}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onDetailsChange(e.target.value)}
+          placeholder="Additional styling details (e.g., puffed sleeves, bow details, belt, decoration etc.)"
+          rows={3}
+          variant="outline"
+          isFullWidth
+        />
+      </FormField>
 
       {/* Scenarios section */}
       <FormField 
