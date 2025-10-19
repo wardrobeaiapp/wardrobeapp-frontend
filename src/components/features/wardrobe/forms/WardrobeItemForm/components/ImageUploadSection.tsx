@@ -242,7 +242,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
         onDragOver={inputMode === 'file' ? onDragOver : undefined}
         style={{ 
           opacity: previewImage ? 1 : (inputMode === 'file' ? 1 : 0.5),
-          pointerEvents: inputMode === 'file' ? 'auto' : 'none'
+          pointerEvents: inputMode === 'file' || previewImage ? 'auto' : 'none'
         }}
       >
         {previewImage ? (
@@ -257,7 +257,7 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 borderRadius: '8px'
               }}
             />
-            {selectedFile && onRemoveBackground && !isUsingProcessedImage && !isImageFromUrl && inputMode !== 'url' && (
+            {onRemoveBackground && !isUsingProcessedImage && (
               <RemoveBackgroundButton
                 type="button"
                 onClick={onRemoveBackground}
