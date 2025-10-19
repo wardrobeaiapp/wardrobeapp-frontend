@@ -329,4 +329,81 @@ describe('useWardrobeItemForm.getFormData() - Conditional Field Logic', () => {
       expect(formData.scenarios).toContain('home');
     });
   });
+
+  describe('DETAILS FIELD - New Feature', () => {
+    it('should include details field when provided', () => {
+      const { result } = renderHook(() => useWardrobeItemForm());
+
+      act(() => {
+        result.current.setCategory(ItemCategory.TOP);
+        result.current.setSubcategory('blouse');
+        result.current.setColor('white');
+        result.current.setDetails('puffed sleeves with bow details');
+        result.current.toggleSeason(Season.SUMMER);
+      });
+
+      const formData = result.current.getFormData();
+
+      expect(formData.details).toBe('puffed sleeves with bow details');
+    });
+
+    it('should include empty details field', () => {
+      const { result } = renderHook(() => useWardrobeItemForm());
+
+      act(() => {
+        result.current.setCategory(ItemCategory.ONE_PIECE);
+        result.current.setSubcategory('dress');
+        result.current.setColor('black');
+        result.current.setDetails('');
+        result.current.toggleSeason(Season.SUMMER);
+      });
+
+      const formData = result.current.getFormData();
+
+      expect(formData.details).toBe(undefined); // Empty strings convert to undefined for consistency
+    });
+
+    it('should include details field for all item categories', () => {
+      const testCases = [
+        { category: ItemCategory.TOP, subcategory: 'blouse', details: 'wrap style with belt' },
+        { category: ItemCategory.BOTTOM, subcategory: 'pants', details: 'high-waisted with elastic band' },
+        { category: ItemCategory.ONE_PIECE, subcategory: 'dress', details: 'maxi length with side slit' },
+        { category: ItemCategory.OUTERWEAR, subcategory: 'jacket', details: 'cropped with metallic buttons' },
+        { category: ItemCategory.FOOTWEAR, subcategory: 'boots', details: 'pointed toe with block heel' },
+        { category: ItemCategory.ACCESSORY, subcategory: 'bag', details: 'structured with chain strap' },
+      ];
+
+      testCases.forEach(({ category, subcategory, details }) => {
+        const { result } = renderHook(() => useWardrobeItemForm());
+
+        act(() => {
+          result.current.setCategory(category);
+          result.current.setSubcategory(subcategory);
+          result.current.setColor('test');
+          result.current.setDetails(details);
+          result.current.toggleSeason(Season.SUMMER);
+        });
+
+        const formData = result.current.getFormData();
+
+        expect(formData.details).toBe(details);
+      });
+    });
+
+    it('should handle undefined details field (default state)', () => {
+      const { result } = renderHook(() => useWardrobeItemForm());
+
+      act(() => {
+        result.current.setCategory(ItemCategory.TOP);
+        result.current.setSubcategory('t-shirt');
+        result.current.setColor('blue');
+        result.current.toggleSeason(Season.SUMMER);
+        // Don't set details - should be undefined
+      });
+
+      const formData = result.current.getFormData();
+
+      expect(formData.details).toBe(undefined);
+    });
+  });
 });

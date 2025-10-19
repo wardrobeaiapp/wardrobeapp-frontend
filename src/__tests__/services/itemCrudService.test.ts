@@ -16,11 +16,11 @@ jest.mock('../../services/core', () => ({
   }
 }));
 
-// Mock the coverage trigger functions
+// Mock the coverage trigger functions to prevent database calls
 jest.mock('../../services/wardrobe/scenarioCoverage', () => ({
-  triggerItemAddedCoverage: jest.fn(),
-  triggerItemUpdatedCoverage: jest.fn(),
-  triggerItemDeletedCoverage: jest.fn()
+  triggerItemAddedCoverage: jest.fn().mockResolvedValue(undefined),
+  triggerItemUpdatedCoverage: jest.fn().mockResolvedValue(undefined), 
+  triggerItemDeletedCoverage: jest.fn().mockResolvedValue(undefined)
 }));
 
 // Mock the scenario relations service
@@ -28,6 +28,11 @@ jest.mock('../../services/wardrobe/items/itemRelationsService', () => ({
   replaceItemScenarios: jest.fn(),
   getItemScenarios: jest.fn(() => Promise.resolve([])),
   getBatchItemScenarios: jest.fn(() => Promise.resolve(new Map()))
+}));
+
+// Mock the outfits service to prevent removeItemFromAllOutfits errors
+jest.mock('../../services/wardrobe/outfits', () => ({
+  removeItemFromAllOutfits: jest.fn(() => Promise.resolve(true))
 }));
 
 // Mock the itemBaseService (for getCurrentUserId)
@@ -50,6 +55,7 @@ jest.mock('../../services/wardrobe/items/itemBaseService', () => ({
       subcategory: dbItem.subcategory || 'test',
       color: dbItem.color,
       brand: dbItem.brand,
+      details: dbItem.details,
       userId: dbItem.user_id || 'user123',
       dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
       isActive: dbItem.is_active !== false,
@@ -67,6 +73,7 @@ jest.mock('../../services/wardrobe/items/itemBaseService', () => ({
       subcategory: dbItem.subcategory || 'test',
       color: dbItem.color,
       brand: dbItem.brand,
+      details: dbItem.details,
       season: dbItem.season || ['summer'],
       userId: dbItem.user_id || 'user123',
       dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
@@ -86,6 +93,10 @@ describe('itemCrudService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Temporarily suppress console logs from wardrobeContextHelpers during tests
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    
     // Mock getCurrentUserId to return a test user ID
     jest.spyOn(itemBaseService, 'getCurrentUserId').mockResolvedValue('user123');
     
@@ -99,6 +110,7 @@ describe('itemCrudService', () => {
         subcategory: dbItem.subcategory || 'test',
         color: dbItem.color,
         brand: dbItem.brand,
+        details: dbItem.details,
         season: dbItem.season || ['summer'],
         userId: dbItem.user_id || 'user123',
         dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
@@ -119,6 +131,7 @@ describe('itemCrudService', () => {
         subcategory: dbItem.subcategory || 'test',
         color: dbItem.color,
         brand: dbItem.brand,
+        details: dbItem.details,
         season: dbItem.season || ['summer'],
         userId: dbItem.user_id || 'user123',
         dateAdded: dbItem.created_at || '2024-01-01T00:00:00Z',
@@ -133,48 +146,51 @@ describe('itemCrudService', () => {
     const { getBatchItemScenarios } = require('../../services/wardrobe/items/itemRelationsService');
     (getBatchItemScenarios as jest.Mock).mockResolvedValue(new Map());
     
-    // Reset and reconfigure the supabase mock completely
+    // Create a universal chainable query builder that works for all patterns
+    const createUniversalQuery = (defaultData = []) => {
+      const query = {
+        eq: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(), 
+        single: jest.fn().mockReturnThis(),
+        contains: jest.fn().mockReturnThis(),
+        update: jest.fn().mockReturnThis(),
+        insert: jest.fn().mockReturnThis(),
+        delete: jest.fn().mockReturnThis(),
+        // Make it awaitable - this is the key part
+        then: jest.fn((resolve) => resolve({ data: defaultData, error: null })),
+        catch: jest.fn().mockReturnThis(),
+        finally: jest.fn().mockReturnThis()
+      };
+      
+      // Mark as thenable
+      Object.defineProperty(query, Symbol.toStringTag, { value: 'Promise' });
+      return query;
+    };
+
+    // Reset and reconfigure with a universal mock
     (mockSupabase.from as jest.Mock).mockClear();
-    (mockSupabase.from as jest.Mock).mockImplementation((tableName) => {
-      if (tableName === 'wardrobe_items') {
-        return {
-          insert: jest.fn(() => ({
+    (mockSupabase.from as jest.Mock).mockImplementation(() => {
+      const table = {
+        insert: jest.fn(() => ({
+          select: jest.fn(() => Promise.resolve({ 
+            data: [{ id: '1', name: 'Test Item', category: 'top', user_id: 'user123' }], 
+            error: null 
+          }))
+        })),
+        select: jest.fn(() => createUniversalQuery([])),
+        update: jest.fn(() => ({
+          eq: jest.fn(() => ({
             select: jest.fn(() => Promise.resolve({ 
-              data: [{ 
-                id: '1', name: 'Test Item', category: 'top', 
-                user_id: 'user123', created_at: '2024-01-01T00:00:00Z'
-              }], 
+              data: [{ id: '1', name: 'Updated Item' }], 
               error: null 
             }))
-          })),
-          select: jest.fn(() => ({
-            eq: jest.fn(() => ({
-              single: jest.fn(() => Promise.resolve({ 
-                data: { id: '1', name: 'Test Item', category: 'top' }, 
-                error: null 
-              }))
-            }))
-          })),
-          update: jest.fn(() => ({
-            eq: jest.fn(() => ({
-              select: jest.fn(() => Promise.resolve({ 
-                data: [{ id: '1', name: 'Updated Item', category: 'top' }], 
-                error: null 
-              }))
-            }))
-          })),
-          delete: jest.fn(() => ({
-            eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
           }))
-        };
-      }
-      // Return a basic mock for other tables if needed
-      return {
-        insert: jest.fn(),
-        select: jest.fn(),
-        update: jest.fn(),
-        delete: jest.fn()
+        })),
+        delete: jest.fn(() => ({
+          eq: jest.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
       };
+      return table;
     });
   });
 
@@ -281,6 +297,71 @@ describe('itemCrudService', () => {
 
       // The function should throw an error when no user is authenticated
       await expect(addWardrobeItem(mockItemData)).rejects.toThrow('Authentication required to add wardrobe item');
+    });
+
+    it('should store styling details field when provided', async () => {
+      const mockItemWithDetails: Partial<WardrobeItem> = {
+        ...mockItemData,
+        details: 'puffed sleeves with elastic cuffs'
+      };
+
+      const mockCreatedItem = {
+        id: '123',
+        name: 'Test Item',
+        category: 'top',
+        subcategory: 't-shirt', 
+        color: 'blue',
+        brand: 'Test Brand',
+        details: 'puffed sleeves with elastic cuffs',
+        user_id: 'user123',
+        season: ['summer', 'winter', 'spring/fall'],
+        wishlist: false,
+        date_added: '2024-01-01T00:00:00.000Z'
+      };
+
+      (mockSupabase.from as jest.Mock).mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: [mockCreatedItem],
+            error: null
+          })
+        })
+      });
+
+      const result = await addWardrobeItem(mockItemWithDetails);
+
+      expect(result).toBeDefined();
+      expect(result?.details).toBe('puffed sleeves with elastic cuffs');
+      expect(mockSupabase.from).toHaveBeenCalledWith('wardrobe_items');
+    });
+
+    it('should handle empty or undefined details field', async () => {
+      const mockItemWithEmptyDetails: Partial<WardrobeItem> = {
+        ...mockItemData,
+        details: ''
+      };
+
+      const mockCreatedItem = {
+        id: '123',
+        name: 'Test Item',
+        category: 'top',
+        details: '',
+        user_id: 'user123'
+      };
+
+      (mockSupabase.from as jest.Mock).mockReturnValue({
+        insert: jest.fn().mockReturnValue({
+          select: jest.fn().mockResolvedValue({
+            data: [mockCreatedItem],
+            error: null
+          })
+        })
+      });
+
+      const result = await addWardrobeItem(mockItemWithEmptyDetails);
+
+      expect(result).toBeDefined();
+      expect(result?.details).toBe('');
     });
   });
 
