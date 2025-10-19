@@ -44,6 +44,7 @@ router.post('/', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      details,
       season, 
       scenarios,
       wishlist,
