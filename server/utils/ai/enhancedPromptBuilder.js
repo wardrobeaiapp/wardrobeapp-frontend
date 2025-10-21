@@ -178,46 +178,38 @@ function buildConditionalAnalysisSection(analysisScope) {
   let section = "";
 
   if (analysisScope.conditional.neckline) {
-    section += "\n\n4. NECKLINE ANALYSIS (Critical for layering compatibility):";
-    section += "\n• Exact neckline type: crew, v-neck, scoop, turtleneck, cowl, boat, off-shoulder, square, etc.";
-    section += "\n• Height assessment: high (turtleneck, cowl), mid (crew, scoop), low (v-neck, boat, square)";
+    section += "\n\n4. NECKLINE ANALYSIS:";
+    section += "\n• Type: crew, v-neck, scoop, turtleneck, cowl, boat, off-shoulder, square";
+    section += "\n• Height: high/mid/low";
   }
 
   if (analysisScope.conditional.sleeves) {
-    section += "\n\n5. SLEEVE ANALYSIS (Critical for layering):";
-    section += "\n• Sleeve style: sleeveless, short, 3/4, long, cap, bell, puff, fitted, balloon, bishop";
-    section += "\n• Sleeve volume: fitted (close to arm), relaxed (some room), voluminous (puffy/wide)";
+    section += "\n\n5. SLEEVE ANALYSIS:";
+    section += "\n• Style: sleeveless, short, 3/4, long, cap, bell, puff, fitted, balloon, bishop";
+    section += "\n• Volume: fitted/relaxed/voluminous";
   }
 
   if (analysisScope.conditional.layeringPotential) {
-    section += "\n\n6. LAYERING POTENTIAL (Critical - be objective based on what you see!):";
-    section += "\n• STANDALONE: Too thick/bulky/complex for layering - worn alone";
-    section += "\n  - Examples: chunky cable-knit sweaters, turtlenecks, puffy sleeves, thick materials";
-    section += "\n• INNER LAYER: Thin, fitted, simple - good under other items";
-    section += "\n  - Examples: fitted tees, camisoles, thin blouses, sleeveless tops";
-    section += "\n• OUTER LAYER: Structured/open design - good over other items";
-    section += "\n  - Examples: blazers, cardigans, open jackets, coats";
-    section += "\n• VERSATILE: Medium weight - works both ways";
-    section += "\n  - Examples: button-up shirts, light sweaters, structured tops";
-    section += "\nBASE ASSESSMENT ON: Material thickness, neckline height, sleeve bulk, overall volume you can see";
+    section += "\n\n6. LAYERING POTENTIAL:";
+    section += "\n• STANDALONE: thick/bulky (chunky knits, turtlenecks) • INNER: thin/fitted (tees, camisoles)";
+    section += "\n• OUTER: structured/open (blazers, cardigans) • VERSATILE: medium weight (shirts, light sweaters)";
+    section += "\n• Base on: material thickness, neckline height, sleeve bulk, volume";
   }
 
   if (analysisScope.conditional.volume) {
     section += "\n\n7. VOLUME & FIT ANALYSIS:";
-    section += "\n• Overall volume: fitted (close to body), relaxed (some ease), oversized (intentionally loose), voluminous (very full)";
-    section += "\n• Silhouette: straight, A-line, flowy, structured, bodycon, boxy, cocoon";
+    section += "\n• Volume: fitted/relaxed/oversized/voluminous • Silhouette: straight/A-line/flowy/structured/bodycon/boxy/cocoon";
   }
 
   if (analysisScope.conditional.heelHeight) {
     section += "\n\n8. FOOTWEAR ANALYSIS:";
-    section += "\n• Heel height: flat (0\"), low (1-2\"), medium (2-3\"), high (3-4\"), very high (4+\")";
-    section += "\n• Activity appropriateness: athletic, casual walking, business, formal events";
+    section += "\n• Heel height: flat (0\")/low (1-2\")/medium (2-3\")/high (3-4\")/very high (4+\")";
+    section += "\n• Activity: athletic/casual/business/formal";
   }
 
   if (analysisScope.conditional.rise) {
     section += "\n\n9. BOTTOM ANALYSIS:";
-    section += "\n• Rise: low-rise (below hip bone), mid-rise (at hip bone), high-waisted (above hip bone)";
-    section += "\n• Length assessment based on what you can see";
+    section += "\n• Rise: low-rise/mid-rise/high-waisted • Length: assess what's visible";
   }
 
   return section;
