@@ -83,12 +83,12 @@ describe('Scenario Detection and Filtering Integration', () => {
       expect(prompt).toContain('COLOR & PATTERN ANALYSIS');
       expect(prompt).toContain('End with \'REASON: [brief explanation]\', then \'FINAL RECOMMENDATION: [RECOMMEND/SKIP/MAYBE]\'');
       
-      // Should include new outerwear compatibility rules
-      expect(prompt).toContain('OUTERWEAR COMPATIBILITY RULES');
-      expect(prompt).toContain('MAJOR INCOMPATIBILITIES (flag these)');
-      expect(prompt).toContain('Puffy/balloon sleeves + fitted blazers/jackets');
+      // Should include new streamlined outerwear compatibility rules
+      expect(prompt).toContain('OUTERWEAR COMPATIBILITY - Flag only TRUE physical incompatibilities');
+      expect(prompt).toContain('Puffy sleeves + fitted blazers');
+      expect(prompt).toContain('Voluminous items + slim coats');
       expect(prompt).toContain('OUTERWEAR INCOMPATIBILITIES: [list specific items');
-      expect(prompt).toContain('BE CONSERVATIVE - only flag obvious physical impossibilities');
+      expect(prompt).toContain('Most clothing works together - incompatibilities are rare exceptions');
     });
   });
 
