@@ -158,13 +158,8 @@ function buildUniversalAnalysisSection() {
   section += "\n• STATEMENT: Focal points - bright/bold colors, patterns, unique details, eye-catching design";
 
   section += "\n\n2. FORMALITY LEVEL (1-5 scale):";
-  section += "\n• 1 = Casual (loungewear, athletic wear, basic tees, flip-flops)";
-  section += "\n• 2 = Smart Casual (nice jeans, casual dresses, sneakers, polo shirts)"; 
-  section += "\n• 3 = Business Casual (blazers, dress pants, blouses, professional flats)";
-  section += "\n• 4 = Business Formal (professional suits, conservative work dresses, dress shoes)";
-  section += "\n  ⚠️  BUSINESS FORMAL = WORKPLACE APPROPRIATE (no sequins, sparkles, metallics, sheer, low-cut, or party elements)";
-  section += "\n• 5 = Formal/Black Tie (evening wear, cocktail dresses, tuxedos, formal gowns)";
-  section += "\n  ✨ EVENING FORMAL = PARTY/EVENT WEAR (sequins, metallics, sparkles, dramatic elements welcome)";
+  section += "\n• 1=Casual • 2=Smart Casual • 3=Business Casual • 4=Business Formal (workplace) • 5=Evening Formal (party/event)";
+  section += "\n• Key: 4=conservative/professional, 5=dramatic/glamorous elements allowed";
 
   section += "\n\n3. COLOR & PATTERN ANALYSIS:";
   section += "\n• Primary color(s): Exact color names you can see";
