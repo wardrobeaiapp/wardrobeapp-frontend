@@ -114,6 +114,11 @@ router.post('/', async (req, res) => {
     // Validate and process image data
     const imageValidation = imageValidator.validateAndProcess(imageBase64);
     if (!imageValidation.isValid) {
+      console.error('❌ Image validation failed:', imageValidation.error);
+      return res.status(imageValidation.statusCode || 400).json({
+        ...imageValidation.errorResponse,
+        success: false
+      });
     }
     
     const base64Data = imageValidation.base64Data;
