@@ -60,6 +60,30 @@ class ImageValidator {
       };
     }
 
+    // Try to repair and validate base64 data
+    const repairedBase64 = this.attemptBase64Repair(base64Data);
+    if (!this.isValidBase64(repairedBase64.data)) {
+      console.log('❌ Base64 validation failed after repair attempts:', repairedBase64.attempts);
+      return {
+        isValid: false,
+        error: 'Invalid base64 format',
+        statusCode: 400,
+        errorResponse: {
+          error: 'Invalid image format', 
+          details: `The provided image data is not valid base64 format. Tried: ${repairedBase64.attempts.join(', ')}`,
+          analysis: 'Error analyzing image. The image data appears to be corrupted or incomplete.',
+          score: 5.0,
+          feedback: 'Please try uploading the image again or use a different image format.'
+        }
+      };
+    }
+
+    // Use the repaired base64 data
+    base64Data = repairedBase64.data;
+    if (repairedBase64.wasRepaired) {
+      console.log('✅ Base64 data was successfully repaired using:', repairedBase64.successfulMethod);
+    }
+
     // Additional validation could be added here:
     // - File size limits
     // - Image format validation
@@ -84,6 +108,95 @@ class ImageValidator {
     } catch (error) {
       return false;
     }
+  }
+
+  /**
+   * Attempt to repair common base64 formatting issues
+   * @param {string} base64String - Base64 string to repair
+   * @returns {Object} Repair result with data, wasRepaired flag, and attempt details
+   */
+  attemptBase64Repair(base64String) {
+    const attempts = [];
+    let data = base64String;
+    let wasRepaired = false;
+    let successfulMethod = null;
+
+    // Strategy 1: Use original data (no repair needed)
+    if (this.isValidBase64(data)) {
+      attempts.push('original');
+      return { data, wasRepaired: false, successfulMethod: 'original', attempts };
+    }
+    attempts.push('original');
+
+    // Strategy 2: Remove all whitespace and newlines
+    try {
+      const cleaned = data.replace(/\s+/g, '');
+      if (this.isValidBase64(cleaned)) {
+        attempts.push('whitespace-removal');
+        return { data: cleaned, wasRepaired: true, successfulMethod: 'whitespace-removal', attempts };
+      }
+      attempts.push('whitespace-removal');
+    } catch (e) {
+      attempts.push('whitespace-removal (failed)');
+    }
+
+    // Strategy 3: Fix padding (add missing = or ==)
+    try {
+      let padded = data.replace(/\s+/g, '');
+      const missingPadding = padded.length % 4;
+      if (missingPadding > 0) {
+        padded += '='.repeat(4 - missingPadding);
+      }
+      if (this.isValidBase64(padded)) {
+        attempts.push('padding-fix');
+        return { data: padded, wasRepaired: true, successfulMethod: 'padding-fix', attempts };
+      }
+      attempts.push('padding-fix');
+    } catch (e) {
+      attempts.push('padding-fix (failed)');
+    }
+
+    // Strategy 4: Convert URL-safe base64 to standard base64
+    try {
+      const standardBase64 = data
+        .replace(/\s+/g, '')
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+      
+      // Fix padding after URL-safe conversion
+      const missingPadding = standardBase64.length % 4;
+      const finalBase64 = missingPadding > 0 
+        ? standardBase64 + '='.repeat(4 - missingPadding)
+        : standardBase64;
+        
+      if (this.isValidBase64(finalBase64)) {
+        attempts.push('url-safe-conversion');
+        return { data: finalBase64, wasRepaired: true, successfulMethod: 'url-safe-conversion', attempts };
+      }
+      attempts.push('url-safe-conversion');
+    } catch (e) {
+      attempts.push('url-safe-conversion (failed)');
+    }
+
+    // Strategy 5: Remove invalid characters and try again
+    try {
+      const validCharsOnly = data.replace(/[^A-Za-z0-9+/=]/g, '');
+      const missingPadding = validCharsOnly.length % 4;
+      const cleanedBase64 = missingPadding > 0 
+        ? validCharsOnly + '='.repeat(4 - missingPadding)
+        : validCharsOnly;
+        
+      if (this.isValidBase64(cleanedBase64)) {
+        attempts.push('invalid-char-removal');
+        return { data: cleanedBase64, wasRepaired: true, successfulMethod: 'invalid-char-removal', attempts };
+      }
+      attempts.push('invalid-char-removal');
+    } catch (e) {
+      attempts.push('invalid-char-removal (failed)');
+    }
+
+    // All repair attempts failed
+    return { data: base64String, wasRepaired: false, successfulMethod: null, attempts };
   }
 
   /**
