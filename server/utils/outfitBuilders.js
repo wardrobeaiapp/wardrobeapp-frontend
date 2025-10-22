@@ -12,20 +12,12 @@
  * - Home scenario support (footwear optional)
  */
 
-/**
- * Check if a scenario is home-based (doesn't require footwear)
- * Backend version matching the frontend function
- * @param {string} scenarioName - Name of the scenario
- * @returns {boolean} true if it's a home scenario
- */
-function isHomeScenario(scenarioName) {
-  if (!scenarioName) return false;
-  
-  const name = scenarioName.toLowerCase();
-  const HOME_KEYWORDS = ['home', 'house', 'remote work'];
-  
-  return HOME_KEYWORDS.some(keyword => name.includes(keyword));
-}
+// Import utility functions for layering and scenario logic
+const { 
+  isSuitableBaseLayer, 
+  isLayeringOnly,
+  isHomeScenario 
+} = require('./outfitBuilders/utils');
 
 /**
  * Build dress-based outfit combinations with professional stylist variety
@@ -144,9 +136,19 @@ function buildTopOutfits(itemData, itemsByCategory, season, scenario) {
  */
 function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
   const outfits = [];
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
+  const allTops = itemsByCategory.tops || itemsByCategory.top || [];
   const footwear = itemsByCategory.footwear || [];
   const outerwear = itemsByCategory.outerwear || [];
+  
+  // Separate layering-only items from standalone tops
+  const standaloneTopItems = allTops.filter(top => !isLayeringOnly(top));
+  const layeringOnlyItems = allTops.filter(top => isLayeringOnly(top));
+  
+  console.log(`   👔 Found ${standaloneTopItems.length} standalone tops, ${layeringOnlyItems.length} layering-only items`);
+  
+  if (layeringOnlyItems.length > 0) {
+    console.log(`   🧥 Layering-only items: ${layeringOnlyItems.map(item => item.name).join(', ')}`);
+  }
   
   // Essential: bottom + top + footwear (footwear optional for home scenarios)
   const isHome = isHomeScenario(scenario);
@@ -157,7 +159,8 @@ function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
     return outfits;
   }
   
-  tops.forEach((top, topIndex) => {
+  // Create outfits with standalone tops (original logic)
+  standaloneTopItems.forEach((top, topIndex) => {
     shoesToUse.forEach((shoes, shoeIndex) => {
       const baseItems = [
         { ...itemData, compatibilityTypes: ['base-item'] },
@@ -192,6 +195,40 @@ function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
       }
     });
   });
+
+  // Create layered outfits with layering-only items OVER suitable standalone tops  
+  if (layeringOnlyItems.length > 0 && standaloneTopItems.length > 0) {
+    standaloneTopItems.forEach((baseTop, baseTopIndex) => {
+      layeringOnlyItems.forEach((layeringItem, layeringIndex) => {
+        // Check if this base layer is suitable for this layering item
+        if (!isSuitableBaseLayer(baseTop, layeringItem)) {
+          return; // Skip this combination
+        }
+        
+        shoesToUse.forEach((shoes, shoeIndex) => {
+          const layeredItems = [
+            { ...itemData, compatibilityTypes: ['base-item'] },
+            baseTop,  // Base layer (t-shirt)
+            layeringItem  // Layering item (cardigan)
+          ];
+          
+          // Add shoes if available (not null for home scenarios)
+          if (shoes) {
+            layeredItems.push(shoes);
+          } else if (isHome) {
+            console.log(`   🏠 Home scenario "${scenario}" - creating layered outfit without footwear`);
+          }
+          
+          const layeredOutfit = {
+            type: isHome && !shoes ? 'bottom-based-layered-cardigan-home' : 'bottom-based-layered-cardigan',
+            items: layeredItems
+          };
+          
+          outfits.push(layeredOutfit);
+        });
+      });
+    });
+  }
   
   return outfits;
 }
@@ -201,11 +238,15 @@ function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
  */
 function buildFootwearOutfits(itemData, itemsByCategory, season, scenario) {
   const outfits = [];
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
+  const allTops = itemsByCategory.tops || itemsByCategory.top || [];
   const bottoms = itemsByCategory.bottoms || itemsByCategory.bottom || [];
   
-  // Essential: footwear + top + bottom
-  tops.forEach(top => {
+  // Separate layering-only items from standalone tops
+  const standaloneTopItems = allTops.filter(top => !isLayeringOnly(top));
+  const layeringOnlyItems = allTops.filter(top => isLayeringOnly(top));
+  
+  // Essential: footwear + top + bottom (standalone tops first)
+  standaloneTopItems.forEach(top => {
     bottoms.forEach(bottom => {
       const outfit = {
         type: 'footwear-based',
@@ -219,6 +260,32 @@ function buildFootwearOutfits(itemData, itemsByCategory, season, scenario) {
       outfits.push(outfit);
     });
   });
+
+  // Create layered outfits with layering-only items OVER suitable standalone tops  
+  if (layeringOnlyItems.length > 0 && standaloneTopItems.length > 0) {
+    standaloneTopItems.forEach((baseTop) => {
+      layeringOnlyItems.forEach((layeringItem) => {
+        // Check if this base layer is suitable for this layering item
+        if (!isSuitableBaseLayer(baseTop, layeringItem)) {
+          return; // Skip this combination
+        }
+        
+        bottoms.forEach(bottom => {
+          const layeredOutfit = {
+            type: 'footwear-based-layered-cardigan',
+            items: [
+              { ...itemData, compatibilityTypes: ['base-item'] },
+              baseTop,     // Base layer (t-shirt)
+              layeringItem, // Layering item (cardigan)
+              bottom
+            ]
+          };
+          
+          outfits.push(layeredOutfit);
+        });
+      });
+    });
+  }
   
   return outfits;
 }
