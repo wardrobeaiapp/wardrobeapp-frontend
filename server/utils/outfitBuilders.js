@@ -9,7 +9,23 @@
  * - Systematic variety through rotation
  * - Duplication prevention (no base + layered versions)
  * - Context-aware outfit building
+ * - Home scenario support (footwear optional)
  */
+
+/**
+ * Check if a scenario is home-based (doesn't require footwear)
+ * Backend version matching the frontend function
+ * @param {string} scenarioName - Name of the scenario
+ * @returns {boolean} true if it's a home scenario
+ */
+function isHomeScenario(scenarioName) {
+  if (!scenarioName) return false;
+  
+  const name = scenarioName.toLowerCase();
+  const HOME_KEYWORDS = ['home', 'house', 'remote work'];
+  
+  return HOME_KEYWORDS.some(keyword => name.includes(keyword));
+}
 
 /**
  * Build dress-based outfit combinations with professional stylist variety
@@ -20,16 +36,28 @@ function buildDressOutfits(itemData, itemsByCategory, season, scenario) {
   const outerwear = itemsByCategory.outerwear || [];
   const accessories = itemsByCategory.accessory || [];
   
-  // Essential: dress + footwear
-  footwear.forEach((shoes, shoeIndex) => {
-    const baseItems = [
-      { ...itemData, compatibilityTypes: ['base-item'] },
-      shoes
-    ];
+  // Essential: dress + footwear (footwear optional for home scenarios)
+  const isHome = isHomeScenario(scenario);
+  const shoesToUse = footwear.length > 0 ? footwear : (isHome ? [null] : []);
+  
+  if (shoesToUse.length === 0) {
+    console.log(`   ❌ No footwear available for non-home scenario "${scenario}"`);
+    return outfits;
+  }
+  
+  shoesToUse.forEach((shoes, shoeIndex) => {
+    const baseItems = [{ ...itemData, compatibilityTypes: ['base-item'] }];
+    
+    // Add shoes if available (not null for home scenarios)
+    if (shoes) {
+      baseItems.push(shoes);
+    } else if (isHome) {
+      console.log(`   🏠 Home scenario "${scenario}" - creating outfit without footwear`);
+    }
     
     // Create the most complete version available
     let finalOutfit = {
-      type: 'dress-based',
+      type: isHome && !shoes ? 'dress-based-home' : 'dress-based',
       items: [...baseItems]
     };
     
@@ -63,14 +91,28 @@ function buildTopOutfits(itemData, itemsByCategory, season, scenario) {
   const footwear = itemsByCategory.footwear || [];
   const outerwear = itemsByCategory.outerwear || [];
   
-  // Essential: top + bottom + footwear
+  // Essential: top + bottom + footwear (footwear optional for home scenarios)
+  const isHome = isHomeScenario(scenario);
+  const shoesToUse = footwear.length > 0 ? footwear : (isHome ? [null] : []);
+  
+  if (shoesToUse.length === 0) {
+    console.log(`   ❌ No footwear available for non-home scenario "${scenario}"`);
+    return outfits;
+  }
+  
   bottoms.forEach((bottom, bottomIndex) => {
-    footwear.forEach((shoes, shoeIndex) => {
+    shoesToUse.forEach((shoes, shoeIndex) => {
       const baseItems = [
         { ...itemData, compatibilityTypes: ['base-item'] },
-        bottom,
-        shoes
+        bottom
       ];
+      
+      // Add shoes if available (not null for home scenarios)
+      if (shoes) {
+        baseItems.push(shoes);
+      } else if (isHome) {
+        console.log(`   🏠 Home scenario "${scenario}" - creating outfit without footwear`);
+      }
       
       // Prefer layered version when outerwear is available
       if (outerwear.length > 0) {
@@ -79,14 +121,14 @@ function buildTopOutfits(itemData, itemsByCategory, season, scenario) {
         const jacket = outerwear[outerwearIndex];
         
         const layeredOutfit = {
-          type: 'top-based-layered',
+          type: isHome && !shoes ? 'top-based-layered-home' : 'top-based-layered',
           items: [...baseItems, jacket]
         };
         outfits.push(layeredOutfit);
       } else {
         // Only create base version if no outerwear available
         const baseOutfit = {
-          type: 'top-based',
+          type: isHome && !shoes ? 'top-based-home' : 'top-based',
           items: baseItems
         };
         outfits.push(baseOutfit);
@@ -106,14 +148,28 @@ function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
   const footwear = itemsByCategory.footwear || [];
   const outerwear = itemsByCategory.outerwear || [];
   
-  // Essential: bottom + top + footwear
+  // Essential: bottom + top + footwear (footwear optional for home scenarios)
+  const isHome = isHomeScenario(scenario);
+  const shoesToUse = footwear.length > 0 ? footwear : (isHome ? [null] : []);
+  
+  if (shoesToUse.length === 0) {
+    console.log(`   ❌ No footwear available for non-home scenario "${scenario}"`);
+    return outfits;
+  }
+  
   tops.forEach((top, topIndex) => {
-    footwear.forEach((shoes, shoeIndex) => {
+    shoesToUse.forEach((shoes, shoeIndex) => {
       const baseItems = [
         { ...itemData, compatibilityTypes: ['base-item'] },
-        top,
-        shoes
+        top
       ];
+      
+      // Add shoes if available (not null for home scenarios)
+      if (shoes) {
+        baseItems.push(shoes);
+      } else if (isHome) {
+        console.log(`   🏠 Home scenario "${scenario}" - creating outfit without footwear`);
+      }
       
       // Prefer layered version when outerwear is available
       if (outerwear.length > 0) {
@@ -122,14 +178,14 @@ function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
         const jacket = outerwear[outerwearIndex];
         
         const layeredOutfit = {
-          type: 'bottom-based-layered',
+          type: isHome && !shoes ? 'bottom-based-layered-home' : 'bottom-based-layered',
           items: [...baseItems, jacket]
         };
         outfits.push(layeredOutfit);
       } else {
         // Only create base version if no outerwear available
         const baseOutfit = {
-          type: 'bottom-based',
+          type: isHome && !shoes ? 'bottom-based-home' : 'bottom-based',
           items: baseItems
         };
         outfits.push(baseOutfit);

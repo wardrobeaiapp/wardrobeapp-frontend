@@ -45,9 +45,9 @@ function createSeasonScenarioCombinations(itemData, compatibleItems) {
       scenarios.forEach(scenario => {
         const combination = `${season} + ${scenario}`;
         
-        // Check essential categories for complete outfit
+        // Check essential categories for complete outfit (pass scenario for home detection)
         const { hasAllEssentials, missingCategories, availableCategories } = checkEssentialCategories(
-          itemData, allCompatibleItems, season
+          itemData, allCompatibleItems, season, scenario
         );
         
         const status = hasAllEssentials ? '✅' : '❌';

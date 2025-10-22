@@ -9,13 +9,29 @@
  */
 
 /**
+ * Check if a scenario is home-based (doesn't require footwear)
+ * Simple backend version of the frontend function
+ * @param {string} scenarioName - Name of the scenario
+ * @returns {boolean} true if it's a home scenario
+ */
+function isHomeScenario(scenarioName) {
+  if (!scenarioName) return false;
+  
+  const name = scenarioName.toLowerCase();
+  const HOME_KEYWORDS = ['home', 'house', 'remote work'];
+  
+  return HOME_KEYWORDS.some(keyword => name.includes(keyword));
+}
+
+/**
  * Check if we have all essential categories for a complete outfit
  * @param {Object} itemData - The item being analyzed (category, etc.)
  * @param {Array} allCompatibleItems - All compatible items from wardrobe
  * @param {string} season - The season to check for (e.g., 'winter', 'summer')
+ * @param {string} scenarioName - The scenario name (optional) for home scenario detection
  * @returns {Object} Analysis of essential categories availability
  */
-function checkEssentialCategories(itemData, allCompatibleItems, season) {
+function checkEssentialCategories(itemData, allCompatibleItems, season, scenarioName = null) {
   // Define essential categories based on the item being analyzed
   const ESSENTIAL_CATEGORIES = {
     'dress': ['footwear'], // Dress just needs shoes
@@ -28,7 +44,14 @@ function checkEssentialCategories(itemData, allCompatibleItems, season) {
   };
   
   const itemCategory = itemData.category?.toLowerCase();
-  const requiredCategories = ESSENTIAL_CATEGORIES[itemCategory] || [];
+  let requiredCategories = ESSENTIAL_CATEGORIES[itemCategory] || [];
+  
+  // 🏠 HOME SCENARIO LOGIC: Remove footwear requirement for home scenarios
+  const isHome = isHomeScenario(scenarioName);
+  if (isHome && requiredCategories.includes('footwear')) {
+    requiredCategories = requiredCategories.filter(category => category !== 'footwear');
+    console.log(`🏠 [checkEssentials] Home scenario "${scenarioName}" - removed footwear requirement`);
+  }
   
   // Warn about unmapped categories
   if (!ESSENTIAL_CATEGORIES.hasOwnProperty(itemCategory)) {

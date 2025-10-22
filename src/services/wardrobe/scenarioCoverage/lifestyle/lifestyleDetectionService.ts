@@ -49,6 +49,23 @@ export const LIFESTYLE_TARGETS = {
 };
 
 /**
+ * Check if a specific scenario is "at home" / internal scenario
+ * Used for compatibility analysis - home scenarios don't require footwear
+ * @param scenarioName - Name of the scenario to check
+ * @returns boolean - true if it's a home/internal scenario
+ */
+export function isHomeScenario(scenarioName: string): boolean {
+  if (!scenarioName) return false;
+  
+  const name = scenarioName.toLowerCase();
+  
+  // Simple keyword-based detection
+  const HOME_KEYWORDS = ['home', 'house', 'remote work'];
+  
+  return HOME_KEYWORDS.some(keyword => name.includes(keyword));
+}
+
+/**
  * ULTRA-SIMPLE: Detect lifestyle based on daily activities
  * INDOOR = Remote work OR housekeeping without outdoor activities
  * OUTDOOR = Everyone else (default for safety)
