@@ -105,7 +105,7 @@ const TabContent: React.FC<TabContentProps> = ({
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
           onAddItem={onAddItem}
-          disableMockDataCheck={true}
+          disableMockDataCheck={false}
         />
       );
     case TabType.OUTFITS:
@@ -162,7 +162,7 @@ const TabContent: React.FC<TabContentProps> = ({
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
           onAddItem={onAddItem}
-          disableMockDataCheck={true}
+          disableMockDataCheck={false}
         />
       );
     default:
