@@ -250,7 +250,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
         expect.objectContaining({
           category: 'one_piece',
           subcategory: 'dress'
-        })
+        }),
+        [] // scenarios list (empty for non-wishlist items)
       );
     });
 
@@ -278,7 +279,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
         expect.objectContaining({
           category: 'outerwear',
           subcategory: 'blazer'
-        })
+        }),
+        [] // scenarios list (empty for non-wishlist items)
       );
     });
   });
@@ -319,7 +321,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
       // Should still call the filtering function
       expect(mockFilterStylingContext).toHaveBeenCalledWith(
         largeWardrobe,
-        expect.any(Object)
+        expect.any(Object),
+        [] // scenarios list (empty for non-wishlist items)
       );
     });
   });

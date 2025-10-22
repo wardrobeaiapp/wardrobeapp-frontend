@@ -220,12 +220,9 @@ function buildConditionalAnalysisSection(analysisScope) {
  * @returns {string} Analysis rules prompt section
  */
 function buildAnalysisRulesSection() {
-  let section = "\n\n🚨 CRITICAL ANALYSIS RULES:";
-  section += "\n• Be OBJECTIVE - only describe what you can clearly see in the image";
-  section += "\n• For layering potential, consider physics - thick materials don't layer well under fitted items";
-  section += "\n• If you cannot determine something from the image, say 'cannot determine from image'";
-  section += "\n• Don't guess or assume - base analysis on visible evidence only";
-  section += "\n• Focus on characteristics that will matter for future styling decisions";
+  let section = "\n\n🚨 ANALYSIS RULES:";
+  section += "\n• Only describe what's clearly visible - say 'cannot determine from image' if unsure";
+  section += "\n• Consider physics for layering - thick materials don't layer under fitted items";
 
   section += "\n\n🧥 OUTERWEAR COMPATIBILITY - Flag only TRUE physical incompatibilities:";
   section += "\n• Puffy sleeves + fitted blazers • Voluminous items + slim coats • High necks + crew blazers • Thick knits + slim jackets";

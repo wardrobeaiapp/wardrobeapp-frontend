@@ -64,7 +64,7 @@ export const wardrobeAnalysisService = {
   async analyzeWardrobeItem(
     imageBase64: string, 
     detectedTags?: any, 
-    formData?: { category?: string; subcategory?: string; seasons?: string[]; color?: string },
+    formData?: { category?: string; subcategory?: string; seasons?: string[]; color?: string; scenarios?: string[] },
     preFilledData?: WardrobeItem
   ): Promise<WardrobeItemAnalysis> {
     try {
@@ -144,16 +144,25 @@ export const wardrobeAnalysisService = {
           }
         }
         
-        // Enhanced formData with color information
+        // Enhanced formData with color information and scenarios from wishlist items
         const enhancedFormData = {
           ...formData,
-          color: detectedColor || formData.color // Only override if we actually detected a color
+          color: detectedColor || formData.color, // Only override if we actually detected a color
+          // 🎯 CRITICAL: Add scenarios from wishlist items for scenario-based filtering
+          scenarios: processedPreFilledData?.scenarios || (formData as any)?.scenarios
         };
         
-        console.log('[wardrobeAnalysisService] Enhanced formData with color:', enhancedFormData);
+        console.log('[wardrobeAnalysisService] Enhanced formData with color and scenarios:', enhancedFormData);
         
-        // Filter for styling context using helper function
-        const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData);
+        // 🎯 Log scenario filtering info
+        if (enhancedFormData.scenarios && enhancedFormData.scenarios.length > 0) {
+          console.log('[wardrobeAnalysisService] 🎯 WISHLIST ITEM SCENARIO FILTERING: Will filter styling context to scenarios:', enhancedFormData.scenarios);
+        } else {
+          console.log('[wardrobeAnalysisService] 📋 REGULAR ITEM ANALYSIS: No scenario filtering (analyzing uploaded image or regular item)');
+        }
+        
+        // Filter for styling context using helper function (pass scenarios list for UUID-to-name conversion)
+        const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData, scenarios);
         
         // Import helper function for flattening structured complementing items
         const { flattenComplementingItems } = require('./wardrobeContextHelpers');
@@ -164,8 +173,8 @@ export const wardrobeAnalysisService = {
           ...stylingContextResult.outerwear
         ] as WardrobeItem[];
         
-        // Filter for gap analysis context using helper function
-        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData) as WardrobeItem[];
+        // Filter for gap analysis context using helper function (pass scenarios list for UUID-to-name conversion)
+        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData, scenarios) as WardrobeItem[];
         
         console.log(`[wardrobeAnalysisService] Generated styling context: ${stylingContext.length} items`);
         console.log(`[wardrobeAnalysisService] Generated gap analysis context: ${similarContext.length} items`);

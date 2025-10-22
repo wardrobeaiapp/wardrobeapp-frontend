@@ -59,6 +59,36 @@ const checkSeasonMatch = (item: WardrobeItem, seasons?: string[]): boolean => {
   return seasons?.some(season => item.season?.includes(season as any)) ?? true;
 };
 
+const checkScenarioMatch = (item: WardrobeItem, scenarios?: string[], scenariosList?: any[]): boolean => {
+  // If no scenarios specified in formData, include all items (regular item analysis)
+  if (!scenarios || scenarios.length === 0) {
+    return true;
+  }
+  
+  // If item has no scenarios, exclude it (item not tagged for any scenarios)
+  if (!item.scenarios || item.scenarios.length === 0) {
+    console.log(`[checkScenarioMatch] ❌ EXCLUDING item "${item.name}" - has no scenarios`);
+    return false;
+  }
+  
+  // Convert item's scenario UUIDs to names if scenariosList is provided
+  let itemScenarioNames = item.scenarios;
+  if (scenariosList && scenariosList.length > 0) {
+    itemScenarioNames = item.scenarios.map((scenarioId: string) => {
+      const scenario = scenariosList.find(s => s.id === scenarioId);
+      return scenario ? scenario.name : scenarioId; // Fallback to original if not found
+    });
+  }
+  
+  // Check if item's scenario names overlap with requested scenario names
+  const hasMatch = scenarios.some(scenario => itemScenarioNames?.includes(scenario));
+  console.log(`[checkScenarioMatch] ${hasMatch ? '✅ INCLUDING' : '❌ EXCLUDING'} item "${item.name}"`);
+  console.log(`[checkScenarioMatch]   Item scenarios (UUID): [${item.scenarios?.join(', ')}]`);
+  console.log(`[checkScenarioMatch]   Item scenarios (names): [${itemScenarioNames?.join(', ')}]`);
+  console.log(`[checkScenarioMatch]   Looking for: [${scenarios.join(', ')}]`);
+  return hasMatch;
+};
+
 const checkCategoryMatch = (item: WardrobeItem, categories: ItemCategory[]): boolean => {
   return categories.includes(item.category as ItemCategory);
 };
@@ -131,9 +161,17 @@ export interface ComplementingItems {
  */
 export const filterStylingContext = (
   wardrobeItems: WardrobeItem[], 
-  formData: { category?: string; subcategory?: string; seasons?: string[] }
+  formData: { category?: string; subcategory?: string; seasons?: string[]; scenarios?: string[] },
+  scenariosList?: any[]
 ): { complementing: ComplementingItems, layering: WardrobeItem[], outerwear: WardrobeItem[] } => {
-  console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}`);
+  console.log(`[wardrobeContextHelpers] FILTERING STYLING CONTEXT for item: category=${formData.category}, subcategory=${formData.subcategory}, seasons=${formData.seasons?.join(',')}, scenarios=${formData.scenarios?.join(',') || 'all'}`);  
+  
+  // 🎯 Log scenario filtering status
+  if (formData.scenarios && formData.scenarios.length > 0) {
+    console.log(`[wardrobeContextHelpers] 🎯 SCENARIO FILTERING ENABLED: Only including items suitable for [${formData.scenarios.join(', ')}]`);
+  } else {
+    console.log(`[wardrobeContextHelpers] 📋 REGULAR FILTERING: No scenario restrictions (analyzing regular item or image upload)`);
+  }
   console.log(`[wardrobeContextHelpers] Total wardrobe items to filter: ${wardrobeItems.length}`);
   
   // Initialize structured complementing items
@@ -144,6 +182,12 @@ export const filterStylingContext = (
   wardrobeItems.forEach(item => {
     // Exclude wishlist items from styling context
     if (item.wishlist === true) {
+      return;
+    }
+    
+    // 🎯 SCENARIO-BASED FILTERING: For wishlist items with pre-selected scenarios,
+    // only include wardrobe items that match those scenarios
+    if (!checkScenarioMatch(item, formData.scenarios, scenariosList)) {
       return;
     }
 
@@ -448,9 +492,15 @@ const getMainCategoriesForRuleBased = (category: ItemCategory): ItemCategory[] =
  */
 export const filterSimilarContext = (
   wardrobeItems: WardrobeItem[], 
-  formData: { category?: string; subcategory?: string; seasons?: string[]; color?: string }
+  formData: { category?: string; subcategory?: string; seasons?: string[]; color?: string; scenarios?: string[] },
+  scenariosList?: any[]
 ): WardrobeItem[] => {
-  console.log(`[wardrobeContextHelpers] FILTERING SIMILAR CONTEXT for category: ${formData.category}, subcategory: ${formData.subcategory}, color: ${formData.color}, seasons: ${formData.seasons?.join(',')}`);
+  console.log(`[wardrobeContextHelpers] FILTERING SIMILAR CONTEXT for category: ${formData.category}, subcategory: ${formData.subcategory}, color: ${formData.color}, seasons: ${formData.seasons?.join(',')}, scenarios: ${formData.scenarios?.join(',') || 'all'}`);  
+  
+  // 🎯 Log scenario filtering status  
+  if (formData.scenarios && formData.scenarios.length > 0) {
+    console.log(`[wardrobeContextHelpers] 🎯 SCENARIO FILTERING ENABLED for duplicate detection: Only considering items suitable for [${formData.scenarios.join(', ')}]`);
+  }
   console.log(`[wardrobeContextHelpers] Input: ${wardrobeItems.length} wardrobe items to filter`);
   
   if (wardrobeItems.length === 0) {
@@ -461,6 +511,12 @@ export const filterSimilarContext = (
   const filtered = wardrobeItems.filter(item => {
     // Exclude wishlist items from similar context (duplicate detection)
     if (item.wishlist === true) {
+      return false;
+    }
+    
+    // 🎯 SCENARIO-BASED FILTERING: For wishlist items with pre-selected scenarios,
+    // only include wardrobe items that match those scenarios for duplicate detection
+    if (!checkScenarioMatch(item, formData.scenarios, scenariosList)) {
       return false;
     }
     
@@ -520,11 +576,18 @@ export const filterSimilarContext = (
  */
 export const filterAdditionalContext = (
   wardrobeItems: WardrobeItem[], 
-  formData: { category?: string; seasons?: string[] }
+  formData: { category?: string; seasons?: string[]; scenarios?: string[] },
+  scenariosList?: any[]
 ): WardrobeItem[] => {
   return wardrobeItems.filter(item => {
     // Exclude wishlist items from additional context
     if (item.wishlist === true) {
+      return false;
+    }
+    
+    // 🎯 SCENARIO-BASED FILTERING: For wishlist items with pre-selected scenarios,
+    // only include wardrobe items that match those scenarios
+    if (!checkScenarioMatch(item, formData.scenarios, scenariosList)) {
       return false;
     }
     

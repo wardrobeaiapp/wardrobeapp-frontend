@@ -33,6 +33,9 @@ export const stylingRules: Record<string, {
     accessories: ['bag', 'hat', 'sunglasses'],
     tops: ['shirt']
   },
+  'pajamas': {
+    accessories: ['bag', 'slippers'],
+  },
   'cardigan': {
     accessories: ['belt', 'bag', 'jewelry', 'watch'],
     tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top']
@@ -51,6 +54,10 @@ export const stylingRules: Record<string, {
   'trousers': {
     accessories: ['belt', 'bag'],
   },
+  'pants': {
+    accessories: ['belt', 'bag'],
+    tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'hoodie', 'sweatshirt', 'cardigan', 'pajamas']
+  },
   'shorts': {
     accessories: ['belt', 'bag'],
   },
@@ -67,7 +74,7 @@ export const stylingRules: Record<string, {
   },
   'dress': {
     accessories: ['bag', 'ties', 'belt', 'jewelry', 'watch'],
-    tops: ['sweater', 'blazer', 'vest', 'cardigan']
+    tops: ['sweater', 'blazer', 'vest', 'cardigan', 'pajamas']
   },
   'jumpsuit': {
     accessories: ['bag', 'belt', 'jewelry', 'watch'],
