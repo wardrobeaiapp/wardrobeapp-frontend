@@ -96,7 +96,7 @@ export const wardrobeAnalysisService = {
       
       // Process preFilledData for wishlist items - convert scenario UUIDs to names
       let processedPreFilledData = preFilledData;
-      if (preFilledData && preFilledData.scenarios && preFilledData.scenarios.length > 0 && scenarios.length > 0) {
+      if (preFilledData && preFilledData.scenarios && preFilledData.scenarios.length > 0 && scenarios && scenarios.length > 0) {
         console.log('[wardrobeAnalysisService] 🔄 Converting wishlist scenario UUIDs to names');
         processedPreFilledData = {
           ...preFilledData,
@@ -162,7 +162,7 @@ export const wardrobeAnalysisService = {
         }
         
         // Filter for styling context using helper function (pass scenarios list for UUID-to-name conversion)
-        const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData, scenarios);
+        const stylingContextResult = filterStylingContext(wardrobeItems, enhancedFormData, scenarios || []);
         
         // Import helper function for flattening structured complementing items
         const { flattenComplementingItems } = require('./wardrobeContextHelpers');
@@ -174,7 +174,7 @@ export const wardrobeAnalysisService = {
         ] as WardrobeItem[];
         
         // Filter for gap analysis context using helper function (pass scenarios list for UUID-to-name conversion)
-        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData, scenarios) as WardrobeItem[];
+        similarContext = filterSimilarContext(wardrobeItems, enhancedFormData, scenarios || []) as WardrobeItem[];
         
         console.log(`[wardrobeAnalysisService] Generated styling context: ${stylingContext.length} items`);
         console.log(`[wardrobeAnalysisService] Generated gap analysis context: ${similarContext.length} items`);
@@ -223,7 +223,7 @@ export const wardrobeAnalysisService = {
         
         // Convert wishlist scenario IDs to names for filtering
         const wishlistScenarioNames = preFilledData.scenarios.map(scenarioId => {
-          const scenario = scenarios.find(s => s.id === scenarioId);
+          const scenario = scenarios && scenarios.find ? scenarios.find(s => s.id === scenarioId) : null;
           return scenario ? scenario.name : null;
         }).filter(name => name !== null);
         
@@ -250,7 +250,7 @@ export const wardrobeAnalysisService = {
           imageBase64,
           detectedTags,
           climateData,
-          scenarios: scenarios.length > 0 ? scenarios.map(({ id, name, description, frequency }) => ({
+          scenarios: scenarios && scenarios.length > 0 ? scenarios.map(({ id, name, description, frequency }) => ({
             id,
             name,
             description,
