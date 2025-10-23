@@ -50,6 +50,9 @@ function extractItemDataForCompatibility(formData, preFilledData, imageAnalysisD
   if (preFilledData?.silhouette || imageAnalysisData?.silhouette) {
     itemData.silhouette = preFilledData?.silhouette || imageAnalysisData?.silhouette;
   }
+  if (preFilledData?.details || formData?.details || imageAnalysisData?.details) {
+    itemData.details = preFilledData?.details || formData?.details || imageAnalysisData?.details;
+  }
   
   // Specific characteristics by category - only add if they exist
   if (itemData.category === 'top') {

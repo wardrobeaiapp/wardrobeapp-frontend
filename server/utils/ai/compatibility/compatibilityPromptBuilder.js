@@ -14,6 +14,19 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   console.log('[compatibility] Building compatibility check prompt');
   console.log('[compatibility] Item data:', itemData);
   console.log('[compatibility] Complementing items count:', complementingItems.length);
+  
+  // Debug: Log what item details Claude will actually see
+  console.log('🔍 [DEBUG] NEW ITEM DETAILS FOR CLAUDE:');
+  console.log('   - Name:', itemData.name);
+  console.log('   - Details:', itemData.details || 'MISSING');
+  console.log('   - Silhouette:', itemData.silhouette || 'MISSING');
+  console.log('   - Material:', itemData.material || 'MISSING');
+  
+  // Debug: Log sample existing items
+  console.log('🔍 [DEBUG] SAMPLE EXISTING ITEMS:');
+  complementingItems.slice(0, 3).forEach(item => {
+    console.log(`   - ${item.name}: silhouette=${item.silhouette || 'MISSING'}, material=${item.material || 'MISSING'}, details=${item.details || 'MISSING'}`);
+  });
 
   // Group items by category for better organization
   const itemsByCategory = groupComplementingItemsByCategory(complementingItems);
@@ -31,6 +44,7 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   if (itemData.pattern) prompt += `- Pattern: ${itemData.pattern}\n`;
   if (itemData.material) prompt += `- Material: ${itemData.material}\n`;
   if (itemData.silhouette) prompt += `- Silhouette: ${itemData.silhouette}\n`;
+  if (itemData.details) prompt += `- Details: ${itemData.details}\n`;
   if (itemData.seasons) prompt += `- Season: ${Array.isArray(itemData.seasons) ? itemData.seasons.join(', ') : itemData.seasons}\n`;
   if (itemData.scenarios) prompt += `- Suitable scenarios: ${Array.isArray(itemData.scenarios) ? itemData.scenarios.join(', ') : itemData.scenarios}\n`;
 
@@ -56,7 +70,11 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
           prompt += ` - ${item.subcategory}`;
         }
         if (item.style) prompt += ` - ${item.style} style`;
+        if (item.silhouette) prompt += ` - ${item.silhouette} fit`;
+        if (item.material) prompt += ` - ${item.material}`;
         if (item.pattern && item.pattern !== 'solid') prompt += ` - ${item.pattern}`;
+        if (item.type) prompt += ` - ${item.type}`;
+        if (item.details) prompt += ` - ${item.details}`;
         if (item.season && Array.isArray(item.season)) {
           prompt += ` - seasons: ${item.season.join(', ')}`;
         }
@@ -66,35 +84,59 @@ function buildCompatibilityCheckingPrompt(itemData, complementingItems) {
   });
 
   prompt += '\nEVALUATION CRITERIA:\n';
-  prompt += 'Consider these factors when selecting compatible items:\n';
-  prompt += '- **Color harmony**: Do the colors work together harmoniously?\n';
-  prompt += '- **Style cohesion**: Do the style levels match appropriately?\n';
-  prompt += '- **Season appropriateness**: Are both items suitable for the same seasons?\n';
-  prompt += '- **Occasion compatibility**: Would this combination work for the intended use cases?\n';
-  prompt += '- **Proportion and silhouette**: Do the shapes and proportions complement each other?\n';
-  prompt += '- **Material compatibility**: Do the textures and materials work together?\n';
-  prompt += '- **Pattern mixing rules**: If patterns are involved, do they follow good mixing principles?\n';
-  prompt += '- **Practical wearability**: Would someone actually wear these together in real life?\n';
+  prompt += 'Be HIGHLY SELECTIVE and consider these sophisticated styling factors:\n\n';
+  
+  prompt += '**THINK LIKE A PROFESSIONAL STYLIST:**\n';
+  prompt += '- Does this combination create an INTENTIONAL, COHESIVE aesthetic?\n';
+  prompt += '- Consider the overall vibe, mood, and styling story of the main piece\n';
+  prompt += '- Use your fashion expertise - what would actually look good together?\n';
+  prompt += '- Focus on creating elevated, harmonious looks rather than just "functional" combinations\n\n';
+  
+  prompt += '**ITEM NECESSITY:**\n';
+  prompt += '- Does this item actually NEED this accessory/complement?\n';
+  prompt += '- Consider if the accessory ENHANCES or DETRACTS from the main item\n';
+  prompt += '- Some items are complete on their own and don\'t need additional accessories\n\n';
+  
+  prompt += '**STYLING SOPHISTICATION:**\n';
+  prompt += '- **Color harmony**: Colors should be harmonious AND support the aesthetic\n';
+  prompt += '- **Tone matching**: Soft items need soft complements, bold items need appropriate boldness\n';
+  prompt += '- **Proportion balance**: Scale and visual weight should be appropriate\n';
+  prompt += '- **Material synergy**: Textures should support the overall mood\n';
+  prompt += '- **Occasion appropriateness**: Perfect for the intended use case\n';
 
   prompt += '\nREQUIRED RESPONSE FORMAT:\n';
-  prompt += 'For each item listed above, respond with COMPATIBLE or NOT_COMPATIBLE:\n\n';
+  prompt += 'For each item listed above, respond with COMPATIBLE or NOT_COMPATIBLE and provide a brief styling reason:\n\n';
+  prompt += 'Format: ItemName: COMPATIBLE/NOT_COMPATIBLE - [brief reason]\n\n';
   
   Object.keys(itemsByCategory).forEach(category => {
     const items = itemsByCategory[category];
     if (items && items.length > 0) {
       prompt += `**${category.toUpperCase()}:**\n`;
       items.forEach((item, index) => {
-        prompt += `${index + 1}. ${item.name}: [COMPATIBLE or NOT_COMPATIBLE]\n`;
+        prompt += `${index + 1}. ${item.name}: [COMPATIBLE or NOT_COMPATIBLE] - [styling reason]\n`;
       });
       prompt += '\n';
     }
   });
 
-  prompt += '\nIMPORTANT:\n';
-  prompt += '- Only include items that genuinely complement the new item\n';
-  prompt += '- Consider real-world styling principles\n';
-  prompt += '- Be selective - fewer good matches is better than many questionable ones\n';
-  prompt += '- If no items in a category work well, write "none"\n';
+  prompt += '\nCOMMON STYLING MISTAKES TO AVOID:\n';
+  prompt += '- Don\'t match items just because they "don\'t clash" - they should ENHANCE each other\n';
+  prompt += '- Avoid adding unnecessary accessories (belts to dresses that are meant to flow)\n';
+  prompt += '- Don\'t pair delicate/romantic items with harsh/chunky pieces\n';
+  prompt += '- Avoid mixing too many different vibes (bohemian + corporate + athletic)\n';
+  prompt += '- Don\'t suggest items that compete for attention rather than complement\n\n';
+  
+  prompt += 'EXAMPLES:\n';
+  prompt += '✅ GOOD: Blue floral dress + nude/tan heels (soft, harmonious, lets dress shine)\n';
+  prompt += '❌ BAD: Blue floral dress + black chunky boots (too harsh, clashing vibes)\n';
+  prompt += '✅ GOOD: Structured blazer + thin leather belt (adds definition, matches formality)\n';
+  prompt += '❌ BAD: Flowy bohemian dress + wide statement belt (interrupts the flow)\n\n';
+  
+  prompt += 'FINAL INSTRUCTIONS:\n';
+  prompt += '- Only approve items that create an INTENTIONAL, COHESIVE look\n';
+  prompt += '- When in doubt, be MORE SELECTIVE - quality over quantity\n';
+  prompt += '- Consider: Would a professional stylist recommend this pairing?\n';
+  prompt += '- If no items in a category work well, that\'s perfectly fine\n';
   
   return prompt;
 }

@@ -34,10 +34,11 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     const itemName = item.name;
     const category = item.category?.toLowerCase() || 'other';
     
-    // Look for this specific item in Claude's response
-    // Pattern: "ItemName: COMPATIBLE" or "ItemName: NOT_COMPATIBLE"
-    let regex = new RegExp(`${escapeRegExp(itemName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)`, 'i');
+    // Look for this specific item in Claude's response with reasoning
+    // Pattern: "ItemName: COMPATIBLE - reason" or "ItemName: NOT_COMPATIBLE - reason"
+    let regex = new RegExp(`${escapeRegExp(itemName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)\\s*-?\\s*(.*)`, 'i');
     let match = claudeResponse.match(regex);
+    let reasoning = '';
     
     // If no exact match, try partial matching (Claude might use shorter names)
     if (!match) {
@@ -47,7 +48,7 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
         // Try matching with just first few words
         for (let i = Math.max(1, words.length - 1); i >= 1; i--) {
           const partialName = words.slice(0, i).join(' ');
-          const partialRegex = new RegExp(`${escapeRegExp(partialName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)`, 'i');
+          const partialRegex = new RegExp(`${escapeRegExp(partialName)}:\\s*(COMPATIBLE|NOT_COMPATIBLE)\\s*-?\\s*(.*)`, 'i');
           const partialMatch = claudeResponse.match(partialRegex);
           if (partialMatch) {
             match = partialMatch;
@@ -94,6 +95,9 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
     }
     
     if (match && match[1].toUpperCase() === 'COMPATIBLE') {
+      // Extract reasoning from the match
+      reasoning = match[2] ? match[2].trim() : '';
+      
       // This item is compatible! Add it to results
       if (!result[category]) {
         result[category] = [];
@@ -105,9 +109,10 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
       });
       
       totalCompatible++;
-      console.log(`✅ ${itemName} → COMPATIBLE`);
+      console.log(`✅ ${itemName} → COMPATIBLE${reasoning ? ' - ' + reasoning : ''}`);
     } else if (match) {
-      console.log(`❌ ${itemName} → NOT_COMPATIBLE`);
+      reasoning = match[2] ? match[2].trim() : '';
+      console.log(`❌ ${itemName} → NOT_COMPATIBLE${reasoning ? ' - ' + reasoning : ''}`);
     } else {
       console.log(`⚠️ ${itemName} → No clear response found`);
     }

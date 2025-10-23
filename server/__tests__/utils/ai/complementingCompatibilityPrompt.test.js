@@ -123,9 +123,9 @@ describe('complementingCompatibilityPrompt', () => {
       
       // Should include evaluation criteria
       expect(result).toContain('Color harmony');
-      expect(result).toContain('Style cohesion');
-      expect(result).toContain('Season appropriateness');
-      expect(result).toContain('Occasion compatibility');
+      expect(result).toContain('THINK LIKE A PROFESSIONAL STYLIST');
+      expect(result).toContain('ITEM NECESSITY');
+      expect(result).toContain('STYLING SOPHISTICATION');
       
       // Should include required response format for YES/NO compatibility
       expect(result).toContain('REQUIRED RESPONSE FORMAT');
