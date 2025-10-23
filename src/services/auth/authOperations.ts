@@ -67,8 +67,8 @@ export const register = async (userData: RegisterData): Promise<AuthResponse> =>
           profileCompleted: false,
           onboardingCompleted: false
         },
-        // Redirect to homepage after email confirmation
-        emailRedirectTo: window.location.origin
+        // Redirect to email verification callback after email confirmation
+        emailRedirectTo: window.location.origin + '/auth/callback'
       }
     });
     

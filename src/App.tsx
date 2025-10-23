@@ -4,17 +4,17 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { SupabaseAuthProvider, useSupabaseAuth } from './context/SupabaseAuthContext';
 import { WardrobeProvider } from './context/WardrobeContext';
+import WelcomePage from './pages/WelcomePage';
+import DemoPage from './pages/Demo/DemoPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import EmailVerificationCallback from './pages/EmailVerificationCallback';
+import OnboardingPage from './pages/OnboardingPage';
 import HomePage from './pages/HomePage';
 import AIAssistantPage from './pages/AIAssistantPage';
 import CalendarPage from './pages/CalendarPage';
 import ProfilePage from './pages/ProfilePage';
-
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import OnboardingPage from './pages/OnboardingPage';
-import WelcomePage from './pages/WelcomePage';
 import TestImageUpload from './pages/TestImageUpload';
-import { DemoPage } from './pages/Demo';
 import Footer from './components/layout/Footer';
 
 const GlobalStyle = createGlobalStyle`
@@ -178,6 +178,9 @@ function App() {
                   <Route path="/demo" element={<DemoPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  
+                  {/* Email verification callback - public route */}
+                  <Route path="/auth/callback" element={<EmailVerificationCallback />} />
                   
                   {/* Onboarding route - requires auth but not onboarding */}
                   <Route path="/onboarding" element={<OnboardingPage />} />
