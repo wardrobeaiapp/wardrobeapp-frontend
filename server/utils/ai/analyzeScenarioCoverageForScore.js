@@ -334,7 +334,17 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
       // Otherwise no additional messaging needed for accessories/outerwear
     }
     else if (totalOutfits === 0) {
-      finalReason += " Unfortunately, you don't have the right pieces in your wardrobe to style this item.";
+      // Context-aware transition based on coverage analysis tone
+      if (gapType === 'critical' || gapType === 'improvement') {
+        // Positive coverage message - smooth transition
+        finalReason += " However, you'll also need to add some compatible pieces to create complete outfits with this item.";
+      } else if (gapType === 'expansion') {
+        // Neutral coverage message - acknowledge styling limitation
+        finalReason += " Plus, you don't currently have the right pieces to style this item effectively.";
+      } else {
+        // Negative coverage message (satisfied/oversaturated) - reinforce the negative
+        finalReason += " Additionally, you don't have the right pieces in your wardrobe to style this item.";
+      }
     } else if (totalOutfits > 0 && coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0) {
       // Only mention coverage gaps if penalty was actually applied (limited styling utility)
       const hasLimitedUtility = totalOutfits <= 2 && coverageGapsWithNoOutfits.length >= 2;

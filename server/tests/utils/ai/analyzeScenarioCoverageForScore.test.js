@@ -307,7 +307,7 @@ describe('analyzeScenarioCoverageForScore', () => {
       );
 
       expect(result.reason).toContain('good coverage in tops');
-      expect(result.reason).toContain("Unfortunately, you don't have the right pieces in your wardrobe to style this item.");
+      expect(result.reason).toContain("Plus, you don't currently have the right pieces to style this item effectively.");
     });
 
     it('should add coverage gaps message only when penalty is applied (limited utility)', () => {
@@ -368,7 +368,7 @@ describe('analyzeScenarioCoverageForScore', () => {
       );
 
       expect(result.reason).toContain('good coverage in tops');
-      expect(result.reason).toContain("Unfortunately, you don't have the right pieces in your wardrobe to style this item.");
+      expect(result.reason).toContain("Plus, you don't currently have the right pieces to style this item effectively.");
       // Should only show "no outfits" message, not coverage gaps message when totalOutfits = 0
       expect(result.reason).not.toContain("However, you're missing");
     });

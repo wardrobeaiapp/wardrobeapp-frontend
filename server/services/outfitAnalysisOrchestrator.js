@@ -34,13 +34,69 @@ function orchestrateOutfitAnalysis({
   duplicateResult
 }) {
   console.log('\n=== 👗 OUTFIT ANALYSIS ORCHESTRATOR ===');
+  console.log('🔍 [orchestrateOutfitAnalysis] Input debug:');
+  console.log('   - suitableScenarios:', suitableScenarios ? suitableScenarios.length : 'missing', suitableScenarios);
+  console.log('   - preFilledData exists:', !!preFilledData);
+  if (preFilledData) {
+    console.log('   - preFilledData.scenarios:', preFilledData.scenarios);
+    console.log('   - preFilledData.scenarios type:', typeof preFilledData.scenarios);
+    console.log('   - preFilledData keys:', Object.keys(preFilledData));
+  }
   
   // Extract combined item data for analysis
+  // For wishlist items, use pre-selected scenarios; otherwise use AI-extracted scenarios
+  const isWishlistItem = !!preFilledData;
+  let finalScenarios = suitableScenarios;
+  
+  if (isWishlistItem && preFilledData.scenarios && Array.isArray(preFilledData.scenarios)) {
+    // Extract scenario names if they're objects
+    if (preFilledData.scenarios.length > 0 && typeof preFilledData.scenarios[0] === 'object') {
+      finalScenarios = preFilledData.scenarios.map(s => s.name || s);
+    } else {
+      finalScenarios = preFilledData.scenarios;
+    }
+    console.log('🏷️ [orchestrateOutfitAnalysis] Using wishlist scenarios:', finalScenarios);
+  } else if (!suitableScenarios || suitableScenarios.length === 0) {
+    console.log('⚠️ [orchestrateOutfitAnalysis] No scenarios from AI analysis and no wishlist scenarios');
+  } else {
+    console.log('🤖 [orchestrateOutfitAnalysis] Using AI-extracted scenarios:', finalScenarios);
+  }
+  
   const itemDataWithScenarios = {
     ...formData,
     ...preFilledData,
-    scenarios: suitableScenarios
+    scenarios: finalScenarios
   };
+  
+  // Debug: Check if seasons data exists
+  console.log('🔍 [orchestrateOutfitAnalysis] itemDataWithScenarios debug:');
+  console.log('   - scenarios:', itemDataWithScenarios.scenarios ? itemDataWithScenarios.scenarios.length : 'missing');
+  console.log('   - seasons:', itemDataWithScenarios.seasons ? itemDataWithScenarios.seasons.length : 'missing');
+  console.log('   - seasons array:', itemDataWithScenarios.seasons);
+  console.log('   - formData.seasons:', formData?.seasons);
+  console.log('   - preFilledData.seasons:', preFilledData?.seasons);
+  
+  // Ensure seasons is always an array (fix for missing seasons data)
+  if (!itemDataWithScenarios.seasons || !Array.isArray(itemDataWithScenarios.seasons)) {
+    console.log('⚠️ [orchestrateOutfitAnalysis] Missing or invalid seasons data - attempting to fix...');
+    
+    // Try to get seasons from either source
+    const seasonsFromForm = formData?.seasons;
+    const seasonsFromPreFilled = preFilledData?.seasons;
+    
+    if (seasonsFromForm && Array.isArray(seasonsFromForm) && seasonsFromForm.length > 0) {
+      itemDataWithScenarios.seasons = seasonsFromForm;
+      console.log('✅ [orchestrateOutfitAnalysis] Using seasons from formData:', seasonsFromForm);
+    } else if (seasonsFromPreFilled && Array.isArray(seasonsFromPreFilled) && seasonsFromPreFilled.length > 0) {
+      itemDataWithScenarios.seasons = seasonsFromPreFilled;
+      console.log('✅ [orchestrateOutfitAnalysis] Using seasons from preFilledData:', seasonsFromPreFilled);
+    } else {
+      // Fallback: use default seasons based on item category if still missing
+      const defaultSeasons = ['summer', 'spring/fall', 'winter'];
+      itemDataWithScenarios.seasons = defaultSeasons;
+      console.log('⚠️ [orchestrateOutfitAnalysis] No seasons found - using default seasons:', defaultSeasons);
+    }
+  }
   
   // Check if this is an accessory or outerwear item - these don't need seasonal breakdown
   // Accessories (jewelry, bags, belts) and outerwear (jackets, blazers) are versatile pieces

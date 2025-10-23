@@ -87,6 +87,12 @@ function createSeasonScenarioCombinations(itemData, compatibleItems) {
     console.log(`\n🎯 SEASON + SCENARIO COMBINATIONS: Cannot create - missing data`);
     console.log(`  - Seasons: ${seasons.length > 0 ? seasons.join(', ') : 'not available'}`);
     console.log(`  - Scenarios: ${scenarios.length > 0 ? scenarios.join(', ') : 'not available'}`);
+    console.log(`🔍 DEBUG - seasons array:`, seasons);
+    console.log(`🔍 DEBUG - scenarios array:`, scenarios);
+    console.log(`🔍 DEBUG - itemData keys:`, Object.keys(itemData));
+    console.log(`🔍 DEBUG - itemData.seasons raw:`, itemData.seasons);
+    console.log(`🔍 DEBUG - itemData.scenarios raw:`, itemData.scenarios);
+    console.log(`🔍 DEBUG - itemData.suitableScenarios raw:`, itemData.suitableScenarios);
   }
   
   return seasonScenarioCombinations;
