@@ -25,6 +25,17 @@ function getCategoryWeights(category, subcategory) {
     };
   }
   
+  // Blazers: silhouette (fit) and style matter most, neckline/sleeves are consistent
+  if (cat === 'top' && subcat === 'blazer') {
+    return { 
+      color: 35,        // Color is important for blazers
+      silhouette: 30,   // Regular vs Loose vs Fitted fit is crucial
+      style: 25,        // Elegant vs Casual matters
+      material: 10      // Wool vs Cotton blend
+      // Note: neckline and sleeves omitted - blazers are consistent (lapels, long sleeves)
+    };
+  }
+  
   // Bottoms: silhouette is very important (skinny vs wide leg)
   if (cat === 'bottom') {
     return { 

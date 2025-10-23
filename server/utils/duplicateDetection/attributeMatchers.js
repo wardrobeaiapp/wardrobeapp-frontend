@@ -66,6 +66,25 @@ function silhouettesMatch(silhouette1, silhouette2, category, subcategory) {
     }
   }
   
+  // Special case: For blazers, treat adjacent fits as similar
+  const isBlazer = category?.toLowerCase() === 'top' && 
+                   subcategory?.toLowerCase() === 'blazer';
+  
+  if (isBlazer) {
+    // Adjacent blazer fits are considered similar: Fitted ↔ Regular ↔ Loose
+    const adjacentFits = [
+      ['Fitted', 'Regular'],    // Fitted ≈ Regular
+      ['Regular', 'Loose']      // Regular ≈ Loose
+    ];
+    
+    for (const [fit1, fit2] of adjacentFits) {
+      if ((silhouette1 === fit1 && silhouette2 === fit2) || 
+          (silhouette1 === fit2 && silhouette2 === fit1)) {
+        return true;
+      }
+    }
+  }
+  
   // Check silhouette families for other categories
   for (const family of Object.values(SILHOUETTE_FAMILIES)) {
     if (family.includes(silhouette1) && family.includes(silhouette2)) {

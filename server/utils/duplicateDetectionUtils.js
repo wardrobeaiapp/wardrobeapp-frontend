@@ -20,6 +20,16 @@ function findCriticalDuplicates(newItem, existingItems) {
   
   console.log('🔍 DEBUG - Category/subcategory matches found:', categoryMatches.length);
   
+  // Enhanced debugging for blazer fit issues
+  if (newItem.category?.toLowerCase() === 'top' && newItem.subcategory?.toLowerCase() === 'blazer') {
+    console.log('🧥 DEBUG - BLAZER DUPLICATE CHECK:');
+    console.log('   - New blazer silhouette:', newItem.silhouette);
+    console.log('   - New blazer color:', newItem.color);
+    categoryMatches.forEach((match, i) => {
+      console.log(`   - Existing blazer ${i+1}: "${match.name}" - silhouette: ${match.silhouette}, color: ${match.color}`);
+    });
+  }
+  
   const withScores = categoryMatches.map(item => {
     const score = calculateSimilarityScore(newItem, item);
     console.log(`🔍 DEBUG - Comparing with "${item.name}":`, {
@@ -308,6 +318,12 @@ FORMAT:
 color: [selection]
 silhouette: [selection or N/A]
 style: [selection]
+
+IMPORTANT: Pay close attention to FIT/SILHOUETTE differences:
+- "Regular" = standard fitted cut
+- "Loose" = oversized, relaxed fit  
+- "Fitted" = tailored, close to body
+For blazers/jackets, the fit is crucial for distinguishing similar items.
 
 Use exact capitalization. Select closest match if uncertain.
 `;
