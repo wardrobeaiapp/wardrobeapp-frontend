@@ -22,7 +22,9 @@ const {
 
 const {
   createOutfitSignature,
-  distributeOutfitsIntelligently
+  distributeOutfitsIntelligently,
+  shouldMergeScenarios,
+  mergeCompatibleScenarios
 } = require('../utils/outfitDistribution');
 
 const {
@@ -223,5 +225,7 @@ module.exports = {
   createOutfitSignature,
   groupOutfitsByVersatility,
   displayGroupedOutfits,
-  distributeOutfitsIntelligently
+  distributeOutfitsIntelligently,
+  shouldMergeScenarios,
+  mergeCompatibleScenarios
 };

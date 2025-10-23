@@ -788,12 +788,21 @@ describe('outfitGenerationService', () => {
 
       const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
 
-      // Exclusive outfit should be assigned to its exclusive scenario
+      // With strict exclusivity, exclusive outfit should be assigned to its exclusive scenario first
       const formalResult = result.find(r => r.scenario === 'Formal Events');
       const officeResult = result.find(r => r.scenario === 'Office Work');
 
+      // Formal Events should get the exclusive outfit (Tuxedo)
+      expect(formalResult).toBeDefined();
       expect(formalResult.outfits.some(o => o.items.some(i => i.name === 'Tuxedo'))).toBe(true);
-      expect(officeResult.outfits.some(o => o.items.some(i => i.name === 'Tuxedo'))).toBe(false);
+      
+      // Office Work should either not exist (strict exclusivity) or not have the Tuxedo
+      if (officeResult) {
+        expect(officeResult.outfits.some(o => o.items.some(i => i.name === 'Tuxedo'))).toBe(false);
+      } else {
+        // This is expected with strict exclusivity - office scenario gets no unique outfits
+        expect(result).toHaveLength(1); // Only formal events scenario in result
+      }
     });
   });
 

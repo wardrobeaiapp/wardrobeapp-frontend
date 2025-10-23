@@ -6,10 +6,11 @@
  * 
  * Key Features:
  * - Creates unique outfit signatures for deduplication
- * - Distributes outfits fairly across scenarios
- * - Prioritizes exclusive outfits over shared ones
+ * - Merges scenarios with identical outfit sets (e.g., "SPRING/FALL/WINTER + STAYING AT HOME")
+ * - Distributes outfits with STRICT exclusivity (no duplicates across scenarios)
+ * - Prioritizes exclusive outfits (fewer compatible scenarios first)
  * - Respects maximum outfit limits per scenario (10)
- * - Prevents the same outfit from appearing across multiple scenarios
+ * - Once assigned, outfits are excluded from other scenarios completely
  */
 
 /**
@@ -20,6 +21,45 @@
 function createOutfitSignature(outfit) {
   const itemNames = outfit.items.map(item => item.name).sort();
   return itemNames.join(' + ');
+}
+
+/**
+ * Check if two scenarios should be merged (have identical outfit sets)
+ * @param {Array} scenarios1 - Compatible scenarios for outfit set 1
+ * @param {Array} scenarios2 - Compatible scenarios for outfit set 2  
+ * @returns {boolean} true if scenarios should be merged
+ */
+function shouldMergeScenarios(scenarios1, scenarios2) {
+  if (scenarios1.length !== scenarios2.length) return false;
+  
+  // Check if both sets contain the same scenario combinations
+  const combinations1 = scenarios1.map(s => s.combination).sort();
+  const combinations2 = scenarios2.map(s => s.combination).sort();
+  
+  return combinations1.every((combo, index) => combo === combinations2[index]);
+}
+
+/**
+ * Merge compatible scenarios into combined season/scenario labels
+ * @param {Array} scenarios - Array of scenario objects to merge
+ * @returns {Object} Merged scenario object
+ */
+function mergeCompatibleScenarios(scenarios) {
+  // Extract unique seasons and scenarios
+  const seasons = [...new Set(scenarios.map(s => s.season))].sort();
+  const scenarioNames = [...new Set(scenarios.map(s => s.scenario))].sort();
+  
+  // Create combined labels
+  const combinedSeason = seasons.join('/');
+  const combinedScenario = scenarioNames.join('/');
+  const combinedCombination = `${combinedSeason} + ${combinedScenario}`;
+  
+  return {
+    combination: combinedCombination,
+    season: combinedSeason,
+    scenario: combinedScenario,
+    mergedFromScenarios: scenarios
+  };
 }
 
 /**
@@ -58,26 +98,82 @@ function distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios) 
   
   console.log(`   Found ${outfitSignatureMap.size} unique outfits across all scenarios`);
   
+  // Check if scenarios should be merged (when they have identical outfit sets)
+  const scenarioGroups = [];
+  const processedScenarios = new Set();
+  
+  completeScenarios.forEach(scenario => {
+    if (processedScenarios.has(scenario.combination)) return;
+    
+    // Find all outfits that work for this scenario
+    const scenarioOutfits = Array.from(outfitSignatureMap.values())
+      .filter(outfitData => 
+        outfitData.compatibleScenarios.some(sc => sc.combination === scenario.combination)
+      );
+    
+    // Find other scenarios with identical outfit sets
+    const identicalScenarios = [scenario];
+    completeScenarios.forEach(otherScenario => {
+      if (otherScenario.combination === scenario.combination || processedScenarios.has(otherScenario.combination)) return;
+      
+      const otherScenarioOutfits = Array.from(outfitSignatureMap.values())
+        .filter(outfitData => 
+          outfitData.compatibleScenarios.some(sc => sc.combination === otherScenario.combination)
+        );
+      
+      // Check if outfit sets are identical
+      if (scenarioOutfits.length === otherScenarioOutfits.length && 
+          scenarioOutfits.every(outfit => 
+            otherScenarioOutfits.some(otherOutfit => 
+              outfit.signature === otherOutfit.signature
+            )
+          )) {
+        identicalScenarios.push(otherScenario);
+        processedScenarios.add(otherScenario.combination);
+      }
+    });
+    
+    processedScenarios.add(scenario.combination);
+    
+    if (identicalScenarios.length > 1) {
+      // Merge scenarios with identical outfits
+      const mergedScenario = mergeCompatibleScenarios(identicalScenarios);
+      console.log(`   🔗 MERGING: ${identicalScenarios.map(s => s.combination.toUpperCase()).join(' + ')} → ${mergedScenario.combination.toUpperCase()}`);
+      scenarioGroups.push(mergedScenario);
+    } else {
+      // Keep scenario as-is
+      scenarioGroups.push(scenario);
+    }
+  });
+  
+  console.log(`   Distributing to ${scenarioGroups.length} scenario groups with strict exclusivity (no duplicates)`);
+  
   // Distribute outfits intelligently
   const distributedResults = [];
   const maxOutfitsPerScenario = 10;
   
-  completeScenarios.forEach(combo => {
+  scenarioGroups.forEach(combo => {
     const scenarioOutfits = [];
     const targetKey = combo.combination;
     
-    // Find outfits that work for this scenario
-    Array.from(outfitSignatureMap.values())
+    // For merged scenarios, check compatibility against any of the original scenarios
+    const originalCombinations = combo.mergedFromScenarios 
+      ? combo.mergedFromScenarios.map(s => s.combination)
+      : [combo.combination];
+    
+    // Find outfits that work for this scenario group AND haven't been assigned yet
+    const availableOutfits = Array.from(outfitSignatureMap.values())
       .filter(outfitData => 
-        outfitData.compatibleScenarios.some(sc => sc.combination === targetKey)
-      )
+        outfitData.compatibleScenarios.some(sc => originalCombinations.includes(sc.combination)) && 
+        !outfitData.assigned  // STRICT: Only include unassigned outfits
+      );
+    
+    console.log(`   📋 ${targetKey.toUpperCase()}: ${availableOutfits.length} available unassigned outfits`);
+    
+    availableOutfits
       .sort((a, b) => {
         // Prioritize outfits that work for fewer scenarios (more exclusive)
-        // Then prioritize unassigned outfits
-        if (a.compatibleScenarios.length !== b.compatibleScenarios.length) {
-          return a.compatibleScenarios.length - b.compatibleScenarios.length;
-        }
-        return a.assigned === b.assigned ? 0 : (a.assigned ? 1 : -1);
+        return a.compatibleScenarios.length - b.compatibleScenarios.length;
       })
       .slice(0, maxOutfitsPerScenario)
       .forEach(outfitData => {
@@ -98,6 +194,8 @@ function distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios) 
         scenario: combo.scenario,
         outfits: scenarioOutfits
       });
+    } else {
+      console.log(`   ⚠️ ${combo.combination.toUpperCase()}: No unique outfits available (all were assigned to previous scenarios)`);
     }
   });
   
@@ -106,5 +204,8 @@ function distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios) 
 
 module.exports = {
   createOutfitSignature,
-  distributeOutfitsIntelligently
+  distributeOutfitsIntelligently,
+  // Helper functions for scenario merging
+  shouldMergeScenarios,
+  mergeCompatibleScenarios
 };
