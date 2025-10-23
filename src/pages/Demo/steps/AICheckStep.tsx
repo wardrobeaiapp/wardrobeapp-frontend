@@ -309,10 +309,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
           score={aiCheckData.score}
           status={aiCheckData.status}
           recommendationAction={aiCheckData.recommendationAction}
-          recommendationText={aiCheckData.usingMockData ? 
-            `🎯 This is real AI analysis data that was previously saved! ${aiCheckData.recommendationText}` : 
-            aiCheckData.recommendationText
-          }
+          recommendationText={aiCheckData.recommendationText}
           suitableScenarios={aiCheckData.suitableScenarios}
           compatibleItems={aiCheckData.compatibleItems}
           outfitCombinations={aiCheckData.outfitCombinations}

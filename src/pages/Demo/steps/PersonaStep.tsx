@@ -23,7 +23,7 @@ interface Persona {
 
 const PERSONAS: Persona[] = [
   {
-    userId: '17e17127-60d9-4f7a-b62f-71089efea6ac',
+    userId: 'bdc94953-9f24-477d-9fea-30a8f7192f53',
     name: 'Emma',
     title: 'Marketing Manager',
     description: 'Wears business casual outfits for office work and client meetings. Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year. Building a capsule wardrobe and trying to shop more intentionally.'
