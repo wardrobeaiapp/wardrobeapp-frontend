@@ -35,9 +35,10 @@ const { createSeasonScenarioCombinations } = require('./seasonScenarioService');
  * @param {Array} stylingContext - Array of existing wardrobe items for compatibility checking
  * @param {Object} anthropic - Anthropic client instance
  * @param {Array} suitableScenarios - Scenarios the item is suitable for
+ * @param {Array} scenarios - Array of scenario objects with id and name for UUID mapping
  * @returns {Object} - Compatibility results for all three types
  */
-async function analyzeAllCompatibilities(formData, preFilledData, extractedCharacteristics, stylingContext, anthropic, suitableScenarios = null) {
+async function analyzeAllCompatibilities(formData, preFilledData, extractedCharacteristics, stylingContext, anthropic, suitableScenarios = null, scenarios = []) {
   const results = {
     compatibleComplementingItems: null,
     compatibleLayeringItems: null,
@@ -146,9 +147,6 @@ async function analyzeComplementingCompatibility(itemDataForCompatibility, styli
           console.log(`   ${category}: ${items.length} items (${itemNames})`);
         }
       });
-      
-      // Create season + scenario combinations after compatibility analysis
-      createSeasonScenarioCombinations(itemDataForCompatibility, result);
       
       return result;
     } else {

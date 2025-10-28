@@ -12,9 +12,10 @@ const { checkEssentialCategories } = require('./essentialCategoriesService');
  * Create and log season + scenario combinations with item availability check
  * @param {Object} itemData - Item data with seasons and scenarios
  * @param {Object} compatibleItems - Compatible items organized by category
+ * @param {Array} scenariosMapping - Array of scenario objects with id and name (optional)
  * @returns {Array} Array of season + scenario combination objects
  */
-function createSeasonScenarioCombinations(itemData, compatibleItems) {
+function createSeasonScenarioCombinations(itemData, compatibleItems, scenariosMapping = []) {
   const seasonScenarioCombinations = [];
   
   // Get seasons from itemData
@@ -45,9 +46,9 @@ function createSeasonScenarioCombinations(itemData, compatibleItems) {
       scenarios.forEach(scenario => {
         const combination = `${season} + ${scenario}`;
         
-        // Check essential categories for complete outfit (pass scenario for home detection)
+        // Check essential categories for complete outfit (pass scenario for home detection and UUID mapping)
         const { hasAllEssentials, missingCategories, availableCategories } = checkEssentialCategories(
-          itemData, allCompatibleItems, season, scenario
+          itemData, allCompatibleItems, season, scenario, scenariosMapping
         );
         
         const status = hasAllEssentials ? '✅' : '❌';

@@ -29,9 +29,10 @@ function isHomeScenario(scenarioName) {
  * @param {Array} allCompatibleItems - All compatible items from wardrobe
  * @param {string} season - The season to check for (e.g., 'winter', 'summer')
  * @param {string} scenarioName - The scenario name (optional) for home scenario detection
+ * @param {Array} scenarios - Array of scenario objects with id and name (optional) for UUID-to-name mapping
  * @returns {Object} Analysis of essential categories availability
  */
-function checkEssentialCategories(itemData, allCompatibleItems, season, scenarioName = null) {
+function checkEssentialCategories(itemData, allCompatibleItems, season, scenarioName = null, scenarios = []) {
   // Define essential categories based on the item being analyzed
   const ESSENTIAL_CATEGORIES = {
     'dress': ['footwear'], // Dress just needs shoes
@@ -58,30 +59,56 @@ function checkEssentialCategories(itemData, allCompatibleItems, season, scenario
     console.log(`⚠️  [checkEssentials] Unknown item category: ${itemCategory} - treating as no requirements`);
   }
   
-  console.log(`🔍 [checkEssentials] Item category: ${itemCategory}, Required: [${requiredCategories.join(', ')}], Season: ${season}`);
+  console.log(`🔍 [checkEssentials] Item category: ${itemCategory}, Required: [${requiredCategories.join(', ')}], Season: ${season}, Scenario: ${scenarioName}`);
   console.log(`🔍 [checkEssentials] All compatible items: ${allCompatibleItems.length} items`);
   
-  // Get items that match this season
-  const seasonItems = allCompatibleItems.filter(item => {
+  // Convert scenario name to UUID for filtering (if scenarios mapping is provided)
+  let scenarioId = null;
+  if (scenarioName && scenarios && scenarios.length > 0) {
+    const scenario = scenarios.find(s => s.name === scenarioName);
+    if (scenario) {
+      scenarioId = scenario.id;
+      console.log(`🔍 [checkEssentials] Scenario "${scenarioName}" → UUID: ${scenarioId}`);
+    } else {
+      console.log(`⚠️  [checkEssentials] Scenario "${scenarioName}" not found in scenarios mapping`);
+    }
+  }
+  
+  // Get items that match both season and scenario
+  const seasonScenarioItems = allCompatibleItems.filter(item => {
+    // First check season match
     const itemSeasons = item.seasons || item.season || [];
-    let matches = false;
+    let seasonMatches = false;
     
     if (typeof itemSeasons === 'string') {
-      matches = itemSeasons.includes(season) || season.includes(itemSeasons);
+      seasonMatches = itemSeasons.includes(season) || season.includes(itemSeasons);
     } else if (Array.isArray(itemSeasons)) {
-      matches = itemSeasons.some(itemSeason => 
+      seasonMatches = itemSeasons.some(itemSeason => 
         itemSeason.includes(season) || season.includes(itemSeason)
       );
     }
     
-    if (matches) {
-      console.log(`    ✅ ${item.name} (${item.category}) - seasons: ${JSON.stringify(itemSeasons)}`);
+    // If season doesn't match, skip this item
+    if (!seasonMatches) {
+      return false;
     }
     
-    return matches;
+    // Then check scenario match (if we have a scenario to filter by)
+    let scenarioMatches = true; // Default to true if no scenario filtering needed
+    if (scenarioId && item.scenarios && Array.isArray(item.scenarios)) {
+      scenarioMatches = item.scenarios.includes(scenarioId);
+      
+      if (!scenarioMatches) {
+        console.log(`    ❌ ${item.name} (${item.category}) - seasons match but scenario doesn't: item scenarios: ${JSON.stringify(item.scenarios)}, needed: ${scenarioId}`);
+        return false;
+      }
+    }
+    
+    console.log(`    ✅ ${item.name} (${item.category}) - seasons: ${JSON.stringify(itemSeasons)}, scenarios: ${JSON.stringify(item.scenarios)}`);
+    return true;
   });
   
-  console.log(`🔍 [checkEssentials] Items matching season '${season}': ${seasonItems.length} items`);
+  console.log(`🔍 [checkEssentials] Items matching season '${season}' and scenario '${scenarioName}': ${seasonScenarioItems.length} items`);
   
   // Helper function to normalize category names for comparison
   const normalizeCategory = (category) => {
@@ -107,7 +134,7 @@ function checkEssentialCategories(itemData, allCompatibleItems, season, scenario
   requiredCategories.forEach(requiredCategory => {
     const normalizedRequired = normalizeCategory(requiredCategory);
     
-    const itemsInCategory = seasonItems.filter(item => 
+    const itemsInCategory = seasonScenarioItems.filter(item => 
       normalizeCategory(item.category) === normalizedRequired
     );
     
@@ -121,7 +148,7 @@ function checkEssentialCategories(itemData, allCompatibleItems, season, scenario
   });
   
   // Also track available non-essential categories for display (normalized)
-  const allAvailableCategories = [...new Set(seasonItems.map(item => normalizeCategory(item.category)).filter(Boolean))];
+  const allAvailableCategories = [...new Set(seasonScenarioItems.map(item => normalizeCategory(item.category)).filter(Boolean))];
   
   console.log(`🔍 [checkEssentials] Result: hasAllEssentials=${missingCategories.length === 0}, missing=[${missingCategories.join(', ')}]`);
   

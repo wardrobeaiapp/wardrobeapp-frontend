@@ -273,7 +273,8 @@ router.post('/', async (req, res) => {
       extractedCharacteristics, 
       stylingContext, 
       anthropic,
-      suitableScenarios
+      suitableScenarios,
+      scenarios
     );
     
     const { 
@@ -301,7 +302,8 @@ router.post('/', async (req, res) => {
       consolidatedCompatibleItems,
       scenarioCoverage,
       userGoals,
-      duplicateResult
+      duplicateResult,
+      scenarios
     });
     
     // Extract results from orchestrator

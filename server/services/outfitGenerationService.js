@@ -35,7 +35,7 @@ const {
 /**
  * Generate outfit combinations using compatible items for complete scenarios
  */
-function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations) {
+function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations, scenarios = []) {
   console.log('\n\n=== 👗 OUTFIT COMBINATIONS GENERATOR ===\n');
   
   // Only process combinations that have all essentials
@@ -80,28 +80,53 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
   completeScenarios.forEach((combo, index) => {
     console.log(`🎯 ${index + 1}) ${combo.combination.toUpperCase()}`);
     
-    // Filter items that match this season
-    const seasonItems = allCompatibleItems.filter(item => {
-      const itemSeasons = item.seasons || item.season || [];
-      if (typeof itemSeasons === 'string') {
-        return itemSeasons.includes(combo.season) || combo.season.includes(itemSeasons);
+    // Convert scenario name to UUID for filtering (if scenarios mapping is provided)
+    let scenarioId = null;
+    if (combo.scenario && scenarios && scenarios.length > 0) {
+      const scenario = scenarios.find(s => s.name === combo.scenario);
+      if (scenario) {
+        scenarioId = scenario.id;
+        console.log(`   🔍 Scenario "${combo.scenario}" → UUID: ${scenarioId}`);
       }
-      if (Array.isArray(itemSeasons)) {
-        return itemSeasons.some(itemSeason => 
+    }
+    
+    // Filter items that match both season AND scenario
+    const seasonScenarioItems = allCompatibleItems.filter(item => {
+      // First check season match
+      const itemSeasons = item.seasons || item.season || [];
+      let seasonMatches = false;
+      
+      if (typeof itemSeasons === 'string') {
+        seasonMatches = itemSeasons.includes(combo.season) || combo.season.includes(itemSeasons);
+      } else if (Array.isArray(itemSeasons)) {
+        seasonMatches = itemSeasons.some(itemSeason => 
           itemSeason.includes(combo.season) || combo.season.includes(itemSeason)
         );
       }
-      return false;
+      
+      // If season doesn't match, skip this item
+      if (!seasonMatches) return false;
+      
+      // Then check scenario match (if we have a scenario to filter by)
+      if (scenarioId && item.scenarios && Array.isArray(item.scenarios)) {
+        const scenarioMatches = item.scenarios.includes(scenarioId);
+        if (!scenarioMatches) {
+          console.log(`   ❌ ${item.name} - seasons match but scenario doesn't`);
+          return false;
+        }
+      }
+      
+      return true;
     });
     
-    if (seasonItems.length === 0) {
-      console.log('   ❌ No items available for this season');
+    if (seasonScenarioItems.length === 0) {
+      console.log('   ❌ No items available for this season+scenario combination');
       return;
     }
     
     // Group items by category for outfit building
     const itemsByCategory = {};
-    seasonItems.forEach(item => {
+    seasonScenarioItems.forEach(item => {
       const category = item.category?.toLowerCase() || item.sourceCategory;
       if (!itemsByCategory[category]) {
         itemsByCategory[category] = [];
