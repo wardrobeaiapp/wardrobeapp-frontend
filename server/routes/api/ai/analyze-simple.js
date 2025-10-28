@@ -122,6 +122,8 @@ router.post('/', async (req, res) => {
     }
     
     const base64Data = imageValidation.base64Data;
+    const mediaType = imageValidation.mediaType || 'image/jpeg'; // Use detected media type with fallback
+    console.log('🖼️ Using media type for Claude API:', mediaType);
 
     // === DUPLICATE DETECTION ===
     console.log('🚨 === DUPLICATE DETECTION START === 🚨');
@@ -205,7 +207,7 @@ router.post('/', async (req, res) => {
               type: "image",
               source: {
                 type: "base64",
-                media_type: "image/jpeg",
+                media_type: mediaType,
                 data: base64Data
               }
             },

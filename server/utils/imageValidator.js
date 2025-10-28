@@ -22,12 +22,15 @@ class ImageValidator {
 
     // Extract base64 data without prefix if present and ensure it's properly formatted
     let base64Data = imageBase64;
+    let mediaType = 'image/jpeg'; // Default fallback
     
     // Handle data URI format (e.g., data:image/jpeg;base64,/9j/4AAQ...)
     if (base64Data.startsWith('data:')) {
       const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
       if (matches && matches.length === 3) {
+        mediaType = matches[1]; // Extract the actual media type
         base64Data = matches[2];
+        console.log('✅ Detected media type from data URI:', mediaType);
       } else {
         return {
           isValid: false,
@@ -42,6 +45,10 @@ class ImageValidator {
           }
         };
       }
+    } else {
+      // If no data URI prefix, try to detect media type from base64 header
+      mediaType = this.detectMediaTypeFromBase64(base64Data);
+      console.log('✅ Detected media type from base64 header:', mediaType);
     }
 
     // Simple validation of base64 data - ensuring it's non-empty and reasonable size
@@ -91,7 +98,8 @@ class ImageValidator {
 
     return {
       isValid: true,
-      base64Data: base64Data
+      base64Data: base64Data,
+      mediaType: mediaType
     };
   }
 
@@ -239,6 +247,51 @@ class ImageValidator {
     
     const matches = dataUri.match(/^data:([A-Za-z-+\/]+);base64,/);
     return matches ? matches[1] : null;
+  }
+
+  /**
+   * Detect media type from base64 data by examining magic bytes
+   * @param {string} base64Data - Base64 encoded image data
+   * @returns {string} Detected media type or default 'image/jpeg'
+   */
+  detectMediaTypeFromBase64(base64Data) {
+    try {
+      // Decode first few bytes to check magic bytes/headers
+      const buffer = Buffer.from(base64Data.substring(0, 20), 'base64');
+      
+      // Check for common image format magic bytes
+      if (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) {
+        return 'image/jpeg';
+      }
+      
+      if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) {
+        return 'image/png';
+      }
+      
+      if (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) {
+        return 'image/gif';
+      }
+      
+      if (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46) {
+        // Could be WebP, check further
+        const webpCheck = Buffer.from(base64Data.substring(0, 32), 'base64');
+        if (webpCheck[8] === 0x57 && webpCheck[9] === 0x45 && webpCheck[10] === 0x42 && webpCheck[11] === 0x50) {
+          return 'image/webp';
+        }
+      }
+      
+      if (buffer[0] === 0x42 && buffer[1] === 0x4D) {
+        return 'image/bmp';
+      }
+      
+      // Default fallback
+      console.log('⚠️ Could not detect image type from magic bytes, defaulting to image/jpeg');
+      return 'image/jpeg';
+      
+    } catch (error) {
+      console.log('⚠️ Error detecting media type from base64:', error.message, 'defaulting to image/jpeg');
+      return 'image/jpeg';
+    }
   }
 }
 
