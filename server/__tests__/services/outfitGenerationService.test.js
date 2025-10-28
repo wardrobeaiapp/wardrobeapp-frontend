@@ -168,7 +168,7 @@ describe('outfitGenerationService', () => {
         expect(result[0].outfits[0].items.some(item => item.name === 'Winter Boots')).toBe(false);
       });
 
-      it('should handle no items available for season', () => {
+      it('should handle no items available for season+scenario combination', () => {
         const winterOnlyItems = {
           footwear: [
             { name: 'Winter Boots', category: 'footwear', seasons: ['winter'] }
@@ -188,7 +188,7 @@ describe('outfitGenerationService', () => {
 
         generateOutfitCombinations(mockItemData, winterOnlyItems, seasonScenarioCombinations);
 
-        expect(consoleSpy).toHaveBeenCalledWith('   ❌ No items available for this season');
+        expect(consoleSpy).toHaveBeenCalledWith('   ❌ No items available for this season+scenario combination');
       });
     });
 
