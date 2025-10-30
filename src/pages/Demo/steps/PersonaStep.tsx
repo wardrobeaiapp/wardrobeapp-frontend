@@ -29,7 +29,7 @@ const PERSONAS: Persona[] = [
     description: 'Wears business casual outfits for office work and client meetings. Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year. Building a capsule wardrobe and trying to shop more intentionally.'
   },
   {
-    userId: '8a2f9c4e-1b5d-4e7a-9f3c-2d8e5a7b9c1f', 
+    userId: '4d3ab63a-ae73-4dcd-8309-231bdd734272', 
     name: 'Max',
     title: 'Freelance Graphic Designer',
     description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together when working from home without overthinking it.'

@@ -6,7 +6,7 @@ import { getBatchItemScenarios } from '../../../services/wardrobe/items/itemRela
 // Demo user IDs that have public read access (defined in RLS policies)
 const DEMO_USER_IDS = [
   'bdc94953-9f24-477d-9fea-30a8f7192f53', // Emma - Marketing Manager
-  '8a2f9c4e-1b5d-4e7a-9f3c-2d8e5a7b9c1f', // Max - Freelance Graphic Designer  
+  '4d3ab63a-ae73-4dcd-8309-231bdd734272', // Max - Freelance Graphic Designer  
   'c5f8d2a9-3e6b-4d7c-8a1f-9e2d5c7b4a6e', // Lisa - Stay-At-Home Mom
   '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b'  // Zoe - College Student
 ];
@@ -17,7 +17,7 @@ const DEMO_PERSONAS = {
     title: 'Marketing Manager',
     description: 'Business casual wardrobe for office work and client meetings'
   },
-  '8a2f9c4e-1b5d-4e7a-9f3c-2d8e5a7b9c1f': {
+  '4d3ab63a-ae73-4dcd-8309-231bdd734272': {
     name: 'Max', 
     title: 'Freelance Graphic Designer',
     description: 'Comfortable home wear that\'s presentable for video calls'
