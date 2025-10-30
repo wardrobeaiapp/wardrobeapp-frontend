@@ -115,8 +115,17 @@ function ScenarioSettingsSection(): React.ReactElement | null {
 
   // Handle updating a scenario from the edit modal
   const handleUpdateScenario = (updatedScenario: ComponentScenario) => {
+    console.log('Updating scenario locally:', updatedScenario.id, 'with name:', updatedScenario.name);
+    
+    // Ensure the updated scenario preserves critical properties
+    const safeUpdatedScenario = {
+      ...updatedScenario,
+      // Ensure isNew flag is not accidentally set for existing scenarios
+      isNew: updatedScenario.isNew || false
+    };
+    
     setScenarios(scenarios.map(s => 
-      s.id === updatedScenario.id ? updatedScenario : s
+      s.id === safeUpdatedScenario.id ? safeUpdatedScenario : s
     ));
     setShowEditModal(false);
     setEditingScenario(null);
@@ -239,6 +248,8 @@ function ScenarioSettingsSection(): React.ReactElement | null {
         throw new Error('User not authenticated');
       }
       
+      console.log('Save scenarios: authenticated user ID:', authData.user.id);
+      
       // First, process deletions from the deletedScenarios state
       for (const scenario of deletedScenarios) {
         console.log('Deleting scenario from database:', scenario.id);
@@ -279,14 +290,28 @@ function ScenarioSettingsSection(): React.ReactElement | null {
           };
         } else {
           // This is an existing scenario that needs to be updated
-          console.log('Updating existing scenario in database:', scenario.id);
+          console.log('Updating existing scenario in database:', scenario.id, 'with name:', scenario.name);
           
-          // Update the scenario in the database
-          await updateScenario(scenario.id, {
-            name: scenario.name,
-            description: scenario.description,
-            frequency: frequencyString
-          });
+          // Validate scenario ID before attempting update
+          if (!scenario.id || scenario.id.startsWith('temp-')) {
+            throw new Error(`Invalid scenario ID for "${scenario.name}": ${scenario.id}`);
+          }
+          
+          try {
+            // Update the scenario in the database
+            await updateScenario(scenario.id, {
+              name: scenario.name,
+              description: scenario.description,
+              frequency: frequencyString
+            });
+            console.log('Successfully updated scenario:', scenario.id);
+          } catch (updateError) {
+            console.error('Failed to update scenario:', scenario.id, updateError);
+            const errorMessage = updateError && typeof updateError === 'object' && 'message' in updateError 
+              ? updateError.message 
+              : updateError;
+            throw new Error(`Failed to update scenario "${scenario.name}": ${errorMessage}`);
+          }
         }
       }
       
@@ -296,7 +321,22 @@ function ScenarioSettingsSection(): React.ReactElement | null {
       showSuccessMessage();
     } catch (err) {
       console.error('Error saving scenarios:', err);
-      setError('Failed to save scenarios. Please try again.');
+      
+      // Better error message handling
+      let errorMessage = 'Failed to save scenarios. Please try again.';
+      if (err && typeof err === 'object') {
+        if ('message' in err && err.message) {
+          errorMessage = `Failed to save scenarios: ${err.message}`;
+        } else if ('details' in err && err.details) {
+          errorMessage = `Failed to save scenarios: ${err.details}`;
+        } else if ('error' in err && err.error) {
+          errorMessage = `Failed to save scenarios: ${err.error}`;
+        }
+      } else if (typeof err === 'string') {
+        errorMessage = `Failed to save scenarios: ${err}`;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

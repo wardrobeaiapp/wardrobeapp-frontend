@@ -64,7 +64,7 @@ export const getScenarioIcon = (scenarioType: string | undefined): ScenarioIconC
         color: '#ef4444',
         bgColor: '#fee2e2'
       };
-    } else if (type.includes('casual') || type.includes('weekend') || type.includes('leisure') || type.includes('staying')) {
+    } else if (type.includes('casual') || type.includes('weekend') || type.includes('leisure') || type.includes('staying') || type.includes('home') || type.includes('housekeeping')) {
       return {
         Icon: FaHome,
         color: '#10b981',
