@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { supabase } from '../../../../../services/core';
 import { FormField, FormSelect } from '../../../../common/Form';
 import { useSupabaseAuth } from '../../../../../context/SupabaseAuthContext';
+import { getDemoScenarios, isDemoUser } from '../../../../../services/scenarios/demoScenarioService';
+import { WardrobeItem } from '../../../../../types';
 
 const StyledSelect = styled(FormSelect)`
   min-width: 160px;
@@ -13,13 +15,15 @@ interface ScenarioFilterProps {
   onChange: (value: string) => void;
   includeAllOption?: boolean;
   allowUnauthenticated?: boolean; // For demo mode - allows fetching scenarios without authentication
+  items?: WardrobeItem[]; // Optional: items being filtered (to auto-detect demo user)
 }
 
 const ScenarioFilter: React.FC<ScenarioFilterProps> = ({ 
   value, 
   onChange, 
   includeAllOption = false,
-  allowUnauthenticated = false 
+  allowUnauthenticated = false,
+  items
 }) => {
   const [scenarios, setScenarios] = useState<Array<{ id: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,40 +34,48 @@ const ScenarioFilter: React.FC<ScenarioFilterProps> = ({
       try {
         setIsLoading(true);
         
-        // 🔒 SECURITY CHECK: Authentication required unless in demo mode
+        // 🎭 DEMO MODE: Auto-detect demo user from items and use dedicated demo service
+        if (allowUnauthenticated && items && items.length > 0) {
+          const detectedUserId = items[0]?.userId;
+          if (detectedUserId && isDemoUser(detectedUserId)) {
+            console.log(`[ScenarioFilter] Demo mode: Auto-detected demo user ${detectedUserId}, using demo service`);
+            const demoScenarios = await getDemoScenarios(detectedUserId);
+            setScenarios(demoScenarios);
+            return;
+          }
+        }
+        
+        // 🔒 SECURITY CHECK: Authentication required for regular users
         if (!allowUnauthenticated && (!isAuthenticated || !user?.id)) {
           console.warn('[ScenarioFilter] No authenticated user - cannot fetch scenarios');
           setScenarios([]);
           return;
         }
         
-        let query = supabase
-          .from('scenarios')
-          .select('id, name');
-        
-        // 🔒 SECURITY FIX: Filter by user_id to prevent data leakage (except in demo mode)
+        // 🔒 REGULAR MODE: Use authenticated user's scenarios
         if (!allowUnauthenticated && user?.id) {
-          query = query.eq('user_id', user.id);
           console.log(`[ScenarioFilter] Fetching scenarios for authenticated user ${user.id}`);
-        } else if (allowUnauthenticated) {
-          console.log('[ScenarioFilter] Demo mode: Fetching all scenarios (public access via RLS)');
-        }
-        
-        const { data, error } = await query.order('name', { ascending: true });
+          const { data, error } = await supabase
+            .from('scenarios')
+            .select('id, name')
+            .eq('user_id', user.id)
+            .order('name', { ascending: true });
+            
+          if (error) {
+            console.error('[ScenarioFilter] Error fetching scenarios:', error);
+            setScenarios([]);
+            return;
+          }
           
-        if (error) {
-          console.error('[ScenarioFilter] Error fetching scenarios:', error);
-          setScenarios([]);
+          console.log(`[ScenarioFilter] Successfully fetched ${data?.length || 0} scenarios for user ${user.id}`);
+          setScenarios((data || []) as Array<{ id: string; name: string }>);
           return;
         }
         
-        if (data) {
-          const logContext = allowUnauthenticated 
-            ? 'demo mode' 
-            : `user ${user?.id || 'unknown'}`;
-          console.log(`[ScenarioFilter] Successfully fetched ${data.length} scenarios for ${logContext}`);
-          setScenarios(data as Array<{ id: string; name: string }>);
-        }
+        // ⚠️ Fallback: This shouldn't happen but just in case
+        console.warn('[ScenarioFilter] Unexpected state - no valid user context');
+        setScenarios([]);
+        
       } catch (error) {
         console.error('[ScenarioFilter] Unexpected error:', error);
         setScenarios([]);
@@ -73,7 +85,7 @@ const ScenarioFilter: React.FC<ScenarioFilterProps> = ({
     };
     
     fetchScenarios();
-  }, [isAuthenticated, user?.id, allowUnauthenticated]); // Re-fetch when auth state or demo mode changes
+  }, [isAuthenticated, user?.id, allowUnauthenticated, items]); // Re-fetch when auth state, demo mode, or items change
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.value);

@@ -1,0 +1,64 @@
+import { supabase } from '../core';
+
+// Demo user IDs that have public read access (same as demoWardrobeService)
+const DEMO_USER_IDS = [
+  'bdc94953-9f24-477d-9fea-30a8f7192f53', // Emma - Marketing Manager
+  '4d3ab63a-ae73-4dcd-8309-231bdd734272', // Max - Freelance Graphic Designer  
+  'c5f8d2a9-3e6b-4d7c-8a1f-9e2d5c7b4a6e', // Lisa - Stay-At-Home Mom
+  '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b'  // Zoe - College Student
+];
+
+/**
+ * Check if a user ID is a demo account with public access
+ */
+export const isDemoUser = (userId: string): boolean => {
+  return DEMO_USER_IDS.includes(userId);
+};
+
+/**
+ * Fetch scenarios for a demo user (public access, no authentication required)
+ * Uses the same pattern as getDemoWardrobeItems
+ */
+export const getDemoScenarios = async (userId: string): Promise<Array<{ id: string; name: string }>> => {
+  try {
+    // Verify this is a demo user
+    if (!isDemoUser(userId)) {
+      console.warn(`⚠️ User ${userId} is not a demo account with public access`);
+      return [];
+    }
+
+    console.log(`🎭 Demo: Fetching scenarios for demo user ${userId}`);
+
+    // Fetch scenarios - RLS policy allows public read for demo users
+    const { data, error } = await supabase
+      .from('scenarios')
+      .select('id, name')
+      .eq('user_id', userId)
+      .order('name', { ascending: true });
+
+    if (error) {
+      console.error('❌ Error fetching demo scenarios:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      return [];
+    }
+
+    console.log(`✅ Demo: Loaded ${data?.length || 0} scenarios for demo user ${userId}`);
+    return (data || []) as Array<{ id: string; name: string }>;
+
+  } catch (error) {
+    console.error('❌ Error in getDemoScenarios:', error);
+    return [];
+  }
+};
+
+/**
+ * Get all demo user IDs (for admin/testing purposes)
+ */
+export const getAllDemoUserIds = (): string[] => {
+  return [...DEMO_USER_IDS];
+};

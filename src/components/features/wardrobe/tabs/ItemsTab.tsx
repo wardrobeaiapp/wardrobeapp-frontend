@@ -148,6 +148,7 @@ const ItemsTab = React.memo<ItemsTabProps>(({
               onChange={setScenarioFilter}
               includeAllOption={true}
               allowUnauthenticated={allowUnauthenticated}
+              items={items}
             />
           )}
       </FiltersContainer>

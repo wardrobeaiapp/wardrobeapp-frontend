@@ -135,6 +135,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
           onChange={handleScenarioChange}
           includeAllOption={true}
           allowUnauthenticated={allowUnauthenticated}
+          items={items}
         />
         {!hideStatusFilter && (
           <SelectFilter<WishlistStatus>
