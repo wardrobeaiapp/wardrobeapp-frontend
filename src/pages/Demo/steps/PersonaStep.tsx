@@ -35,7 +35,7 @@ const PERSONAS: Persona[] = [
     description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together when working from home without overthinking it.'
   },
   {
-    userId: 'c5f8d2a9-3e6b-4d7c-8a1f-9e2d5c7b4a6e',
+    userId: '9206c9a8-920a-4304-a99a-1129e308609e',
     name: 'Lisa', 
     title: 'Stay-At-Home Mom',
     description: 'Prefers practical clothes that work for both school runs and playground time. Spends time at home with kids, runs errands, occasionally meets friends for coffee. Wants to save money and make getting dressed faster with two kids.'
