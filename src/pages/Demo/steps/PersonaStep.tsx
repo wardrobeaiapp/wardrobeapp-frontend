@@ -41,7 +41,7 @@ const PERSONAS: Persona[] = [
     description: 'Prefers practical clothes that work for both school runs and playground time. Spends time at home with kids, runs errands, occasionally meets friends for coffee. Wants to save money and make getting dressed faster with two kids.'
   },
   {
-    userId: '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b',
+    userId: 'fba15166-e5e0-48ab-98f6-fee5a08e7945',
     name: 'Zoe',
     title: 'College Student', 
     description: 'Rocks casual everyday looks for classes, part-time café job, and hanging out with friends. Goes to parties, concerts, and social events regularly, loves thrifting on weekends. Looking to define her personal style on a student budget.'

@@ -8,7 +8,7 @@ const DEMO_USER_IDS = [
   'bdc94953-9f24-477d-9fea-30a8f7192f53', // Emma - Marketing Manager
   '4d3ab63a-ae73-4dcd-8309-231bdd734272', // Max - Freelance Graphic Designer  
   '9206c9a8-920a-4304-a99a-1129e308609e', // Lisa - Stay-At-Home Mom
-  '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b'  // Zoe - College Student
+  'fba15166-e5e0-48ab-98f6-fee5a08e7945'  // Zoe - College Student
 ];
 
 const DEMO_PERSONAS = {
@@ -27,7 +27,7 @@ const DEMO_PERSONAS = {
     title: 'Stay-At-Home Mom', 
     description: 'Practical clothes for school runs and playground activities'
   },
-  '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b': {
+  'fba15166-e5e0-48ab-98f6-fee5a08e7945': {
     name: 'Zoe',
     title: 'College Student',
     description: 'Casual looks for classes, work, and social events'
