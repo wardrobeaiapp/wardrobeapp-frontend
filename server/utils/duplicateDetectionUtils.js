@@ -8,7 +8,7 @@ const { calculateSimilarityScore } = require('./duplicateDetection/scoringEngine
 const { colorsMatch, silhouettesMatch } = require('./duplicateDetection/attributeMatchers');
 
 /**
- * Find critical duplicates (85%+ similarity)
+ * Find critical duplicates (75%+ similarity)
  */
 function findCriticalDuplicates(newItem, existingItems) {
   console.log('🔍 DEBUG - Finding duplicates for:', JSON.stringify(newItem, null, 2));
@@ -45,7 +45,7 @@ function findCriticalDuplicates(newItem, existingItems) {
         material: item.material
       },
       similarityScore: score,
-      passesThreshold: score >= 85
+      passesThreshold: score >= 75
     });
     
     return {
@@ -55,8 +55,8 @@ function findCriticalDuplicates(newItem, existingItems) {
     };
   });
   
-  const duplicates = withScores.filter(match => match.similarity_score >= 85);
-  console.log('🔍 DEBUG - Duplicates found (85%+ threshold):', duplicates.length);
+  const duplicates = withScores.filter(match => match.similarity_score >= 75);
+  console.log('🔍 DEBUG - Duplicates found (75%+ threshold):', duplicates.length);
   
   return duplicates.sort((a, b) => b.similarity_score - a.similarity_score);
 }

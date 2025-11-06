@@ -47,7 +47,7 @@ describe('duplicateDetectionUtils', () => {
       const duplicates = findCriticalDuplicates(newItem, mockWardrobeItems);
       
       expect(duplicates).toHaveLength(2); // Both black t-shirts
-      expect(duplicates[0].similarity_score).toBeGreaterThanOrEqual(85);
+      expect(duplicates[0].similarity_score).toBeGreaterThanOrEqual(75);
       expect(duplicates[0].item.name).toMatch(/Black T-Shirt/);
     });
 
