@@ -19,8 +19,8 @@ export interface LifestyleAnalysis {
  */
 export const SEASONAL_OUTERWEAR_TARGETS = {
   'summer': { min: 1, ideal: 2, max: 3 },           // Light cardigan, light jacket
-  'winter': { min: 2, ideal: 3, max: 4 },           // Heavy coat, warm jacket, maybe backup
-  'spring/fall': { min: 3, ideal: 4, max: 5 },      // Need variety: light jacket, medium coat, rain jacket, blazer
+  'winter': { min: 1, ideal: 2, max: 3 },           // One good winter coat is sufficient minimum, 2 ideal, 3 max
+  'spring/fall': { min: 2, ideal: 4, max: 5 },      // Need variety: light jacket, medium coat, rain jacket, blazer
   'default': { min: 2, ideal: 3, max: 4 }           // Fallback - more realistic
 };
 

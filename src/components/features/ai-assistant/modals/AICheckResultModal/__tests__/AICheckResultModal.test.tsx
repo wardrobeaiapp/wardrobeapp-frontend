@@ -443,8 +443,8 @@ describe('AICheckResultModal Card Rendering', () => {
       expect(screen.getByText('shoes:')).toBeInTheDocument(); // Updated: footwear -> shoes
       expect(screen.getByText('accessories:')).toBeInTheDocument();
       
-      // Should transform one_piece to dresses 
-      expect(screen.getByText('dresses:')).toBeInTheDocument(); // Updated: Dresses -> dresses
+      // Should transform one_piece to generic term 
+      expect(screen.getByText('one-piece items:')).toBeInTheDocument(); // Updated: Use generic term instead of assuming dresses
     });
 
     it('should not customRender Works well with section when no compatible items', () => {
