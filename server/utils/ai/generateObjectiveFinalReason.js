@@ -26,12 +26,33 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
     itemType = relevantCoverage[0].subcategory.toLowerCase();
   }
   
-  // Make it plural for better readability (e.g., "tops" instead of "top")
-  // Handle special cases: mass nouns and words that are already plural
-  const massNouns = ['outerwear', 'footwear', 'sleepwear', 'activewear', 'underwear'];
-  if (!itemType.endsWith('s') && !massNouns.includes(itemType)) {
-    itemType += 's';
+  // Convert technical category names to user-friendly terms
+  // Note: one_piece items could be dresses, jumpsuits, rompers, etc. 
+  // Use generic language to avoid assuming specific item type
+  const categoryMapping = {
+    'one_piece': null, // Use generic language instead of assuming "dress"
+    'one_pieces': null, // Use generic language instead of assuming "dresses"
+    'top': 'tops',
+    'bottom': 'bottoms',
+    'footwear': 'shoes',
+    'outerwear': 'outerwear',
+    'accessory': 'accessories'
+  };
+  
+  // Use user-friendly category name if available, or null for generic language
+  if (categoryMapping.hasOwnProperty(itemType)) {
+    itemType = categoryMapping[itemType]; // Could be null for generic language
+  } else {
+    // Fallback: Make it plural for better readability (e.g., "tops" instead of "top")
+    // Handle special cases: mass nouns and words that are already plural
+    const massNouns = ['outerwear', 'footwear', 'sleepwear', 'activewear', 'underwear'];
+    if (!itemType.endsWith('s') && !massNouns.includes(itemType)) {
+      itemType += 's';
+    }
   }
+  
+  // Flag for using generic language when we can't specify the category
+  const useGenericLanguage = itemType === null;
   
   let reason = "";
   
@@ -43,66 +64,115 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
   // Build reason based on gap type - human-readable and friendly
   switch (gapType) {
     case 'critical':
-      reason = `You're missing essential ${itemType} pieces`;
-      if (relevantCoverage.length > 0) {
-        // Find the coverage item with the biggest gap (highest gap count, lowest coverage percentage)
-        const prioritizedCoverage = relevantCoverage.sort((a, b) => {
-          if (a.gapCount !== b.gapCount) {
-            return b.gapCount - a.gapCount; // Higher gap count = higher priority
+      if (useGenericLanguage || category.toLowerCase() === 'one_piece') {
+        // Special case: one_piece items - focus on scenario coverage since separates might already cover it
+        if (relevantCoverage.length > 0) {
+          const prioritizedCoverage = relevantCoverage.sort((a, b) => {
+            if (a.gapCount !== b.gapCount) {
+              return b.gapCount - a.gapCount;
+            }
+            return a.coveragePercent - b.coveragePercent;
+          })[0];
+          
+          reason = `This could add versatility for ${prioritizedCoverage.scenarioName}`;
+          
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` in ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            reason += ` in ${prioritizedCoverage.season}`;
           }
-          return a.coveragePercent - b.coveragePercent; // Lower coverage = higher priority
-        })[0];
-        
-        // Check if there are multiple seasons with critical gaps
-        const seasonsWithGaps = relevantCoverage
-          .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
-          .map(item => item.season);
-        
-        if (seasonsWithGaps.length > 1) {
-          // Multiple seasons - show all of them
-          const uniqueSeasons = [...new Set(seasonsWithGaps)];
-          reason += ` for ${uniqueSeasons.join(' and ')}`;
-        } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
-          // Single season
-          reason += ` for ${prioritizedCoverage.season}`;
+        } else {
+          reason = `This could add versatility to your wardrobe`;
         }
-        
-        if (prioritizedCoverage.scenarioName !== 'All scenarios') reason += ` for ${prioritizedCoverage.scenarioName}`;
+        reason += ", even if you already have separates that work.";
+      } else {
+        // Normal case: other categories
+        reason = `You're missing essential ${itemType} pieces`;
+        if (relevantCoverage.length > 0) {
+          const prioritizedCoverage = relevantCoverage.sort((a, b) => {
+            if (a.gapCount !== b.gapCount) {
+              return b.gapCount - a.gapCount;
+            }
+            return a.coveragePercent - b.coveragePercent;
+          })[0];
+          
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` for ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            reason += ` for ${prioritizedCoverage.season}`;
+          }
+          
+          if (prioritizedCoverage.scenarioName !== 'All scenarios') reason += ` for ${prioritizedCoverage.scenarioName}`;
+        }
+        reason += ". This could be a great addition to fill that gap!";
       }
-      reason += ". This could be a great addition to fill that gap!";
       break;
       
     case 'improvement':
-      reason = `Your ${itemType} collection could use some variety`;
-      if (relevantCoverage.length > 0) {
-        // Find the coverage item with the biggest gap (highest gap count, lowest coverage percentage)
-        const prioritizedCoverage = relevantCoverage.sort((a, b) => {
-          if (a.gapCount !== b.gapCount) {
-            return b.gapCount - a.gapCount; // Higher gap count = higher priority
+      if (useGenericLanguage || category.toLowerCase() === 'one_piece') {
+        // Special case: one_piece items - focus on adding styling options since separates might already provide variety
+        if (relevantCoverage.length > 0) {
+          const prioritizedCoverage = relevantCoverage.sort((a, b) => {
+            if (a.gapCount !== b.gapCount) {
+              return b.gapCount - a.gapCount;
+            }
+            return a.coveragePercent - b.coveragePercent;
+          })[0];
+          
+          reason = `This could add a different styling option for ${prioritizedCoverage.scenarioName}`;
+          
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` in ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            reason += ` in ${prioritizedCoverage.season}`;
           }
-          return a.coveragePercent - b.coveragePercent; // Lower coverage = higher priority
-        })[0];
-        
-        // Check if there are multiple seasons with improvement gaps
-        const seasonsWithGaps = relevantCoverage
-          .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
-          .map(item => item.season);
-        
-        if (seasonsWithGaps.length > 1) {
-          // Multiple seasons - show all of them
-          const uniqueSeasons = [...new Set(seasonsWithGaps)];
-          reason += ` for ${uniqueSeasons.join(' and ')}`;
-        } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
-          // Single season
-          reason += ` for ${prioritizedCoverage.season}`;
+        } else {
+          reason = `This could add a different styling option to your wardrobe`;
         }
-        
-        // Only mention scenarios if this coverage uses scenario-specific analysis
-        if (prioritizedCoverage.scenarioName !== 'All scenarios' && suitableScenarios && suitableScenarios.length > 0) {
-          reason += `, especially for ${suitableScenarios.join(' and ')}`;
+        reason += ", complementing your existing separates.";
+      } else {
+        // Normal case: other categories
+        reason = `Your ${itemType} collection could use some variety`;
+        if (relevantCoverage.length > 0) {
+          const prioritizedCoverage = relevantCoverage.sort((a, b) => {
+            if (a.gapCount !== b.gapCount) {
+              return b.gapCount - a.gapCount;
+            }
+            return a.coveragePercent - b.coveragePercent;
+          })[0];
+          
+          const seasonsWithGaps = relevantCoverage
+            .filter(item => item.season && item.season !== 'all_seasons' && !isNonSeasonalAccessory)
+            .map(item => item.season);
+          
+          if (seasonsWithGaps.length > 1) {
+            const uniqueSeasons = [...new Set(seasonsWithGaps)];
+            reason += ` for ${uniqueSeasons.join(' and ')}`;
+          } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
+            reason += ` for ${prioritizedCoverage.season}`;
+          }
+          
+          if (prioritizedCoverage.scenarioName !== 'All scenarios' && suitableScenarios && suitableScenarios.length > 0) {
+            reason += `, especially for ${suitableScenarios.join(' and ')}`;
+          }
         }
+        reason += ". This would be a nice addition!";
       }
-      reason += ". This would be a nice addition!";
       break;
       
     case 'expansion':
@@ -119,7 +189,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
         console.log(`📊 EXPANSION GAP DETAIL: ${prioritizedCoverage.scenarioName} - ${itemType} - ${prioritizedCoverage.season || 'all seasons'} (${prioritizedCoverage.gapCount} gaps, ${prioritizedCoverage.coveragePercent}% coverage)`);
         
         // Special case: one_piece items can be replaced by separates for the same scenario
-        if (itemType === 'one_pieces' || itemType === 'one_piece') {
+        if (useGenericLanguage || category.toLowerCase() === 'one_piece') {
           reason = `You have good coverage for ${prioritizedCoverage.scenarioName}`;
           
           // Add season info for one_piece scenario-based messaging
@@ -135,7 +205,9 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
           }
         } else {
           // Normal case: category-specific coverage makes sense for other items
-          reason = `You have good coverage in ${itemType}`;
+          reason = useGenericLanguage ? 
+            `You have good coverage` : 
+            `You have good coverage in ${itemType}`;
           
           // Check if there are multiple seasons with similar gaps
           const seasonsWithGaps = relevantCoverage
@@ -155,7 +227,9 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
         }
       } else {
         // Fallback when no coverage data available
-        reason = `You have good coverage in ${itemType}`;
+        reason = useGenericLanguage ? 
+          `You have good coverage` : 
+          `You have good coverage in ${itemType}`;
       }
       reason += hasConstraintGoals 
         ? ". Maybe skip unless it's really special?" 
@@ -163,7 +237,9 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
       break;
       
     case 'satisfied':
-      reason = `You're well-stocked with ${itemType}`;
+      reason = useGenericLanguage ? 
+        `You're well-stocked` : 
+        `You're well-stocked with ${itemType}`;
       if (relevantCoverage.length > 0) {
         // Find the coverage item with the highest coverage/lowest gap count for satisfied items
         const prioritizedCoverage = relevantCoverage.sort((a, b) => {
@@ -195,7 +271,9 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
       break;
       
     case 'oversaturated':
-      reason = `You already have plenty of ${itemType}`;
+      reason = useGenericLanguage ? 
+        `You already have plenty in this category` : 
+        `You already have plenty of ${itemType}`;
       if (relevantCoverage.length > 0) {
         // Find the coverage item with the highest coverage/lowest gap count for oversaturated items
         const prioritizedCoverage = relevantCoverage.sort((a, b) => {

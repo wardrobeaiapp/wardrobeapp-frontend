@@ -22,8 +22,10 @@ interface CompatibleItemsSectionProps {
 }
 
 // User-friendly category name mapping
+// Note: one_piece items could be dresses, jumpsuits, rompers, etc.
+// Use generic term to avoid assuming specific item type
 const CATEGORY_NAME_MAP: { [key: string]: string } = {
-  'one_piece': 'dresses',
+  'one_piece': 'one-piece items',
   'footwear': 'shoes',
   'tops': 'tops',
   'bottoms': 'bottoms',
