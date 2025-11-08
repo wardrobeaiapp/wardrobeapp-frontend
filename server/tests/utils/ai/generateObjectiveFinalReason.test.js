@@ -491,8 +491,8 @@ describe('generateObjectiveFinalReason', () => {
         []
       );
       
-      // Should show all seasons when they have similar gap severity
-      expect(result).toContain('for summer and spring/fall and winter');
+      // Should show "all seasons" when all three main seasons are covered  
+      expect(result).toContain('for all seasons');
       expect(result).toContain('Office Work');
     });
 

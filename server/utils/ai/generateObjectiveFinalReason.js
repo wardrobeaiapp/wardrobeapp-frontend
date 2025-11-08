@@ -8,6 +8,24 @@
  * @param {Array} userGoals - User goals that affect the response
  * @returns {string} Objective reason based on gap analysis
  */
+/**
+ * Helper function to format seasons - returns "all seasons" if all main seasons are covered
+ */
+function formatSeasons(seasonsArray) {
+  const uniqueSeasons = [...new Set(seasonsArray)];
+  const allMainSeasons = ['summer', 'winter', 'spring/fall'];
+  
+  // Check if we have all main seasons
+  const hasAllSeasons = allMainSeasons.every(season => uniqueSeasons.includes(season));
+  
+  if (hasAllSeasons && uniqueSeasons.length === 3) {
+    return 'all seasons';
+  }
+  
+  // Otherwise join with "and" as before
+  return uniqueSeasons.join(' and ');
+}
+
 function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals) {
   if (!relevantCoverage || relevantCoverage.length === 0) {
     return "No coverage data available for analysis.";
@@ -81,8 +99,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` in ${uniqueSeasons.join(' and ')}`;
+            reason += ` in ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             reason += ` in ${prioritizedCoverage.season}`;
           }
@@ -106,8 +123,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` for ${uniqueSeasons.join(' and ')}`;
+            reason += ` for ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             reason += ` for ${prioritizedCoverage.season}`;
           }
@@ -136,8 +152,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` in ${uniqueSeasons.join(' and ')}`;
+            reason += ` in ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             reason += ` in ${prioritizedCoverage.season}`;
           }
@@ -161,8 +176,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` for ${uniqueSeasons.join(' and ')}`;
+            reason += ` for ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             reason += ` for ${prioritizedCoverage.season}`;
           }
@@ -198,8 +212,7 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` in ${uniqueSeasons.join(' and ')}`;
+            reason += ` in ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             reason += ` in ${prioritizedCoverage.season}`;
           }
@@ -215,9 +228,8 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             .map(item => item.season);
           
           if (seasonsWithGaps.length > 1) {
-            // Multiple seasons - show all of them
-            const uniqueSeasons = [...new Set(seasonsWithGaps)];
-            reason += ` for ${uniqueSeasons.join(' and ')}`;
+            // Multiple seasons - show all of them or "all seasons" if complete
+            reason += ` for ${formatSeasons(seasonsWithGaps)}`;
           } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
             // Single season
             reason += ` for ${prioritizedCoverage.season}`;
@@ -255,9 +267,8 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
           .map(item => item.season);
         
         if (seasonsWithGaps.length > 1) {
-          // Multiple seasons - show all of them
-          const uniqueSeasons = [...new Set(seasonsWithGaps)];
-          reason += ` for ${uniqueSeasons.join(' and ')}`;
+          // Multiple seasons - show all of them or "all seasons" if complete
+          reason += ` for ${formatSeasons(seasonsWithGaps)}`;
         } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
           // Single season
           reason += ` for ${prioritizedCoverage.season}`;
@@ -289,9 +300,8 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
           .map(item => item.season);
         
         if (seasonsWithGaps.length > 1) {
-          // Multiple seasons - show all of them
-          const uniqueSeasons = [...new Set(seasonsWithGaps)];
-          reason += ` for ${uniqueSeasons.join(' and ')}`;
+          // Multiple seasons - show all of them or "all seasons" if complete
+          reason += ` for ${formatSeasons(seasonsWithGaps)}`;
         } else if (prioritizedCoverage.season && prioritizedCoverage.season !== 'all_seasons' && !isNonSeasonalAccessory) {
           // Single season
           reason += ` for ${prioritizedCoverage.season}`;

@@ -120,8 +120,7 @@ describe('Reasoning Consistency Fix', () => {
   test('should pluralize category names correctly', () => {
     const testCases = [
       { category: 'top', expected: 'tops' },
-      { category: 'bottom', expected: 'bottoms' },
-      { category: 'one_piece', expected: 'one_pieces' }
+      { category: 'bottom', expected: 'bottoms' }
     ];
 
     testCases.forEach(({ category, expected }) => {
@@ -146,5 +145,32 @@ describe('Reasoning Consistency Fix', () => {
       
       expect(result).toContain(expected);
     });
+  });
+
+  test('should use generic language for one_piece items', () => {
+    const relevantCoverage = [{
+      scenarioName: 'Test Scenario',
+      category: 'one_piece',
+      currentItems: 1,
+      neededItemsIdeal: 3,
+      gapType: 'improvement'
+    }];
+    
+    const formData = { category: 'one_piece' };
+    
+    const result = generateObjectiveFinalReason(
+      relevantCoverage,
+      'improvement',
+      [],
+      false,
+      formData,
+      []
+    );
+    
+    // Should use generic language instead of mentioning category name
+    expect(result).toContain('styling option');
+    expect(result).toContain('complementing your existing separates');
+    expect(result).not.toContain('one_piece');
+    expect(result).not.toContain('one_pieces');
   });
 });

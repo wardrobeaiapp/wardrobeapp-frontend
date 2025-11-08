@@ -727,10 +727,10 @@ describe('lifestyleDetectionService - Indoor-Focused Detection', () => {
       test('should return correct indoor_focused winter targets', () => {
         const result = getOuterwearTargets('winter', 'indoor_focused');
         
-        // Expected: base winter targets (2/3/4) × 0.7 = 1.4/2.1/2.8 → floor to 1/2/2 with minimums
-        expect(result.min).toBe(1);  // max(1, floor(2 × 0.7)) = max(1, 1) = 1
-        expect(result.ideal).toBe(2); // max(1, floor(3 × 0.7)) = max(1, 2) = 2
-        expect(result.max).toBe(2);   // max(2, floor(4 × 0.7)) = max(2, 2) = 2
+        // Expected: base winter targets (1/2/3) × 0.7 = 0.7/1.4/2.1 → floor to 1/1/2 with minimums
+        expect(result.min).toBe(1);  // max(1, floor(1 × 0.7)) = max(1, 0) = 1
+        expect(result.ideal).toBe(1); // max(1, floor(2 × 0.7)) = max(1, 1) = 1
+        expect(result.max).toBe(2);   // max(2, floor(3 × 0.7)) = max(2, 2) = 2
         
         // Check it's a proper progression
         expect(result.min).toBeLessThanOrEqual(result.ideal);
@@ -741,9 +741,9 @@ describe('lifestyleDetectionService - Indoor-Focused Detection', () => {
         const result = getOuterwearTargets('winter', 'outdoor_focused');
         
         // Expected: full base winter targets (no reduction)
-        expect(result.min).toBe(2);
-        expect(result.ideal).toBe(3);
-        expect(result.max).toBe(4);
+        expect(result.min).toBe(1);
+        expect(result.ideal).toBe(2);
+        expect(result.max).toBe(3);
         
         // Check it's a proper progression
         expect(result.min).toBeLessThanOrEqual(result.ideal);
@@ -765,8 +765,8 @@ describe('lifestyleDetectionService - Indoor-Focused Detection', () => {
       test('should return correct indoor_focused spring/fall targets', () => {
         const result = getOuterwearTargets('spring/fall', 'indoor_focused');
         
-        // Expected: base spring/fall targets (3/4/5) × 0.7 = 2.1/2.8/3.5 → floor to 2/2/3 with minimums
-        expect(result.min).toBe(2);  // max(1, floor(3 × 0.7)) = max(1, 2) = 2
+        // Expected: base spring/fall targets (2/4/5) × 0.7 = 1.4/2.8/3.5 → floor to 1/2/3 with minimums
+        expect(result.min).toBe(1);  // max(1, floor(2 × 0.7)) = max(1, 1) = 1
         expect(result.ideal).toBe(2); // max(1, floor(4 × 0.7)) = max(1, 2) = 2
         expect(result.max).toBe(3);   // max(2, floor(5 × 0.7)) = max(2, 3) = 3
         
@@ -779,7 +779,7 @@ describe('lifestyleDetectionService - Indoor-Focused Detection', () => {
         const result = getOuterwearTargets('spring/fall', 'outdoor_focused');
         
         // Expected: full base spring/fall targets (no reduction)
-        expect(result.min).toBe(3);
+        expect(result.min).toBe(2);
         expect(result.ideal).toBe(4);
         expect(result.max).toBe(5);
         
