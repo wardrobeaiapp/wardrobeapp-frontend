@@ -71,7 +71,7 @@ const getSeasonDurationInMonths = (season: Season): number => {
     case Season.WINTER:
       return 3; // Individual seasons are ~3 months
     case Season.TRANSITIONAL:
-      return 6; // Spring/fall combined is ~6 months (Mar-May + Sep-Nov)
+      return 4.5; // Spring/fall combined gets 1.5x multiplier (acknowledges longer season but keeps practical)
     default:
       return 3; // Default fallback
   }
