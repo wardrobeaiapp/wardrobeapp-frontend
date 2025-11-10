@@ -168,7 +168,14 @@ async function analyzeLayeringCompatibility(itemDataForLayering, extractedCharac
   
   try {
     // First check if the item is suitable for layering
+    console.log('🔍 LAYERING SUITABILITY CHECK:');
+    console.log('  - itemDataForLayering:', itemDataForLayering?.name || 'unknown');
+    console.log('  - extractedCharacteristics.layeringPotential:', extractedCharacteristics?.layeringPotential);
+    console.log('  - extractedCharacteristics available fields:', extractedCharacteristics ? Object.keys(extractedCharacteristics) : 'null');
+    
     const isSuitableForLayering = isItemSuitableForLayering(itemDataForLayering, extractedCharacteristics);
+    
+    console.log('  - isSuitableForLayering result:', isSuitableForLayering);
     
     if (isSuitableForLayering) {
       // Get layering items from styling context
@@ -198,15 +205,15 @@ async function analyzeLayeringCompatibility(itemDataForLayering, extractedCharac
         const layeringCategoryCount = Object.keys(compatibleItems).length;
         const layeringTotalItems = Object.values(compatibleItems).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
         console.log(`✅ Found ${layeringTotalItems} compatible layering items across ${layeringCategoryCount} categories`);
-        
-        return compatibleItems;
+        return { compatibleItems: compatibleItems.compatibleItems || [], compatibleItemsByCategory: compatibleItems.compatibleItemsByCategory || [] };
       } else {
-        console.log('ℹ️ No layering items found to evaluate');
-        return null;
+        console.log('⚠️ No layering items available in styling context');
+        return { compatibleItems: [], compatibleItemsByCategory: [] };
       }
     } else {
-      console.log('ℹ️ Item is not suitable for layering - skipping layering compatibility check');
-      return null;
+      console.log('🚫 Item NOT suitable for layering - skipping layering compatibility analysis');
+      console.log('  - Reason: layeringPotential =', extractedCharacteristics?.layeringPotential || 'undefined');
+      return { compatibleItems: [], compatibleItemsByCategory: [] };
     }
   } catch (error) {
     console.error('❌ Error in layering compatibility checking:', error);

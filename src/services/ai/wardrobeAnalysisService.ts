@@ -34,6 +34,7 @@ const filterPreFilledData = (preFilledData: WardrobeItem) => {
   if (preFilledData.bootHeight) filtered.bootHeight = preFilledData.bootHeight;
   if (preFilledData.brand) filtered.brand = preFilledData.brand;
   if (preFilledData.size) filtered.size = preFilledData.size;
+  if (preFilledData.details) filtered.details = preFilledData.details; // CRITICAL: Include styling details like "balloon sleeves"
   if (preFilledData.season) filtered.season = preFilledData.season;
   
   // CRITICAL: Include scenarios for wishlist items - these are the user's pre-selected scenarios

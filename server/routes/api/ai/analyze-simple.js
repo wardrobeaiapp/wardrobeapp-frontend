@@ -176,10 +176,20 @@ router.post('/', async (req, res) => {
     };
     
     // Determine analysis scope based on category/subcategory (using DetailsFields.tsx logic)
+    console.log('🔍 SCOPE INPUT DEBUG:');
+    console.log('  - analysisData.category:', analysisData.category);
+    console.log('  - analysisData.subcategory:', analysisData.subcategory);
+    console.log('  - Expected for TOP/Blouse: sleeves = true');
+    
     const analysisScope = getAnalysisScope(analysisData.category, analysisData.subcategory);
     
     console.log('📊 Analysis data:', analysisData);
     console.log('🔍 Analysis scope:', analysisScope);
+    
+    // Debug specific sleeve scope issue
+    if (analysisData.category === 'TOP' && analysisData.subcategory === 'Blouse') {
+      console.log('🎯 TOP/Blouse detected - sleeves should be true, actual:', analysisScope.conditional.sleeves);
+    }
     if (preFilledData) {
       console.log('👗 Pre-filled wishlist data detected - will verify/correct/complete');
     }

@@ -161,6 +161,13 @@ function extractLayeringReasoning(text) {
  * @returns {object} Extracted characteristics object
  */
 function extractItemCharacteristics(rawResponse, analysisScope, preFilledData) {
+  
+  // 🔍 DEBUG: Show raw Claude response immediately after image analysis
+  console.log('\n🎯 RAW CLAUDE IMAGE ANALYSIS RESPONSE:');
+  console.log('=====================================');
+  console.log(rawResponse);
+  console.log('=====================================\n');
+  
   const characteristics = {};
   
   // Universal characteristics (always extracted)
@@ -180,13 +187,23 @@ function extractItemCharacteristics(rawResponse, analysisScope, preFilledData) {
   }
   
   if (analysisScope.conditional.sleeves) {
-    characteristics.sleeves = extractField(rawResponse, ['sleeve', 'sleeveless', 'short', 'long', 'bell', 'puff'], null);
-    characteristics.sleeveVolume = extractField(rawResponse, ['sleeve volume', 'fitted', 'relaxed', 'voluminous'], null);
+    characteristics.sleeves = extractField(rawResponse, ['sleeve', 'sleeveless', 'short', 'long', 'bell', 'puff', 'balloon', 'gathered', 'voluminous'], null);
+    characteristics.sleeveVolume = extractField(rawResponse, ['sleeve volume', 'fitted', 'relaxed', 'voluminous', 'puffed', 'balloon', 'gathered', 'puffy'], null);
+    
+    console.log('🔍 SLEEVE EXTRACTION DEBUG:');
+    console.log(`  - Extracted sleeves: "${characteristics.sleeves}"`);
+    console.log(`  - Extracted sleeveVolume: "${characteristics.sleeveVolume}"`);
+    console.log(`  - Searching for keywords: ['sleeve', 'sleeveless', 'short', 'long', 'bell', 'puff', 'balloon']`);
   }
   
   if (analysisScope.conditional.layeringPotential) {
-    characteristics.layeringPotential = extractField(rawResponse, ['layering potential', 'standalone', 'inner layer', 'outer layer', 'versatile'], 'standalone');
+    characteristics.layeringPotential = extractField(rawResponse, ['layering potential', 'standalone', 'inner layer', 'outer layer', 'versatile', 'limited'], 'standalone');
     characteristics.layeringReasoning = extractLayeringReasoning(rawResponse);
+    
+    console.log('🔍 LAYERING EXTRACTION DEBUG:');
+    console.log(`  - Extracted layeringPotential: "${characteristics.layeringPotential}"`);
+    console.log(`  - Extracted layeringReasoning: "${characteristics.layeringReasoning}"`);
+    console.log(`  - Searching for keywords: ['layering potential', 'standalone', 'inner layer', 'outer layer', 'versatile', 'limited']`);
   }
   
   if (analysisScope.conditional.volume) {

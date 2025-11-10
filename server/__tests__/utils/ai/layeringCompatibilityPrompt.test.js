@@ -86,7 +86,22 @@ describe('layeringCompatibilityPrompt', () => {
       };
       
       const extractedCharacteristics = {
-        layeringCapability: 'standalone'
+        layeringPotential: 'standalone'
+      };
+      
+      const result = isItemSuitableForLayering(itemData, extractedCharacteristics);
+      expect(result).toBe(false);
+    });
+
+    it('should respect AI characteristics indicating limited layering potential', () => {
+      const itemData = {
+        category: 'top',
+        subcategory: 'blouse',
+        name: 'Balloon Sleeve Blouse'
+      };
+      
+      const extractedCharacteristics = {
+        layeringPotential: 'limited'
       };
       
       const result = isItemSuitableForLayering(itemData, extractedCharacteristics);

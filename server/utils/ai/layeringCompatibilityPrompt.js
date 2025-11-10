@@ -27,11 +27,12 @@ function isItemSuitableForLayering(itemData, extractedCharacteristics) {
     }
   }
   
-  // Check extracted characteristics for layering capability
+  // Check if item has layering restrictions based on extracted characteristics
   if (extractedCharacteristics) {
-    // Look for layering-related characteristics
-    const layeringCapability = extractedCharacteristics.layeringCapability;
-    if (layeringCapability === 'standalone') {
+    // Look for layering-related characteristics - updated field names
+    const layeringPotential = extractedCharacteristics.layeringPotential;
+    if (layeringPotential === 'standalone' || layeringPotential === 'limited') {
+      console.log(`🚫 Item "${itemData.name}" has ${layeringPotential} layering potential - excluding from layering combinations`);
       return false;
     }
   }
@@ -68,6 +69,7 @@ function buildLayeringCompatibilityPrompt(itemData, layeringItems) {
   if (itemData.fit) prompt += `- Fit: ${itemData.fit}\n`;
   if (itemData.length) prompt += `- Length: ${itemData.length}\n`;
   if (itemData.sleeves) prompt += `- Sleeves: ${itemData.sleeves}\n`;
+  if (itemData.details) prompt += `- STYLING DETAILS: ${itemData.details} ⚠️ CRITICAL FOR LAYERING\n`;
   if (itemData.neckline) prompt += `- Neckline: ${itemData.neckline}\n`;
   if (itemData.rise) prompt += `- Rise: ${itemData.rise}\n`;
   if (itemData.type) prompt += `- Type: ${itemData.type}\n`;

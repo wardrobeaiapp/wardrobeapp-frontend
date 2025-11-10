@@ -57,6 +57,7 @@ function addFormDataSection(systemPrompt, formData, preFilledData) {
     if (preFilledData.pattern) systemPrompt += `\n- Pattern: ${preFilledData.pattern}`;
     if (preFilledData.length) systemPrompt += `\n- Length: ${preFilledData.length}`;
     if (preFilledData.sleeves) systemPrompt += `\n- Sleeves: ${preFilledData.sleeves}`;
+    if (preFilledData.details) systemPrompt += `\n- STYLING DETAILS: ${preFilledData.details} ⚠️ IMPORTANT FOR LAYERING`;
     if (preFilledData.rise) systemPrompt += `\n- Rise: ${preFilledData.rise}`;
     if (preFilledData.neckline) systemPrompt += `\n- Neckline: ${preFilledData.neckline}`;
     if (preFilledData.heelHeight) systemPrompt += `\n- Heel Height: ${preFilledData.heelHeight}`;

@@ -82,6 +82,7 @@ function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData,
   // === ENHANCED CHARACTERISTIC ANALYSIS PROMPT ===
   systemPrompt += "\n\n=== COMPREHENSIVE ITEM ANALYSIS ===";
   systemPrompt += "\nAnalyze this item to extract comprehensive characteristics for future styling decisions.";
+  systemPrompt += "\n\n🔍 LAYERING COMPATIBILITY FOCUS: Examine the image for visual details that affect layering. CRITICAL: Look at sleeve SHAPE (not just length) - do sleeves puff out, balloon, or gather? Also check for textured surfaces, structured elements, high necklines, hardware, bulk, or any features preventing layering under blazers/jackets.";
   
   // Handle pre-filled wishlist data
   if (preFilledData) {
@@ -92,7 +93,13 @@ function buildEnhancedAnalysisPrompt(analysisData, analysisScope, preFilledData,
   systemPrompt += buildUniversalAnalysisSection();
   
   // Conditional analysis based on category/subcategory
-  systemPrompt += buildConditionalAnalysisSection(analysisScope);
+  const conditionalSection = buildConditionalAnalysisSection(analysisScope);
+  console.log('\n🔍 CONDITIONAL ANALYSIS SECTIONS DEBUG:');
+  console.log('analysisScope.conditional:', analysisScope.conditional);
+  console.log('conditionalSection length:', conditionalSection.length);
+  console.log('conditionalSection preview:', conditionalSection.substring(0, 200) + '...');
+  
+  systemPrompt += conditionalSection;
   
   // Critical analysis rules
   systemPrompt += buildAnalysisRulesSection();
@@ -121,7 +128,7 @@ function buildWishlistVerificationSection(preFilledData) {
   
   // Only show descriptive fields that the AI can verify from the image
   const descriptiveFields = ['name', 'category', 'subcategory', 'color', 'style', 'silhouette', 'fit', 
-                            'material', 'pattern', 'length', 'sleeves', 'rise', 'neckline', 
+                            'material', 'pattern', 'length', 'sleeves', 'details', 'rise', 'neckline', 
                             'heelHeight', 'bootHeight', 'brand', 'size', 'season'];
   
   descriptiveFields.forEach(field => {
@@ -130,7 +137,12 @@ function buildWishlistVerificationSection(preFilledData) {
       if (Array.isArray(value)) {
         section += `\n• ${field}: ${value.join(', ')}`;
       } else {
-        section += `\n• ${field}: ${value}`;
+        // Highlight details field if it contains layering-critical information
+        if (field === 'details' && (value.toLowerCase().includes('balloon') || value.toLowerCase().includes('puff') || value.toLowerCase().includes('gathered'))) {
+          section += `\n• ⚠️ ${field}: ${value} ⚠️ CRITICAL FOR LAYERING ASSESSMENT`;
+        } else {
+          section += `\n• ${field}: ${value}`;
+        }
       }
     }
   });
@@ -139,6 +151,7 @@ function buildWishlistVerificationSection(preFilledData) {
   section += "\n• VERIFY these details against what you see in the image";
   section += "\n• CORRECT any details that are wrong based on visual evidence";
   section += "\n• CONFIRM details that are accurate";
+  section += "\n• ⚠️ CRITICAL: If 'details' mentions balloon/puff/gathered sleeves, USE THIS INFORMATION for layering assessment regardless of visual interpretation";
   section += "\n• COMPLETE any missing details by analyzing the image";
   section += "\n• Be honest - if you can't verify something from the image, say so";
 
@@ -176,29 +189,53 @@ function buildUniversalAnalysisSection() {
  */
 function buildConditionalAnalysisSection(analysisScope) {
   let section = "";
+  console.log('\n🔍 BUILDING CONDITIONAL SECTIONS:');
 
   if (analysisScope.conditional.neckline) {
-    section += "\n\n4. NECKLINE ANALYSIS:";
-    section += "\n• Type: crew, v-neck, scoop, turtleneck, cowl, boat, off-shoulder, square";
+    console.log('  ✅ Adding NECKLINE analysis section (item 4)');
+    section += "\n\n4. NECKLINE ANALYSIS - CRITICAL FOR LAYERING:";
+    section += "\n• Type: crew, v-neck, scoop, turtleneck, cowl, boat, off-shoulder, square, halter, mock neck";
     section += "\n• Height: high/mid/low";
+    section += "\n• ⚠️ LAYERING BLOCKERS: Identify high turtlenecks, mock necks, large collars, bow details, hardware that prevent layering under blazers";
   }
 
   if (analysisScope.conditional.sleeves) {
-    section += "\n\n5. SLEEVE ANALYSIS:";
-    section += "\n• Style: sleeveless, short, 3/4, long, cap, bell, puff, fitted, balloon, bishop";
-    section += "\n• Volume: fitted/relaxed/voluminous";
+    console.log('  ✅ Adding SLEEVE analysis section (item 5)');
+    section += "\n\n5. SLEEVE ANALYSIS - CRITICAL FOR LAYERING:";
+    section += "\n• LENGTH: sleeveless, short, 3/4, long, cap";
+    section += "\n• SHAPE/VOLUME (CRITICAL FOR LAYERING): fitted, balloon, puff, bell, bishop, flutter, gathered, voluminous";
+    section += "\n• ⚠️ MANDATORY: Examine sleeve SHAPE - do they puff out from the arm? Balloon/puff/gathered sleeves create bulk that prevents layering under fitted blazers/jackets";
+    section += "\n• ⚠️ Don't just identify length - identify if sleeves have volume/puffiness that affects layering";
+  } else {
+    console.log('  ❌ SLEEVE analysis section SKIPPED - conditional.sleeves is false');
   }
 
   if (analysisScope.conditional.layeringPotential) {
-    section += "\n\n6. LAYERING POTENTIAL:";
-    section += "\n• STANDALONE: thick/bulky (chunky knits, turtlenecks) • INNER: thin/fitted (tees, camisoles)";
+    console.log('  ✅ Adding LAYERING POTENTIAL analysis section (item 6)');
+    section += "\n\n6. LAYERING POTENTIAL - MANDATORY SLEEVE VOLUME CHECK:";
+    section += "\n\n🔍 CRITICAL SLEEVE ASSESSMENT:";
+    section += "\n⚠️ FIRST CHECK: If pre-filled data mentions 'balloon sleeves', 'puff sleeves', or similar volume descriptions, TRUST THAT INFORMATION over visual assessment.";
+    section += "\n\nIf no pre-filled sleeve details, examine image for:";
+    section += "\n• Gathered or elastic cuffs at the wrists";
+    section += "\n• Fabric that extends outward from where the arm would be";
+    section += "\n• Extra fabric creating volume between shoulder and cuff";
+    section += "\n• Sleeves that appear wider than a fitted sleeve would be";
+    section += "\n\n🔍 REQUIRED: Are balloon/puff sleeves indicated by pre-filled data OR visual cues? (YES/NO)";
+    section += "\n\n⚠️ LAYERING ASSESSMENT RULES:";
+    section += "\n• If balloon/puff sleeves are indicated (pre-filled OR visual) → LAYERING POTENTIAL: LIMITED";
+    section += "\n• Only if sleeves are confirmed fitted → Check other factors";
+    section += "\n\n• STANDALONE: thick/bulky (chunky knits, turtlenecks) • INNER: thin/fitted (tees, camisoles)";
     section += "\n• OUTER: structured/open (blazers, cardigans) • VERSATILE: medium weight (shirts, light sweaters)";
-    section += "\n• Base on: material thickness, neckline height, sleeve bulk, volume";
+    section += "\n\n⚠️ OTHER LAYERING BLOCKERS TO CHECK:";
+    section += "\n• NECKLINE: High turtlenecks, mock necks create conflicts";
+    section += "\n• TEXTURE: Sequins, chunky knits, fuzzy textures create bulk";
+    section += "\n• CONSTRUCTION: Wrap ties, structured elements add bulk";
   }
 
   if (analysisScope.conditional.volume) {
     section += "\n\n7. VOLUME & FIT ANALYSIS:";
     section += "\n• Volume: fitted/relaxed/oversized/voluminous • Silhouette: straight/A-line/flowy/structured/bodycon/boxy/cocoon";
+    section += "\n• ⚠️ LAYERING IMPACT: Voluminous/oversized items typically cannot layer under fitted outerwear";
   }
 
   if (analysisScope.conditional.heelHeight) {
@@ -212,6 +249,7 @@ function buildConditionalAnalysisSection(analysisScope) {
     section += "\n• Rise: low-rise/mid-rise/high-waisted • Length: assess what's visible";
   }
 
+  console.log('  📋 Final conditional sections built. Total length:', section.length);
   return section;
 }
 
