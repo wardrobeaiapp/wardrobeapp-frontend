@@ -32,18 +32,33 @@ function findCriticalDuplicates(newItem, existingItems) {
   
   const withScores = categoryMatches.map(item => {
     const score = calculateSimilarityScore(newItem, item);
+    
+    // Build category-appropriate attributes for debug output
+    const baseAttributes = { 
+      category: item.category, 
+      subcategory: item.subcategory, 
+      color: item.color, 
+      silhouette: item.silhouette, 
+      style: item.style,
+      pattern: item.pattern,
+      material: item.material
+    };
+    
+    // Add category-specific attributes
+    const category = item.category?.toLowerCase();
+    if (category === 'top' || category === 'one_piece') {
+      baseAttributes.neckline = item.neckline;
+      baseAttributes.sleeves = item.sleeves;
+    } else if (category === 'bottom') {
+      baseAttributes.rise = item.rise;
+      baseAttributes.length = item.length;
+    } else if (category === 'footwear') {
+      baseAttributes.heelHeight = item.heelHeight;
+      baseAttributes.bootHeight = item.bootHeight;
+    }
+    
     console.log(`🔍 DEBUG - Comparing with "${item.name}":`, {
-      itemAttributes: { 
-        category: item.category, 
-        subcategory: item.subcategory, 
-        color: item.color, 
-        silhouette: item.silhouette, 
-        style: item.style,
-        pattern: item.pattern,
-        neckline: item.neckline,
-        sleeves: item.sleeves,
-        material: item.material
-      },
+      itemAttributes: baseAttributes,
       similarityScore: score,
       passesThreshold: score >= 75
     });

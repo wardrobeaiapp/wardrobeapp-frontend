@@ -49,7 +49,7 @@ class DuplicateDetectionService {
         category: formData.category,
         subcategory: formData.subcategory,
         color: extractedAttributes.color,
-        silhouette: extractedAttributes.silhouette,
+        silhouette: this.normalizeSilhouette(extractedAttributes.silhouette, formData.subcategory),
         style: extractedAttributes.style,
         seasons: formData.seasons,
         // Include additional attributes from formData if available
@@ -76,7 +76,54 @@ class DuplicateDetectionService {
       };
 
     } catch (error) {
-      console.error('Enhanced duplicate detection failed:', error);
+      console.error('AI duplicate analysis failed:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Analyze item for duplicates using form data (skip AI extraction)
+   * @param {Object} analysisData - Complete analysis data (formData + preFilledData + extracted characteristics)
+   * @param {Array} similarContext - Similar context items (same category/subcategory)
+   * @returns {Object|null} Duplicate analysis result or null if failed
+   */
+  async analyzeWithFormData(analysisData, similarContext) {
+    if (!analysisData || !analysisData.category || !similarContext) {
+      console.log('Skipping duplicate detection: insufficient data');
+      return null;
+    }
+
+    try {
+      console.log('=== Using Form Data for Duplicate Analysis (Skip AI Extraction) ===');
+      
+      // Use the analysis data directly - it already has the correct values!
+      const extractedAttributes = {
+        color: analysisData.color || 'unknown',
+        silhouette: this.normalizeSilhouette(analysisData.silhouette, analysisData.subcategory), 
+        style: analysisData.style || 'unknown',
+        material: analysisData.material || 'unknown',
+        pattern: analysisData.pattern || 'unknown'
+      };
+
+      console.log('Using attributes from analysis data:', extractedAttributes);
+
+      // Run algorithmic duplicate analysis (same as in analyzeWithAI)
+      const enrichedItemData = {
+        category: analysisData.category,
+        subcategory: analysisData.subcategory,
+        seasons: analysisData.seasons || [],
+        ...extractedAttributes
+      };
+
+      const duplicateAnalysis = analyzeDuplicatesForAI(enrichedItemData, similarContext);
+
+      return {
+        extractedAttributes,
+        duplicateAnalysis
+      };
+
+    } catch (error) {
+      console.error('Duplicate analysis with extracted characteristics failed:', error);
       return null;
     }
   }
@@ -120,6 +167,33 @@ class DuplicateDetectionService {
       console.error('Attribute extraction failed:', error);
       return null;
     }
+  }
+
+  /**
+   * Normalize silhouette based on subcategory logic
+   * @param {string} silhouette - Provided silhouette or undefined
+   * @param {string} subcategory - Item subcategory
+   * @returns {string} Normalized silhouette
+   */
+  normalizeSilhouette(silhouette, subcategory) {
+    // If silhouette is already provided, use it
+    if (silhouette && silhouette !== 'unknown' && silhouette !== 'undefined') {
+      return silhouette;
+    }
+    
+    console.log(`🔄 Normalizing silhouette for ${subcategory}: ${silhouette} → applying defaults`);
+    
+    // Apply logical default for leggings only (as requested)
+    const subcat = subcategory?.toLowerCase();
+    
+    if (subcat === 'leggings') {
+      console.log(`   ✅ Applied logical default: leggings → skinny`);
+      return 'skinny';
+    }
+    
+    // If no logical default exists, return unknown
+    console.log(`   ⚠️ No default silhouette available for subcategory: ${subcategory}`);
+    return 'unknown';
   }
 
   /**

@@ -125,46 +125,6 @@ router.post('/', async (req, res) => {
     const mediaType = imageValidation.mediaType || 'image/jpeg'; // Use detected media type with fallback
     console.log('🖼️ Using media type for Claude API:', mediaType);
 
-    // === DUPLICATE DETECTION ===
-    console.log('🚨 === DUPLICATE DETECTION START === 🚨');
-    console.log('🔍 DEBUG - similarContext:', similarContext ? `${similarContext.length} items` : 'none');
-    console.log('🔍 DEBUG - formData:', `${formData?.name} (${formData?.category}/${formData?.subcategory})`);
-    
-    // Enhanced debugging - show summary only
-    if (similarContext && similarContext.length > 0) {
-      const categoryMatches = similarContext.filter(item => 
-        item.category?.toLowerCase() === formData.category?.toLowerCase()
-      ).length;
-      const subcategoryMatches = similarContext.filter(item => 
-        item.subcategory?.toLowerCase() === formData.subcategory?.toLowerCase()
-      ).length;
-      
-      console.log(`🔍 DEBUG - Target: "${formData.category}/${formData.subcategory}"`);
-      console.log(`🔍 DEBUG - Matches: ${categoryMatches} category, ${subcategoryMatches} subcategory`);
-    }
-    
-    const duplicateResult = await duplicateDetectionService.analyzeWithAI(
-      base64Data, formData, similarContext
-    );
-    
-    let duplicatePromptSection = '';
-    if (duplicateResult) {
-      duplicatePromptSection = duplicateDetectionService.generatePromptSection(
-        duplicateResult.extractedAttributes, 
-        duplicateResult.duplicateAnalysis
-      );
-      console.log('✅ Duplicate analysis completed');
-      console.log('   - Duplicates found:', duplicateResult.duplicateAnalysis.duplicate_analysis.found);
-      console.log('   - Count:', duplicateResult.duplicateAnalysis.duplicate_analysis.count);
-      console.log('   - Items:', duplicateResult.duplicateAnalysis.duplicate_analysis.items);
-      console.log('   - Severity:', duplicateResult.duplicateAnalysis.duplicate_analysis.severity);
-      console.log('   - Extracted attributes:', duplicateResult.extractedAttributes);
-      console.log('🔍 DEBUG - Generated duplicate prompt section:');
-      console.log(duplicatePromptSection);
-    } else {
-      console.log('⚠️ Duplicate analysis skipped (insufficient data)');
-    }
-
     // === ENHANCED CHARACTERISTIC ANALYSIS ===
     console.log('=== STEP: Enhanced Characteristic Analysis Setup ===');
     
@@ -193,6 +153,9 @@ router.post('/', async (req, res) => {
     if (preFilledData) {
       console.log('👗 Pre-filled wishlist data detected - will verify/correct/complete');
     }
+
+    // Initialize duplicate prompt section as empty (will be populated after image analysis)
+    let duplicatePromptSection = '';
 
     // Build comprehensive system prompt using modular approach
     const systemPrompt = buildEnhancedAnalysisPrompt(
@@ -267,6 +230,49 @@ router.post('/', async (req, res) => {
     console.log('=== STEP: Extracting Item Characteristics ===');
     const extractedCharacteristics = extractItemCharacteristics(rawAnalysisResponse, analysisScope, preFilledData);
     console.log('🏷️ Extracted characteristics:', extractedCharacteristics);
+
+    // === DUPLICATE DETECTION ===
+    console.log('=== STEP: Duplicate Detection ===');
+    
+    // Check if we have similar items in context for duplicate analysis
+    console.log('🔍 DEBUG - similarContext:', similarContext ? `${similarContext.length} items` : 'none');
+    console.log('🔍 DEBUG - formData:', `${formData?.name} (${formData?.category}/${formData?.subcategory})`);
+    
+    // Enhanced debugging - show summary only
+    if (similarContext && similarContext.length > 0) {
+      const categoryMatches = similarContext.filter(item => 
+        item.category?.toLowerCase() === formData.category?.toLowerCase()
+      ).length;
+      const subcategoryMatches = similarContext.filter(item => 
+        item.subcategory?.toLowerCase() === formData.subcategory?.toLowerCase()
+      ).length;
+      
+      console.log(`🔍 DEBUG - Target: "${formData.category}/${formData.subcategory}"`);
+      console.log(`🔍 DEBUG - Matches: ${categoryMatches} category, ${subcategoryMatches} subcategory`);
+    }
+    
+    // Use analysis data (form data + pre-filled data) for duplicate detection  
+    const duplicateResult = await duplicateDetectionService.analyzeWithFormData(
+      analysisData, similarContext
+    );
+    
+    // Update the duplicatePromptSection (already declared earlier)
+    if (duplicateResult) {
+      duplicatePromptSection = duplicateDetectionService.generatePromptSection(
+        duplicateResult.extractedAttributes, 
+        duplicateResult.duplicateAnalysis
+      );
+      console.log('✅ Duplicate analysis completed using form data');
+      console.log('   - Duplicates found:', duplicateResult.duplicateAnalysis.duplicate_analysis.found);
+      console.log('   - Count:', duplicateResult.duplicateAnalysis.duplicate_analysis.count);
+      console.log('   - Items:', duplicateResult.duplicateAnalysis.duplicate_analysis.items);
+      console.log('   - Severity:', duplicateResult.duplicateAnalysis.duplicate_analysis.severity);
+      console.log('   - Form data attributes:', duplicateResult.extractedAttributes);
+      console.log('🔍 DEBUG - Generated duplicate prompt section:');
+      console.log(duplicatePromptSection);
+    } else {
+      console.log('⚠️ Duplicate analysis skipped (insufficient data)');
+    }
 
     // === UNIFIED COMPATIBILITY ANALYSIS ===
     console.log('\n=== STEP: Unified Compatibility Analysis ===');
