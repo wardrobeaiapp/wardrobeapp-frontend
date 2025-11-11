@@ -23,7 +23,7 @@ async function generateOutfitsWithClaude(itemData, itemsByCategory, season, scen
   try {
     const response = await anthropicClient.messages.create({
       model: "claude-3-haiku-20240307",
-      max_tokens: 1024,
+      max_tokens: 2048, // Increased for up to 10 outfits with explanations
       temperature: 0.3, // Lower temperature for more consistent fashion logic
       system: "You are a professional fashion stylist. Create practical, weather-appropriate outfit combinations that make fashion sense.",
       messages: [{
@@ -91,13 +91,16 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
   );
 
   prompt += `\nINSTRUCTIONS:
-- Create 2-3 COMPLETE outfit combinations that include the base item
+- Create up to 10 COMPLETE outfit combinations that include the base item
+- Stop creating outfits when you've exhausted genuinely different, high-quality styling approaches
+- Each outfit should offer a distinct look or styling approach - avoid repetitive combinations
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) are ADDITIONAL items that complement complete outfits - they do NOT replace footwear or essential clothing
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
 - Each outfit should be practical and fashionable
 - For each outfit, list the items used and briefly explain why they work together
+- Quality over quantity: It's better to have 3-5 excellent, diverse outfits than 10 similar ones
 ${isHomeScenario ? '' : '- FOOTWEAR IS MANDATORY for non-home scenarios - do not create outfits without shoes'}
 
 FORMAT your response as:
@@ -105,7 +108,9 @@ OUTFIT 1: [item names separated by + symbols]
 Explanation: [brief fashion reasoning]
 
 OUTFIT 2: [item names separated by + symbols]  
-Explanation: [brief fashion reasoning]`;
+Explanation: [brief fashion reasoning]
+
+... continue up to OUTFIT 10 if you have genuinely different, high-quality styling approaches`;
 
   return prompt;
 }
