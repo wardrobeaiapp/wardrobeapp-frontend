@@ -93,9 +93,11 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
   prompt += `\nINSTRUCTIONS:
 - Create up to 10 COMPLETE outfit combinations that include the base item
 - Stop creating outfits when you've exhausted genuinely different, high-quality styling approaches
-- Each outfit should offer a distinct look or styling approach - avoid repetitive combinations
+- Each outfit should offer a DISTINCT STYLING APPROACH - different footwear, different tops, different layering, etc.
+- AVOID redundant combinations: Don't create both "Skirt + Blouse + Sneakers" and "Skirt + Blouse + Sneakers + Bag" - just show the complete version with accessories included
+- If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
-- ACCESSORIES (bags, jewelry, belts) are ADDITIONAL items that complement complete outfits - they do NOT replace footwear or essential clothing
+- ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
 - Each outfit should be practical and fashionable
