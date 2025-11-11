@@ -313,7 +313,7 @@ router.post('/', async (req, res) => {
     // ===== OUTFIT ANALYSIS ORCHESTRATION =====
     console.log('\n=== STEP: Outfit Analysis Orchestration ===');
     
-    const outfitAnalysisResults = orchestrateOutfitAnalysis({
+    const outfitAnalysisResults = await orchestrateOutfitAnalysis({
       formData,
       preFilledData,
       suitableScenarios,
@@ -321,7 +321,8 @@ router.post('/', async (req, res) => {
       scenarioCoverage,
       userGoals,
       duplicateResult,
-      scenarios
+      scenarios,
+      anthropicClient: anthropic
     });
     
     // Extract results from orchestrator

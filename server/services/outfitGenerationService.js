@@ -20,6 +20,9 @@ const {
   buildGeneralOutfits
 } = require('../utils/outfitBuilders');
 
+// Import Claude-based outfit generation
+const { generateOutfitsWithClaude } = require('../utils/claudeOutfitGenerator');
+
 const {
   createOutfitSignature,
   distributeOutfitsIntelligently,
@@ -35,7 +38,7 @@ const {
 /**
  * Generate outfit combinations using compatible items for complete scenarios
  */
-function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations, scenarios = []) {
+async function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations, scenarios = [], anthropicClient = null) {
   console.log('\n\n=== 👗 OUTFIT COMBINATIONS GENERATOR ===\n');
   
   // Only process combinations that have all essentials
@@ -77,7 +80,8 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
   // Generate all outfits for all scenarios first
   const allGeneratedOutfits = [];
   
-  completeScenarios.forEach((combo, index) => {
+  for (let index = 0; index < completeScenarios.length; index++) {
+    const combo = completeScenarios[index];
     console.log(`🎯 ${index + 1}) ${combo.combination.toUpperCase()}`);
     
     // Convert scenario name to UUID for filtering (if scenarios mapping is provided)
@@ -134,8 +138,25 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
       itemsByCategory[category].push(item);
     });
     
-    // Generate ALL outfit recommendations (professional stylist approach)
-    const outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+    // Generate outfit recommendations using Claude's fashion intelligence if available
+    let outfits = [];
+    if (anthropicClient) {
+      console.log('   🤖 Using Claude for outfit generation (anthropicClient available)');
+      outfits = await generateOutfitsWithClaude(itemData, itemsByCategory, combo.season, combo.scenario, anthropicClient);
+      // If Claude failed (returned null), fallback to algorithmic approach
+      if (outfits === null) {
+        console.log('   🔄 Claude failed, using algorithmic outfit generation as fallback');
+        outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+      } else if (outfits.length === 0) {
+        console.log('   ⚠️ Claude returned empty results, using algorithmic fallback');
+        outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+      } else {
+        console.log(`   ✅ Claude successfully generated ${outfits.length} outfits`);
+      }
+    } else {
+      console.log('   🔧 No anthropicClient available, using algorithmic outfit generation');
+      outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+    }
     
     if (outfits.length > 0) {
       console.log(`   ✅ ${outfits.length} OUTFIT COMBINATIONS GENERATED`);
@@ -150,7 +171,7 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
     }
     
     console.log(''); // Empty line between combinations
-  });
+  }
   
   // Now intelligently distribute outfits across scenarios
   const outfitCombinations = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);

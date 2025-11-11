@@ -25,7 +25,7 @@ const analyzeScenarioCoverageForScore = require('../utils/ai/analyzeScenarioCove
  * @param {Array} params.scenarios - Array of scenario objects with id and name for UUID mapping
  * @returns {Object} Complete outfit analysis results
  */
-function orchestrateOutfitAnalysis({
+async function orchestrateOutfitAnalysis({
   formData,
   preFilledData,
   suitableScenarios,
@@ -33,7 +33,8 @@ function orchestrateOutfitAnalysis({
   scenarioCoverage,
   userGoals,
   duplicateResult,
-  scenarios
+  scenarios,
+  anthropicClient = null
 }) {
   console.log('\n=== 👗 OUTFIT ANALYSIS ORCHESTRATOR ===');
   console.log('🔍 [orchestrateOutfitAnalysis] Input debug:');
@@ -155,7 +156,7 @@ function orchestrateOutfitAnalysis({
     seasonScenarioCombinations = createSeasonScenarioCombinations(itemDataWithScenarios, consolidatedCompatibleItems, scenarios);
     
     // Generate outfit combinations for complete scenarios only
-    outfitCombinations = generateOutfitCombinations(itemDataWithScenarios, consolidatedCompatibleItems, seasonScenarioCombinations, scenarios);
+    outfitCombinations = await generateOutfitCombinations(itemDataWithScenarios, consolidatedCompatibleItems, seasonScenarioCombinations, scenarios, anthropicClient);
     
     // ===== STEP 2: COVERAGE VS OUTFIT CROSS-REFERENCE =====
     console.log('\n=== STEP: Coverage vs Outfit Cross-Reference ===');
