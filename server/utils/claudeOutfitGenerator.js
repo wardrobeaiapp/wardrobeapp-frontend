@@ -99,6 +99,7 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
 - When using outer layer items like cardigans, blazers, vests, or jackets, pay attention to their details - if they're described as "open", "no buttons", "no closure", or similar, they require something to be worn underneath (t-shirt, blouse, tank top, etc.)
+- Pay attention to layer thickness when combining items - avoid putting bulky items (sweaters, hoodies, thick tops) under other layers like cardigans or jackets, as this creates an impractical, bulky look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
 - Each outfit should be practical and fashionable
