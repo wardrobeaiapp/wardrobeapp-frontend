@@ -11,15 +11,6 @@
  * - Modular architecture with specialized utility modules
  */
 
-// Import specialized utility modules
-const {
-  buildDressOutfits,
-  buildTopOutfits,
-  buildBottomOutfits,
-  buildFootwearOutfits,
-  buildGeneralOutfits
-} = require('../utils/outfitBuilders');
-
 // Import Claude-based outfit generation
 const { generateOutfitsWithClaude } = require('../utils/claudeOutfitGenerator');
 
@@ -138,24 +129,23 @@ async function generateOutfitCombinations(itemData, compatibleItems, seasonScena
       itemsByCategory[category].push(item);
     });
     
-    // Generate outfit recommendations using Claude's fashion intelligence if available
+    // Generate outfit recommendations using Claude's fashion intelligence
     let outfits = [];
     if (anthropicClient) {
-      console.log('   🤖 Using Claude for outfit generation (anthropicClient available)');
+      console.log('   🤖 Using Claude for outfit generation');
       outfits = await generateOutfitsWithClaude(itemData, itemsByCategory, combo.season, combo.scenario, anthropicClient);
-      // If Claude failed (returned null), fallback to algorithmic approach
-      if (outfits === null) {
-        console.log('   🔄 Claude failed, using algorithmic outfit generation as fallback');
-        outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
-      } else if (outfits.length === 0) {
-        console.log('   ⚠️ Claude returned empty results, using algorithmic fallback');
-        outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+      
+      if (outfits === null || outfits.length === 0) {
+        console.log('   ❌ Claude failed to generate outfits for this combination');
+        // Skip this combination rather than generating poor quality fallback outfits
+        return;
       } else {
-        console.log(`   ✅ Claude successfully generated ${outfits.length} outfits`);
+        console.log(`   ✅ Claude successfully generated ${outfits.length} fashion-intelligent outfits`);
       }
     } else {
-      console.log('   🔧 No anthropicClient available, using algorithmic outfit generation');
-      outfits = buildOutfitRecommendations(itemData, itemsByCategory, combo.season, combo.scenario);
+      console.error('   ❌ No Claude API client available - outfit generation requires AI analysis');
+      // Skip this combination - we need Claude for quality outfit generation
+      return;
     }
     
     if (outfits.length > 0) {
@@ -204,70 +194,13 @@ async function generateOutfitCombinations(itemData, compatibleItems, seasonScena
 
 // Note: distributeOutfitsIntelligently function moved to /utils/outfitDistribution.js
 
-/**
- * Build outfit recommendations based on item type and available compatible items
- * Routes to appropriate specialized builder functions from outfitBuilders utility
- */
-function buildOutfitRecommendations(itemData, itemsByCategory, season, scenario) {
-  const itemCategory = itemData.category?.toLowerCase();
-  const outfits = [];
-  
-  // Define outfit building strategies based on the analyzed item
-  switch (itemCategory) {
-    case 'dress':
-    case 'one_piece':
-      // Dress-based outfits: dress + shoes + optional accessories/outerwear
-      outfits.push(...buildDressOutfits(itemData, itemsByCategory, season, scenario));
-      break;
-      
-    case 'top':
-      // Top-based outfits: top + bottom + shoes + optional accessories/outerwear
-      outfits.push(...buildTopOutfits(itemData, itemsByCategory, season, scenario));
-      break;
-      
-    case 'bottom':
-      // Bottom-based outfits: bottom + top + shoes + optional accessories/outerwear
-      outfits.push(...buildBottomOutfits(itemData, itemsByCategory, season, scenario));
-      break;
-      
-    case 'footwear':
-      // Shoe-based outfits: shoes + top + bottom + optional accessories/outerwear
-      outfits.push(...buildFootwearOutfits(itemData, itemsByCategory, season, scenario));
-      break;
-      
-    case 'accessory':
-      // Accessories complement existing outfits - don't generate specific outfit combinations
-      console.log('   💎 ACCESSORY ITEM: This piece complements many different outfits in your wardrobe');
-      break;
-      
-    case 'outerwear':  
-      // Outerwear layers over many base outfits - don't generate specific outfit combinations
-      console.log('   🧥 OUTERWEAR ITEM: This layering piece works with many different base outfits');
-      break;
-      
-    default:
-      // For other items, try to build general combinations
-      outfits.push(...buildGeneralOutfits(itemData, itemsByCategory, season, scenario));
-  }
-  
-  // Return all good combinations (let the caller handle reasonable limits)
-  return outfits;
-}
-
-// Note: All outfit building functions have been moved to specialized utility modules:
-// - buildDressOutfits, buildTopOutfits, etc. → /utils/outfitBuilders.js
-// - createOutfitSignature, distributeOutfitsIntelligently → /utils/outfitDistribution.js
-// - groupOutfitsByVersatility, displayGroupedOutfits → /utils/outfitGrouping.js
+// Note: Outfit generation now uses Claude AI for fashion-intelligent combinations
+// - All algorithmic outfit builders have been removed in favor of AI analysis
+// - Claude considers weather appropriateness, occasion suitability, and fashion sense
+// - Distribution and grouping utilities remain for organizing AI-generated outfits
 
 module.exports = {
   generateOutfitCombinations,
-  buildOutfitRecommendations,
-  // Re-export functions from utility modules for backward compatibility
-  buildDressOutfits,
-  buildTopOutfits,
-  buildBottomOutfits,
-  buildFootwearOutfits,
-  buildGeneralOutfits,
   createOutfitSignature,
   groupOutfitsByVersatility,
   displayGroupedOutfits,
