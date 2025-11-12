@@ -115,8 +115,8 @@ async function generateOutfitCombinations(itemData, compatibleItems, seasonScena
     });
     
     if (seasonScenarioItems.length === 0) {
-      console.log('   ❌ No items available for this season+scenario combination');
-      return;
+      console.log('   ❌ No items available for this season+scenario combination - skipping to next');
+      continue;
     }
     
     // Group items by category for outfit building
@@ -136,16 +136,16 @@ async function generateOutfitCombinations(itemData, compatibleItems, seasonScena
       outfits = await generateOutfitsWithClaude(itemData, itemsByCategory, combo.season, combo.scenario, anthropicClient);
       
       if (outfits === null || outfits.length === 0) {
-        console.log('   ❌ Claude failed to generate outfits for this combination');
+        console.log('   ❌ Claude failed to generate outfits for this combination - skipping to next');
         // Skip this combination rather than generating poor quality fallback outfits
-        return;
+        continue;
       } else {
         console.log(`   ✅ Claude successfully generated ${outfits.length} fashion-intelligent outfits`);
       }
     } else {
-      console.error('   ❌ No Claude API client available - outfit generation requires AI analysis');
+      console.error('   ❌ No Claude API client available - outfit generation requires AI analysis - skipping to next');
       // Skip this combination - we need Claude for quality outfit generation
-      return;
+      continue;
     }
     
     if (outfits.length > 0) {
