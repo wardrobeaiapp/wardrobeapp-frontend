@@ -226,6 +226,12 @@ function buildConditionalAnalysisSection(analysisScope) {
     section += "\n• Only if sleeves are confirmed fitted → Check other factors";
     section += "\n\n• STANDALONE: thick/bulky (chunky knits, turtlenecks) • INNER: thin/fitted (tees, camisoles)";
     section += "\n• OUTER: structured/open (blazers, cardigans) • VERSATILE: medium weight (shirts, light sweaters)";
+    section += "\n\n🔍 CLOSURE TYPE ANALYSIS (for outer layers):";
+    section += "\n• CRITICAL: If this is a cardigan, blazer, vest, or jacket, identify the closure type";
+    section += "\n• CLOSURE TYPES affect layering requirements:";
+    section += "\n  - 'Open Front' or 'Wrap Style': REQUIRES something underneath (cannot be worn alone)";
+    section += "\n  - 'Buttons', 'Zipper', or 'Belt': CAN be worn alone or with layers";
+    section += "\n• Always specify the closure type for outer layer items";
     section += "\n\n⚠️ OTHER LAYERING BLOCKERS TO CHECK:";
     section += "\n• NECKLINE: High turtlenecks, mock necks create conflicts";
     section += "\n• TEXTURE: Sequins, chunky knits, fuzzy textures create bulk";

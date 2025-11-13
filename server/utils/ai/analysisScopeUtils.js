@@ -26,14 +26,14 @@ function getAnalysisScope(category, subcategory) {
   };
 
   // From DetailsFields: shouldShowNeckline logic
-  if (subcategory && ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'cardigan', 'jumpsuit', 'romper'].includes(subcategory.toLowerCase())) {
+  if (subcategory && ['dress', 't-shirt', 'shirt', 'blouse', 'top', 'tank top', 'sweater', 'cardigan', 'blazer', 'jumpsuit', 'romper'].includes(subcategory.toLowerCase())) {
     scope.conditional.neckline = true;
-    scope.conditional.layeringPotential = true; // Critical for items with necklines
+    scope.conditional.layeringPotential = true; // Critical for items with necklines and closure analysis
   }
 
   // From DetailsFields: shouldShowSleeves logic  
   if ((category === 'ONE_PIECE' && subcategory && !['overall'].includes(subcategory.toLowerCase())) || 
-      (category === 'TOP' && subcategory && ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan'].includes(subcategory.toLowerCase()))) {
+      (category === 'TOP' && subcategory && ['t-shirt', 'shirt', 'blouse', 'sweater', 'cardigan', 'blazer'].includes(subcategory.toLowerCase()))) {
     scope.conditional.sleeves = true;
     scope.conditional.volume = true; // Important for layering compatibility
   }

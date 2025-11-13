@@ -100,7 +100,10 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
 - If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
-- When using outer layer items like cardigans, blazers, vests, or jackets, check their "closure" field - if it shows "Open Front" or "Wrap Style", they require something to be worn underneath (t-shirt, blouse, tank top, etc.). Items with "Buttons", "Zipper", or "Belt/Tie" closures can be worn alone
+- CRITICAL: Pay attention to the "closure" type field for outer layers (cardigans, blazers etc.). CLOSURE TYPE DETERMINES LAYERING REQUIREMENTS:
+  • "Open Front" or "Wrap Style" closures REQUIRE something underneath (t-shirt, blouse, tank top, etc.) - they cannot be worn alone
+  • "Buttons", "Zipper", or "Belt" closures CAN be worn alone or with layers underneath - they have full coverage
+- Always check the closure type before creating outfits with outer layers
 - Pay attention to layer thickness and type when combining items - avoid layering outer garments together (don't put hoodies or sweatshirts with sweaters and cardigans, etc.) as both are designed to be worn as the outer layer, creating a bulky, impractical look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
