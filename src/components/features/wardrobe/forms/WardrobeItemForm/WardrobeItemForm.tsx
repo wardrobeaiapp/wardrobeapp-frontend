@@ -186,6 +186,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       heelHeight: formData.heelHeight,
       bootHeight: formData.bootHeight,
       type: formData.type,
+      closure: formData.closure, // THE MISSING CLOSURE FIELD!
       details: formData.details,
       rise: formData.rise,
       imageUrl: finalImageUrl, // Add image URL to the item

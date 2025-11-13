@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../../../middleware/auth');
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 console.log('🔴 TRYING TO IMPORT scenarioCoverageTriggers...');
 const { onItemAdded, onItemUpdated, onItemDeleted } = require('../../../utils/scenarioCoverageTriggers');
@@ -11,9 +17,19 @@ console.log('🟢 SUCCESS: scenarioCoverageTriggers imported:', { onItemAdded, o
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    // Return in-memory wardrobe items for the authenticated user
-    const userItems = global.inMemoryWardrobeItems.filter(item => item.userId === req.user.id);
-    res.json(userItems);
+    // Get items from Supabase database
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('date_added', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to fetch items from database' });
+    }
+
+    res.json(data || []);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
@@ -44,6 +60,7 @@ router.post('/', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      closure, // Added closure field!
       details,
       season, 
       scenarios,
@@ -72,6 +89,7 @@ router.post('/', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      closure, // Added closure field!
       details,
       season: season || [],
       scenarios: scenarios || [],
@@ -81,17 +99,65 @@ router.post('/', auth, async (req, res) => {
       dateAdded: new Date().toISOString()
     };
 
-    console.log('[API] Creating item with wishlist:', newItem.wishlist);
+    console.log('[API] Creating item with closure:', newItem.closure);
 
-    // Add item to in-memory store
-    global.inMemoryWardrobeItems.push(newItem);
+    // Map fields for Supabase (convert camelCase to snake_case)
+    const supabaseData = {
+      user_id: req.user.id,
+      name: newItem.name,
+      category: newItem.category,
+      subcategory: newItem.subcategory,
+      color: newItem.color,
+      pattern: newItem.pattern,
+      material: newItem.material,
+      brand: newItem.brand,
+      silhouette: newItem.silhouette,
+      length: newItem.length,
+      sleeves: newItem.sleeves,
+      style: newItem.style,
+      rise: newItem.rise,
+      neckline: newItem.neckline,
+      heel_height: newItem.heelHeight,
+      boot_height: newItem.bootHeight,
+      type: newItem.type,
+      closure: newItem.closure, // The key field!
+      details: newItem.details,
+      season: newItem.season,
+      scenarios: newItem.scenarios,
+      image_url: newItem.imageUrl,
+      wishlist: newItem.wishlist,
+      date_added: newItem.dateAdded,
+      tags: newItem.tags
+    };
+
+    // Remove undefined fields
+    Object.keys(supabaseData).forEach(key => {
+      if (supabaseData[key] === undefined) {
+        delete supabaseData[key];
+      }
+    });
+
+    // Save to Supabase database
+    console.log('Saving item to Supabase with closure:', supabaseData.closure);
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .insert([supabaseData])
+      .select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to save item to database', details: error.message });
+    }
+
+    const savedItem = data[0];
+    console.log('Item saved successfully to Supabase with closure:', savedItem.closure);
 
     // Trigger scenario coverage recalculation (async, don't block response)
-    onItemAdded(req.user.id, newItem).catch(error => {
+    onItemAdded(req.user.id, savedItem).catch(error => {
       console.error('Failed to update scenario coverage after item addition:', error);
     });
 
-    res.json(newItem);
+    res.json(savedItem);
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
@@ -123,6 +189,7 @@ router.put('/:id', auth, async (req, res) => {
       heelHeight,
       bootHeight,
       type,
+      closure, // Added closure field for updates!
       details,
       season, 
       scenarios,
@@ -131,57 +198,59 @@ router.put('/:id', auth, async (req, res) => {
       tags
     } = req.body;
 
-    // Find item index
-    const itemIndex = global.inMemoryWardrobeItems.findIndex(
-      item => item.id === id && item.userId === req.user.id
-    );
+    console.log('[API] Updating item with closure:', closure);
 
-    if (itemIndex === -1) {
+    // Build update object with only provided fields
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (category !== undefined) updateData.category = category;
+    if (subcategory !== undefined) updateData.subcategory = subcategory;
+    if (color !== undefined) updateData.color = color;
+    if (pattern !== undefined) updateData.pattern = pattern;
+    if (material !== undefined) updateData.material = material;
+    if (brand !== undefined) updateData.brand = brand;
+    if (silhouette !== undefined) updateData.silhouette = silhouette;
+    if (length !== undefined) updateData.length = length;
+    if (sleeves !== undefined) updateData.sleeves = sleeves;
+    if (style !== undefined) updateData.style = style;
+    if (rise !== undefined) updateData.rise = rise;
+    if (neckline !== undefined) updateData.neckline = neckline;
+    if (heelHeight !== undefined) updateData.heel_height = heelHeight;
+    if (bootHeight !== undefined) updateData.boot_height = bootHeight;
+    if (type !== undefined) updateData.type = type;
+    if (closure !== undefined) updateData.closure = closure; // THE KEY FIELD!
+    if (details !== undefined) updateData.details = details;
+    if (season !== undefined) updateData.season = season;
+    if (scenarios !== undefined) updateData.scenarios = scenarios;
+    if (wishlist !== undefined) updateData.wishlist = wishlist === true || wishlist === 'true';
+    if (imageUrl !== undefined) updateData.image_url = imageUrl;
+    if (tags !== undefined) updateData.tags = tags;
+
+    console.log('[API] Updating Supabase with closure:', updateData.closure);
+
+    // Update in Supabase database
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .select();
+
+    if (error) {
+      console.error('Supabase update error:', error);
+      return res.status(500).json({ error: 'Failed to update item in database', details: error.message });
+    }
+
+    if (!data || data.length === 0) {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Store old item for coverage recalculation
-    const oldItem = { ...global.inMemoryWardrobeItems[itemIndex] };
-
-    // Update item with all fields
-    const updatedItem = {
-      ...global.inMemoryWardrobeItems[itemIndex],
-      name: name !== undefined ? name : global.inMemoryWardrobeItems[itemIndex].name,
-      category: category !== undefined ? category : global.inMemoryWardrobeItems[itemIndex].category,
-      subcategory: subcategory !== undefined ? subcategory : global.inMemoryWardrobeItems[itemIndex].subcategory,
-      color: color !== undefined ? color : global.inMemoryWardrobeItems[itemIndex].color,
-      pattern: pattern !== undefined ? pattern : global.inMemoryWardrobeItems[itemIndex].pattern,
-      material: material !== undefined ? material : global.inMemoryWardrobeItems[itemIndex].material,
-      brand: brand !== undefined ? brand : global.inMemoryWardrobeItems[itemIndex].brand,
-      silhouette: silhouette !== undefined ? silhouette : global.inMemoryWardrobeItems[itemIndex].silhouette,
-      length: length !== undefined ? length : global.inMemoryWardrobeItems[itemIndex].length,
-      sleeves: sleeves !== undefined ? sleeves : global.inMemoryWardrobeItems[itemIndex].sleeves,
-      style: style !== undefined ? style : global.inMemoryWardrobeItems[itemIndex].style,
-      rise: rise !== undefined ? rise : global.inMemoryWardrobeItems[itemIndex].rise,
-      neckline: neckline !== undefined ? neckline : global.inMemoryWardrobeItems[itemIndex].neckline,
-      heelHeight: heelHeight !== undefined ? heelHeight : global.inMemoryWardrobeItems[itemIndex].heelHeight,
-      bootHeight: bootHeight !== undefined ? bootHeight : global.inMemoryWardrobeItems[itemIndex].bootHeight,
-      type: type !== undefined ? type : global.inMemoryWardrobeItems[itemIndex].type,
-      details: details !== undefined ? details : global.inMemoryWardrobeItems[itemIndex].details,
-      season: season !== undefined ? season : global.inMemoryWardrobeItems[itemIndex].season,
-      scenarios: scenarios !== undefined ? scenarios : global.inMemoryWardrobeItems[itemIndex].scenarios,
-      wishlist: wishlist !== undefined ? (wishlist === true || wishlist === 'true') : global.inMemoryWardrobeItems[itemIndex].wishlist,
-      imageUrl: imageUrl !== undefined ? imageUrl : global.inMemoryWardrobeItems[itemIndex].imageUrl,
-      tags: tags !== undefined ? tags : global.inMemoryWardrobeItems[itemIndex].tags
-    };
-
-    global.inMemoryWardrobeItems[itemIndex] = updatedItem;
+    const updatedItem = data[0];
+    console.log('[API] Item updated successfully with closure:', updatedItem.closure);
 
     // Trigger scenario coverage recalculation (async, don't block response)
-    console.log('🔵 ABOUT TO CALL onItemUpdated with:', {
-      userId: req.user.id,
-      oldItemName: oldItem.name,
-      newItemName: updatedItem.name,
-      oldOccasion: oldItem.occasion,
-      newOccasion: updatedItem.occasion
-    });
-    
-    onItemUpdated(req.user.id, oldItem, updatedItem).catch(error => {
+    // Note: oldItem comparison skipped for now - using frontend Supabase service instead
+    onItemUpdated(req.user.id, {}, updatedItem).catch(error => {
       console.error('Failed to update scenario coverage after item update:', error);
     });
 

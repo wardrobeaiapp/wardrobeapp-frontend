@@ -5,6 +5,12 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Create uploads directory if it doesn't exist
 const uploadDir = path.join(__dirname, '../uploads');
@@ -29,12 +35,19 @@ const upload = multer({
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    // Filter items for the current user from in-memory storage
-    // In production, this would be replaced with your Supabase queries
-    const userItems = (global.inMemoryWardrobeItems || []).filter(item => item.user === req.user.id);
-    // Sort by dateAdded (newest first)
-    userItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-    res.json(userItems);
+    // Get items from Supabase database
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .order('date_added', { ascending: false });
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to fetch items from database' });
+    }
+
+    res.json(data || []);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
@@ -172,6 +185,9 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
       ...(req.body.heelHeight && { heelHeight: req.body.heelHeight }),
       ...(req.body.bootHeight && { bootHeight: req.body.bootHeight }),
       ...(req.body.type && { type: req.body.type }),
+      ...(req.body.closure && { closure: req.body.closure }),
+      ...(req.body.details && { details: req.body.details }),
+      ...(req.body.scenarios && { scenarios: typeof req.body.scenarios === 'string' ? JSON.parse(req.body.scenarios) : req.body.scenarios }),
       ...(req.body.tags && { tags: typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags }),
       ...(req.body.wishlistStatus && { wishlistStatus: req.body.wishlistStatus })
     };
@@ -184,24 +200,62 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
     console.log('- category:', category);
     console.log('- color:', color);
     console.log('- season:', season);
+    console.log('- closure:', itemData.closure);
     console.log('- imageUrl:', imageUrl);
     console.log('- wishlist:', itemData.wishlist);
     
-    // Store the item in memory (in production, this would be replaced with Supabase queries)
-    const newItem = {
-      ...itemData,
-      id: `item-${Date.now()}`,
-      dateAdded: new Date().toISOString(),
+    // Map fields for Supabase (convert camelCase to snake_case)
+    const supabaseData = {
+      user_id: req.user.id,
+      name: itemData.name,
+      category: itemData.category,
+      subcategory: itemData.subcategory,
+      color: itemData.color,
+      pattern: itemData.pattern,
+      material: itemData.material,
+      brand: itemData.brand,
+      price: itemData.price,
+      silhouette: itemData.silhouette,
+      length: itemData.length,
+      sleeves: itemData.sleeves,
+      style: itemData.style,
+      rise: itemData.rise,
+      neckline: itemData.neckline,
+      heel_height: itemData.heelHeight,
+      boot_height: itemData.bootHeight,
+      type: itemData.type,
+      closure: itemData.closure, // The key field we're adding!
+      details: itemData.details,
+      season: itemData.season,
+      scenarios: itemData.scenarios,
+      image_url: itemData.imageUrl,
+      wishlist: itemData.wishlist,
+      date_added: new Date().toISOString(),
     };
-    
-    // Make sure the in-memory array exists
-    if (!global.inMemoryWardrobeItems) {
-      global.inMemoryWardrobeItems = [];
+
+    // Remove undefined fields
+    Object.keys(supabaseData).forEach(key => {
+      if (supabaseData[key] === undefined) {
+        delete supabaseData[key];
+      }
+    });
+
+    // Save to Supabase database
+    console.log('Saving item to Supabase with mapped data:', supabaseData);
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .insert([supabaseData])
+      .select();
+
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: 'Failed to save item to database', details: error.message });
     }
-    
-    global.inMemoryWardrobeItems.push(newItem);
-    console.log('Item saved successfully with ID:', newItem.id);
-    console.log('Final imageUrl in saved item:', newItem.imageUrl);
+
+    const newItem = data[0];
+    console.log('Item saved successfully to Supabase with ID:', newItem.id);
+    console.log('Final closure value in saved item:', newItem.closure);
+    console.log('Final imageUrl in saved item:', newItem.image_url);
     console.log('=== POST /api/wardrobe-items END ===');
     return res.status(201).json(newItem);
   } catch (err) {

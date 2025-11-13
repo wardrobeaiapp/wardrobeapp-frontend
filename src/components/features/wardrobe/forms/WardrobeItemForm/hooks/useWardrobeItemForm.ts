@@ -205,8 +205,6 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
       detectedTags
     };
     
-    // Debug logging removed for performance
-    
     return formData;
   };
 
