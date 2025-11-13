@@ -245,6 +245,29 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     }
   }
   
+  // SAFETY NET: Final closure rule validation to catch any AI mistakes
+  const invalidClosureItems = outfitItems.filter(item => {
+    const isCardigan = item.subcategory?.toLowerCase() === 'cardigan';
+    const isBlazer = item.subcategory?.toLowerCase() === 'blazer';
+    const isOpenFront = ['Open Front', 'Wrap Style'].includes(item.closure);
+    return (isCardigan || isBlazer) && isOpenFront;
+  });
+  
+  if (invalidClosureItems.length > 0) {
+    // Check if there's an underneath layer for the open front items
+    const hasUnderneathLayer = outfitItems.some(item => 
+      ['t-shirt', 'shirt', 'blouse', 'tank top', 'camisole'].includes(item.subcategory?.toLowerCase())
+    );
+    
+    if (!hasUnderneathLayer) {
+      const invalidNames = invalidClosureItems.map(item => `${item.name} (${item.closure})`).join(', ');
+      return {
+        isValid: false,
+        reason: `Open Front items require underneath layer: ${invalidNames}`
+      };
+    }
+  }
+  
   // Outfit is valid
   return { isValid: true };
 }
