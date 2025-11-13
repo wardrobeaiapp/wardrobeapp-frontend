@@ -1,11 +1,11 @@
 import React from 'react';
 import { WardrobeItem } from '../../../../../types';
 import { formatCategory } from '../../../../../utils/textFormatting';
+import ItemImage from '../ItemImage';
 import {
   ItemsGrid as StyledItemsGrid,
   ItemCard,
   ItemImageContainer,
-  ItemImage,
   PlaceholderImage,
   ItemContent,
   ItemName,
@@ -57,11 +57,9 @@ const ItemsGrid: React.FC<ItemsGridProps> = ({
             <ItemImageContainer>
               {item.imageUrl ? (
                 <ItemImage 
-                  src={item.imageUrl} 
-                  alt={item.name} 
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
+                  item={item}
+                  alt={item.name}
+                  className="item-grid-image"
                 />
               ) : (
                 <PlaceholderImage>No Image</PlaceholderImage>
