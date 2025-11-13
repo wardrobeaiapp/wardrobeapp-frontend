@@ -74,6 +74,11 @@ export const getFieldVisibility = (
       (category === ItemCategory.OUTERWEAR && 
         subcategory && 
         ['jacket', 'coat'].includes(subcategoryLower))
-    )
+    ),
+    
+    // Show closure field for cardigans and blazers
+    shouldShowClosure: !!(category === ItemCategory.TOP && 
+      subcategory && 
+      ['cardigan', 'blazer'].includes(subcategoryLower))
   };
 };

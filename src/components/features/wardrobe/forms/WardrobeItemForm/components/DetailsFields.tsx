@@ -34,6 +34,8 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
   onBootHeightChange,
   type,
   onTypeChange,
+  closure,
+  onClosureChange,
   details,
   onDetailsChange,
   scenarios,
@@ -223,6 +225,22 @@ export const DetailsFields: React.FC<DetailsFieldsProps> = ({
               >
                 <option value="">Select type</option>
                 {formOptions.typeOptions.map((option: string) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </FormSelect>
+            </FormField>
+          )}
+
+          {fieldVisibility.shouldShowClosure && (
+            <FormField label="Closure" error={errors.closure}>
+              <FormSelect
+                value={closure}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => onClosureChange(e.target.value)}
+                variant="outline"
+                isFullWidth
+              >
+                <option value="">Select closure type</option>
+                {formOptions.closureOptions.map((option: string) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
               </FormSelect>

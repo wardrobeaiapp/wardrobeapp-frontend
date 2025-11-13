@@ -32,6 +32,7 @@ export interface WardrobeItem {
   heelHeight?: string;
   bootHeight?: string;
   type?: string;
+  closure?: string; // Closure method for cardigans, blazers, etc. (e.g., Buttons, Zipper, Open Front)
   details?: string; // Additional styling details (e.g., puffed sleeves, bow details, wrap style)
   season: Season[];
   scenarios?: string[]; // Array of scenario names this item is suitable for

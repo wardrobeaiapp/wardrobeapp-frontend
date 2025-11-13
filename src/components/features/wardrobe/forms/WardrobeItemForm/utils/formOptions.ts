@@ -10,7 +10,8 @@ import {
   getHeelHeightOptions,
   getBootHeightOptions,
   getTypeOptions,
-  getPatternOptions
+  getPatternOptions,
+  getClosureOptions
 } from '../utils/formHelpers';
 
 /**
@@ -68,6 +69,11 @@ export const useFormOptions = (category: ItemCategory | '', subcategory: string)
     getPatternOptions(), 
     []
   );
+  
+  const closureOptions = useMemo(() => 
+    getClosureOptions(subcategory), 
+    [subcategory]
+  );
 
   return {
     silhouetteOptions,
@@ -79,6 +85,7 @@ export const useFormOptions = (category: ItemCategory | '', subcategory: string)
     heelHeightOptions,
     bootHeightOptions,
     typeOptions,
-    patternOptions
+    patternOptions,
+    closureOptions
   };
 };

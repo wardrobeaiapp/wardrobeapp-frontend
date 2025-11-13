@@ -231,3 +231,16 @@ export const getPatternOptions = (): string[] => {
     'Geometric & Abstract', 'Other', 'Polka Dot', 'Stripe'
   ];
 };
+
+// Get closure options for cardigans and blazers
+export const getClosureOptions = (subcategory?: string): string[] => {
+  if (!subcategory) return [];
+  
+  const subcategoryLower = subcategory.toLowerCase();
+  
+  if (subcategoryLower === 'cardigan' || subcategoryLower === 'blazer') {
+    return ['Buttons', 'Zipper', 'Belt', 'Open Front', 'Wrap Style'];
+  }
+  
+  return [];
+};

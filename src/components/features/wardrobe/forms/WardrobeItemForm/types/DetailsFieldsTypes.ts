@@ -39,6 +39,10 @@ export interface DetailsFieldsProps {
   type: string;
   onTypeChange: (type: string) => void;
   
+  // Closure field (for cardigans, blazers, etc.)
+  closure: string;
+  onClosureChange: (closure: string) => void;
+  
   // Additional details (styling notes)
   details: string;
   onDetailsChange: (details: string) => void;
@@ -74,4 +78,5 @@ export interface FieldVisibilityConfig {
   shouldShowHeelHeight: boolean;
   shouldShowBootHeight: boolean;
   shouldShowType: boolean;
+  shouldShowClosure: boolean;
 }

@@ -65,6 +65,7 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
   if (itemData.material) prompt += `  Material: ${itemData.material}\n`;
   if (itemData.style) prompt += `  Style: ${itemData.style}\n`;
   if (itemData.color) prompt += `  Color: ${itemData.color}\n`;
+  if (itemData.closure) prompt += `  Closure: ${itemData.closure}\n`;
   if (itemData.details) prompt += `  Details: ${itemData.details}\n`;
   
   prompt += `\nAVAILABLE COMPATIBLE ITEMS:\n`;
@@ -78,6 +79,7 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
         if (item.type) prompt += ` (type: ${item.type})`;
         if (item.material) prompt += ` (material: ${item.material})`;
         if (item.color) prompt += ` (color: ${item.color})`;
+        if (item.closure) prompt += ` (closure: ${item.closure})`;
         if (item.details) prompt += ` (${item.details})`;
         prompt += `\n`;
       });
@@ -98,7 +100,7 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
 - If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
-- When using outer layer items like cardigans, blazers, vests, or jackets, check their details for closure methods (buttons, zipper, belt, tie, snap, hook) - if no closure is mentioned or they're described as "open", they require something to be worn underneath (t-shirt, blouse, tank top, etc.)
+- When using outer layer items like cardigans, blazers, vests, or jackets, check their "closure" field - if it shows "Open Front" or "Wrap Style", they require something to be worn underneath (t-shirt, blouse, tank top, etc.). Items with "Buttons", "Zipper", or "Belt/Tie" closures can be worn alone
 - Pay attention to layer thickness and type when combining items - avoid layering outer garments together (don't put hoodies or sweatshirts with sweaters and cardigans, etc.) as both are designed to be worn as the outer layer, creating a bulky, impractical look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
