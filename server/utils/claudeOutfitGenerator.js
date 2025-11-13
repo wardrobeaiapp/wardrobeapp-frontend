@@ -92,7 +92,15 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
     scenario.toLowerCase().includes('staying at home')
   );
 
-  prompt += `\nINSTRUCTIONS:
+  prompt += `\n🚨 MANDATORY CLOSURE RULE FOR ALL OUTFIT COMBINATIONS 🚨
+For EVERY outfit you create, check ALL cardigans/blazers in the combination (from any source - base item OR available items list):
+• If ANY cardigan/blazer has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
+• If no underneath layer is available in that combination → DO NOT create that outfit
+• Example: "Jeans + Cream Cardigan (closure: Open Front) + Boots" = INVALID - skip this combination
+• Example: "Jeans + T-Shirt + Cream Cardigan (closure: Open Front) + Boots" = VALID
+This rule applies to EVERY outfit combination, regardless of which item is the base item.
+
+INSTRUCTIONS:
 - Create up to 10 COMPLETE outfit combinations that include the base item
 - Stop creating outfits when you've exhausted genuinely different, high-quality styling approaches
 - Each outfit should offer a DISTINCT STYLING APPROACH - different footwear, different tops, different layering, etc.
@@ -100,10 +108,6 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
 - If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
-- CRITICAL: Pay attention to the "closure" type field for outer layers (cardigans, blazers etc.). CLOSURE TYPE DETERMINES LAYERING REQUIREMENTS:
-  • "Open Front" or "Wrap Style" closures REQUIRE something underneath (t-shirt, blouse, tank top, etc.) - they cannot be worn alone
-  • "Buttons", "Zipper", or "Belt" closures CAN be worn alone or with layers underneath - they have full coverage
-- Always check the closure type before creating outfits with outer layers
 - Pay attention to layer thickness and type when combining items - avoid layering outer garments together (don't put hoodies or sweatshirts with sweaters and cardigans, etc.) as both are designed to be worn as the outer layer, creating a bulky, impractical look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"

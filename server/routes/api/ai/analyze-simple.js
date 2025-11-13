@@ -83,6 +83,7 @@ router.post('/', async (req, res) => {
         console.log(`      - material: ${item.material || 'N/A'}`);
         console.log(`      - style: ${item.style || 'N/A'}`);
         console.log(`      - type: ${item.type || 'N/A'}`);
+        console.log(`      - closure: ${item.closure || 'N/A'}`);
         console.log(`      - heelHeight: ${item.heelHeight || 'N/A'}`);
         console.log(`      - bootHeight: ${item.bootHeight || 'N/A'}`);
         console.log(`      - pattern: ${item.pattern || 'N/A'}`);

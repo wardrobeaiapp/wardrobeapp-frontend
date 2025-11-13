@@ -38,6 +38,7 @@ export function filterItemContextForAI(items: WardrobeItem[], maxItems?: number,
     if (item.rise !== undefined && item.rise !== null) filtered.rise = item.rise;
     if (item.heelHeight !== undefined && item.heelHeight !== null) filtered.heelHeight = item.heelHeight;
     if (item.bootHeight !== undefined && item.bootHeight !== null) filtered.bootHeight = item.bootHeight;
+    if (item.closure !== undefined && item.closure !== null) filtered.closure = item.closure; // CRITICAL for layering requirements (Open Front vs Buttons)
     if (item.details !== undefined && item.details !== null) filtered.details = item.details; // Essential styling details for AI compatibility analysis
     
     // Include card fields for frontend display when requested
