@@ -1,269 +1,74 @@
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const fetch = require('node-fetch');
-const { createClient } = require('@supabase/supabase-js');
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Import our new services and utilities
+const imageService = require('../services/imageService');
+const supabaseService = require('../services/supabaseService');
+const { mapItemDataForSupabase, processItemRequestData } = require('../utils/dataMappers');
+const { isValidItemId, validateRequiredFields, validateImageData, userOwnsItem } = require('../utils/validation');
 
-// Create uploads directory if it doesn't exist
-const uploadDir = path.join(__dirname, '../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-// Simplified multer configuration
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: uploadDir,
-    filename: (req, file, cb) => {
-      const uniqueName = `image-${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname) || '.jpg'}`;
-      cb(null, uniqueName);
-    }
-  }),
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-});
+// Create multer upload middleware
+const upload = imageService.createMulterConfig().single('image');
 
 // @route   GET /api/wardrobe-items
 // @desc    Get all wardrobe items for a user
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
-    // Get items from Supabase database
-    const { data, error } = await supabase
-      .from('wardrobe_items')
-      .select('*')
-      .eq('user_id', req.user.id)
-      .order('date_added', { ascending: false });
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return res.status(500).json({ error: 'Failed to fetch items from database' });
-    }
-
-    res.json(data || []);
+    const items = await supabaseService.getUserWardrobeItems(req.user.id);
+    res.json(items);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: err.message });
   }
 });
 
 // @route   POST /api/wardrobe-items
 // @desc    Add a new wardrobe item
 // @access  Private
-router.post('/', auth, upload.single('image'), async (req, res) => {
+router.post('/', auth, upload, async (req, res) => {
   try {
     console.log('=== POST /api/wardrobe-items START ===');
     console.log('Request body keys:', Object.keys(req.body));
     console.log('Request has image?', req.body.imageUrl ? 'YES' : 'NO');
     console.log('Request file:', req.file);
     
-    // Basic validation
-    if (!req.body.name || !req.body.category || !req.body.color) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Validate required fields
+    const validation = validateRequiredFields(req.body);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: 'Missing required fields', details: validation.errors });
     }
     
-    // Extract basic fields
-    const name = req.body.name;
-    const category = req.body.category;
-    const color = req.body.color;
+    // Process item data from request
+    const itemData = processItemRequestData(req.body);
     
-    // Handle arrays with safe defaults
-    let season = ['ALL_SEASON'];
-    
-    // Try to parse season if provided
-    if (req.body.season) {
-      try {
-        season = JSON.parse(req.body.season);
-      } catch (err) {
-        console.log('Using default season due to parsing error');
-      }
-    }
-    
-    // Handle image URL
-    let imageUrl = null;
-    
-    console.log('Checking for image in request...');
-    console.log('Request body keys:', Object.keys(req.body));
-    console.log('Request body imageUrl type:', typeof req.body.imageUrl);
-    console.log('Request body imageUrl starts with data:image?', req.body.imageUrl && req.body.imageUrl.startsWith('data:image'));
-    
-    // Check if we have a file from multer
-    if (req.file) {
-      console.log('Found file from multer:', req.file.filename);
-      // Use absolute URL with hostname for client compatibility
-      // Use the request's host and protocol to build the full URL
-      const host = req.get('host');
-      const protocol = req.protocol;
-      imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
-      console.log('Image saved to:', imageUrl);
-    } 
-    // Check if we have a base64 image in the request body
-    else if (req.body.imageUrl && req.body.imageUrl.startsWith('data:image')) {
-      console.log('Found base64 image in request body');
-      try {
-        // Extract the base64 data and file type
-        const matches = req.body.imageUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        
-        if (!matches || matches.length !== 3) {
-          console.log('Invalid base64 image format');
-        } else {
-          // Extract content type and base64 data
-          const contentType = matches[1];
-          const base64Data = matches[2];
-          console.log('Image content type:', contentType);
-          console.log('Base64 data length:', base64Data.length);
-          
-          const buffer = Buffer.from(base64Data, 'base64');
-          
-          // Generate a unique filename
-          const filename = `image-${Date.now()}-${Math.round(Math.random() * 1E9)}.${contentType.split('/')[1] || 'jpg'}`;
-          const filepath = path.join(uploadDir, filename);
-          console.log('Saving image to path:', filepath);
-          
-          // Check if directory exists and is writable
-          try {
-            console.log('Upload directory exists:', fs.existsSync(uploadDir));
-            console.log('Upload directory writable:', fs.accessSync(uploadDir, fs.constants.W_OK) === undefined);
-          } catch (err) {
-            console.error('Directory access error:', err);
-          }
-          
-          // Save the file
-          try {
-            fs.writeFileSync(filepath, buffer);
-            console.log('File saved successfully to:', filepath);
-            console.log('File exists after save:', fs.existsSync(filepath));
-            console.log('File size:', fs.statSync(filepath).size, 'bytes');
-          } catch (saveErr) {
-            console.error('Error saving file:', saveErr);
-            throw saveErr;
-          }
-          
-          // Set the image URL - use absolute URL with hostname for client compatibility
-          const host = req.get('host');
-          const protocol = req.protocol;
-          imageUrl = `${protocol}://${host}/uploads/${filename}`;
-          console.log('Base64 image saved to:', imageUrl);
-        }
-      } catch (error) {
-        console.error('Error saving base64 image:', error);
-        console.error('Error details:', error.message);
-      }
-    } else {
-      console.log('No image received in request');
-    }
-    
-    // Create the item object with all possible fields
-    const itemData = {
-      user: req.user.id,
-      name,
-      category,
-      color,
-      season,
-      imageUrl,
-      wishlist: req.body.wishlist === true || req.body.wishlist === 'true',
-      // Include all optional fields if provided
-      ...(req.body.subcategory && { subcategory: req.body.subcategory }),
-      ...(req.body.brand && { brand: req.body.brand }),
-      ...(req.body.size && { size: req.body.size }),
-      ...(req.body.material && { material: req.body.material }),
-      ...(req.body.price && { price: parseFloat(req.body.price) }),
-      ...(req.body.pattern && { pattern: req.body.pattern }),
-      ...(req.body.silhouette && { silhouette: req.body.silhouette }),
-      ...(req.body.length && { length: req.body.length }),
-      ...(req.body.sleeves && { sleeves: req.body.sleeves }),
-      ...(req.body.style && { style: req.body.style }),
-      ...(req.body.rise && { rise: req.body.rise }),
-      ...(req.body.neckline && { neckline: req.body.neckline }),
-      ...(req.body.heelHeight && { heelHeight: req.body.heelHeight }),
-      ...(req.body.bootHeight && { bootHeight: req.body.bootHeight }),
-      ...(req.body.type && { type: req.body.type }),
-      ...(req.body.closure && { closure: req.body.closure }),
-      ...(req.body.details && { details: req.body.details }),
-      ...(req.body.scenarios && { scenarios: typeof req.body.scenarios === 'string' ? JSON.parse(req.body.scenarios) : req.body.scenarios }),
-      ...(req.body.tags && { tags: typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags }),
-      ...(req.body.wishlistStatus && { wishlistStatus: req.body.wishlistStatus })
-    };
-    
-    console.log('Wishlist property in request:', req.body.wishlist);
-    console.log('Wishlist property type:', typeof req.body.wishlist);
+    // Process image
+    const imageUrl = await imageService.processImageFromRequest(req);
+    itemData.imageUrl = imageUrl;
     
     console.log('Creating wardrobe item with data:');
-    console.log('- name:', name);
-    console.log('- category:', category);
-    console.log('- color:', color);
-    console.log('- season:', season);
+    console.log('- name:', itemData.name);
+    console.log('- category:', itemData.category);
+    console.log('- color:', itemData.color);
+    console.log('- season:', itemData.season);
     console.log('- closure:', itemData.closure);
     console.log('- imageUrl:', imageUrl);
     console.log('- wishlist:', itemData.wishlist);
     
-    // Map fields for Supabase (convert camelCase to snake_case)
-    const supabaseData = {
-      user_id: req.user.id,
-      name: itemData.name,
-      category: itemData.category,
-      subcategory: itemData.subcategory,
-      color: itemData.color,
-      pattern: itemData.pattern,
-      material: itemData.material,
-      brand: itemData.brand,
-      price: itemData.price,
-      silhouette: itemData.silhouette,
-      length: itemData.length,
-      sleeves: itemData.sleeves,
-      style: itemData.style,
-      rise: itemData.rise,
-      neckline: itemData.neckline,
-      heel_height: itemData.heelHeight,
-      boot_height: itemData.bootHeight,
-      type: itemData.type,
-      closure: itemData.closure, // The key field we're adding!
-      details: itemData.details,
-      season: itemData.season,
-      scenarios: itemData.scenarios,
-      image_url: itemData.imageUrl,
-      wishlist: itemData.wishlist,
-      date_added: new Date().toISOString(),
-    };
-
-    // Remove undefined fields
-    Object.keys(supabaseData).forEach(key => {
-      if (supabaseData[key] === undefined) {
-        delete supabaseData[key];
-      }
-    });
-
-    // Save to Supabase database
-    console.log('Saving item to Supabase with mapped data:', supabaseData);
-    const { data, error } = await supabase
-      .from('wardrobe_items')
-      .insert([supabaseData])
-      .select();
-
-    if (error) {
-      console.error('Supabase error:', error);
-      return res.status(500).json({ error: 'Failed to save item to database', details: error.message });
-    }
-
-    const newItem = data[0];
-    console.log('Item saved successfully to Supabase with ID:', newItem.id);
-    console.log('Final closure value in saved item:', newItem.closure);
-    console.log('Final imageUrl in saved item:', newItem.image_url);
+    // Map data for Supabase
+    const supabaseData = mapItemDataForSupabase(itemData, req.user.id);
+    
+    // Save to database
+    const newItem = await supabaseService.createWardrobeItem(supabaseData);
+    
     console.log('=== POST /api/wardrobe-items END ===');
     return res.status(201).json(newItem);
   } catch (err) {
     console.error('Error adding wardrobe item:', err);
     console.error('Error stack:', err.stack);
     
-    // Send detailed error response for debugging
-    res.status(500).send({
+    res.status(500).json({
       error: 'Server error',
       message: err.message,
       stack: process.env.NODE_ENV === 'production' ? null : err.stack
@@ -276,41 +81,28 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 // @access  Private
 router.get('/:id', auth, async (req, res) => {
   try {
-    // Handle invalid ID formats more gracefully
     const itemId = req.params.id;
     
-    // Comprehensive validation for invalid IDs
-    if (!itemId || 
-        itemId.trim() === '' || 
-        itemId === 'null' || 
-        itemId === 'undefined' ||
-        itemId.length > 100 ||  // Too long
-        /[<>\"'%;()&+]/.test(itemId)) {  // Contains suspicious characters
+    // Validate item ID
+    if (!isValidItemId(itemId)) {
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Find item in storage (in production, this would be replaced with Supabase queries)
-    const item = (global.inMemoryWardrobeItems || []).find(item => item.id === itemId);
+    // Get item from database
+    const item = await supabaseService.getWardrobeItemById(itemId, req.user.id);
     
-    // Check if item exists
     if (!item) {
       return res.status(404).json({ message: 'Item not found' });
-    }
-    
-    // Check if user owns the item
-    if (item.user !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
     }
     
     res.json(item);
   } catch (err) {
     console.error(err.message);
-    // For malformed requests that don't match our validation, return 404
     if (err.message.includes('Invalid ID format') || 
         err.name === 'ValidationError') {
       return res.status(404).json({ message: 'Item not found' });
     }
-    res.status(500).send('Server error');
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -319,30 +111,24 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id', auth, async (req, res) => {
   try {
-    // Find item in storage (in production, this would be replaced with Supabase queries)
-    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
+    const itemId = req.params.id;
     
-    // Check if item exists
-    if (itemIndex === -1) {
+    // Validate item ID
+    if (!isValidItemId(itemId)) {
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Check if user owns the item
-    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
+    // Update item in database
+    const updatedItem = await supabaseService.updateWardrobeItem(itemId, req.user.id, req.body);
+    
+    if (!updatedItem) {
+      return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Update item
-    global.inMemoryWardrobeItems[itemIndex] = {
-      ...global.inMemoryWardrobeItems[itemIndex],
-      ...req.body,
-      id: req.params.id // Ensure ID doesn't change
-    };
-    
-    res.json(global.inMemoryWardrobeItems[itemIndex]);
+    res.json(updatedItem);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -351,39 +137,24 @@ router.put('/:id', auth, async (req, res) => {
 // @access  Private
 router.delete('/:id', auth, async (req, res) => {
   try {
-    // Handle invalid ID formats more gracefully
     const itemId = req.params.id;
     
-    // Comprehensive validation for invalid IDs
-    if (!itemId || 
-        itemId.trim() === '' || 
-        itemId === 'null' || 
-        itemId === 'undefined' ||
-        itemId.length > 100 ||  // Too long
-        /[<>\"'%;()&+]/.test(itemId)) {  // Contains suspicious characters
+    // Validate item ID
+    if (!isValidItemId(itemId)) {
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Find item in storage (in production, this would be replaced with Supabase queries)
-    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === itemId);
+    // Delete item from database
+    const deleted = await supabaseService.deleteWardrobeItem(itemId, req.user.id);
     
-    // Check if item exists
-    if (itemIndex === -1) {
+    if (!deleted) {
       return res.status(404).json({ message: 'Item not found' });
     }
-    
-    // Check if user owns the item
-    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
-    }
-    
-    // Delete the item
-    global.inMemoryWardrobeItems.splice(itemIndex, 1);
     
     res.json({ message: 'Item removed' });
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -392,30 +163,31 @@ router.delete('/:id', auth, async (req, res) => {
 // @access  Private
 router.put('/:id/wear', auth, async (req, res) => {
   try {
-    // Find item in storage (in production, this would be replaced with Supabase queries)
-    const itemIndex = (global.inMemoryWardrobeItems || []).findIndex(item => item.id === req.params.id);
+    const itemId = req.params.id;
     
-    // Check if item exists
-    if (itemIndex === -1) {
+    // Validate item ID
+    if (!isValidItemId(itemId)) {
       return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Check if user owns the item
-    if (global.inMemoryWardrobeItems[itemIndex].user !== req.user.id) {
-      return res.status(401).json({ message: 'Not authorized' });
+    // Get current item
+    const currentItem = await supabaseService.getWardrobeItemById(itemId, req.user.id);
+    if (!currentItem) {
+      return res.status(404).json({ message: 'Item not found' });
     }
     
-    // Update times worn and last worn date
-    global.inMemoryWardrobeItems[itemIndex] = {
-      ...global.inMemoryWardrobeItems[itemIndex],
-      timesWorn: (global.inMemoryWardrobeItems[itemIndex].timesWorn || 0) + 1,
-      lastWorn: new Date().toISOString()
+    // Update wear data
+    const wearData = {
+      times_worn: (currentItem.times_worn || 0) + 1,
+      last_worn: new Date().toISOString()
     };
     
-    res.json(global.inMemoryWardrobeItems[itemIndex]);
+    const updatedItem = await supabaseService.updateWardrobeItem(itemId, req.user.id, wearData);
+    
+    res.json(updatedItem);
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -427,42 +199,17 @@ router.post('/test-image', async (req, res) => {
     console.log('POST /api/wardrobe-items/test-image received');
     console.log('Request body keys:', Object.keys(req.body));
     
-    if (!req.body.image) {
-      return res.status(400).json({ error: 'No image data provided' });
+    const validation = validateImageData(req.body.image);
+    if (!validation.isValid) {
+      return res.status(400).json({ error: validation.error });
     }
     
-    // Extract the base64 data
-    const matches = req.body.image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    // Process the base64 image
+    const imageUrl = await imageService.processBase64Image(req.body.image, req);
     
-    if (!matches || matches.length !== 3) {
-      return res.status(400).json({ error: 'Invalid image format' });
+    if (!imageUrl) {
+      return res.status(500).json({ error: 'Failed to process image' });
     }
-    
-    // Extract content type and base64 data
-    const contentType = matches[1];
-    const base64Data = matches[2];
-    const buffer = Buffer.from(base64Data, 'base64');
-    
-    // Ensure uploads directory exists
-    const uploadDir = path.join(__dirname, '../uploads');
-    if (!fs.existsSync(uploadDir)) {
-      console.log('Creating uploads directory...');
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    // Generate a unique filename
-    const filename = `test-image-${Date.now()}.${contentType.split('/')[1] || 'jpg'}`;
-    const filepath = path.join(uploadDir, filename);
-    
-    // Save the file
-    fs.writeFileSync(filepath, buffer);
-    console.log('Test image saved to:', filepath);
-    
-    // Return the FULL URL to the saved image (including hostname)
-    const host = req.get('host');
-    const protocol = req.protocol;
-    const imageUrl = `${protocol}://${host}/uploads/${filename}`;
-    console.log('Returning full image URL:', imageUrl);
     
     return res.json({ success: true, imageUrl });
   } catch (err) {
@@ -482,52 +229,11 @@ router.post('/download-image', auth, async (req, res) => {
       return res.status(400).json({ error: 'Image URL is required' });
     }
     
-    console.log('[Server] Downloading image from URL:', imageUrl);
-    
-    // Download the image from external URL
-    const response = await fetch(imageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-    }
-    
-    // Get the image buffer
-    const imageBuffer = await response.buffer();
-    
-    // Determine file extension from content type or URL
-    let fileExt = 'jpg'; // default
-    const contentType = response.headers.get('content-type');
-    if (contentType?.includes('image/png')) fileExt = 'png';
-    else if (contentType?.includes('image/gif')) fileExt = 'gif';
-    else if (contentType?.includes('image/webp')) fileExt = 'webp';
-    else if (contentType?.includes('image/jpeg')) fileExt = 'jpg';
-    else {
-      // Try to extract from URL
-      const urlExt = imageUrl.split('.').pop()?.split('?')[0]?.toLowerCase();
-      if (urlExt && ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt)) {
-        fileExt = urlExt === 'jpeg' ? 'jpg' : urlExt;
-      }
-    }
-    
-    // Generate unique filename
-    const uniqueName = `downloaded-${Date.now()}-${Math.round(Math.random() * 1E9)}.${fileExt}`;
-    const filePath = path.join(uploadDir, uniqueName);
-    
-    // Save the image to disk
-    fs.writeFileSync(filePath, imageBuffer);
-    
-    // Return the relative URL path for the stored image
-    const imageUrlPath = `/uploads/${uniqueName}`;
-    
-    console.log('[Server] Image downloaded and saved successfully:', imageUrlPath);
+    const localImageUrl = await imageService.downloadExternalImage(imageUrl, req);
     
     res.json({
       success: true,
-      imageUrl: imageUrlPath,
+      imageUrl: localImageUrl,
       originalUrl: imageUrl
     });
     
