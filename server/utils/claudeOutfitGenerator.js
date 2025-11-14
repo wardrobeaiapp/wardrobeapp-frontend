@@ -92,13 +92,23 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
     scenario.toLowerCase().includes('staying at home')
   );
 
-  prompt += `\n🚨 MANDATORY CLOSURE RULE FOR ALL OUTFIT COMBINATIONS 🚨
+  prompt += `\n🚨 BLAZER/CARDIGAN STYLING RULES 🚨
 For EVERY outfit you create, check ALL cardigans/blazers in the combination (from any source - base item OR available items list):
+
+MANDATORY RULE:
 • If ANY cardigan/blazer has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
 • If no underneath layer is available in that combination → DO NOT create that outfit
 • Example: "Jeans + Cream Cardigan (closure: Open Front) + Boots" = INVALID - skip this combination
 • Example: "Jeans + T-Shirt + Cream Cardigan (closure: Open Front) + Boots" = VALID
-This rule applies to EVERY outfit combination, regardless of which item is the base item.
+
+STYLING VARIETY RULE:
+• For button/zip closure blazers/cardigans - CREATE BOTH styling approaches when possible:
+  - Some outfits with the blazer/cardigan worn STANDALONE (just the blazer + bottoms + shoes)
+  - Some outfits with the blazer/cardigan LAYERED over tops (blazer + shirt/blouse/t-shirt + bottoms + shoes)
+• This creates styling variety and shows different looks: professional (standalone), casual-chic (layered), etc.
+• Example variety: "Navy Blazer + White Pants + Heels" AND "Navy Blazer + Silk Blouse + White Pants + Heels"
+
+These rules apply to EVERY outfit combination, regardless of which item is the base item.
 
 INSTRUCTIONS:
 - Create up to 10 COMPLETE outfit combinations that include the base item
@@ -108,7 +118,7 @@ INSTRUCTIONS:
 - If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
-- 🚨 OUTERWEAR RULE: If the base item is OUTERWEAR (jacket, blazer, cardigan), the outfit MUST include BOTH a TOP and BOTTOMS underneath. Never create outfits like "Jacket + Jeans + Boots" - always include a shirt/blouse/top under the outerwear.
+- 🚨 OUTERWEAR RULE: If the base item is OUTERWEAR (jacket, blazer, cardigan), ensure it follows the closure rules above. Button/zip blazers can be worn standalone OR layered for variety. Heavy jackets and coats typically need base layers underneath.
 - Pay attention to layer thickness and type when combining items - avoid layering outer garments together (don't put hoodies or sweatshirts with sweaters and cardigans, etc.) as both are designed to be worn as the outer layer, creating a bulky, impractical look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
@@ -247,24 +257,37 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
   }
   
   if (baseCategory === 'outerwear') {
-    // Outerwear (jackets, blazers, cardigans) need BOTH tops AND bottoms underneath
-    const hasTops = outfitItems.some(item => 
-      ['top', 'tops'].includes(item.category?.toLowerCase())
-    );
+    // Smart outerwear validation based on item type and styling approach
     const hasBottoms = outfitItems.some(item => 
       ['bottom', 'bottoms'].includes(item.category?.toLowerCase())
     );
     
-    if (!hasTops) {
-      return {
-        isValid: false,
-        reason: 'Outerwear-based outfit missing tops (cannot wear jacket/blazer without a base layer)'
-      };
-    }
+    // Bottoms are always required for outerwear-based outfits
     if (!hasBottoms) {
       return {
         isValid: false,
         reason: 'Outerwear-based outfit missing bottoms (need complete outfit underneath)'
+      };
+    }
+    
+    // For tops: Blazers and cardigans can be worn standalone if they have button/zip closures
+    // Heavy jackets and coats typically need base layers
+    const baseItem = outfitItems.find(item => item.category?.toLowerCase() === 'outerwear');
+    const isBlazerId = baseItem?.subcategory?.toLowerCase() === 'blazer';
+    const isCardigan = baseItem?.subcategory?.toLowerCase() === 'cardigan';
+    const hasButtonOrZip = baseItem?.closure && ['Buttons', 'Zipper'].includes(baseItem.closure);
+    
+    const hasTops = outfitItems.some(item => 
+      ['top', 'tops'].includes(item.category?.toLowerCase())
+    );
+    
+    // Heavy jackets/coats need base layers, but blazers/cardigans with proper closures can go standalone
+    const canGoStandalone = (isBlazerId || isCardigan) && hasButtonOrZip;
+    
+    if (!hasTops && !canGoStandalone) {
+      return {
+        isValid: false,
+        reason: `${baseItem?.subcategory || 'Outerwear'} requires base layer underneath (missing top)`
       };
     }
   }
