@@ -108,6 +108,7 @@ INSTRUCTIONS:
 - If you add accessories to an outfit, include them as part of a complete look, don't create separate versions with/without accessories
 - A COMPLETE outfit must include: base item + appropriate clothing + ${isHomeScenario ? 'footwear (optional for home scenarios)' : 'footwear (REQUIRED)'}
 - ACCESSORIES (bags, jewelry, belts) should be included when they enhance the outfit, but don't create separate outfit variations just to add/remove accessories
+- 🚨 OUTERWEAR RULE: If the base item is OUTERWEAR (jacket, blazer, cardigan), the outfit MUST include BOTH a TOP and BOTTOMS underneath. Never create outfits like "Jacket + Jeans + Boots" - always include a shirt/blouse/top under the outerwear.
 - Pay attention to layer thickness and type when combining items - avoid layering outer garments together (don't put hoodies or sweatshirts with sweaters and cardigans, etc.) as both are designed to be worn as the outer layer, creating a bulky, impractical look
 - Consider weather appropriateness (e.g., don't pair heavy winter items with summer items)
 - Consider occasion appropriateness for "${scenario}"
@@ -241,6 +242,29 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
       return {
         isValid: false,
         reason: 'Bottom-based outfit missing tops'
+      };
+    }
+  }
+  
+  if (baseCategory === 'outerwear') {
+    // Outerwear (jackets, blazers, cardigans) need BOTH tops AND bottoms underneath
+    const hasTops = outfitItems.some(item => 
+      ['top', 'tops'].includes(item.category?.toLowerCase())
+    );
+    const hasBottoms = outfitItems.some(item => 
+      ['bottom', 'bottoms'].includes(item.category?.toLowerCase())
+    );
+    
+    if (!hasTops) {
+      return {
+        isValid: false,
+        reason: 'Outerwear-based outfit missing tops (cannot wear jacket/blazer without a base layer)'
+      };
+    }
+    if (!hasBottoms) {
+      return {
+        isValid: false,
+        reason: 'Outerwear-based outfit missing bottoms (need complete outfit underneath)'
       };
     }
   }
