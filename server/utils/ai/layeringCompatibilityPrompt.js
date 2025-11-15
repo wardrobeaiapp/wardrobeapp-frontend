@@ -10,7 +10,26 @@ function isItemSuitableForLayering(itemData, extractedCharacteristics) {
   const category = itemData.category?.toLowerCase();
   const subcategory = itemData.subcategory?.toLowerCase();
   
-  // Items that are typically standalone (cannot be layered effectively)
+  // FIRST: Check AI's intelligent layering assessment (prioritize over hardcoded rules)
+  if (extractedCharacteristics) {
+    // Look for layering-related characteristics - updated field names
+    const layeringPotential = extractedCharacteristics.layeringPotential;
+    if (layeringPotential) {
+      const layeringLower = layeringPotential.toLowerCase();
+      
+      if (layeringLower.includes('standalone') || layeringLower.includes('limited')) {
+        console.log(`🚫 Item "${itemData.name}" has ${layeringPotential} layering potential - excluding from layering combinations`);
+        return false;
+      }
+      // If AI says 'versatile', trust that assessment over hardcoded rules
+      if (layeringLower.includes('versatile')) {
+        console.log(`✅ Item "${itemData.name}" has ${layeringPotential} layering potential - including in layering combinations`);
+        return true;
+      }
+    }
+  }
+  
+  // FALLBACK: Use hardcoded rules only when AI assessment is missing
   const standaloneItems = {
     'one_piece': ['dress', 'jumpsuit', 'romper', 'bodysuit'],
     'outerwear': ['coat', 'puffer', 'parka', 'trench'], // Heavy outerwear is typically outermost
@@ -19,20 +38,11 @@ function isItemSuitableForLayering(itemData, extractedCharacteristics) {
     'accessory': ['hat', 'bag', 'jewelry'] // Accessories don't layer typically
   };
   
-  // Check if item is in standalone categories
+  // Check if item is in standalone categories (only as fallback)
   if (standaloneItems[category]) {
     const standaloneSubcategories = standaloneItems[category];
     if (standaloneSubcategories.includes(subcategory)) {
-      return false;
-    }
-  }
-  
-  // Check if item has layering restrictions based on extracted characteristics
-  if (extractedCharacteristics) {
-    // Look for layering-related characteristics - updated field names
-    const layeringPotential = extractedCharacteristics.layeringPotential;
-    if (layeringPotential === 'standalone' || layeringPotential === 'limited') {
-      console.log(`🚫 Item "${itemData.name}" has ${layeringPotential} layering potential - excluding from layering combinations`);
+      console.log(`🚫 Item "${itemData.name}" in hardcoded standalone category ${category}:${subcategory} - excluding from layering combinations`);
       return false;
     }
   }
@@ -300,30 +310,57 @@ function parseLayeringCompatibilityResponse(claudeResponse, stylingContext = [])
  */
 function getLayeringItemsFromContext(stylingContext, newItemCategory) {
   if (!stylingContext || stylingContext.length === 0) {
+    console.log('🔍 [DEBUG] No styling context provided to getLayeringItemsFromContext');
     return [];
   }
+  
+  console.log(`🔍 [DEBUG] getLayeringItemsFromContext called with:`);
+  console.log(`   - newItemCategory: ${newItemCategory}`);
+  console.log(`   - stylingContext length: ${stylingContext.length}`);
+  
+  // Debug: Show what's actually in styling context
+  const categoryBreakdown = {};
+  stylingContext.forEach(item => {
+    const cat = item.category?.toLowerCase() || 'unknown';
+    if (!categoryBreakdown[cat]) categoryBreakdown[cat] = [];
+    categoryBreakdown[cat].push(item.name);
+  });
+  console.log('   - stylingContext breakdown:', categoryBreakdown);
   
   // Define what can layer with what
   const layeringMap = {
     'top': ['top', 'outerwear'], // Tops can layer with other tops and outerwear
     'outerwear': ['top'], // Light outerwear can layer with tops
+    'one_piece': ['outerwear'], // Dresses can layer with outerwear (blazers, cardigans, jackets over dress)
     'accessory': ['accessory'] // Some accessories can layer (scarves)
   };
   
   const newCategory = newItemCategory?.toLowerCase();
   const validLayeringCategories = layeringMap[newCategory] || [];
   
+  console.log(`   - newCategory: ${newCategory}`);
+  console.log(`   - validLayeringCategories: ${validLayeringCategories}`);
+  
   const layeringItems = stylingContext.filter(item => {
     const existingCategory = item.category?.toLowerCase();
     const isLayeringCategory = validLayeringCategories.includes(existingCategory);
     
+    console.log(`   - Checking item "${item.name}" (${existingCategory}): ${isLayeringCategory ? 'INCLUDED' : 'EXCLUDED'}`);
+    
     // Additional filtering for specific subcategories
     if (isLayeringCategory && existingCategory === 'accessory') {
       const subcategory = item.subcategory?.toLowerCase();
-      return ['scarf', 'wrap', 'shawl'].includes(subcategory);
+      const accessoryIncluded = ['scarf', 'wrap', 'shawl'].includes(subcategory);
+      console.log(`     - Accessory subcategory filter: ${subcategory} -> ${accessoryIncluded ? 'INCLUDED' : 'EXCLUDED'}`);
+      return accessoryIncluded;
     }
     
     return isLayeringCategory;
+  });
+  
+  console.log(`🔍 [DEBUG] getLayeringItemsFromContext result: ${layeringItems.length} items`);
+  layeringItems.forEach(item => {
+    console.log(`   ✅ ${item.name} (${item.category})`);
   });
   
   return layeringItems;
