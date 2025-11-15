@@ -114,7 +114,7 @@ function parseCompatibilityResponse(claudeResponse, stylingContext = []) {
       reasoning = match[2] ? match[2].trim() : '';
       console.log(`❌ ${itemName} → NOT_COMPATIBLE${reasoning ? ' - ' + reasoning : ''}`);
     } else {
-      console.log(`⚠️ ${itemName} → No clear response found`);
+      // Skip logging "No clear response found" - items may be handled by other compatibility types
     }
   });
 
