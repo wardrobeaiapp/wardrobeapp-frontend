@@ -108,6 +108,21 @@ STYLING VARIETY RULE:
 • This creates styling variety and shows different looks: professional (standalone), casual-chic (layered), etc.
 • Example variety: "Navy Blazer + White Pants + Heels" AND "Navy Blazer + Silk Blouse + White Pants + Heels"
 
+🚨 CRITICAL: PROPER LAYERING RULES 🚨
+• GOOD LAYERING (encouraged): Base layer + outer layer
+  - ✅ VALID: "T-shirt + Blazer + Jeans" (base + outer)
+  - ✅ VALID: "Tank Top + Cardigan + Skirt" (base + outer)
+  - ✅ VALID: "Blouse + Light Jacket + Trousers" (base + outer)
+
+• BAD LAYERING (forbidden): Multiple outer layers together
+  - ❌ INVALID: "Hoodie + Sweatshirt" (both are outer layers)
+  - ❌ INVALID: "Sweater + Cardigan" (both are outer layers)  
+  - ❌ INVALID: "Blazer + Jacket" (both are outer layers)
+
+• Outer layer items: hoodies, sweatshirts, sweaters, cardigans, blazers, jackets, coats
+• Base layer items: t-shirts, tank tops, blouses, shirts, camisoles
+• Rule: Multiple tops are GOOD when they're proper layering (base + outer), BAD when they're competing outer layers
+
 These rules apply to EVERY outfit combination, regardless of which item is the base item.
 
 INSTRUCTIONS:
@@ -256,6 +271,30 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     }
   }
   
+  if (baseCategory === 'footwear') {
+    // Footwear needs BOTH tops AND bottoms to make a complete outfit
+    // Note: Multiple tops are allowed for proper layering (e.g., t-shirt + blazer)
+    const topItems = outfitItems.filter(item => 
+      ['top', 'tops'].includes(item.category?.toLowerCase())
+    );
+    const hasBottoms = outfitItems.some(item => 
+      ['bottom', 'bottoms'].includes(item.category?.toLowerCase())
+    );
+    
+    if (topItems.length === 0) {
+      return {
+        isValid: false,
+        reason: 'Footwear-based outfit missing tops (cannot wear just shoes and bottoms)'
+      };
+    }
+    if (!hasBottoms) {
+      return {
+        isValid: false,
+        reason: 'Footwear-based outfit missing bottoms (cannot wear just shoes and tops)'
+      };
+    }
+  }
+  
   if (baseCategory === 'outerwear') {
     // Smart outerwear validation based on item type and styling approach
     const hasBottoms = outfitItems.some(item => 
@@ -292,6 +331,21 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     }
   }
   
+  // SAFETY NET: Check for double outer layer violations
+  const outerLayerItems = outfitItems.filter(item => {
+    const subcategory = item.subcategory?.toLowerCase() || '';
+    const isOuterLayer = ['hoodie', 'sweatshirt', 'sweater', 'cardigan', 'blazer', 'jacket', 'coat'].includes(subcategory);
+    return isOuterLayer;
+  });
+  
+  if (outerLayerItems.length > 1) {
+    const outerLayerNames = outerLayerItems.map(item => `${item.name} (${item.subcategory})`).join(' + ');
+    return {
+      isValid: false,
+      reason: `Invalid double outer layers: ${outerLayerNames} - choose only one outer layer per outfit`
+    };
+  }
+
   // SAFETY NET: Final closure rule validation to catch any AI mistakes
   const invalidClosureItems = outfitItems.filter(item => {
     const isCardigan = item.subcategory?.toLowerCase() === 'cardigan';
