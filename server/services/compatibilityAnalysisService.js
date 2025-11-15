@@ -205,20 +205,29 @@ async function analyzeLayeringCompatibility(itemDataForLayering, extractedCharac
         const layeringCategoryCount = Object.keys(compatibleItems).length;
         const layeringTotalItems = Object.values(compatibleItems).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
         console.log(`✅ Found ${layeringTotalItems} compatible layering items across ${layeringCategoryCount} categories`);
-        return { compatibleItems: compatibleItems.compatibleItems || [], compatibleItemsByCategory: compatibleItems.compatibleItemsByCategory || [] };
+        
+        // Log which items were found for debugging
+        Object.entries(compatibleItems).forEach(([category, items]) => {
+          if (Array.isArray(items) && items.length > 0) {
+            const itemNames = items.map(item => item.name).join(', ');
+            console.log(`   ${category}: ${items.length} items (${itemNames})`);
+          }
+        });
+        
+        return compatibleItems; // Return the actual compatible items structure
       } else {
         console.log('⚠️ No layering items available in styling context');
-        return { compatibleItems: [], compatibleItemsByCategory: [] };
+        return {};
       }
     } else {
       console.log('🚫 Item NOT suitable for layering - skipping layering compatibility analysis');
       console.log('  - Reason: layeringPotential =', extractedCharacteristics?.layeringPotential || 'undefined');
-      return { compatibleItems: [], compatibleItemsByCategory: [] };
+      return {};
     }
   } catch (error) {
     console.error('❌ Error in layering compatibility checking:', error);
     // Continue without layering compatibility data rather than failing the whole request
-    return null;
+    return {};
   }
 }
 
