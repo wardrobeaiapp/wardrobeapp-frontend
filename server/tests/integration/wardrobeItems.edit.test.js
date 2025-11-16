@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware globally
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' }; // Valid UUID format for Supabase
     next();
   };
 });
@@ -37,7 +37,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         color: 'blue',
         brand: 'Original Brand',
         size: 'M',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -62,7 +62,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
       
       // Unchanged fields should be preserved
       expect(response.body.category).toBe('top');
-      expect(response.body.user).toBe('test-user-123');
+      expect(response.body.user).toBe('123e4567-e89b-12d3-a456-426614174000');
       expect(response.body.id).toBe('edit-test-1'); // ID never changes
     });
 
@@ -76,7 +76,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         size: 'M',
         material: 'Denim',
         price: 59.99,
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -113,7 +113,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         season: ['summer'],
         tags: { style: 'casual' },
         wishlist: false,
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -176,8 +176,8 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
 
     it('should enforce user isolation across multiple items', async () => {
       const items = [
-        { id: 'user123-item1', name: 'My Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
-        { id: 'user123-item2', name: 'My Item 2', user: 'test-user-123', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
+        { id: 'user123-item1', name: 'My Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
+        { id: 'user123-item2', name: 'My Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
         { id: 'user456-item', name: 'Not My Item', user: 'other-user-456', category: 'accessory', color: 'red', dateAdded: new Date().toISOString() }
       ];
       
@@ -209,7 +209,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         name: 'Initial Name',
         category: 'footwear',
         color: 'brown',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -235,7 +235,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         name: 'Empty Test',
         category: 'accessory',
         color: 'gold',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -258,7 +258,7 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
         category: 'top',
         color: 'white',
         price: 30,
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -324,8 +324,8 @@ describe('Wardrobe Items Edit API - Integration Tests', () => {
 
     it('should preserve data integrity in concurrent scenarios', async () => {
       const items = [
-        { id: 'item-1', name: 'Item 1', user: 'test-user-123', category: 'top', color: 'red', dateAdded: new Date().toISOString() },
-        { id: 'item-2', name: 'Item 2', user: 'test-user-123', category: 'bottom', color: 'blue', dateAdded: new Date().toISOString() }
+        { id: 'item-1', name: 'Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'red', dateAdded: new Date().toISOString() },
+        { id: 'item-2', name: 'Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'blue', dateAdded: new Date().toISOString() }
       ];
       
       global.inMemoryWardrobeItems = items;

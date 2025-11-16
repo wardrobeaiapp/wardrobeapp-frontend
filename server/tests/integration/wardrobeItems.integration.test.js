@@ -2,7 +2,15 @@ const request = require('supertest');
 const express = require('express');
 const path = require('path');
 
-// Import the actual server components
+// Mock the authentication middleware BEFORE importing anything that uses it
+jest.mock('../../middleware/auth', () => {
+  return (req, res, next) => {
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' }; // Valid UUID format for Supabase
+    next();
+  };
+});
+
+// Import the actual server components (AFTER mocking auth)
 const wardrobeItemsRouter = require('../../routes/wardrobeItems');
 const auth = require('../../middleware/auth');
 
@@ -29,13 +37,6 @@ const createTestApp = () => {
   return app;
 };
 
-// Mock the authentication middleware globally
-jest.mock('../../middleware/auth', () => {
-  return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
-    next();
-  };
-});
 
 // Note: WardrobeItem model no longer needed since we use Supabase, not MongoDB
 
@@ -60,7 +61,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
   describe('Authentication Integration', () => {
     it('should allow authenticated requests', async () => {
       global.inMemoryWardrobeItems = [
-        { id: '1', name: 'Test Item', user: 'test-user-123', dateAdded: new Date() }
+        { id: '1', name: 'Test Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: new Date() }
       ];
 
       const response = await request(app)
@@ -73,9 +74,9 @@ describe('Wardrobe Items API - Integration Tests', () => {
 
     it('should filter items by authenticated user', async () => {
       global.inMemoryWardrobeItems = [
-        { id: '1', name: 'User 123 Item', user: 'test-user-123', dateAdded: new Date() },
+        { id: '1', name: 'User 123 Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: new Date() },
         { id: '2', name: 'User 456 Item', user: 'test-user-456', dateAdded: new Date() },
-        { id: '3', name: 'Another 123 Item', user: 'test-user-123', dateAdded: new Date() }
+        { id: '3', name: 'Another 123 Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: new Date() }
       ];
 
       const response = await request(app)
@@ -83,7 +84,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
         .expect(200);
 
       expect(response.body).toHaveLength(2);
-      expect(response.body.every(item => item.user === 'test-user-123')).toBe(true);
+      expect(response.body.every(item => item.user === '123e4567-e89b-12d3-a456-426614174000')).toBe(true);
     });
   });
 
@@ -101,8 +102,8 @@ describe('Wardrobe Items API - Integration Tests', () => {
       const newDate = new Date('2024-01-01');
       
       global.inMemoryWardrobeItems = [
-        { id: '1', name: 'Old Item', user: 'test-user-123', dateAdded: oldDate },
-        { id: '2', name: 'New Item', user: 'test-user-123', dateAdded: newDate }
+        { id: '1', name: 'Old Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: oldDate },
+        { id: '2', name: 'New Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: newDate }
       ];
 
       const response = await request(app)
@@ -137,7 +138,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
         category: 'top',
         color: 'blue',
         brand: 'Test Brand',
-        user: 'test-user-123'
+        user: '123e4567-e89b-12d3-a456-426614174000'
       });
 
       expect(response.body.id).toBeDefined();
@@ -344,7 +345,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
         name: `Item ${index}`,
         category: 'top',
         color: 'blue',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(Date.now() + index * 1000) // Different timestamps
       }));
 
@@ -365,7 +366,7 @@ describe('Wardrobe Items API - Integration Tests', () => {
 
     it('should handle multiple concurrent GET requests', async () => {
       global.inMemoryWardrobeItems = [
-        { id: '1', name: 'Test Item', user: 'test-user-123', dateAdded: new Date() }
+        { id: '1', name: 'Test Item', user: '123e4567-e89b-12d3-a456-426614174000', dateAdded: new Date() }
       ];
 
       // Send 10 concurrent GET requests

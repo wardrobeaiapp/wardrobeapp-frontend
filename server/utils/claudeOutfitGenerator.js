@@ -96,7 +96,7 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
 For EVERY outfit you create, check ALL cardigans/blazers/hoodies in the combination (from any source - base item OR available items list):
 
 MANDATORY RULE:
-• If ANY cardigan/blaze/vest has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
+• If ANY cardigan/blazer/vest has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
 • If no underneath layer is available in that combination → DO NOT create that outfit
 • Example: "Jeans + Cream Cardigan (closure: Open Front) + Boots" = INVALID - skip this combination
 • Example: "Jeans + T-Shirt + Cream Cardigan (closure: Open Front) + Boots" = VALID
@@ -380,12 +380,13 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     const subcategory = item.subcategory?.toLowerCase();
     const isCardigan = subcategory === 'cardigan';
     const isBlazer = subcategory === 'blazer';
+    const isVest = subcategory === 'vest';
     const isHoodie = subcategory === 'hoodie';
     const isOpenFront = ['Open Front', 'Wrap Style'].includes(item.closure);
     const isZipHoodie = isHoodie && item.closure === 'Zipper';
     
-    // Check cardigans/blazers with open front OR zip hoodies (both need base layers)
-    return (isCardigan || isBlazer) && isOpenFront || isZipHoodie;
+    // Check cardigans/blazers/vests with open front OR zip hoodies (both need base layers)
+    return ((isCardigan || isBlazer || isVest) && isOpenFront) || isZipHoodie;
   });
   
   if (invalidClosureItems.length > 0) {

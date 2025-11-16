@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware globally
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' }; // Valid UUID format for Supabase
     next();
   };
 });
@@ -47,7 +47,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         category: 'top',
         color: 'blue',
         brand: 'Test Brand',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(),
         season: ['summer']
       };
@@ -112,7 +112,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         neckline: 'round',
         season: ['spring/fall', 'summer'],
         imageUrl: 'https://example.com/image.jpg',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(),
         wishlist: false,
         tags: { occasion: 'casual', formality: 'relaxed' }
@@ -142,7 +142,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         category: 'top',
         color: 'blue',
         brand: 'Original Brand',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date()
       };
       
@@ -208,7 +208,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         brand: 'Original Brand',
         size: 'M',
         material: 'Cotton',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date()
       };
       
@@ -234,7 +234,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         color: 'blue',
         season: ['summer'],
         tags: { style: 'casual' },
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date()
       };
       
@@ -264,7 +264,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         name: 'Item to Delete',
         category: 'top',
         color: 'blue',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date()
       };
       
@@ -315,7 +315,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         {
           id: 'item-1',
           name: 'Keep Item 1',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           category: 'top',
           color: 'blue',
           dateAdded: new Date()
@@ -323,7 +323,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         {
           id: 'item-2',
           name: 'Delete This Item',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           category: 'bottom',
           color: 'red',
           dateAdded: new Date()
@@ -331,7 +331,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         {
           id: 'item-3',
           name: 'Keep Item 3',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           category: 'footwear',
           color: 'black',
           dateAdded: new Date()
@@ -430,7 +430,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         {
           id: 'concurrent-1',
           name: 'Concurrent Item 1',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           category: 'top',
           color: 'blue',
           dateAdded: new Date()
@@ -438,7 +438,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
         {
           id: 'concurrent-2', 
           name: 'Concurrent Item 2',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           category: 'bottom',
           color: 'red',
           dateAdded: new Date()
@@ -473,7 +473,7 @@ describe('Wardrobe Items API - View & CRUD Integration', () => {
     it('should enforce user isolation across all operations', async () => {
       // Add items for different users
       const multiUserItems = [
-        { id: 'user123-item', name: 'User 123 Item', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date() },
+        { id: 'user123-item', name: 'User 123 Item', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date() },
         { id: 'user456-item', name: 'User 456 Item', user: 'other-user-456', category: 'top', color: 'red', dateAdded: new Date() }
       ];
       

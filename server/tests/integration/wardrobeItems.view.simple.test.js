@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware globally
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' };
     next();
   };
 });
@@ -66,7 +66,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
         category: 'top',
         color: 'blue',
         brand: 'Test Brand',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(),
         season: ['summer']
       };
@@ -131,7 +131,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
         neckline: 'round',
         season: ['spring/fall', 'summer'],
         imageUrl: 'https://example.com/image.jpg',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(),
         wishlist: false,
         tags: { occasion: 'casual', formality: 'relaxed' }
@@ -156,8 +156,8 @@ describe('Wardrobe Items View API - Integration Tests', () => {
     it('should enforce strict user isolation', async () => {
       // Add items for multiple users
       const items = [
-        { id: 'user123-item1', name: 'User 123 Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date() },
-        { id: 'user123-item2', name: 'User 123 Item 2', user: 'test-user-123', category: 'bottom', color: 'red', dateAdded: new Date() },
+        { id: 'user123-item1', name: 'User 123 Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date() },
+        { id: 'user123-item2', name: 'User 123 Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'red', dateAdded: new Date() },
         { id: 'user456-item1', name: 'User 456 Item 1', user: 'other-user-456', category: 'top', color: 'green', dateAdded: new Date() },
         { id: 'user789-item1', name: 'User 789 Item 1', user: 'another-user-789', category: 'footwear', color: 'black', dateAdded: new Date() }
       ];
@@ -194,7 +194,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
         name: `Item ${index}`,
         category: index % 2 === 0 ? 'top' : 'bottom',
         color: ['blue', 'red', 'green', 'black'][index % 4],
-        user: index % 3 === 0 ? 'other-user' : 'test-user-123', // Mix of users
+        user: index % 3 === 0 ? 'other-user' : '123e4567-e89b-12d3-a456-426614174000', // Mix of users
         dateAdded: new Date(Date.now() + index * 1000),
         brand: `Brand ${index % 10}`
       }));
@@ -215,9 +215,9 @@ describe('Wardrobe Items View API - Integration Tests', () => {
     it('should handle concurrent view requests efficiently', async () => {
       // Add test items
       const items = [
-        { id: 'concurrent-1', name: 'Concurrent Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date() },
-        { id: 'concurrent-2', name: 'Concurrent Item 2', user: 'test-user-123', category: 'bottom', color: 'red', dateAdded: new Date() },
-        { id: 'concurrent-3', name: 'Concurrent Item 3', user: 'test-user-123', category: 'footwear', color: 'black', dateAdded: new Date() }
+        { id: 'concurrent-1', name: 'Concurrent Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date() },
+        { id: 'concurrent-2', name: 'Concurrent Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'red', dateAdded: new Date() },
+        { id: 'concurrent-3', name: 'Concurrent Item 3', user: '123e4567-e89b-12d3-a456-426614174000', category: 'footwear', color: 'black', dateAdded: new Date() }
       ];
       
       global.inMemoryWardrobeItems = items;
@@ -236,7 +236,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
       // All should succeed and return correct data
       responses.forEach(response => {
         expect(response.status).toBe(200);
-        expect(response.body.user).toBe('test-user-123');
+        expect(response.body.user).toBe('123e4567-e89b-12d3-a456-426614174000');
         expect(response.body.name).toMatch(/^Concurrent Item \d$/);
       });
 
@@ -291,7 +291,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
       expect(viewResponse.body.brand).toBe('Consistency Brand');
       expect(viewResponse.body.size).toBe('L');
       expect(viewResponse.body.material).toBe('Cotton blend');
-      expect(viewResponse.body.user).toBe('test-user-123');
+      expect(viewResponse.body.user).toBe('123e4567-e89b-12d3-a456-426614174000');
     });
   });
 
@@ -347,7 +347,7 @@ describe('Wardrobe Items View API - Integration Tests', () => {
         season: ['spring/fall'],
         imageUrl: 'https://example.com/complex-dress.jpg',
         imageExpiry: '2024-12-31T23:59:59.000Z',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: '2024-01-15T10:30:00.000Z',
         wishlist: true,
         wishlistStatus: 'approved',

@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' }; // Valid UUID format for Supabase
     next();
   };
 });
@@ -137,7 +137,7 @@ describe('Wardrobe Items - All Fields Persistence Tests', () => {
       
       // Verify auto-generated fields
       expect(response.body.id).toBeDefined();
-      expect(response.body.userId).toBe('test-user-123');
+      expect(response.body.userId).toBe('123e4567-e89b-12d3-a456-426614174000');
       expect(response.body.dateAdded).toBeDefined();
     });
 
@@ -257,7 +257,7 @@ describe('Wardrobe Items - All Fields Persistence Tests', () => {
       
       // ID and userId should remain unchanged
       expect(response.body.id).toBe(itemId);
-      expect(response.body.userId).toBe('test-user-123');
+      expect(response.body.userId).toBe('123e4567-e89b-12d3-a456-426614174000');
     });
 
     it('should update only specified fields and preserve others', async () => {

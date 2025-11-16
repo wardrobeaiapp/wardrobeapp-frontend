@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' };
     next();
   };
 });

@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware globally
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' };
     next();
   };
 });
@@ -35,7 +35,7 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
         category: 'top',
         color: 'red',
         brand: 'Test Brand',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -53,9 +53,9 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
 
     it('should delete item and preserve other items', async () => {
       const items = [
-        { id: 'keep-1', name: 'Keep Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
-        { id: 'delete-2', name: 'Delete Item', user: 'test-user-123', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
-        { id: 'keep-3', name: 'Keep Item 3', user: 'test-user-123', category: 'dress', color: 'green', dateAdded: new Date().toISOString() }
+        { id: 'keep-1', name: 'Keep Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
+        { id: 'delete-2', name: 'Delete Item', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
+        { id: 'keep-3', name: 'Keep Item 3', user: '123e4567-e89b-12d3-a456-426614174000', category: 'dress', color: 'green', dateAdded: new Date().toISOString() }
       ];
       
       global.inMemoryWardrobeItems = items;
@@ -82,7 +82,7 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
         season: ['winter', 'spring/fall'],
         tags: { style: 'formal', occasion: 'work' },
         metadata: { source: 'wishlist', aiAnalyzed: true },
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date().toISOString()
       };
       
@@ -130,9 +130,9 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
 
     it('should enforce strict user isolation during delete operations', async () => {
       const multiUserItems = [
-        { id: 'user123-item1', name: 'My Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
+        { id: 'user123-item1', name: 'My Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
         { id: 'user456-item1', name: 'Other Item 1', user: 'other-user-456', category: 'top', color: 'red', dateAdded: new Date().toISOString() },
-        { id: 'user123-item2', name: 'My Item 2', user: 'test-user-123', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
+        { id: 'user123-item2', name: 'My Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
         { id: 'user789-item1', name: 'Third User Item', user: 'third-user-789', category: 'dress', color: 'green', dateAdded: new Date().toISOString() }
       ];
       
@@ -155,7 +155,7 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
       // Verify only own item was deleted
       expect(global.inMemoryWardrobeItems).toHaveLength(3);
       const remainingItemUsers = global.inMemoryWardrobeItems.map(item => item.user);
-      expect(remainingItemUsers).toContain('test-user-123'); // My second item remains
+      expect(remainingItemUsers).toContain('123e4567-e89b-12d3-a456-426614174000'); // My second item remains
       expect(remainingItemUsers).toContain('other-user-456');
       expect(remainingItemUsers).toContain('third-user-789');
     });
@@ -164,9 +164,9 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
   describe('Delete Data Consistency', () => {
     it('should maintain data integrity after deletion', async () => {
       const items = [
-        { id: 'item-1', name: 'Item One', user: 'test-user-123', category: 'top', color: 'blue', priority: 1, dateAdded: new Date().toISOString() },
-        { id: 'item-2', name: 'Item Two', user: 'test-user-123', category: 'bottom', color: 'black', priority: 2, dateAdded: new Date().toISOString() },
-        { id: 'item-3', name: 'Item Three', user: 'test-user-123', category: 'dress', color: 'red', priority: 3, dateAdded: new Date().toISOString() }
+        { id: 'item-1', name: 'Item One', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', priority: 1, dateAdded: new Date().toISOString() },
+        { id: 'item-2', name: 'Item Two', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'black', priority: 2, dateAdded: new Date().toISOString() },
+        { id: 'item-3', name: 'Item Three', user: '123e4567-e89b-12d3-a456-426614174000', category: 'dress', color: 'red', priority: 3, dateAdded: new Date().toISOString() }
       ];
       
       global.inMemoryWardrobeItems = items;
@@ -189,9 +189,9 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
 
     it('should handle concurrent delete operations safely', async () => {
       const items = [
-        { id: 'concurrent-1', name: 'Concurrent Item 1', user: 'test-user-123', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
-        { id: 'concurrent-2', name: 'Concurrent Item 2', user: 'test-user-123', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
-        { id: 'concurrent-3', name: 'Concurrent Item 3', user: 'test-user-123', category: 'dress', color: 'red', dateAdded: new Date().toISOString() }
+        { id: 'concurrent-1', name: 'Concurrent Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'blue', dateAdded: new Date().toISOString() },
+        { id: 'concurrent-2', name: 'Concurrent Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'black', dateAdded: new Date().toISOString() },
+        { id: 'concurrent-3', name: 'Concurrent Item 3', user: '123e4567-e89b-12d3-a456-426614174000', category: 'dress', color: 'red', dateAdded: new Date().toISOString() }
       ];
       
       global.inMemoryWardrobeItems = items;
@@ -252,10 +252,10 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
     it('should handle bulk delete operations', async () => {
       // Create multiple items
       const items = [
-        { id: 'bulk-1', name: 'Bulk Item 1', user: 'test-user-123', category: 'top', color: 'red', dateAdded: new Date().toISOString() },
-        { id: 'bulk-2', name: 'Bulk Item 2', user: 'test-user-123', category: 'bottom', color: 'blue', dateAdded: new Date().toISOString() },
-        { id: 'bulk-3', name: 'Bulk Item 3', user: 'test-user-123', category: 'dress', color: 'green', dateAdded: new Date().toISOString() },
-        { id: 'keep-item', name: 'Keep This Item', user: 'test-user-123', category: 'accessory', color: 'gold', dateAdded: new Date().toISOString() }
+        { id: 'bulk-1', name: 'Bulk Item 1', user: '123e4567-e89b-12d3-a456-426614174000', category: 'top', color: 'red', dateAdded: new Date().toISOString() },
+        { id: 'bulk-2', name: 'Bulk Item 2', user: '123e4567-e89b-12d3-a456-426614174000', category: 'bottom', color: 'blue', dateAdded: new Date().toISOString() },
+        { id: 'bulk-3', name: 'Bulk Item 3', user: '123e4567-e89b-12d3-a456-426614174000', category: 'dress', color: 'green', dateAdded: new Date().toISOString() },
+        { id: 'keep-item', name: 'Keep This Item', user: '123e4567-e89b-12d3-a456-426614174000', category: 'accessory', color: 'gold', dateAdded: new Date().toISOString() }
       ];
       
       global.inMemoryWardrobeItems = items;
@@ -322,7 +322,7 @@ describe('Wardrobe Items Delete API - Integration Tests', () => {
       const itemWithNulls = {
         id: 'null-props-item',
         name: 'Item with Nulls',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         category: 'top',
         color: null,
         brand: undefined,

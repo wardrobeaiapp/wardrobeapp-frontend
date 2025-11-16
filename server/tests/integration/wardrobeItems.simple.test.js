@@ -4,7 +4,7 @@ const express = require('express');
 // Mock the authentication middleware globally
 jest.mock('../../middleware/auth', () => {
   return (req, res, next) => {
-    req.user = { id: 'test-user-123' };
+    req.user = { id: '123e4567-e89b-12d3-a456-426614174000' };
     next();
   };
 });
@@ -89,7 +89,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         name: 'Existing Item',
         category: 'top',
         color: 'red',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date()
       };
       
@@ -111,7 +111,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         {
           id: 'item-1',
           name: 'User 123 Item',
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           dateAdded: new Date()
         },
         {
@@ -123,7 +123,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         {
           id: 'item-3',
           name: 'Another 123 Item', 
-          user: 'test-user-123',
+          user: '123e4567-e89b-12d3-a456-426614174000',
           dateAdded: new Date()
         }
       ];
@@ -133,7 +133,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.length).toBe(2);
-      expect(response.body.every(item => item.user === 'test-user-123')).toBe(true);
+      expect(response.body.every(item => item.user === '123e4567-e89b-12d3-a456-426614174000')).toBe(true);
     });
   });
 
@@ -199,7 +199,7 @@ describe('Wardrobe Items API - Simple Integration', () => {
         name: `Item ${index}`,
         category: 'top',
         color: 'blue',
-        user: 'test-user-123',
+        user: '123e4567-e89b-12d3-a456-426614174000',
         dateAdded: new Date(Date.now() + index * 1000)
       }));
 
