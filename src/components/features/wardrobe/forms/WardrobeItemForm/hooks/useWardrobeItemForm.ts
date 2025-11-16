@@ -193,7 +193,7 @@ export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: Us
         ['jacket', 'coat'].includes(subcategory.toLowerCase())))
         ? type || undefined : undefined,
       closure: (category === ItemCategory.TOP && subcategory && 
-        ['cardigan', 'blazer'].includes(subcategory.toLowerCase()))
+        ['cardigan', 'blazer', 'hoodie', 'vest'].includes(subcategory.toLowerCase()))
         ? closure || undefined : undefined,
       details: details || undefined,
       style: (category !== ItemCategory.ACCESSORY && category !== ItemCategory.OTHER) 
