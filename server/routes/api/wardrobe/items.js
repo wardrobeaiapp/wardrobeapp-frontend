@@ -17,6 +17,14 @@ console.log('🟢 SUCCESS: scenarioCoverageTriggers imported:', { onItemAdded, o
 // @access  Private
 router.get('/', auth, async (req, res) => {
   try {
+    // Use in-memory storage for tests
+    if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
+      const userItems = global.inMemoryWardrobeItems
+        .filter(item => item.user === req.user.id)
+        .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); // Sort newest first
+      return res.json(userItems);
+    }
+
     // Get items from Supabase database
     const { data, error } = await supabase
       .from('wardrobe_items')
@@ -130,6 +138,22 @@ router.post('/', auth, async (req, res) => {
       tags: newItem.tags
     };
 
+    // Use in-memory storage for tests
+    if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
+      // Create test item with proper structure
+      const testItem = {
+        id: `test-item-${Date.now()}-${Math.random()}`,
+        ...newItem,
+        user: req.user.id,
+        userId: req.user.id,
+        dateAdded: new Date().toISOString()
+      };
+      
+      global.inMemoryWardrobeItems.push(testItem);
+      console.log('Item saved to in-memory storage (TEST MODE)');
+      return res.json(testItem);
+    }
+
     // Remove undefined fields
     Object.keys(supabaseData).forEach(key => {
       if (supabaseData[key] === undefined) {
@@ -228,6 +252,39 @@ router.put('/:id', auth, async (req, res) => {
 
     console.log('[API] Updating Supabase with closure:', updateData.closure);
 
+    // Use in-memory storage for tests
+    if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
+      const item = global.inMemoryWardrobeItems.find(item => item.id === id);
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+      
+      // Update the item - map camelCase back to match in-memory structure
+      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === id);
+      const mappedUpdate = { ...updateData };
+      if (mappedUpdate.heel_height !== undefined) {
+        mappedUpdate.heelHeight = mappedUpdate.heel_height;
+        delete mappedUpdate.heel_height;
+      }
+      if (mappedUpdate.boot_height !== undefined) {
+        mappedUpdate.bootHeight = mappedUpdate.boot_height;
+        delete mappedUpdate.boot_height;
+      }
+      if (mappedUpdate.image_url !== undefined) {
+        mappedUpdate.imageUrl = mappedUpdate.image_url;
+        delete mappedUpdate.image_url;
+      }
+      
+      const updatedItem = { ...global.inMemoryWardrobeItems[itemIndex], ...mappedUpdate };
+      global.inMemoryWardrobeItems[itemIndex] = updatedItem;
+      console.log('[API] Item updated in in-memory storage (TEST MODE)');
+      return res.json(updatedItem);
+    }
+
     // Update in Supabase database
     const { data, error } = await supabase
       .from('wardrobe_items')
@@ -268,20 +325,41 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Find item index
-    const itemIndex = global.inMemoryWardrobeItems.findIndex(
-      item => item.id === id && item.userId === req.user.id
-    );
+    // Use in-memory storage for tests
+    if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
+      const item = global.inMemoryWardrobeItems.find(item => item.id === id);
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
+      }
+      
+      // Delete the item
+      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === id);
+      global.inMemoryWardrobeItems.splice(itemIndex, 1);
+      return res.json({ message: 'Item removed' });
+    }
 
-    if (itemIndex === -1) {
+    // Delete from Supabase database
+    const { data, error } = await supabase
+      .from('wardrobe_items')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', req.user.id)
+      .select();
+
+    if (error) {
+      console.error('Supabase delete error:', error);
+      return res.status(500).json({ error: 'Failed to delete item from database', details: error.message });
+    }
+
+    if (!data || data.length === 0) {
       return res.status(404).json({ message: 'Item not found' });
     }
 
-    // Store deleted item for coverage recalculation
-    const deletedItem = { ...global.inMemoryWardrobeItems[itemIndex] };
-
-    // Remove item
-    global.inMemoryWardrobeItems.splice(itemIndex, 1);
+    const deletedItem = data[0];
 
     // Trigger scenario coverage recalculation (async, don't block response)
     onItemDeleted(req.user.id, deletedItem).catch(error => {

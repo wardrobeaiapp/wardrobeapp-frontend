@@ -18,7 +18,9 @@ router.get('/', auth, async (req, res) => {
   try {
     // Use in-memory storage for tests
     if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
-      const userItems = global.inMemoryWardrobeItems.filter(item => item.user === req.user.id);
+      const userItems = global.inMemoryWardrobeItems
+        .filter(item => item.user === req.user.id)
+        .sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded)); // Sort newest first
       return res.json(userItems);
     }
     
@@ -112,9 +114,13 @@ router.get('/:id', auth, async (req, res) => {
     
     // Use in-memory storage for tests
     if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
-      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId && item.user === req.user.id);
+      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId);
       if (!item) {
         return res.status(404).json({ message: 'Item not found' });
+      }
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
       }
       return res.json(item);
     }
@@ -151,12 +157,17 @@ router.put('/:id', auth, async (req, res) => {
     
     // Use in-memory storage for tests
     if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
-      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === itemId && item.user === req.user.id);
-      if (itemIndex === -1) {
+      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId);
+      if (!item) {
         return res.status(404).json({ message: 'Item not found' });
+      }
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
       }
       
       // Update the item
+      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === itemId);
       const updatedItem = { ...global.inMemoryWardrobeItems[itemIndex], ...req.body };
       global.inMemoryWardrobeItems[itemIndex] = updatedItem;
       return res.json(updatedItem);
@@ -190,12 +201,17 @@ router.delete('/:id', auth, async (req, res) => {
     
     // Use in-memory storage for tests
     if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
-      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === itemId && item.user === req.user.id);
-      if (itemIndex === -1) {
+      const item = global.inMemoryWardrobeItems.find(item => item.id === itemId);
+      if (!item) {
         return res.status(404).json({ message: 'Item not found' });
+      }
+      // Check if user owns the item
+      if (item.user !== req.user.id) {
+        return res.status(401).json({ message: 'Not authorized' });
       }
       
       // Delete the item
+      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === itemId);
       global.inMemoryWardrobeItems.splice(itemIndex, 1);
       return res.json({ message: 'Item removed' });
     }
