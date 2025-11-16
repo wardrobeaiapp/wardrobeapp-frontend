@@ -27,7 +27,8 @@ export const stylingRules: Record<string, {
     tops: ['shirt']
   },
   'hoodie': {
-    accessories: ['bag', 'hat', 'sunglasses']
+    accessories: ['bag', 'hat', 'sunglasses'],
+    tops: ['t-shirt', 'shirt', 'blouse', 'top', 'tank top']
   },
   'sweatshirt': {
     accessories: ['bag', 'hat', 'sunglasses'],
