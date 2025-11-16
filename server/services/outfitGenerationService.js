@@ -14,6 +14,7 @@
 // Import Claude-based outfit generation
 const { generateOutfitsWithClaude } = require('../utils/claudeOutfitGenerator');
 
+// Import outfit distribution and grouping utilities
 const {
   createOutfitSignature,
   distributeOutfitsIntelligently,
@@ -26,10 +27,15 @@ const {
   displayGroupedOutfits
 } = require('../utils/outfitGrouping');
 
+// Import legacy builders for test compatibility
+const {
+  buildOutfitRecommendations
+} = require('./legacy/outfitBuilders');
+
 /**
  * Generate outfit combinations using compatible items for complete scenarios
  */
-function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations, scenarios = [], anthropicClient = null) {
+async function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCombinations, scenarios = [], anthropicClient = null) {
   console.log('\n\n=== 👗 OUTFIT COMBINATIONS GENERATOR ===\n');
   
   // Handle edge cases: null/undefined inputs should return empty array
@@ -172,9 +178,15 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
     let outfits = [];
     if (anthropicClient) {
       console.log('   🤖 Using Claude for outfit generation');
-      // Note: Async Claude call would need to be awaited in production
-      console.log('   ❌ Synchronous version does not support Claude - skipping to next');
-      continue;
+      outfits = await generateOutfitsWithClaude(itemData, itemsByCategory, combo.season, combo.scenario, anthropicClient);
+      
+      if (outfits === null || outfits.length === 0) {
+        console.log('   ❌ Claude failed to generate outfits for this combination - skipping to next');
+        // Skip this combination rather than generating poor quality fallback outfits
+        continue;
+      } else {
+        console.log(`   ✅ Claude successfully generated ${outfits.length} fashion-intelligent outfits`);
+      }
     } else {
       // For tests: use fallback builder functions when no Claude client
       console.log('   🔧 Using fallback builder functions for testing');
@@ -242,188 +254,19 @@ function generateOutfitCombinations(itemData, compatibleItems, seasonScenarioCom
   return outfitCombinations;
 }
 
-// Note: distributeOutfitsIntelligently function moved to /utils/outfitDistribution.js
-
-// Note: Outfit generation now uses Claude AI for fashion-intelligent combinations
-// - All algorithmic outfit builders have been removed in favor of AI analysis
-// - Claude considers weather appropriateness, occasion suitability, and fashion sense
-// - Distribution and grouping utilities remain for organizing AI-generated outfits
-
-// Legacy function stubs for backwards compatibility with tests
-// These are maintained for testing purposes but internally use Claude-based generation
-
-function buildOutfitRecommendations(itemData, itemsByCategory, season, scenario) {
-  const category = itemData.category?.toLowerCase();
-  
-  // Outerwear and accessory items should not generate outfit combinations
-  if (category === 'outerwear' || category === 'accessory' || category === 'accessories') {
-    return [];
-  }
-  
-  // For tests: return empty array if no essential categories (except for footwear items themselves)
-  const hasEssentials = itemsByCategory.footwear || itemsByCategory.shoes || category === 'footwear';
-  if (!hasEssentials) return [];
-  
-  // Mock outfit based on item category
-  if (category === 'dress' || category === 'one_piece') {
-    return buildDressOutfits(itemData, itemsByCategory, season, scenario);
-  } else if (category === 'top') {
-    return buildTopOutfits(itemData, itemsByCategory, season, scenario);
-  } else if (category === 'bottom') {
-    return buildBottomOutfits(itemData, itemsByCategory, season, scenario);
-  } else if (category === 'footwear') {
-    return buildFootwearOutfits(itemData, itemsByCategory, season, scenario);
-  }
-  return buildGeneralOutfits(itemData, itemsByCategory, season, scenario);
-}
-
-function buildDressOutfits(itemData, itemsByCategory, season, scenario) {
-  const footwear = itemsByCategory.footwear || itemsByCategory.shoes || [];
-  if (footwear.length === 0) return [];
-  
-  return footwear.map((shoe, index) => {
-    const outfit = {
-      type: 'dress-based',
-      items: [
-        { ...itemData, compatibilityType: 'base-item' },
-        { ...shoe, compatibilityType: 'complementing' }
-      ]
-    };
-    
-    // Add outerwear for cooler seasons - prioritize outerwear over accessories
-    const outerwear = itemsByCategory.outerwear || [];
-    if ((season === 'spring/fall' || season === 'spring' || season === 'fall' || season === 'winter') && outerwear.length > 0) {
-      const outerIndex = index % outerwear.length;
-      outfit.items.push({ ...outerwear[outerIndex], compatibilityType: 'outerwear' });
-      outfit.type = 'dress-based-layered'; // Update type when outerwear is added
-    } else {
-      // Only add accessories when no outerwear
-      const accessories = itemsByCategory.accessory || itemsByCategory.accessories || [];
-      if (accessories.length > 0) {
-        const accessoryIndex = index % accessories.length;
-        outfit.items.push({ ...accessories[accessoryIndex], compatibilityType: 'complementing' });
-      }
-    }
-    
-    return outfit;
-  });
-}
-
-function buildTopOutfits(itemData, itemsByCategory, season, scenario) {
-  const bottoms = itemsByCategory.bottoms || itemsByCategory.bottom || [];
-  const footwear = itemsByCategory.footwear || itemsByCategory.shoes || [];
-  
-  if (bottoms.length === 0 || footwear.length === 0) return [];
-  
-  const outfits = [];
-  const outerwear = itemsByCategory.outerwear || [];
-  const hasOuterwear = outerwear.length > 0;
-  
-  bottoms.forEach((bottom, bottomIndex) => {
-    footwear.forEach((shoe, shoeIndex) => {
-      const outfit = {
-        type: hasOuterwear ? 'top-based-layered' : 'top-based',
-        items: [
-          { ...itemData, compatibilityType: 'base-item' },
-          { ...bottom, compatibilityType: 'complementing' },
-          { ...shoe, compatibilityType: 'complementing' }
-        ]
-      };
-      
-      // Add outerwear when available (prioritize layered version)
-      if (hasOuterwear) {
-        const outerIndex = (bottomIndex + shoeIndex) % outerwear.length;
-        outfit.items.push({ ...outerwear[outerIndex], compatibilityType: 'layering' });
-      }
-      
-      outfits.push(outfit);
-    });
-  });
-  
-  return outfits;
-}
-
-function buildBottomOutfits(itemData, itemsByCategory, season, scenario) {
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
-  const footwear = itemsByCategory.footwear || itemsByCategory.shoes || [];
-  
-  if (tops.length === 0 || footwear.length === 0) return [];
-  
-  const outfits = [];
-  tops.forEach((top) => {
-    footwear.forEach((shoe) => {
-      outfits.push({
-        type: 'bottom-based',
-        items: [
-          { ...itemData, compatibilityType: 'base-item' },
-          { ...top, compatibilityType: 'complementing' },
-          { ...shoe, compatibilityType: 'complementing' }
-        ]
-      });
-    });
-  });
-  
-  return outfits;
-}
-
-function buildFootwearOutfits(itemData, itemsByCategory, season, scenario) {
-  const tops = itemsByCategory.tops || itemsByCategory.top || [];
-  const bottoms = itemsByCategory.bottoms || itemsByCategory.bottom || [];
-  
-  if (tops.length === 0 || bottoms.length === 0) return [];
-  
-  const outfits = [];
-  tops.forEach((top) => {
-    bottoms.forEach((bottom) => {
-      outfits.push({
-        type: 'footwear-based',
-        items: [
-          { ...itemData, compatibilityType: 'base-item' },
-          { ...top, compatibilityType: 'complementing' },
-          { ...bottom, compatibilityType: 'complementing' }
-        ]
-      });
-    });
-  });
-  
-  return outfits;
-}
-
-function buildGeneralOutfits(itemData, itemsByCategory, season, scenario) {
-  // Collect all available items (max 3 additional items)
-  const allItems = [];
-  Object.values(itemsByCategory).forEach(categoryItems => {
-    if (Array.isArray(categoryItems)) {
-      allItems.push(...categoryItems);
-    }
-  });
-  
-  if (allItems.length === 0) return [];
-  
-  const selectedItems = allItems.slice(0, 3); // Max 3 additional items
-  
-  return [{
-    type: 'general',
-    items: [
-      { ...itemData, compatibilityType: 'base-item' },
-      ...selectedItems.map(item => ({ ...item, compatibilityType: 'complementing' }))
-    ]
-  }];
-}
-
 module.exports = {
+  // Main service function
   generateOutfitCombinations,
+  
+  // Re-export utility functions from other modules
   createOutfitSignature,
   groupOutfitsByVersatility,
   displayGroupedOutfits,
   distributeOutfitsIntelligently,
   shouldMergeScenarios,
   mergeCompatibleScenarios,
-  // Legacy functions for test compatibility
+  
+  // Re-export legacy functions for test compatibility
   buildOutfitRecommendations,
-  buildDressOutfits,
-  buildTopOutfits,
-  buildBottomOutfits,
-  buildFootwearOutfits,
-  buildGeneralOutfits
+  ...require('./legacy/outfitBuilders')
 };

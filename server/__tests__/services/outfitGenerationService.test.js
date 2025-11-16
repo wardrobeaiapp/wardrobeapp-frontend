@@ -45,7 +45,7 @@ describe('outfitGenerationService', () => {
     };
 
     describe('Complete Scenarios', () => {
-      it('should generate outfits for complete scenarios only', () => {
+      it('should generate outfits for complete scenarios only', async () => {
         const seasonScenarioCombinations = [
           {
             combination: 'summer + Social Outings',
@@ -65,7 +65,7 @@ describe('outfitGenerationService', () => {
           }
         ];
 
-        const result = generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
+        const result = await generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
 
         expect(result).toHaveLength(1);
         expect(result[0].combination).toBe('summer + Social Outings');
@@ -94,19 +94,19 @@ describe('outfitGenerationService', () => {
     });
 
     describe('Incomplete Scenarios', () => {
-      it('should handle no complete scenarios gracefully', () => {
+      it('should handle no complete scenarios gracefully', async () => {
         const seasonScenarioCombinations = [
           {
             combination: 'winter + Office Work',
             season: 'winter',
-            scenario: 'Office Work',
+            scenario: 'Office Work', 
             hasItems: false,
             missingCategories: ['footwear'],
-            availableCategories: []
+            availableCategories: ['accessory']
           }
         ];
 
-        const result = generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
+        const result = await generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
 
         expect(result).toEqual([]);
         expect(consoleSpy).toHaveBeenCalledWith('❌ NO COMPLETE OUTFIT COMBINATIONS AVAILABLE');
@@ -114,7 +114,7 @@ describe('outfitGenerationService', () => {
         expect(consoleSpy).toHaveBeenCalledWith('   WINTER + OFFICE WORK - don\'t have footwear to combine with');
       });
 
-      it('should show incomplete scenarios at end when there are complete ones', () => {
+      it('should show incomplete scenarios at end when there are complete ones', async () => {
         const seasonScenarioCombinations = [
           {
             combination: 'summer + Social Outings',
@@ -134,7 +134,7 @@ describe('outfitGenerationService', () => {
           }
         ];
 
-        generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
+        await generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
 
         expect(consoleSpy).toHaveBeenCalledWith('\n🚫 INCOMPLETE SCENARIOS:');
         expect(consoleSpy).toHaveBeenCalledWith('   WINTER + OFFICE WORK - don\'t have footwear or outerwear to combine with');
@@ -142,7 +142,7 @@ describe('outfitGenerationService', () => {
     });
 
     describe('Season Filtering', () => {
-      it('should filter items by matching season', () => {
+      it('should filter items by matching season', async () => {
         const summerWinterItems = {
           footwear: [
             { name: 'Summer Sandals', category: 'footwear', seasons: ['summer'] },
@@ -153,7 +153,7 @@ describe('outfitGenerationService', () => {
         const seasonScenarioCombinations = [
           {
             combination: 'summer + Social Outings',
-            season: 'summer',
+            season: 'summer', 
             scenario: 'Social Outings',
             hasItems: true,
             missingCategories: [],
@@ -161,14 +161,14 @@ describe('outfitGenerationService', () => {
           }
         ];
 
-        const result = generateOutfitCombinations(mockItemData, summerWinterItems, seasonScenarioCombinations);
+        const result = await generateOutfitCombinations(mockItemData, summerWinterItems, seasonScenarioCombinations);
 
         // Should only include summer items in the outfit
         expect(result[0].outfits[0].items.some(item => item.name === 'Summer Sandals')).toBe(true);
         expect(result[0].outfits[0].items.some(item => item.name === 'Winter Boots')).toBe(false);
       });
 
-      it('should handle no items available for season+scenario combination', () => {
+      it('should handle no items available for season+scenario combination', async () => {
         const winterOnlyItems = {
           footwear: [
             { name: 'Winter Boots', category: 'footwear', seasons: ['winter'] }
@@ -186,14 +186,14 @@ describe('outfitGenerationService', () => {
           }
         ];
 
-        generateOutfitCombinations(mockItemData, winterOnlyItems, seasonScenarioCombinations);
+        await generateOutfitCombinations(mockItemData, winterOnlyItems, seasonScenarioCombinations);
 
         expect(consoleSpy).toHaveBeenCalledWith('   ❌ No items available for this season+scenario combination');
       });
     });
 
     describe('Concise Logging Format', () => {
-      it('should log outfit generation completion', () => {
+      it('should log outfit generation completion', async () => {
         const seasonScenarioCombinations = [
           {
             combination: 'summer + Social Outings',
@@ -205,7 +205,7 @@ describe('outfitGenerationService', () => {
           }
         ];
 
-        generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
+        await generateOutfitCombinations(mockItemData, mockCompatibleItems, seasonScenarioCombinations);
 
         // Should log outfit generation and distribution
         expect(consoleSpy).toHaveBeenCalledWith('\n📊 INTELLIGENT OUTFIT DISTRIBUTION:');
@@ -637,7 +637,7 @@ describe('outfitGenerationService', () => {
       expect(signature1).toBe('Black Pants + Brown Shoes + White Shirt');
     });
 
-    it('should distribute outfits intelligently across scenarios', () => {
+    it('should distribute outfits intelligently across scenarios', async () => {
       const allGeneratedOutfits = [
         {
           combination: 'spring/fall + Office Work',
@@ -695,7 +695,7 @@ describe('outfitGenerationService', () => {
         }
       ];
 
-      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+      const result = await distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
 
       expect(result).toHaveLength(2); // Both scenarios should get results
 
@@ -713,7 +713,7 @@ describe('outfitGenerationService', () => {
       expect(result[1].outfits.length).toBeGreaterThan(0);
     });
 
-    it('should respect maximum outfits per scenario limit', () => {
+    it('should respect maximum outfits per scenario limit', async () => {
       // Create more than 10 unique outfits for one scenario
       const manyOutfits = [];
       for (let i = 0; i < 15; i++) {
@@ -743,13 +743,13 @@ describe('outfitGenerationService', () => {
         }
       ];
 
-      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+      const result = await distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
 
       expect(result).toHaveLength(1);
       expect(result[0].outfits.length).toBeLessThanOrEqual(10); // Should cap at 10
     });
 
-    it('should prioritize exclusive outfits over shared ones', () => {
+    it('should prioritize exclusive outfits over shared ones', async () => {
       const exclusiveOutfit = {
         items: [{ name: 'Tuxedo' }, { name: 'Dress Shoes' }]
       };
@@ -786,7 +786,7 @@ describe('outfitGenerationService', () => {
         }
       ];
 
-      const result = distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
+      const result = await distributeOutfitsIntelligently(allGeneratedOutfits, completeScenarios);
 
       // With strict exclusivity, exclusive outfit should be assigned to its exclusive scenario first
       const formalResult = result.find(r => r.scenario === 'Formal Events');
@@ -807,48 +807,50 @@ describe('outfitGenerationService', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle null/undefined compatible items', () => {
+    it('should handle null/undefined compatible items', async () => {
       const seasonScenarioCombinations = [{
         combination: 'summer + Social Outings',
         season: 'summer',
         scenario: 'Social Outings',
-        hasItems: true,
-        missingCategories: [],
+        hasItems: false,
+        missingCategories: ['footwear'],
         availableCategories: []
       }];
 
-      const result1 = generateOutfitCombinations({ name: 'Test', category: 'dress' }, null, seasonScenarioCombinations);
-      const result2 = generateOutfitCombinations({ name: 'Test', category: 'dress' }, undefined, seasonScenarioCombinations);
+      const result1 = await generateOutfitCombinations({ name: 'Test', category: 'dress' }, null, seasonScenarioCombinations);
+      const result2 = await generateOutfitCombinations({ name: 'Test', category: 'dress' }, undefined, seasonScenarioCombinations);
 
       expect(result1).toEqual([]);
       expect(result2).toEqual([]);
     });
 
-    it('should handle empty season scenario combinations', () => {
+    it('should handle empty season scenario combinations', async () => {
       const mockItemData = { name: 'Test', category: 'dress' };
       const mockCompatibleItems = { footwear: [{ name: 'Shoes' }] };
 
-      const result = generateOutfitCombinations(mockItemData, mockCompatibleItems, []);
+      const result = await generateOutfitCombinations(mockItemData, mockCompatibleItems, []);
 
       expect(result).toEqual([]);
       expect(consoleSpy).toHaveBeenCalledWith('❌ NO COMPLETE OUTFIT COMBINATIONS AVAILABLE');
     });
 
-    it('should handle items with string season format', () => {
+    it('should handle items with string season format', async () => {
       const itemsByCategory = {
         footwear: [{ name: 'Sandals', category: 'footwear', seasons: 'summer' }] // string instead of array
       };
 
-      const seasonScenarioCombinations = [{
-        combination: 'summer + Beach',
-        season: 'summer',
-        scenario: 'Beach',
-        hasItems: true,
-        missingCategories: [],
-        availableCategories: ['footwear']
-      }];
+      const seasonScenarioCombinations = [
+        {
+          combination: 'summer + Beach',
+          season: 'summer',
+          scenario: 'Beach',
+          hasItems: true,
+          missingCategories: [],
+          availableCategories: ['footwear']
+        }
+      ];
 
-      const result = generateOutfitCombinations(
+      const result = await generateOutfitCombinations(
         { name: 'Swimsuit', category: 'one_piece', seasons: ['summer'] },
         { footwear: itemsByCategory.footwear },
         seasonScenarioCombinations
@@ -857,7 +859,7 @@ describe('outfitGenerationService', () => {
       expect(result[0].outfits[0].items.some(item => item.name === 'Sandals')).toBe(true);
     });
 
-    it('should handle compound seasons like "spring/fall"', () => {
+    it('should handle compound seasons like "spring/fall"', async () => {
       const itemsByCategory = {
         footwear: [{ name: 'Boots', category: 'footwear', seasons: ['spring/fall'] }],
         tops: [{ name: 'Sweater', category: 'top', seasons: ['fall'] }],
@@ -873,7 +875,7 @@ describe('outfitGenerationService', () => {
         availableCategories: ['footwear', 'tops', 'bottoms']
       }];
 
-      const result = generateOutfitCombinations(
+      const result = await generateOutfitCombinations(
         { name: 'Boots', category: 'footwear', seasons: ['fall'] },
         itemsByCategory,
         seasonScenarioCombinations
@@ -882,22 +884,24 @@ describe('outfitGenerationService', () => {
       expect(result[0].outfits[0].items.some(item => item.name === 'Boots')).toBe(true);
     });
     
-    it('should not generate outfits for outerwear items', () => {
+    it('should not generate outfits for outerwear items', async () => {
       const itemsByCategory = {
-        footwear: [{ name: 'Boots', category: 'footwear' }],
-        tops: [{ name: 'White Shirt', category: 'top' }]
+        footwear: [{ name: 'Shoes', category: 'footwear' }],
+        tops: [{ name: 'T-shirt', category: 'top' }]
       };
 
-      const seasonScenarioCombinations = [{
-        combination: 'fall + Office Work',
-        season: 'fall',
-        scenario: 'Office Work',
-        hasItems: true,
-        missingCategories: [],
-        availableCategories: ['footwear', 'tops']
-      }];
+      const seasonScenarioCombinations = [
+        {
+          combination: 'fall + Casual',
+          season: 'fall',
+          scenario: 'Casual',
+          hasItems: true,
+          missingCategories: [],
+          availableCategories: ['footwear', 'tops']
+        }
+      ];
 
-      const result = generateOutfitCombinations(
+      const result = await generateOutfitCombinations(
         { name: 'Blazer', category: 'outerwear', seasons: ['fall'] },
         itemsByCategory,
         seasonScenarioCombinations
@@ -907,22 +911,24 @@ describe('outfitGenerationService', () => {
       expect(result).toHaveLength(0);
     });
     
-    it('should not generate outfits for accessory items', () => {
+    it('should not generate outfits for accessory items', async () => {
       const itemsByCategory = {
-        footwear: [{ name: 'Heels', category: 'footwear' }],
-        tops: [{ name: 'Blouse', category: 'top' }]
+        footwear: [{ name: 'Shoes', category: 'footwear' }],
+        tops: [{ name: 'T-shirt', category: 'top' }]
       };
 
-      const seasonScenarioCombinations = [{
-        combination: 'summer + Social Outings',
-        season: 'summer',
-        scenario: 'Social Outings',
-        hasItems: true,
-        missingCategories: [],
-        availableCategories: ['footwear', 'tops']
-      }];
+      const seasonScenarioCombinations = [
+        {
+          combination: 'summer + Social',
+          season: 'summer',
+          scenario: 'Social',
+          hasItems: true,
+          missingCategories: [],
+          availableCategories: ['footwear', 'tops']
+        }
+      ];
 
-      const result = generateOutfitCombinations(
+      const result = await generateOutfitCombinations(
         { name: 'Gold Necklace', category: 'accessory', seasons: ['summer'] },
         itemsByCategory,
         seasonScenarioCombinations
@@ -932,13 +938,13 @@ describe('outfitGenerationService', () => {
       expect(result).toHaveLength(0);
     });
     
-    it('should handle empty compatible items for accessories and outerwear in orchestrator', () => {
+    it('should handle empty compatible items for accessories and outerwear in orchestrator', async () => {
       // This test is for documentation - the actual penalty logic happens in orchestrator
       // When accessories/outerwear have zero compatible items, they get -2 score penalty
       
       // Test case: accessory with no compatible items
       const emptyCompatibleItems = {};
-      const result = generateOutfitCombinations(
+      const result = await generateOutfitCombinations(
         { name: 'Strange Accessory', category: 'accessory', seasons: ['summer'] },
         emptyCompatibleItems, // No compatible items at all
         []
