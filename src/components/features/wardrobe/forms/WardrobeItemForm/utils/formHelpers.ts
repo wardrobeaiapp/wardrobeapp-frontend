@@ -232,7 +232,7 @@ export const getPatternOptions = (): string[] => {
   ];
 };
 
-// Get closure options for cardigans and blazers
+// Get closure options for cardigans, blazers, hoodies, and vests
 export const getClosureOptions = (subcategory?: string): string[] => {
   if (!subcategory) return [];
   
@@ -240,6 +240,14 @@ export const getClosureOptions = (subcategory?: string): string[] => {
   
   if (subcategoryLower === 'cardigan' || subcategoryLower === 'blazer') {
     return ['Buttons', 'Zipper', 'Belt', 'Open Front', 'Wrap Style'];
+  }
+  
+  if (subcategoryLower === 'hoodie') {
+    return ['Zipper', 'Pullover'];
+  }
+  
+  if (subcategoryLower === 'vest') {
+    return ['Buttons', 'Zipper', 'Belt', 'Open Front', 'Wrap Style', 'Pullover'];
   }
   
   return [];

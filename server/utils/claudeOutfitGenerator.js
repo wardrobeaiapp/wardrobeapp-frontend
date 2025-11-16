@@ -92,17 +92,24 @@ function buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario) 
     scenario.toLowerCase().includes('staying at home')
   );
 
-  prompt += `\n🚨 BLAZER/CARDIGAN STYLING RULES 🚨
-For EVERY outfit you create, check ALL cardigans/blazers in the combination (from any source - base item OR available items list):
+  prompt += `\n🚨 BLAZER/CARDIGAN/HOODIE STYLING RULES 🚨
+For EVERY outfit you create, check ALL cardigans/blazers/hoodies in the combination (from any source - base item OR available items list):
 
 MANDATORY RULE:
-• If ANY cardigan/blazer has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
+• If ANY cardigan/blaze/vest has "Open Front" or "Wrap Style" closure → That outfit MUST also contain an underneath layer (t-shirt, blouse, tank top)
 • If no underneath layer is available in that combination → DO NOT create that outfit
 • Example: "Jeans + Cream Cardigan (closure: Open Front) + Boots" = INVALID - skip this combination
 • Example: "Jeans + T-Shirt + Cream Cardigan (closure: Open Front) + Boots" = VALID
 
+HOODIE STYLING RULES:
+• Pullover hoodies can be worn STANDALONE or WITH layering underneath (t-shirt, tank top)
+• Zip closure hoodies should ONLY be worn WITH layering underneath (t-shirt, tank top)
+• Example: "Jeans + Zip Hoodie + Sneakers" = INVALID (missing base layer)
+• Example: "Jeans + T-Shirt + Zip Hoodie + Sneakers" = VALID (has base layer)
+• Example: "Jeans + Pullover Hoodie + Sneakers" = VALID (pullover can be standalone)
+
 STYLING VARIETY RULE:
-• For button/zip closure blazers/cardigans - CREATE BOTH styling approaches when possible:
+• For button/zip closure blazers/cardigans/vest - CREATE BOTH styling approaches when possible:
   - Some outfits with the blazer/cardigan worn STANDALONE (just the blazer + bottoms + shoes)
   - Some outfits with the blazer/cardigan LAYERED over tops (blazer + shirt/blouse/t-shirt + bottoms + shoes)
 • This creates styling variety and shows different looks: professional (standalone), casual-chic (layered), etc.
@@ -370,10 +377,15 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
 
   // SAFETY NET: Final closure rule validation to catch any AI mistakes
   const invalidClosureItems = outfitItems.filter(item => {
-    const isCardigan = item.subcategory?.toLowerCase() === 'cardigan';
-    const isBlazer = item.subcategory?.toLowerCase() === 'blazer';
+    const subcategory = item.subcategory?.toLowerCase();
+    const isCardigan = subcategory === 'cardigan';
+    const isBlazer = subcategory === 'blazer';
+    const isHoodie = subcategory === 'hoodie';
     const isOpenFront = ['Open Front', 'Wrap Style'].includes(item.closure);
-    return (isCardigan || isBlazer) && isOpenFront;
+    const isZipHoodie = isHoodie && item.closure === 'Zipper';
+    
+    // Check cardigans/blazers with open front OR zip hoodies (both need base layers)
+    return (isCardigan || isBlazer) && isOpenFront || isZipHoodie;
   });
   
   if (invalidClosureItems.length > 0) {
@@ -383,10 +395,10 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     );
     
     if (!hasUnderneathLayer) {
-      const invalidNames = invalidClosureItems.map(item => `${item.name} (${item.closure})`).join(', ');
+      const invalidNames = invalidClosureItems.map(item => `${item.name} (${item.closure || item.subcategory})`).join(', ');
       return {
         isValid: false,
-        reason: `Open Front items require underneath layer: ${invalidNames}`
+        reason: `Items requiring base layer underneath: ${invalidNames}`
       };
     }
   }
