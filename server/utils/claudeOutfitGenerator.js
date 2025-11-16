@@ -119,6 +119,14 @@ STYLING VARIETY RULE:
   - ❌ INVALID: "Sweater + Cardigan" (both are outer layers)  
   - ❌ INVALID: "Blazer + Jacket" (both are outer layers)
 
+🚨 CRITICAL: NO MULTIPLE BOTTOMS 🚨
+• NEVER include multiple bottom items in one outfit:
+  - ❌ INVALID: "T-shirt + Black Joggers + Grey Joggers + Sneakers" (two pairs of pants)
+  - ❌ INVALID: "T-shirt + Jeans + Shorts + Boots" (two bottom pieces)
+  - ❌ INVALID: "Blouse + Skirt + Trousers + Heels" (two bottom pieces)
+• Rule: Only ONE bottom per outfit - you can't wear multiple pants/shorts/skirts simultaneously
+• Choose the BEST bottom option, don't combine bottoms
+
 • Outer layer items: hoodies, sweatshirts, sweaters, cardigans, blazers, jackets, coats
 • Base layer items: t-shirts, tank tops, blouses, shirts, camisoles
 • Rule: Multiple tops are GOOD when they're proper layering (base + outer), BAD when they're competing outer layers
@@ -331,6 +339,20 @@ function validateOutfitCompleteness(outfitItems, baseItemCategory, scenario) {
     }
   }
   
+  // SAFETY NET: Check for multiple bottoms violation  
+  const bottomItems = outfitItems.filter(item => {
+    const category = item.category?.toLowerCase();
+    return category === 'bottom' || category === 'bottoms';
+  });
+  
+  if (bottomItems.length > 1) {
+    const bottomNames = bottomItems.map(item => `${item.name}`).join(' + ');
+    return {
+      isValid: false,
+      reason: `Invalid multiple bottoms: ${bottomNames} - can only wear one bottom per outfit`
+    };
+  }
+
   // SAFETY NET: Check for double outer layer violations
   const outerLayerItems = outfitItems.filter(item => {
     const subcategory = item.subcategory?.toLowerCase() || '';

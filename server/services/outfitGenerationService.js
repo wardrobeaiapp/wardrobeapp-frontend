@@ -68,11 +68,31 @@ async function generateOutfitCombinations(itemData, compatibleItems, seasonScena
   
   console.log(`✅ GENERATING OUTFITS FOR ${completeScenarios.length} COMPLETE SCENARIOS\n`);
   
+  // IMPORTANT: Sort scenarios by season priority (winter → spring/fall → summer)
+  // This ensures more layered outfits for colder seasons, fewer layers for warmer seasons
+  const seasonPriority = {
+    'winter': 1,
+    'spring/fall': 2,
+    'summer': 3
+  };
+  
+  const sortedCompleteScenarios = completeScenarios.sort((a, b) => {
+    const seasonA = a.season?.toLowerCase() || 'unknown';
+    const seasonB = b.season?.toLowerCase() || 'unknown';
+    
+    const priorityA = seasonPriority[seasonA] || 999; // Unknown seasons go last
+    const priorityB = seasonPriority[seasonB] || 999;
+    
+    return priorityA - priorityB;
+  });
+  
+  console.log(`🌡️ Processing seasons in layering-priority order: ${sortedCompleteScenarios.map(s => s.season).join(' → ')}\n`);
+  
   // Generate all outfits for all scenarios first
   const allGeneratedOutfits = [];
   
-  for (let index = 0; index < completeScenarios.length; index++) {
-    const combo = completeScenarios[index];
+  for (let index = 0; index < sortedCompleteScenarios.length; index++) {
+    const combo = sortedCompleteScenarios[index];
     console.log(`🎯 ${index + 1}) ${combo.combination.toUpperCase()}`);
     
     // Convert scenario name to UUID for filtering (if scenarios mapping is provided)
