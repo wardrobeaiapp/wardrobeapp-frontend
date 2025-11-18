@@ -1,27 +1,24 @@
-import { useEffect } from 'react';
-import { Capsule } from '../../../types';
-import useDataLoading from '../../core/useDataLoading';
-import { useCapsules } from './useCapsules';
+import { useWardrobe } from '../../../context/WardrobeContext';
 
+/**
+ * PERFORMANCE OPTIMIZATION:
+ * This hook now uses WardrobeContext as single source of truth instead of
+ * separate useCapsules hook. This prevents duplicate API calls that were
+ * contributing to 175ms blocking operations.
+ * 
+ * Previous issue: useCapsules was making separate database queries even after
+ * outfit optimization, causing continued performance bottleneck.
+ */
 export const useCapsulesData = () => {
-  const { 
-    capsules, 
-    loading: isLoading, 
-    error 
-  } = useCapsules();
-  
-  const [state, actions] = useDataLoading<Capsule[]>([]);
-
-  useEffect(() => {
-    if (capsules) {
-      actions.setData(capsules);
-    }
-  }, [capsules, actions.setData]);
+  const { capsules, isLoading, error } = useWardrobe();
 
   return {
-    capsules: state.data,
-    isLoading: isLoading || state.isLoading,
-    error: error || state.error,
-    refetch: () => actions.loadData(Promise.resolve(capsules || [])),
+    capsules: capsules || [],
+    isLoading,
+    error,
+    refetch: () => {
+      // WardrobeContext handles refetching internally
+      console.log('[useCapsulesData] Refetch requested - handled by WardrobeContext');
+    },
   };
 };

@@ -76,4 +76,20 @@ describe('useScenarios Hook (Form Wrapper)', () => {
   });
 
   it('should handle empty scenarios array', () => {
+    // Arrange
+    mockUseSharedScenarios.mockReturnValue({
+      scenarios: [],
+      isLoading: false,
+      error: null,
+      refetch: jest.fn()
+    });
+
+    // Act
+    const { result } = renderHook(() => useScenarios());
+
+    // Assert
+    expect(result.current.scenarios).toEqual([]);
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
 });

@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
 import { useOutfits } from '../hooks/wardrobe/outfits/useOutfits';
-import { createCapsule, updateCapsule as updateCapsuleService, deleteCapsule as deleteCapsuleService } from '../services/wardrobe/capsules';
+import { useCapsules } from '../hooks/wardrobe/capsules/useCapsules';
 
 // Base outfit interface with all possible fields
 interface OutfitBase {
@@ -62,12 +62,17 @@ interface WardrobeProviderProps {
 }
 
 export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }): React.ReactElement => {
-  const { user, isAuthenticated } = useSupabaseAuth();
-  const userId = user?.id || 'guest';
+  const { user } = useSupabaseAuth();
 
-  // Initialize state with empty arrays
-  const [capsules, setCapsules] = useState<Capsule[]>([]);
-  const [capsuleError, setCapsuleError] = useState<string | null>(null);
+  // Use the useCapsules hook for capsule data loading (performance optimization)
+  const {
+    capsules = [],
+    error: capsulesError,
+    loading: isCapsulesLoading = false,
+    addCapsule: addCapsuleHook = async () => null,
+    updateCapsuleById: updateCapsuleHook = async () => null,
+    deleteCapsuleById: deleteCapsuleHook = async () => {},
+  } = useCapsules();
   
   // Use the custom hooks for items and outfits
   const { 
@@ -133,125 +138,40 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
   }, [deleteOutfitHook]);
   
   // Combine loading states
-  const isLoading = itemsLoading || isOutfitsLoading;
+  const isLoading = itemsLoading || isOutfitsLoading || isCapsulesLoading;
   
   // Only show errors if we don't have any items loaded
   // This prevents showing API errors when we've successfully loaded items from localStorage
-  const error = items.length > 0 ? null : (itemsError || outfitsError || capsuleError);
+  const error = items.length > 0 ? null : (itemsError || outfitsError || capsulesError);
 
-  // Capsule management methods
+  // Capsule management methods - use hook functions directly for better performance
   const addCapsule = useCallback(async (capsuleData: Omit<Capsule, 'id' | 'dateCreated'>) => {
     try {
-      let newCapsule: Capsule;
-      
-      if (isAuthenticated) {
-        // Use API for authenticated users
-        try {
-          newCapsule = await createCapsule(capsuleData);
-          setCapsules([...capsules, newCapsule]);
-        } catch (apiError: any) {
-          // Silently handle API errors and fall back to local storage
-          setCapsuleError(apiError.message || 'Failed to create capsule on server');
-          
-          // Fallback to local storage if API fails
-          newCapsule = {
-            ...capsuleData,
-            id: uuidv4(),
-            dateCreated: new Date().toISOString()
-          };
-          const updatedCapsules = [...capsules, newCapsule];
-          setCapsules(updatedCapsules);
-          localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-        }
-      } else {
-        // Use localStorage for guest users
-        newCapsule = {
-          ...capsuleData,
-          id: uuidv4(),
-          dateCreated: new Date().toISOString()
-        };
-        const updatedCapsules = [...capsules, newCapsule];
-        setCapsules(updatedCapsules);
-        localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-      }
-      
-      return newCapsule;
+      return await addCapsuleHook(capsuleData);
     } catch (err) {
-      setCapsuleError('Failed to add capsule');
       console.error('Error adding capsule:', err);
       return null;
     }
-  }, [capsules, isAuthenticated, userId]);
+  }, [addCapsuleHook]);
 
   const updateCapsule = useCallback(async (id: string, capsuleData: Partial<Capsule>) => {
     try {
-      if (isAuthenticated) {
-        // Use API for authenticated users
-        try {
-          await updateCapsuleService(id, capsuleData);
-          const updatedCapsules = capsules.map(capsule => 
-            capsule.id === id ? { ...capsule, ...capsuleData } : capsule
-          );
-          setCapsules(updatedCapsules);
-        } catch (apiError: any) {
-          // Removed excessive logging for performance
-          setCapsuleError(apiError.message || 'Failed to update capsule on server');
-          
-          // Fallback to local storage if API fails
-          const updatedCapsules = capsules.map(capsule => 
-            capsule.id === id ? { ...capsule, ...capsuleData } : capsule
-          );
-          setCapsules(updatedCapsules);
-          localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-        }
-      } else {
-        // Use localStorage for guest users
-        const updatedCapsules = capsules.map(capsule => 
-          capsule.id === id ? { ...capsule, ...capsuleData } : capsule
-        );
-        setCapsules(updatedCapsules);
-        localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-      }
-      
-      return capsules.find(capsule => capsule.id === id) || null;
+      return await updateCapsuleHook(id, capsuleData);
     } catch (err) {
-      setCapsuleError('Failed to update capsule');
       console.error('Error updating capsule:', err);
       return null;
     }
-  }, [capsules, isAuthenticated, userId]);
+  }, [updateCapsuleHook]);
 
   const deleteCapsule = useCallback(async (id: string) => {
     try {
-      if (isAuthenticated) {
-        // Use API for authenticated users
-        try {
-          await deleteCapsuleService(id);
-          const updatedCapsules = capsules.filter(capsule => capsule.id !== id);
-          setCapsules(updatedCapsules);
-        } catch (apiError: any) {
-          console.error('[WardrobeContext] API error deleting capsule:', apiError);
-          setCapsuleError(apiError.message || 'Failed to delete capsule from server');
-          
-          // Fallback to local storage if API fails
-          const updatedCapsules = capsules.filter(capsule => capsule.id !== id);
-          setCapsules(updatedCapsules);
-          localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-        }
-      } else {
-        // Use localStorage for guest users
-        const updatedCapsules = capsules.filter(capsule => capsule.id !== id);
-        setCapsules(updatedCapsules);
-        localStorage.setItem(`capsules-${userId}`, JSON.stringify(updatedCapsules));
-      }
-      
+      await deleteCapsuleHook(id);
       return true;
     } catch (err) {
-      setCapsuleError('Failed to delete capsule');
       console.error('Error deleting capsule:', err);
       return false;
     }
-  }, [capsules, isAuthenticated, userId]);
+  }, [deleteCapsuleHook]);
 
   // Listen for item deletion events to update outfits
   useEffect(() => {
@@ -319,7 +239,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updateCapsule,
     deleteCapsule,
     isLoading,
-    error: error || outfitsError || capsuleError || null
+    error: error || outfitsError || capsulesError || null
   }), [
     items,
     outfits,
@@ -336,7 +256,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     isLoading,
     error,
     outfitsError,
-    capsuleError,
+    capsulesError,
     user
   ]);
 
