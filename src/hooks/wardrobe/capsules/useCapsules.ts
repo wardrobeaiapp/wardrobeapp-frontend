@@ -90,14 +90,12 @@ export const useCapsules = () => {
     }
   }, []);
   
-  // Initial load and setup - DEFERRED to reduce initial blocking
+  // Initial load and setup
   useEffect(() => {
     isMounted.current = true;
     
-    // Defer capsule loading to prevent blocking main data queries (items/outfits)
-    const timer = setTimeout(() => {
-      loadCapsules();
-    }, 50); // Small delay to stagger database queries
+    // Initial load
+    loadCapsules();
     
     // Set up refresh event listener
     const handleRefreshCapsules = () => {
@@ -108,7 +106,6 @@ export const useCapsules = () => {
     
     // Cleanup
     return () => {
-      clearTimeout(timer);
       isMounted.current = false;
       window.removeEventListener('refreshCapsules', handleRefreshCapsules);
       

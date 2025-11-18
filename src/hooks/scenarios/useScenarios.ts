@@ -72,14 +72,9 @@ export const useScenarios = (): UseScenarios => {
     }
   }, [user?.id, isAuthenticated]);
 
-  // Load scenarios on mount and auth changes - DEFERRED to reduce initial blocking
+  // Load scenarios on mount and auth changes
   useEffect(() => {
-    // Defer scenario loading to prevent blocking main data queries
-    const timer = setTimeout(() => {
-      fetchScenarios();
-    }, 100); // Small delay to stagger database queries
-
-    return () => clearTimeout(timer);
+    fetchScenarios();
   }, [fetchScenarios]); // Include fetchScenarios dependency as required by ESLint
 
   return {

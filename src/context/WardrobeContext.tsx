@@ -64,8 +64,8 @@ interface WardrobeProviderProps {
 export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }): React.ReactElement => {
   const { user } = useSupabaseAuth();
 
-  // PERFORMANCE OPTIMIZATION: Load critical data first, defer others
-  // Priority 1: Items (most important for page functionality)
+  // PERFORMANCE OPTIMIZATION: Use shared hooks to prevent duplicate queries
+  // Items (most important for page functionality)
   const { 
     items, 
     addItem, 
@@ -75,7 +75,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     isLoading: itemsLoading
   } = useWardrobeItemsDB([]);
 
-  // Priority 2: Outfits (needed for wardrobe page)
+  // Outfits (optimized with JOIN query to eliminate N+1 problem)
   const {
     outfits = [],
     error: outfitsError,
@@ -85,7 +85,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     deleteOutfit: deleteOutfitHook = async () => false,
   } = useOutfits([]);
 
-  // Priority 3: Capsules loading is deferred via the useCapsules hook (50ms delay)
+  // Capsules (shared hook prevents duplicate loading)
   const {
     capsules = [],
     error: capsulesError,
