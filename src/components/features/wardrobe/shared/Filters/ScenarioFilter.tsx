@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { supabase } from '../../../../../services/core';
 import { FormField, FormSelect } from '../../../../common/Form';
-import { useSupabaseAuth } from '../../../../../context/SupabaseAuthContext';
 import { getDemoScenarios, isDemoUser } from '../../../../../services/scenarios/demoScenarioService';
+import { useScenarios } from '../../../../../hooks/scenarios';
 import { WardrobeItem } from '../../../../../types';
 
 const StyledSelect = styled(FormSelect)`
@@ -25,67 +24,52 @@ const ScenarioFilter: React.FC<ScenarioFilterProps> = ({
   allowUnauthenticated = false,
   items
 }) => {
-  const [scenarios, setScenarios] = useState<Array<{ id: string; name: string }>>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, isAuthenticated } = useSupabaseAuth();
+  // Use shared scenario hook for authenticated users (performance optimization)
+  const { scenarios: sharedScenarios, isLoading: sharedIsLoading } = useScenarios();
+  
+  // Local state for demo mode scenarios 
+  const [demoScenarios, setDemoScenarios] = useState<Array<{ id: string; name: string }>>([]);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  
+  // Auth context no longer needed since we use shared useScenarios hook
+  // const { user, isAuthenticated } = useSupabaseAuth();
 
+  // Handle demo mode scenarios separately
   useEffect(() => {
-    const fetchScenarios = async () => {
-      try {
-        setIsLoading(true);
-        
-        // 🎭 DEMO MODE: Auto-detect demo user from items and use dedicated demo service
-        if (allowUnauthenticated && items && items.length > 0) {
-          const detectedUserId = items[0]?.userId;
-          if (detectedUserId && isDemoUser(detectedUserId)) {
-            console.log(`[ScenarioFilter] Demo mode: Auto-detected demo user ${detectedUserId}, using demo service`);
-            const demoScenarios = await getDemoScenarios(detectedUserId);
-            setScenarios(demoScenarios);
-            return;
-          }
-        }
-        
-        // 🔒 SECURITY CHECK: Authentication required for regular users
-        if (!allowUnauthenticated && (!isAuthenticated || !user?.id)) {
-          console.warn('[ScenarioFilter] No authenticated user - cannot fetch scenarios');
-          setScenarios([]);
-          return;
-        }
-        
-        // 🔒 REGULAR MODE: Use authenticated user's scenarios
-        if (!allowUnauthenticated && user?.id) {
-          console.log(`[ScenarioFilter] Fetching scenarios for authenticated user ${user.id}`);
-          const { data, error } = await supabase
-            .from('scenarios')
-            .select('id, name')
-            .eq('user_id', user.id)
-            .order('name', { ascending: true });
-            
-          if (error) {
-            console.error('[ScenarioFilter] Error fetching scenarios:', error);
-            setScenarios([]);
-            return;
-          }
+    const fetchDemoScenarios = async () => {
+      // Check if we're in demo mode (unauthenticated with demo items)
+      if (allowUnauthenticated && items && items.length > 0) {
+        const detectedUserId = items[0]?.userId;
+        if (detectedUserId && isDemoUser(detectedUserId)) {
+          console.log(`[ScenarioFilter] PERFORMANCE: Using demo mode for ${detectedUserId}`);
+          setIsDemoMode(true);
+          setIsDemoLoading(true);
           
-          console.log(`[ScenarioFilter] Successfully fetched ${data?.length || 0} scenarios for user ${user.id}`);
-          setScenarios((data || []) as Array<{ id: string; name: string }>);
+          try {
+            const demoScenariosData = await getDemoScenarios(detectedUserId);
+            setDemoScenarios(demoScenariosData);
+          } catch (error) {
+            console.error('[ScenarioFilter] Demo scenarios error:', error);
+            setDemoScenarios([]);
+          } finally {
+            setIsDemoLoading(false);
+          }
           return;
         }
-        
-        // ⚠️ Fallback: This shouldn't happen but just in case
-        console.warn('[ScenarioFilter] Unexpected state - no valid user context');
-        setScenarios([]);
-        
-      } catch (error) {
-        console.error('[ScenarioFilter] Unexpected error:', error);
-        setScenarios([]);
-      } finally {
-        setIsLoading(false);
       }
+      
+      // Not demo mode
+      setIsDemoMode(false);
+      setDemoScenarios([]);
     };
     
-    fetchScenarios();
-  }, [isAuthenticated, user?.id, allowUnauthenticated, items]); // Re-fetch when auth state, demo mode, or items change
+    fetchDemoScenarios();
+  }, [allowUnauthenticated, items]);
+
+  // Determine which scenarios and loading state to use
+  const scenarios = isDemoMode ? demoScenarios : sharedScenarios;
+  const isLoading = isDemoMode ? isDemoLoading : sharedIsLoading;
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.value);

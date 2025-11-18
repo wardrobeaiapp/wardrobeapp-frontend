@@ -1,7 +1,12 @@
 import React from 'react';
-import { Scenario } from '../../../../../types';
 import { Checkbox, FormField, FormInput } from '../../../../../components/common/Form';
 import styled from 'styled-components';
+
+// Minimal scenario type - ScenarioSelector only needs id and name
+interface MinimalScenario {
+  id: string;
+  name: string;
+}
 
 const ScenarioCheckboxes = styled.div`
   display: flex;
@@ -16,7 +21,7 @@ const CheckboxItem = styled.div`
 
 export interface ScenarioSelectorProps {
   /** List of available scenarios */
-  scenarios: Scenario[];
+  scenarios: MinimalScenario[];
   /** Currently selected scenario IDs */
   selectedScenarios: string[];
   /** Callback when a scenario selection changes */
