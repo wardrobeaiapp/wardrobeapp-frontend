@@ -100,7 +100,7 @@ export const useCapsules = () => {
         requestIdleCallback(() => loadCapsules());
       } else {
         // Fallback for browsers without requestIdleCallback
-        setTimeout(() => loadCapsules(), 150);
+        setTimeout(() => loadCapsules(), 250);
       }
     };
     

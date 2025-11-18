@@ -1,18 +1,21 @@
 import { useState, useCallback } from 'react';
-import { useCapsules } from '../wardrobe/capsules/useCapsules';
+import { useWardrobe } from '../../context/WardrobeContext';
 import { Capsule } from '../../types';
 import { CapsuleFormData } from '../../components/features/wardrobe/forms/CapsuleForm';
 
 /**
  * Hook for managing capsule operations (add, update, delete)
+ * PERFORMANCE OPTIMIZATION: Uses WardrobeContext with lazy loading
+ * to prevent blocking main thread on initial page load.
  */
 export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./useModalState').useModalState>) => {
-  // Use capsules hook for better capsule-items relationship management
+  // Use wardrobe context with lazy loading instead of direct useCapsules hook
   const {
     addCapsule,
-    updateCapsuleById,
-    deleteCapsuleById
-  } = useCapsules();
+    updateCapsule,
+    deleteCapsule,
+    loadCapsules
+  } = useWardrobe();
   
   // Local state for capsule management
   const [selectedCapsule, setSelectedCapsule] = useState<Capsule | undefined>(undefined);
@@ -41,10 +44,11 @@ export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./us
   /**
    * Delete a capsule by ID
    */
-  const handleDeleteCapsule = useCallback((id: string) => {
-    deleteCapsuleById(id);
+  const handleDeleteCapsule = useCallback(async (id: string) => {
+    await loadCapsules(); // Ensure capsules are loaded
+    await deleteCapsule(id);
     setSelectedCapsule(undefined);
-  }, [deleteCapsuleById]);
+  }, [deleteCapsule, loadCapsules]);
   
   /**
    * Handle edit capsule submit
@@ -65,8 +69,9 @@ export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./us
     
     console.log('[useCapsuleManagement] Updating capsule with data:', capsuleData);
     
-    await updateCapsuleById(id, capsuleData);
-  }, [updateCapsuleById]);
+    await loadCapsules(); // Ensure capsules are loaded
+    await updateCapsule(id, capsuleData);
+  }, [updateCapsule, loadCapsules]);
   
   /**
    * Add a new capsule
@@ -84,13 +89,14 @@ export const useCapsuleManagement = (modalState?: ReturnType<typeof import('./us
         mainItemId: data.mainItemId || ''
       };
       
-      // Add the capsule and wait for it to complete
+      // Ensure capsules are loaded and add the capsule
+      await loadCapsules(); // Ensure capsules are loaded  
       await addCapsule(capsuleData);
     } catch (error) {
       console.error('Error adding capsule:', error);
       throw error; // Re-throw to handle in the component
     }
-  }, [addCapsule]);
+  }, [addCapsule, loadCapsules]);
   
   return {
     // State

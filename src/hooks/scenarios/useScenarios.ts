@@ -79,8 +79,8 @@ export const useScenarios = (): UseScenarios => {
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => fetchScenarios());
       } else {
-        // Fallback for browsers without requestIdleCallback
-        setTimeout(fetchScenarios, 100);
+        // Fallback for browsers without requestIdleCallback  
+        setTimeout(fetchScenarios, 250);
       }
     };
     

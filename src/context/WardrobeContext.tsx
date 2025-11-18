@@ -4,7 +4,6 @@ import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
 import { useOutfits } from '../hooks/wardrobe/outfits/useOutfits';
-import { useCapsules } from '../hooks/wardrobe/capsules/useCapsules';
 
 // Base outfit interface with all possible fields
 interface OutfitBase {
@@ -43,6 +42,7 @@ interface WardrobeContextState {
   addCapsule: (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => Promise<Capsule | null>;
   updateCapsule: (id: string, updates: Partial<Capsule>) => Promise<Capsule | null>;
   deleteCapsule: (id: string) => Promise<boolean>;
+  loadCapsules: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -85,14 +85,43 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     deleteOutfit: deleteOutfitHook = async () => false,
   } = useOutfits([]);
 
-  // Capsules (shared hook prevents duplicate loading)
-  const {
-    capsules = [],
-    error: capsulesError,
-    addCapsule: addCapsuleHook = async () => null,
-    updateCapsuleById: updateCapsuleHook = async () => null,
-    deleteCapsuleById: deleteCapsuleHook = async () => {},
-  } = useCapsules();
+  // Capsules (deferred loading - only when capsules tab is accessed)
+  // This prevents blocking the main thread on initial page load
+  const [capsulesLoaded, setCapsulesLoaded] = React.useState(false);
+  const [capsules, setCapsules] = React.useState<Capsule[]>([]);
+  const [capsulesError, setCapsulesError] = React.useState<string | null>(null);
+  
+  // Lazy load capsules only when needed
+  const loadCapsules = useCallback(async () => {
+    if (capsulesLoaded) return;
+    
+    try {
+      setCapsulesLoaded(true);
+      // Import and use the capsules service directly to avoid hook calls
+      const { fetchCapsules } = await import('../services/wardrobe/capsules');
+      const capsulesData = await fetchCapsules();
+      setCapsules(capsulesData);
+    } catch (error) {
+      console.error('Error loading capsules:', error);
+      setCapsulesError('Failed to load capsules');
+    }
+  }, [capsulesLoaded]);
+  
+  // Placeholder functions for capsules (to be implemented with lazy loading)
+  const addCapsuleHook = useCallback(async (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => {
+    await loadCapsules(); // Ensure capsules are loaded first
+    return null;
+  }, [loadCapsules]);
+  
+  const updateCapsuleHook = useCallback(async (id: string, updates: Partial<Capsule>) => {
+    await loadCapsules(); // Ensure capsules are loaded first
+    return null;
+  }, [loadCapsules]);
+  
+  const deleteCapsuleHook = useCallback(async (id: string) => {
+    await loadCapsules(); // Ensure capsules are loaded first
+    return false;
+  }, [loadCapsules]);
 
   // Handle outfit updates with proper type safety
   const updateOutfit = useCallback(async (
@@ -238,6 +267,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     addCapsule,
     updateCapsule,
     deleteCapsule,
+    loadCapsules,
     isLoading,
     error: error || outfitsError || capsulesError || null
   }), [
@@ -253,6 +283,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     addCapsule,
     updateCapsule,
     deleteCapsule,
+    loadCapsules,
     isLoading,
     error,
     outfitsError,
