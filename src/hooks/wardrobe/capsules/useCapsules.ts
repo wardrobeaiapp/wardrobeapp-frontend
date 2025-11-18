@@ -90,12 +90,21 @@ export const useCapsules = () => {
     }
   }, []);
   
-  // Initial load and setup
+  // Initial load and setup - deferred to prevent blocking
   useEffect(() => {
     isMounted.current = true;
     
-    // Initial load
-    loadCapsules();
+    // Defer capsule loading to avoid blocking critical page rendering
+    const loadWhenIdle = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => loadCapsules());
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(() => loadCapsules(), 150);
+      }
+    };
+    
+    loadWhenIdle();
     
     // Set up refresh event listener
     const handleRefreshCapsules = () => {

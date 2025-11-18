@@ -72,9 +72,19 @@ export const useScenarios = (): UseScenarios => {
     }
   }, [user?.id, isAuthenticated]);
 
-  // Load scenarios on mount and auth changes
+  // Load scenarios after initial page render to avoid blocking
   useEffect(() => {
-    fetchScenarios();
+    // Use requestIdleCallback to defer scenario loading until browser is idle
+    const loadWhenIdle = () => {
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(() => fetchScenarios());
+      } else {
+        // Fallback for browsers without requestIdleCallback
+        setTimeout(fetchScenarios, 100);
+      }
+    };
+    
+    loadWhenIdle();
   }, [fetchScenarios]); // Include fetchScenarios dependency as required by ESLint
 
   return {
