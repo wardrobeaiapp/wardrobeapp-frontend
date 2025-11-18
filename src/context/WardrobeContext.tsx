@@ -64,17 +64,8 @@ interface WardrobeProviderProps {
 export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }): React.ReactElement => {
   const { user } = useSupabaseAuth();
 
-  // Use the useCapsules hook for capsule data loading (performance optimization)
-  const {
-    capsules = [],
-    error: capsulesError,
-    loading: isCapsulesLoading = false,
-    addCapsule: addCapsuleHook = async () => null,
-    updateCapsuleById: updateCapsuleHook = async () => null,
-    deleteCapsuleById: deleteCapsuleHook = async () => {},
-  } = useCapsules();
-  
-  // Use the custom hooks for items and outfits
+  // PERFORMANCE OPTIMIZATION: Load critical data first, defer others
+  // Priority 1: Items (most important for page functionality)
   const { 
     items, 
     addItem, 
@@ -82,9 +73,9 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     deleteItem, 
     error: itemsError,
     isLoading: itemsLoading
-  } = useWardrobeItemsDB([]);  // Always start with empty array, the hook will load from DB or localStorage as needed
+  } = useWardrobeItemsDB([]);
 
-  // Use the useOutfits hook with proper type annotations and default values
+  // Priority 2: Outfits (needed for wardrobe page)
   const {
     outfits = [],
     error: outfitsError,
@@ -93,6 +84,15 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updateOutfit: updateOutfitHook = async () => null,
     deleteOutfit: deleteOutfitHook = async () => false,
   } = useOutfits([]);
+
+  // Priority 3: Capsules loading is deferred via the useCapsules hook (50ms delay)
+  const {
+    capsules = [],
+    error: capsulesError,
+    addCapsule: addCapsuleHook = async () => null,
+    updateCapsuleById: updateCapsuleHook = async () => null,
+    deleteCapsuleById: deleteCapsuleHook = async () => {},
+  } = useCapsules();
 
   // Handle outfit updates with proper type safety
   const updateOutfit = useCallback(async (
@@ -137,8 +137,8 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     }
   }, [deleteOutfitHook]);
   
-  // Combine loading states
-  const isLoading = itemsLoading || isOutfitsLoading || isCapsulesLoading;
+  // Combine loading states with priority (show loading until critical data is ready)
+  const isLoading = itemsLoading || isOutfitsLoading; // Don't wait for capsules for main loading state
   
   // Only show errors if we don't have any items loaded
   // This prevents showing API errors when we've successfully loaded items from localStorage
