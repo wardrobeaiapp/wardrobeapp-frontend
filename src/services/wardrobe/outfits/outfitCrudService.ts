@@ -66,7 +66,7 @@ export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
       return processedOutfits as Outfit[];
     }
 
-    // OPTIMIZED: Process all outfits at once (no async map needed)
+    // PERFORMANCE: Process with minimal blocking (using synchronous map but with better structure)
     const outfitsWithRelations = (data || []).map(outfitData => {
       try {
         // Convert base outfit data
