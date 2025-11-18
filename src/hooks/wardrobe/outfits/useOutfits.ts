@@ -80,7 +80,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       setError(null);
       
       try {
-        if (isAuthenticated && user?.id) {
+        if (authState.isAuthenticated && authState.userId) {
           try {
             // Load from the new outfits service
             const apiResponse = await (async () => {
@@ -99,12 +99,12 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
           } catch (apiError) {
             console.error('[useOutfits] Error loading from API:', apiError);
             // Fallback to localStorage if API fails
-            const storedOutfits = localStorage.getItem(`outfits-${user.id}`);
+            const storedOutfits = localStorage.getItem(`outfits-${authState.userId}`);
             if (storedOutfits) {
               try {
                 const parsedOutfits = JSON.parse(storedOutfits);
                 const formattedOutfits = Array.isArray(parsedOutfits)
-                  ? parsedOutfits.map((outfit: any) => toOutfit(outfit, user.id))
+                  ? parsedOutfits.map((outfit: any) => toOutfit(outfit, authState.userId))
                   : [];
                 setOutfits(formattedOutfits);
               } catch (parseError) {
@@ -140,7 +140,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
     };
     
     loadOutfits();
-  }, [authState.isAuthenticated, authState.userId, isAuthenticated, user?.id, toOutfit]);
+  }, [authState.isAuthenticated, authState.userId, toOutfit]);
 
   // Note: Removed unused getOutfitsInternal and getOutfits functions as they're not being used in the component
 
