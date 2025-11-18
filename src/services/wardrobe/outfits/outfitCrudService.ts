@@ -24,58 +24,30 @@ export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
     const userId = await getCurrentUserId();
     console.log('[outfitService] fetchOutfitsFromSupabase: User ID:', userId);
     
-    // PERFORMANCE OPTIMIZATION: Fetch outfits and items in single query using JOIN
-    console.log('[outfitService] fetchOutfitsFromSupabase: Querying Supabase with optimized JOIN...');
-    
-    // Single query to get outfits with their items (no N+1 problem)
+    // Fetch outfits from Supabase (simplified approach for better performance)
+    console.log('[outfitService] fetchOutfitsFromSupabase: Querying Supabase...');
     const { data, error } = await supabase
       .from(OUTFITS_TABLE)
-      .select(`
-        *,
-        ${OUTFIT_ITEMS_TABLE}!inner(item_id)
-      `)
+      .select('*')
       .eq('user_uuid', userId);
     
     console.log('[outfitService] fetchOutfitsFromSupabase: Supabase response - data:', data, 'error:', error);
       
     if (error) {
       console.error('[outfitService] fetchOutfitsFromSupabase: Supabase error detected:', error);
-      
-      // Fallback to original query if JOIN fails
-      console.log('[outfitService] Falling back to original query method...');
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from(OUTFITS_TABLE)
-        .select('*')
-        .eq('user_uuid', userId);
-      
-      if (fallbackError) {
-        console.error('[outfitService] Fallback query also failed:', fallbackError);
-        return [];
-      }
-      
-      // Process fallback data without items (will use stored items array)
-      const processedOutfits = (fallbackData || []).map(outfitData => {
-        const outfit = convertToOutfit(outfitData);
-        return {
-          ...outfit,
-          items: Array.isArray(outfitData.items) ? outfitData.items.map(id => String(id)) : [],
-          scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios.map(id => String(id)) : []
-        };
-      });
-      
-      return processedOutfits as Outfit[];
+      return [];
     }
-
-    // PERFORMANCE: Process with minimal blocking (using synchronous map but with better structure)
+    
+    // Process outfits efficiently (use stored items array instead of JOIN)
     const outfitsWithRelations = (data || []).map(outfitData => {
       try {
         // Convert base outfit data
         const outfit = convertToOutfit(outfitData);
         
-        // Extract item IDs from JOIN result (already fetched in single query)
-        const itemIds = Array.isArray(outfitData[OUTFIT_ITEMS_TABLE]) 
-          ? outfitData[OUTFIT_ITEMS_TABLE].map((item: any) => String(item.item_id))
-          : (Array.isArray(outfitData.items) ? outfitData.items.map(id => String(id)) : []);
+        // Use items directly from outfit data (faster than JOIN)
+        const itemIds = Array.isArray(outfitData.items) 
+          ? outfitData.items.map(id => String(id)) 
+          : [];
         
         // Scenarios are stored directly in the outfits table
         const scenarioIds = Array.isArray(outfitData.scenarios) 
