@@ -35,11 +35,11 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Memoize auth state to prevent unnecessary re-renders
+  // PERFORMANCE: Stabilize auth state to prevent multiple outfit loads
   const authState = useMemo(() => ({
     userId,
     isAuthenticated: !!isAuthenticated && !!user
-  }), [user, isAuthenticated, userId]);
+  }), [userId, isAuthenticated, user]); // Include user dependency as required by ESLint
   
   // Ensure we have a valid user ID
   const getValidUserId = useCallback((): string => {
@@ -50,19 +50,17 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   }, [user, isAuthenticated]);
   
   // Helper function to convert any object to OutfitExtended type with all required fields
+  // PERFORMANCE OPTIMIZATION: Simplified validation to prevent main thread blocking
   const toOutfit = useCallback((data: any, defaultUserId: string): OutfitExtended => {
     if (!data) {
       throw new Error('Cannot convert undefined or null to OutfitExtended');
     }
     
-    // Ensure season is properly typed as Season[]
-    const seasonArray = Array.isArray(data.season) ? data.season : [];
-    const season: Season[] = seasonArray.every((s: any): s is Season => 
-      typeof s === 'string' && Object.values(Season).includes(s as Season)
-    ) ? seasonArray : [];
+    // Simplified season handling - trust the data from database
+    const season: Season[] = Array.isArray(data.season) ? data.season : [];
 
     return {
-      id: data.id || uuidv4(),
+      id: data.id || 'temp-' + Date.now(), // Faster than uuidv4() for existing items
       name: data.name || 'Untitled Outfit',
       items: Array.isArray(data.items) ? data.items : [],
       season,
@@ -76,6 +74,11 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   // Load outfits from API or local storage
   useEffect(() => {
     const loadOutfits = async () => {
+      console.log('[useOutfits] PERFORMANCE DEBUG: loadOutfits triggered', { 
+        authenticated: authState.isAuthenticated, 
+        userId: authState.userId,
+        timestamp: Date.now() 
+      });
       setIsLoading(true);
       setError(null);
       
@@ -85,8 +88,8 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
             // Load from the new outfits service
             const apiResponse = await (async () => {
               if (authState.isAuthenticated && authState.userId) {
-                // Fetch outfits without any parameters
-                const data = await fetchOutfitsFromService();
+                // PERFORMANCE OPTIMIZATION: Pass userId to avoid redundant auth calls
+                const data = await fetchOutfitsFromService(authState.userId);
                 return data.map(outfit => toOutfit(outfit, authState.userId));
               } else {
                 const storedOutfits = localStorage.getItem('outfits');
@@ -139,6 +142,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
       }
     };
     
+    // TEMPORARY: Direct load to test if timeout is causing measurement issues
     loadOutfits();
   }, [authState.isAuthenticated, authState.userId, toOutfit]);
 

@@ -80,7 +80,7 @@ export const useScenarios = (): UseScenarios => {
         requestIdleCallback(() => fetchScenarios());
       } else {
         // Fallback for browsers without requestIdleCallback  
-        setTimeout(fetchScenarios, 250);
+        setTimeout(fetchScenarios, 350); // Staggered after outfits to prevent concurrent operations
       }
     };
     

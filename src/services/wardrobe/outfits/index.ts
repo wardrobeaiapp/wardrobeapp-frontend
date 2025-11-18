@@ -39,11 +39,11 @@ export * from './outfitBaseService';
 
 // CRUD service exports
 export {
-  fetchOutfits,
+  fetchOutfits, // Now optimized with optional userId parameter
   createOutfit,
   updateOutfit,
   deleteOutfit,
-  fetchOutfitsFromSupabase,
+  fetchOutfitsFromSupabase, // Now optimized with optional userId parameter
   createOutfitInSupabase,
   updateOutfitInSupabase,
   deleteOutfitInSupabase

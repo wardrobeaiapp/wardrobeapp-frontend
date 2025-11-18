@@ -16,20 +16,20 @@ import { replaceOutfitScenarios } from './outfitRelationsService';
 
 /**
  * Fetch all outfits for the current user from Supabase
+ * PERFORMANCE OPTIMIZATION: Accept userId parameter to avoid redundant auth calls
  */
-export const fetchOutfitsFromSupabase = async (): Promise<Outfit[]> => {
+export const fetchOutfitsFromSupabase = async (userId?: string): Promise<Outfit[]> => {
   try {
-    console.log('[outfitService] fetchOutfitsFromSupabase: Getting current user...');
-    // Get current user
-    const userId = await getCurrentUserId();
-    console.log('[outfitService] fetchOutfitsFromSupabase: User ID:', userId);
+    // Use provided userId or fall back to auth call
+    const finalUserId = userId || await getCurrentUserId();
+    console.log('[outfitService] fetchOutfitsFromSupabase: User ID:', finalUserId);
     
     // Fetch outfits from Supabase (simplified approach for better performance)
     console.log('[outfitService] fetchOutfitsFromSupabase: Querying Supabase...');
     const { data, error } = await supabase
       .from(OUTFITS_TABLE)
       .select('*')
-      .eq('user_uuid', userId);
+      .eq('user_uuid', finalUserId);
     
     console.log('[outfitService] fetchOutfitsFromSupabase: Supabase response - data:', data, 'error:', error);
       
@@ -279,12 +279,13 @@ export const deleteOutfitInSupabase = async (id: string): Promise<void> => {
 // Public API functions using pure Supabase (like wardrobe items)
 
 /**
- * Fetch outfits using Supabase
+ * Main function to fetch outfits - uses pure Supabase approach
+ * PERFORMANCE OPTIMIZATION: Accept userId parameter to avoid redundant auth calls
  */
-export const fetchOutfits = async (): Promise<Outfit[]> => {
+export const fetchOutfits = async (userId?: string): Promise<Outfit[]> => {
   try {
-    // Use pure Supabase like wardrobe items do - no legacy API fallback needed
-    const outfits = await fetchOutfitsFromSupabase();
+    // Use provided userId or get it from auth if not provided
+    const outfits = await fetchOutfitsFromSupabase(userId);
     return outfits;
   } catch (error) {
     console.error('[outfitService] Error fetching outfits:', error);
