@@ -1,51 +1,17 @@
 import React, { createContext, useContext, useEffect, useMemo, useCallback, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { WardrobeItem, Capsule, Season } from '../types';
+import { Capsule } from '../types';
+import { 
+  OutfitInput, 
+  OutfitExtended, 
+  WardrobeContextState 
+} from '../types/wardrobe';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
 
-// Base outfit interface with all possible fields
-interface OutfitBase {
-  id: string;
-  userId: string;
-  name: string;
-  items: string[];
-  dateCreated: string;
-  season: Season[];
-  scenarios?: string[];
-  scenarioNames?: string[];
-}
-
-// Input type for creating/updating outfits
-type OutfitInput = {
-  name: string;
-  items: string[];
-  season: Season[];
-  userId?: string;
-  scenarios?: string[];
-  scenarioNames?: string[];
-};
-
-export type OutfitExtended = OutfitBase;
-
-interface WardrobeContextState {
-  items: WardrobeItem[];
-  outfits: OutfitExtended[];
-  capsules: Capsule[];
-  addItem: (item: Omit<WardrobeItem, 'id'>, file?: File) => Promise<WardrobeItem | null>;
-  updateItem: (id: string, updates: Partial<WardrobeItem>, file?: File) => Promise<WardrobeItem | null>;
-  deleteItem: (id: string) => Promise<boolean>;
-  addOutfit: (outfit: Omit<OutfitExtended, 'id' | 'dateCreated'>) => Promise<OutfitExtended | null>;
-  updateOutfit: (id: string, updates: Partial<Omit<OutfitExtended, 'id' | 'userId' | 'dateCreated'>>) => Promise<OutfitExtended | null>;
-  deleteOutfit: (id: string) => Promise<boolean>;
-  addCapsule: (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => Promise<Capsule | null>;
-  updateCapsule: (id: string, updates: Partial<Capsule>) => Promise<Capsule | null>;
-  deleteCapsule: (id: string) => Promise<boolean>;
-  loadCapsules: () => Promise<void>;
-  loadOutfits: () => Promise<void>;
-  isLoading: boolean;
-  error: string | null;
-}
+// Types are now imported from '../types/wardrobe'
+// Re-export types that are used by other components
+export type { OutfitExtended } from '../types/wardrobe';
 
 const WardrobeContext = createContext<WardrobeContextState | undefined>(undefined);
 
