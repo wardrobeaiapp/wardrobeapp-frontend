@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { useSupabaseAuth } from '../../../context/SupabaseAuthContext';
 import { OutfitExtended, OutfitInput, Season } from '../../../types/outfit';
@@ -34,6 +34,10 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // PERFORMANCE: Prevent duplicate loading calls
+  const loadingRef = useRef<boolean>(false);
+  const lastAuthStateRef = useRef<string>('');
   
   // PERFORMANCE: Stabilize auth state to prevent multiple outfit loads
   const authState = useMemo(() => ({
@@ -79,6 +83,20 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         userId: authState.userId,
         timestamp: Date.now() 
       });
+      
+      // PERFORMANCE FIX: Prevent duplicate loading calls
+      const authStateKey = `${authState.isAuthenticated}-${authState.userId}`;
+      if (loadingRef.current || lastAuthStateRef.current === authStateKey) {
+        console.log('[useOutfits] Skipping duplicate load', { 
+          isLoading: loadingRef.current,
+          sameAuthState: lastAuthStateRef.current === authStateKey 
+        });
+        return;
+      }
+      
+      loadingRef.current = true;
+      lastAuthStateRef.current = authStateKey;
+      
       setIsLoading(true);
       setError(null);
       
@@ -139,6 +157,7 @@ export const useOutfits = (initialOutfits: OutfitExtended[] = []): UseOutfitsRet
         setError('Failed to load outfits');
       } finally {
         setIsLoading(false);
+        loadingRef.current = false; // Reset loading flag
       }
     };
     

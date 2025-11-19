@@ -3,7 +3,7 @@
  */
 
 import { supabase } from '../../core';
-import { CAPSULE_ITEMS_TABLE } from './capsuleBaseService';
+import { CAPSULE_ITEMS_TABLE, getCurrentUser } from './capsuleBaseService';
 import { shouldLogDetails } from './capsuleUtils';
 
 /**
@@ -14,7 +14,8 @@ import { shouldLogDetails } from './capsuleUtils';
  */
 export const updateCapsuleItems = async (
   capsuleId: string,
-  itemIds: string[]
+  itemIds: string[],
+  userId?: string
 ): Promise<boolean> => {
   const shouldLog = shouldLogDetails();
   
@@ -43,10 +44,18 @@ export const updateCapsuleItems = async (
     return true;
   }
   
+  // Get the current user ID for the join table
+  const finalUserId = userId || (await getCurrentUser())?.id;
+  if (!finalUserId) {
+    console.error('⚠️ [DATABASE] No user ID available for capsule items insertion');
+    return false;
+  }
+
   // Prepare bulk insert data for items join table
   const itemInserts = itemIds.map(itemId => ({
     capsule_id: capsuleId,
-    item_id: itemId
+    item_id: itemId,
+    user_id: finalUserId  // Include user_id to satisfy NOT NULL constraint
   }));
   
   // Insert all item relationships
@@ -55,7 +64,15 @@ export const updateCapsuleItems = async (
     .insert(itemInserts);
   
   if (insertError) {
-    console.warn('u26a0ufe0f [DATABASE] Warning: Could not insert items:', insertError);
+    console.error('⚠️ [DATABASE] DETAILED ERROR - Could not insert items:', {
+      error: insertError,
+      errorCode: insertError.code,
+      errorMessage: insertError.message,
+      errorDetails: insertError.details,
+      capsuleId,
+      itemIds,
+      itemInserts
+    });
     return false;
   } else if (shouldLog) {
     console.log('u2705 [DATABASE] Added', itemInserts.length, 'items to capsule');

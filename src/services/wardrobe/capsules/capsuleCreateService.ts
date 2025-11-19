@@ -84,7 +84,7 @@ export const createCapsule = async (capsule: Omit<Capsule, 'id' | 'dateCreated'>
       
       // Handle join tables for items
       if (newCapsule.selectedItems && newCapsule.selectedItems.length > 0) {
-        await updateCapsuleItems(newCapsule.id, newCapsule.selectedItems);
+        await updateCapsuleItems(newCapsule.id, newCapsule.selectedItems, user?.id);
       }
       
       // If in guest mode, also store in local storage

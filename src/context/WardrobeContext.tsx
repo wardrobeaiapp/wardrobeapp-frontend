@@ -107,20 +107,67 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     }
   }, [capsulesLoaded]);
   
-  // Placeholder functions for capsules (to be implemented with lazy loading)
+  // Capsule operations with lazy loading
   const addCapsuleHook = useCallback(async (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => {
-    await loadCapsules(); // Ensure capsules are loaded first
-    return null;
-  }, [loadCapsules]);
+    try {
+      // Load capsules if not loaded yet (but don't reload if already loaded)
+      if (!capsulesLoaded) {
+        await loadCapsules();
+      }
+      
+      // Capsule creation with proper item association
+      
+      // Import and use the capsules service directly
+      const { createCapsule } = await import('../services/wardrobe/capsules');
+      const newCapsule = await createCapsule(capsule);
+      
+      // Update local state to show new capsule immediately
+      setCapsules(prev => [...prev, newCapsule]);
+      console.log('[WardrobeContext] Capsule created successfully:', newCapsule.name);
+      return newCapsule;
+    } catch (error) {
+      console.error('Error adding capsule:', error);
+      setCapsulesError('Failed to add capsule');
+      return null;
+    }
+  }, [loadCapsules, capsulesLoaded]);
   
   const updateCapsuleHook = useCallback(async (id: string, updates: Partial<Capsule>) => {
-    await loadCapsules(); // Ensure capsules are loaded first
-    return null;
+    try {
+      await loadCapsules(); // Ensure capsules are loaded first
+      
+      // Import and use the capsules service directly
+      const { updateCapsule } = await import('../services/wardrobe/capsules');
+      const updatedCapsule = await updateCapsule(id, updates);
+      
+      // Update local state if update was successful
+      if (updatedCapsule) {
+        setCapsules(prev => prev.map(cap => cap.id === id ? updatedCapsule : cap));
+      }
+      return updatedCapsule;
+    } catch (error) {
+      console.error('Error updating capsule:', error);
+      setCapsulesError('Failed to update capsule');
+      return null;
+    }
   }, [loadCapsules]);
   
   const deleteCapsuleHook = useCallback(async (id: string) => {
-    await loadCapsules(); // Ensure capsules are loaded first
-    return false;
+    try {
+      await loadCapsules(); // Ensure capsules are loaded first
+      
+      // Import and use the capsules service directly
+      const { deleteCapsule } = await import('../services/wardrobe/capsules');
+      await deleteCapsule(id);
+      
+      // Update local state - if no error was thrown, deletion was successful
+      setCapsules(prev => prev.filter(cap => cap.id !== id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting capsule:', error);
+      setCapsulesError('Failed to delete capsule');
+      return false;
+    }
   }, [loadCapsules]);
 
   // Handle outfit updates with proper type safety

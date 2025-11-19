@@ -83,7 +83,7 @@ export const updateCapsule = async (id: string, capsule: Partial<Capsule>): Prom
       
       // Handle item relationships
       if (capsule.selectedItems !== undefined) {
-        await updateCapsuleItems(id, capsule.selectedItems);
+        await updateCapsuleItems(id, capsule.selectedItems, user?.id);
       }
       
       // Fetch the updated capsule to get the latest data including join tables
