@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { WardrobeItem, Capsule, Season } from '../types';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
-import { useOutfits } from '../hooks/wardrobe/outfits/useOutfits';
 
 // Base outfit interface with all possible fields
 interface OutfitBase {
@@ -43,6 +42,7 @@ interface WardrobeContextState {
   updateCapsule: (id: string, updates: Partial<Capsule>) => Promise<Capsule | null>;
   deleteCapsule: (id: string) => Promise<boolean>;
   loadCapsules: () => Promise<void>;
+  loadOutfits: () => Promise<void>;
   isLoading: boolean;
   error: string | null;
 }
@@ -75,15 +75,95 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     isLoading: itemsLoading
   } = useWardrobeItemsDB([]);
 
-  // Outfits (optimized with JOIN query to eliminate N+1 problem)
-  const {
-    outfits = [],
-    error: outfitsError,
-    isLoading: isOutfitsLoading = false,
-    addOutfit: addOutfitHook = async () => null,
-    updateOutfit: updateOutfitHook = async () => null,
-    deleteOutfit: deleteOutfitHook = async () => false,
-  } = useOutfits([]);
+  // Outfits (deferred loading - only when outfits are needed)
+  // This prevents blocking the main thread on initial page load
+  const [outfitsLoaded, setOutfitsLoaded] = React.useState(false);
+  const [outfits, setOutfits] = React.useState<OutfitExtended[]>([]);
+  const [outfitsError, setOutfitsError] = React.useState<string | null>(null);
+  const [isOutfitsLoading, setIsOutfitsLoading] = React.useState(false);
+  
+  // Lazy load outfits only when needed
+  const loadOutfits = useCallback(async () => {
+    if (outfitsLoaded) return;
+    
+    try {
+      setIsOutfitsLoading(true);
+      setOutfitsLoaded(true);
+      // Import and use the outfits service directly to avoid hook calls
+      const { fetchOutfits } = await import('../services/wardrobe/outfits');
+      const outfitsData = await fetchOutfits(user?.id);
+      setOutfits(outfitsData as OutfitExtended[]);
+    } catch (error) {
+      console.error('Error loading outfits:', error);
+      setOutfitsError('Failed to load outfits');
+    } finally {
+      setIsOutfitsLoading(false);
+    }
+  }, [outfitsLoaded, user?.id]);
+  
+  // Outfit operations with lazy loading
+  const addOutfitHook = useCallback(async (outfit: Omit<OutfitExtended, 'id' | 'dateCreated'>) => {
+    try {
+      // Load outfits if not loaded yet
+      if (!outfitsLoaded) {
+        await loadOutfits();
+      }
+      
+      // Import and use the outfits service directly
+      const { createOutfit } = await import('../services/wardrobe/outfits');
+      const newOutfit = await createOutfit(outfit);
+      
+      // Update local state
+      setOutfits(prev => [...prev, newOutfit as OutfitExtended]);
+      return newOutfit as OutfitExtended;
+    } catch (error) {
+      console.error('Error adding outfit:', error);
+      setOutfitsError('Failed to add outfit');
+      return null;
+    }
+  }, [loadOutfits, outfitsLoaded]);
+  
+  const updateOutfitHook = useCallback(async (id: string, updates: Partial<OutfitExtended>) => {
+    try {
+      if (!outfitsLoaded) {
+        await loadOutfits();
+      }
+      
+      const { updateOutfit } = await import('../services/wardrobe/outfits');
+      await updateOutfit(id, updates);
+      
+      // Update local state with the changes
+      setOutfits(prev => prev.map(outfit => 
+        outfit.id === id ? { ...outfit, ...updates } : outfit
+      ));
+      
+      // Return the updated outfit
+      const updatedOutfit = outfits.find(o => o.id === id);
+      return updatedOutfit ? { ...updatedOutfit, ...updates } : null;
+    } catch (error) {
+      console.error('Error updating outfit:', error);
+      setOutfitsError('Failed to update outfit');
+      return null;
+    }
+  }, [loadOutfits, outfitsLoaded, outfits]);
+  
+  const deleteOutfitHook = useCallback(async (id: string) => {
+    try {
+      if (!outfitsLoaded) {
+        await loadOutfits();
+      }
+      
+      const { deleteOutfit } = await import('../services/wardrobe/outfits');
+      await deleteOutfit(id);
+      
+      setOutfits(prev => prev.filter(outfit => outfit.id !== id));
+      return true;
+    } catch (error) {
+      console.error('Error deleting outfit:', error);
+      setOutfitsError('Failed to delete outfit');
+      return false;
+    }
+  }, [loadOutfits, outfitsLoaded]);
 
   // Capsules (deferred loading - only when capsules tab is accessed)
   // This prevents blocking the main thread on initial page load
@@ -284,10 +364,15 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
         }
 
         // Create a properly typed outfit object with all required fields
-        const newOutfitData: OutfitInput = {
+        const newOutfitData: OutfitExtended = {
           name: outfitData.name,
           items: Array.isArray(outfitData.items) ? outfitData.items : [],
           season: Array.isArray(outfitData.season) ? outfitData.season : [],
+          userId: currentUser.id, // Ensure userId is set as string, not undefined
+          id: '', // Will be set by the service
+          dateCreated: '', // Will be set by the service
+          scenarios: Array.isArray(outfitData.scenarios) ? outfitData.scenarios : [],
+          scenarioNames: Array.isArray(outfitData.scenarioNames) ? outfitData.scenarioNames : []
         };
         
         const newOutfit = await addOutfitHook(newOutfitData);
@@ -315,6 +400,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updateCapsule,
     deleteCapsule,
     loadCapsules,
+    loadOutfits,
     isLoading,
     error: error || outfitsError || capsulesError || null
   }), [
@@ -331,6 +417,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     updateCapsule,
     deleteCapsule,
     loadCapsules,
+    loadOutfits,
     isLoading,
     error,
     outfitsError,

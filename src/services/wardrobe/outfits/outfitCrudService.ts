@@ -38,19 +38,34 @@ export const fetchOutfitsFromSupabase = async (userId?: string): Promise<Outfit[
       return [];
     }
     
-    // Process outfits and fetch their item relationships
-    const outfitsWithRelations = await Promise.all((data || []).map(async outfitData => {
+    // PERFORMANCE OPTIMIZATION: Fetch all outfit items in a single query
+    const outfitIds = (data || []).map(outfit => String(outfit.id));
+    let outfitItemsMap: Record<string, string[]> = {};
+    
+    if (outfitIds.length > 0) {
+      const { data: allItemsData } = await supabase
+        .from(OUTFIT_ITEMS_TABLE)
+        .select('outfit_id, item_id')
+        .in('outfit_id', outfitIds);
+      
+      // Group items by outfit_id for efficient lookup
+      outfitItemsMap = (allItemsData || []).reduce((acc, row) => {
+        const outfitId = String(row.outfit_id);
+        if (!acc[outfitId]) acc[outfitId] = [];
+        acc[outfitId].push(String(row.item_id));
+        return acc;
+      }, {} as Record<string, string[]>);
+    }
+    
+    // Process outfits efficiently using the pre-fetched items map
+    const outfitsWithRelations = (data || []).map(outfitData => {
       try {
         // Convert base outfit data
         const outfit = convertToOutfit(outfitData);
+        const outfitId = String(outfitData.id);
         
-        // Fetch items from the join table (items are NOT stored directly in outfit)
-        const { data: itemsData, error: itemsError } = await supabase
-          .from(OUTFIT_ITEMS_TABLE)
-          .select('item_id')
-          .eq('outfit_id', String(outfitData.id));
-          
-        const itemIds = itemsError ? [] : (itemsData || []).map(row => String(row.item_id));
+        // Get items from our efficient lookup map
+        const itemIds = outfitItemsMap[outfitId] || [];
         
         // Scenarios are stored directly in the outfits table
         const scenarioIds = Array.isArray(outfitData.scenarios) 
@@ -73,7 +88,7 @@ export const fetchOutfitsFromSupabase = async (userId?: string): Promise<Outfit[
           scenarios: []
         };
       }
-    }));
+    });
     
     console.log('[outfitService] fetchOutfitsFromSupabase: Successfully processed', outfitsWithRelations.length, 'outfits');
     return outfitsWithRelations as Outfit[];

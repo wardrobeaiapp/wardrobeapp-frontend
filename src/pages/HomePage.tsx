@@ -40,7 +40,9 @@ const HomePage: React.FC = () => {
 
   // Data loading hooks with proper null handling  
   const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItemsData();
-  const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = useOutfitsData();
+  // PERFORMANCE: Only load outfits when outfits tab is active to prevent main thread blocking
+  const { outfits: outfitsData = null, isLoading: isLoadingOutfits, error: outfitsError } = 
+    useOutfitsData(activeTab === TabType.OUTFITS);
   const { capsules: capsulesData = null, isLoading: isLoadingCapsules, error: capsulesError } = useCapsulesData();
   
   // Provide default empty arrays for null data
