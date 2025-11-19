@@ -38,16 +38,19 @@ export const fetchOutfitsFromSupabase = async (userId?: string): Promise<Outfit[
       return [];
     }
     
-    // Process outfits efficiently (use stored items array instead of JOIN)
-    const outfitsWithRelations = (data || []).map(outfitData => {
+    // Process outfits and fetch their item relationships
+    const outfitsWithRelations = await Promise.all((data || []).map(async outfitData => {
       try {
         // Convert base outfit data
         const outfit = convertToOutfit(outfitData);
         
-        // Use items directly from outfit data (faster than JOIN)
-        const itemIds = Array.isArray(outfitData.items) 
-          ? outfitData.items.map(id => String(id)) 
-          : [];
+        // Fetch items from the join table (items are NOT stored directly in outfit)
+        const { data: itemsData, error: itemsError } = await supabase
+          .from(OUTFIT_ITEMS_TABLE)
+          .select('item_id')
+          .eq('outfit_id', String(outfitData.id));
+          
+        const itemIds = itemsError ? [] : (itemsData || []).map(row => String(row.item_id));
         
         // Scenarios are stored directly in the outfits table
         const scenarioIds = Array.isArray(outfitData.scenarios) 
@@ -70,7 +73,7 @@ export const fetchOutfitsFromSupabase = async (userId?: string): Promise<Outfit[
           scenarios: []
         };
       }
-    });
+    }));
     
     console.log('[outfitService] fetchOutfitsFromSupabase: Successfully processed', outfitsWithRelations.length, 'outfits');
     return outfitsWithRelations as Outfit[];
