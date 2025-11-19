@@ -8,6 +8,8 @@ import {
 } from '../types/wardrobe';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { useWardrobeItemsDB } from '../hooks/wardrobe/items';
+import { useWardrobeOutfits } from '../hooks/wardrobe/useWardrobeOutfits';
+import { useWardrobeCapsules } from '../hooks/wardrobe/useWardrobeCapsules';
 
 // Types are now imported from '../types/wardrobe'
 // Re-export types that are used by other components
@@ -41,180 +43,29 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     isLoading: itemsLoading
   } = useWardrobeItemsDB([]);
 
-  // Outfits (deferred loading - only when outfits are needed)
-  // This prevents blocking the main thread on initial page load
-  const [outfitsLoaded, setOutfitsLoaded] = React.useState(false);
-  const [outfits, setOutfits] = React.useState<OutfitExtended[]>([]);
-  const [outfitsError, setOutfitsError] = React.useState<string | null>(null);
-  const [isOutfitsLoading, setIsOutfitsLoading] = React.useState(false);
-  
-  // Lazy load outfits only when needed
-  const loadOutfits = useCallback(async () => {
-    if (outfitsLoaded) return;
-    
-    try {
-      setIsOutfitsLoading(true);
-      setOutfitsLoaded(true);
-      // Import and use the outfits service directly to avoid hook calls
-      const { fetchOutfits } = await import('../services/wardrobe/outfits');
-      const outfitsData = await fetchOutfits(user?.id);
-      setOutfits(outfitsData as OutfitExtended[]);
-    } catch (error) {
-      console.error('Error loading outfits:', error);
-      setOutfitsError('Failed to load outfits');
-    } finally {
-      setIsOutfitsLoading(false);
-    }
-  }, [outfitsLoaded, user?.id]);
-  
-  // Outfit operations with lazy loading
-  const addOutfitHook = useCallback(async (outfit: Omit<OutfitExtended, 'id' | 'dateCreated'>) => {
-    try {
-      // Load outfits if not loaded yet
-      if (!outfitsLoaded) {
-        await loadOutfits();
-      }
-      
-      // Import and use the outfits service directly
-      const { createOutfit } = await import('../services/wardrobe/outfits');
-      const newOutfit = await createOutfit(outfit);
-      
-      // Update local state
-      setOutfits(prev => [...prev, newOutfit as OutfitExtended]);
-      return newOutfit as OutfitExtended;
-    } catch (error) {
-      console.error('Error adding outfit:', error);
-      setOutfitsError('Failed to add outfit');
-      return null;
-    }
-  }, [loadOutfits, outfitsLoaded]);
-  
-  const updateOutfitHook = useCallback(async (id: string, updates: Partial<OutfitExtended>) => {
-    try {
-      if (!outfitsLoaded) {
-        await loadOutfits();
-      }
-      
-      const { updateOutfit } = await import('../services/wardrobe/outfits');
-      await updateOutfit(id, updates);
-      
-      // Update local state with the changes
-      setOutfits(prev => prev.map(outfit => 
-        outfit.id === id ? { ...outfit, ...updates } : outfit
-      ));
-      
-      // Return the updated outfit
-      const updatedOutfit = outfits.find(o => o.id === id);
-      return updatedOutfit ? { ...updatedOutfit, ...updates } : null;
-    } catch (error) {
-      console.error('Error updating outfit:', error);
-      setOutfitsError('Failed to update outfit');
-      return null;
-    }
-  }, [loadOutfits, outfitsLoaded, outfits]);
-  
-  const deleteOutfitHook = useCallback(async (id: string) => {
-    try {
-      if (!outfitsLoaded) {
-        await loadOutfits();
-      }
-      
-      const { deleteOutfit } = await import('../services/wardrobe/outfits');
-      await deleteOutfit(id);
-      
-      setOutfits(prev => prev.filter(outfit => outfit.id !== id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting outfit:', error);
-      setOutfitsError('Failed to delete outfit');
-      return false;
-    }
-  }, [loadOutfits, outfitsLoaded]);
+  // Outfits management using extracted hook
+  const {
+    outfits,
+    outfitsError,
+    isOutfitsLoading,
+    loadOutfits,
+    addOutfit: addOutfitHook,
+    updateOutfit: updateOutfitHook,
+    deleteOutfit: deleteOutfitHook,
+  } = useWardrobeOutfits();
 
-  // Capsules (deferred loading - only when capsules tab is accessed)
-  // This prevents blocking the main thread on initial page load
-  const [capsulesLoaded, setCapsulesLoaded] = React.useState(false);
-  const [capsules, setCapsules] = React.useState<Capsule[]>([]);
-  const [capsulesError, setCapsulesError] = React.useState<string | null>(null);
-  
-  // Lazy load capsules only when needed
-  const loadCapsules = useCallback(async () => {
-    if (capsulesLoaded) return;
-    
-    try {
-      setCapsulesLoaded(true);
-      // Import and use the capsules service directly to avoid hook calls
-      const { fetchCapsules } = await import('../services/wardrobe/capsules');
-      const capsulesData = await fetchCapsules();
-      setCapsules(capsulesData);
-    } catch (error) {
-      console.error('Error loading capsules:', error);
-      setCapsulesError('Failed to load capsules');
-    }
-  }, [capsulesLoaded]);
-  
-  // Capsule operations with lazy loading
-  const addCapsuleHook = useCallback(async (capsule: Omit<Capsule, 'id' | 'dateCreated'>) => {
-    try {
-      // Load capsules if not loaded yet (but don't reload if already loaded)
-      if (!capsulesLoaded) {
-        await loadCapsules();
-      }
-      
-      // Capsule creation with proper item association
-      
-      // Import and use the capsules service directly
-      const { createCapsule } = await import('../services/wardrobe/capsules');
-      const newCapsule = await createCapsule(capsule);
-      
-      // Update local state to show new capsule immediately
-      setCapsules(prev => [...prev, newCapsule]);
-      console.log('[WardrobeContext] Capsule created successfully:', newCapsule.name);
-      return newCapsule;
-    } catch (error) {
-      console.error('Error adding capsule:', error);
-      setCapsulesError('Failed to add capsule');
-      return null;
-    }
-  }, [loadCapsules, capsulesLoaded]);
-  
-  const updateCapsuleHook = useCallback(async (id: string, updates: Partial<Capsule>) => {
-    try {
-      await loadCapsules(); // Ensure capsules are loaded first
-      
-      // Import and use the capsules service directly
-      const { updateCapsule } = await import('../services/wardrobe/capsules');
-      const updatedCapsule = await updateCapsule(id, updates);
-      
-      // Update local state if update was successful
-      if (updatedCapsule) {
-        setCapsules(prev => prev.map(cap => cap.id === id ? updatedCapsule : cap));
-      }
-      return updatedCapsule;
-    } catch (error) {
-      console.error('Error updating capsule:', error);
-      setCapsulesError('Failed to update capsule');
-      return null;
-    }
-  }, [loadCapsules]);
-  
-  const deleteCapsuleHook = useCallback(async (id: string) => {
-    try {
-      await loadCapsules(); // Ensure capsules are loaded first
-      
-      // Import and use the capsules service directly
-      const { deleteCapsule } = await import('../services/wardrobe/capsules');
-      await deleteCapsule(id);
-      
-      // Update local state - if no error was thrown, deletion was successful
-      setCapsules(prev => prev.filter(cap => cap.id !== id));
-      return true;
-    } catch (error) {
-      console.error('Error deleting capsule:', error);
-      setCapsulesError('Failed to delete capsule');
-      return false;
-    }
-  }, [loadCapsules]);
+  // Capsules management using extracted hook
+  const {
+    capsules,
+    capsulesError,
+    loadCapsules,
+    addCapsule: addCapsuleHook,
+    updateCapsule: updateCapsuleHook,
+    deleteCapsule: deleteCapsuleHook,
+  } = useWardrobeCapsules();
+
+  // Combined loading state from all hooks
+  const isLoading = itemsLoading || isOutfitsLoading;
 
   // Handle outfit updates with proper type safety
   const updateOutfit = useCallback(async (
@@ -259,8 +110,7 @@ export const WardrobeProvider: React.FC<WardrobeProviderProps> = ({ children }):
     }
   }, [deleteOutfitHook]);
   
-  // Combine loading states with priority (show loading until critical data is ready)
-  const isLoading = itemsLoading || isOutfitsLoading; // Don't wait for capsules for main loading state
+  // Loading states already combined above
   
   // Only show errors if we don't have any items loaded
   // This prevents showing API errors when we've successfully loaded items from localStorage
