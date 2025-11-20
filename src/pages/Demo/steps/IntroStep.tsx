@@ -1,4 +1,5 @@
 import React from 'react';
+import styled from 'styled-components';
 import {
   DemoTitle,
   DemoSubtitle,
@@ -12,6 +13,29 @@ import {
   CTABlock
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
+
+const AppName = styled.h1`
+  color: #4f46e5;
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.1;
+  text-align: center;
+  
+  @media (max-width: 768px) {
+    font-size: 2.2rem;
+  }
+`;
+
+const SecondaryTitle = styled(DemoTitle)`
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 2rem;
+  
+  @media (max-width: 768px) {
+    font-size: 1.6rem;
+  }
+`;
 
 interface IntroStepProps {
   onNext: () => void;
@@ -28,7 +52,8 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
     <div>
       {/* Hero Block - Headers and Titles */}
       <HeroBlock>
-        <DemoTitle>The First App That Tells You What NOT to Buy</DemoTitle>
+        <AppName>Sharni</AppName>
+        <SecondaryTitle>The First App That Tells You What NOT to Buy</SecondaryTitle>
         <DemoSubtitle>
           Get personalized advice on every potential purchase. Our AI analyzes your wardrobe and lifestyle to show you what works, what doesn't, and why.
         </DemoSubtitle>
