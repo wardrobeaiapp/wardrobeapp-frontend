@@ -26,7 +26,7 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
     return (
       <SimpleFooter>
         <SimpleFooterContent>
-          <div>© {currentYear} WardrobeAI. All rights reserved.</div>
+          <div>© {currentYear} Sharni. All rights reserved.</div>
           <SimpleFooterLinks>
             <SimpleFooterLink to="/privacy">Privacy Policy</SimpleFooterLink>
             <SimpleFooterLink to="/terms">Terms of Service</SimpleFooterLink>
@@ -43,7 +43,7 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
         <FooterColumn>
           <FooterLogo>
             <FooterLogoIcon>👔</FooterLogoIcon>
-            WardrobeAI
+            Sharni
           </FooterLogo>
           <FooterTagline>
             Your personal AI stylist that helps you organize your wardrobe, create outfits, and plan your style calendar.
@@ -75,7 +75,7 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
       </FooterContent>
 
       <Copyright>
-        © {currentYear} WardrobeAI. All rights reserved.
+        © {currentYear} Sharni. All rights reserved.
       </Copyright>
     </FooterContainer>
   );

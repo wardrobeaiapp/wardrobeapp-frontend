@@ -99,7 +99,7 @@ const WelcomePage: React.FC = () => {
       <Header>
         <Logo>
           <LogoIcon>👔</LogoIcon>
-          WardrobeAI
+          Sharni
         </Logo>
         <Nav>
           <NavLink href="#features">Features</NavLink>
@@ -132,12 +132,12 @@ const WelcomePage: React.FC = () => {
           </ButtonGroup>
         </HeroContent>
         <HeroImage>
-          <PhoneImage src="/app-screenshot.png" alt="WardrobeAI App Screenshot" />
+          <PhoneImage src="/app-screenshot.png" alt="Sharni App Screenshot" />
         </HeroImage>
       </HeroSection>
       
       <FeaturesSection id="features">
-        <SectionTitle>Why Choose WardrobeAI?</SectionTitle>
+        <SectionTitle>Why Choose Sharni?</SectionTitle>
         <SectionDescription>
           Our intelligent platform helps you make the most of your existing wardrobe
           while reducing unnecessary purchases.
@@ -214,7 +214,7 @@ const WelcomePage: React.FC = () => {
           <FooterColumn>
             <FooterLogo>
               <FooterLogoIcon>👔</FooterLogoIcon>
-              WardrobeAI
+              Sharni
             </FooterLogo>
             <FooterTagline>Dress smarter. Buy less. Feel better.</FooterTagline>
           </FooterColumn>
@@ -237,7 +237,7 @@ const WelcomePage: React.FC = () => {
             <FooterLink href="#">Privacy</FooterLink>
           </FooterColumn>
         </FooterContent>
-        <Copyright>© 2025 WardrobeAI. All rights reserved.</Copyright>
+        <Copyright>© 2025 Sharni. All rights reserved.</Copyright>
       </Footer>
     </PageContainer>
   );

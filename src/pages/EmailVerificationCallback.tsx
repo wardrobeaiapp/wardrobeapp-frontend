@@ -185,7 +185,7 @@ const EmailVerificationCallback: React.FC = () => {
               console.log('🔐 User has completed onboarding, redirecting to home');
               setTimeout(() => navigate('/', { replace: true }), 1500);
             } else {
-              setMessage('Welcome to WardrobeAI! Let\'s set up your profile...');
+              setMessage('Welcome to Sharni! Let\'s set up your profile...');
               console.log('🔐 New user, redirecting to onboarding');
               setTimeout(() => navigate('/onboarding', { replace: true }), 1500);
             }

@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
       ) : (
         <Logo>
           <LogoIcon>👔</LogoIcon>
-          <LogoText>WardrobeAI</LogoText>
+          <LogoText>Sharni</LogoText>
         </Logo>
       )}
 

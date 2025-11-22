@@ -101,7 +101,7 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
           <SuccessEmoji>🎉</SuccessEmoji>
           <DemoTitle>You're on the list!</DemoTitle>
           <DemoSubtitle>
-            Thank you for joining our waitlist. We'll notify you as soon as WardrobeAI is ready for early access.
+            Thank you for joining our waitlist. We'll notify you as soon as Sharni is ready for early access.
           </DemoSubtitle>
           <SuccessMessage>
             Check your email for confirmation details
@@ -154,7 +154,7 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
           Join the Waitlist
         </WaitlistTitle>
         <WaitlistDescription>
-          Enter your email to get notified when WardrobeAI launches and be the first to experience smarter shopping.
+          Enter your email to get notified when Sharni launches and be the first to experience smarter shopping.
         </WaitlistDescription>
 
         <WaitlistForm onSubmit={handleJoinWaitlist}>

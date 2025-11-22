@@ -105,7 +105,7 @@ export const RegisterPage: React.FC = () => {
             <LogoCircle>
               <LogoIcon>👔</LogoIcon>
             </LogoCircle>
-            <BrandName>WardrobeAI</BrandName>
+            <BrandName>Sharni</BrandName>
             <Tagline>Dress smarter. Buy less. Feel better.</Tagline>
           </LogoContainer>
           
