@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DemoTitle,
   DemoSubtitle,
@@ -34,6 +34,34 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
     return emailRegex.test(email);
   };
 
+  // Try Email Octopus through server API
+  const handleEmailOctopusSubmit = async (email: string) => {
+    try {
+      // Use our server's waitlist endpoint which includes Email Octopus integration
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return { success: true, data };
+      } else if (response.status === 409) {
+        // Already subscribed
+        return { success: true, data: { message: 'Already subscribed' } };
+      } else {
+        throw new Error(data.message || 'Failed to subscribe');
+      }
+    } catch (error) {
+      console.error('Waitlist API error:', error);
+      return { success: false, error };
+    }
+  };
+
   const handleJoinWaitlist = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -53,30 +81,19 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
     setErrorMessage('');
     
     try {
-      // Make API call to waitlist endpoint
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to join waitlist');
-      }
-
-      setSubmitStatus('success');
-      markStepCompleted(DemoStep.WAITLIST);
+      // Submit to our waitlist API (which includes Email Octopus integration)
+      const result = await handleEmailOctopusSubmit(email);
       
-      // Track analytics
-      console.log('Waitlist signup successful:', {
-        email,
-        position: data.data?.position,
-        estimated_launch: data.data?.estimated_launch
-      });
+      if (result.success) {
+        setSubmitStatus('success');
+        markStepCompleted(DemoStep.WAITLIST);
+        
+        // Track analytics
+        console.log('Waitlist signup successful:', { email });
+      } else {
+        throw new Error('Failed to join waitlist');
+      }
+      
     } catch (error: unknown) {
       console.error('Waitlist signup error:', error);
       let errorMsg = 'Failed to join waitlist. Please try again.';
@@ -93,6 +110,12 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    // Clean up any previous errors when component mounts
+    setErrorMessage('');
+    setSubmitStatus('idle');
+  }, []);
 
   if (submitStatus === 'success') {
     return (
