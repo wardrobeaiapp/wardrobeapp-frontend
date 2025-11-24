@@ -7,7 +7,7 @@ const RENEWAL_BUFFER_MS = 24 * 60 * 60 * 1000; // 1 day before expiration
 const MAX_RETRIES = 3;
 
 interface UseImageUrlResult {
-  imageUrl: string;
+  imageUrl: string | null;
   isLoading: boolean;
   error: string | null;
   onImageError: () => void;
@@ -35,7 +35,7 @@ const isRetailSiteUrl = (url: string): boolean => {
 };
 
 export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const renewalTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -212,7 +212,9 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
   // Main effect to handle URL validation and renewal
   useEffect(() => {
     if (!item?.imageUrl) {
+      setImageUrl(null);
       setIsLoading(false);
+      setError(null);
       return;
     }
 

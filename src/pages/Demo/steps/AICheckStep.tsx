@@ -92,6 +92,45 @@ interface AICheckStepProps {
   markStepCompleted: (step: DemoStep) => void;
 }
 
+/**
+ * Replace mock items with actual wardrobe items where possible
+ * This ensures proper ItemImage component behavior and URL renewal
+ */
+const refreshImageUrls = (
+  compatibleItems: { [category: string]: any[] },
+  currentWardrobeItems: WardrobeItem[]
+): { [category: string]: any[] } => {
+  // Create a lookup map of current items by ID for fast matching
+  const itemMap = new Map<string, WardrobeItem>();
+  currentWardrobeItems.forEach(item => {
+    if (item.id) {
+      itemMap.set(item.id, item);
+    }
+  });
+
+  // Process each category
+  const refreshedItems: { [category: string]: any[] } = {};
+  
+  Object.entries(compatibleItems).forEach(([category, items]) => {
+    refreshedItems[category] = items.map(item => {
+      // If item has an ID and we have a current wardrobe item with that ID
+      if (item.id && itemMap.has(item.id)) {
+        const currentItem = itemMap.get(item.id)!;
+        
+        // Use the actual WardrobeItem instead of mock data + copied URL
+        // This ensures proper ItemImage component behavior
+        return currentItem;
+      }
+      
+      // Return item unchanged if no current match found (fallback to text display)
+      return item;
+    });
+  });
+
+  return refreshedItems;
+};
+
+
 const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isWishlistModalOpen, setIsWishlistModalOpen] = useState(false);
@@ -156,6 +195,11 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
         // Reconstruct the analysis data from saved mock
         const reconstructedData = aiAnalysisMocksService.reconstructMockData(existingMockData);
         
+        // Refresh compatible items with current wardrobe data
+        const refreshedCompatibleItems = refreshImageUrls(reconstructedData.compatibleItems || {}, wardrobeItems);
+        
+        // Outfit combinations use original data - OutfitCombinations handles URL matching
+        
         resultData = {
           score: existingMockData.compatibility_score || 0,
           status: existingMockData.wishlist_status === 'approved' ? WishlistStatus.APPROVED :
@@ -164,7 +208,7 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
           recommendationAction: existingMockData.recommendation_action || 'RECOMMEND',
           recommendationText: reconstructedData.recommendationText || 'Analysis from saved data',
           suitableScenarios: existingMockData.suitable_scenarios || [],
-          compatibleItems: reconstructedData.compatibleItems || {},
+          compatibleItems: refreshedCompatibleItems,
           outfitCombinations: reconstructedData.outfitCombinations || [],
           seasonScenarioCombinations: reconstructedData.seasonScenarioCombinations || [],
           coverageGapsWithNoOutfits: reconstructedData.coverageGapsWithNoOutfits || [],
@@ -174,36 +218,54 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
       } else {
         console.log('❌ Demo: No saved mock data found, using demo fallback data');
         
-        // Use fallback demo data
+        // Demo compatible items
+        const demoCompatibleItems = {
+          "Bottoms": [
+            { name: "Black Dress Pants", category: "PANTS" },
+            { name: "Dark Wash Jeans", category: "PANTS" },
+            { name: "Navy Chinos", category: "PANTS" }
+          ],
+          "Outerwear": [
+            { name: "Navy Blazer", category: "JACKET" },
+            { name: "Denim Jacket", category: "JACKET" }
+          ]
+        };
+
+        // Demo outfit combinations with proper structure
+        const demoOutfitCombinations = [
+          {
+            season: "SPRING/FALL",
+            scenario: "Office Work", 
+            outfits: [
+              {
+                items: [
+                  { name: selectedItem.name, type: "base-item" }, // Use the selected item
+                  { name: "Black Dress Pants", category: "PANTS" },
+                  { name: "Navy Blazer", category: "JACKET" }
+                ]
+              },
+              {
+                items: [
+                  { name: selectedItem.name, type: "base-item" },
+                  { name: "Dark Wash Jeans", category: "PANTS" },
+                  { name: "Denim Jacket", category: "JACKET" }
+                ]
+              }
+            ]
+          }
+        ];
+        
+        // 🔄 Refresh URLs for compatible items, let OutfitCombinations component handle outfit URLs
+        const refreshedCompatibleItems = refreshImageUrls(demoCompatibleItems, wardrobeItems);
+        
         resultData = {
           score: 85,
           status: WishlistStatus.APPROVED,
           recommendationAction: "RECOMMEND" as const,
           recommendationText: "Great choice! This item would be a perfect addition to your wardrobe.",
           suitableScenarios: ["Work", "Casual", "Weekend"],
-          compatibleItems: {
-            "Bottoms": [
-              { name: "Black Dress Pants", category: "PANTS" },
-              { name: "Dark Wash Jeans", category: "PANTS" },
-              { name: "Navy Chinos", category: "PANTS" }
-            ],
-            "Outerwear": [
-              { name: "Navy Blazer", category: "JACKET" },
-              { name: "Denim Jacket", category: "JACKET" }
-            ]
-          },
-          outfitCombinations: [
-            {
-              name: "Professional Look",
-              items: ["Elegant Plain T-Shirt", "Black Dress Pants", "Navy Blazer"],
-              occasion: "Work"
-            },
-            {
-              name: "Casual Weekend",
-              items: ["Elegant Plain T-Shirt", "Dark Wash Jeans", "Denim Jacket"],
-              occasion: "Casual"
-            }
-          ],
+          compatibleItems: refreshedCompatibleItems,
+          outfitCombinations: demoOutfitCombinations,
           imageUrl: selectedItem.imageUrl,
           usingMockData: false // Using demo fallback data
         };
@@ -316,6 +378,8 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
           seasonScenarioCombinations={aiCheckData.seasonScenarioCombinations}
           coverageGapsWithNoOutfits={aiCheckData.coverageGapsWithNoOutfits}
           imageUrl={aiCheckData.imageUrl}
+          selectedWishlistItem={selectedItem}
+          wardrobeItems={wardrobeItems}
           hideActions={true}
         />
       )}

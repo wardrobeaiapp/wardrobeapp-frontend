@@ -3,7 +3,8 @@ import { WishlistStatus, WardrobeItem } from '../../../../../types';
 import { Modal } from '../../../../common/Modal';
 import { 
   ImageContainer,
-  PreviewImage
+  PreviewImage,
+  ConstrainedItemImage
 } from './AICheckResultModal.styles';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 import OutfitCombinations from './OutfitCombinations';
@@ -12,6 +13,7 @@ import RecommendationSection from './RecommendationSection';
 import ItemDetailsSection from './ItemDetailsSection';
 import { useMockSave } from './useMockSave';
 import { createModalActions } from './modalActionsUtils';
+import ItemImage from '../../../wardrobe/shared/ItemImage/ItemImage';
 
 interface AICheckResultModalProps {
   isOpen: boolean;
@@ -39,6 +41,8 @@ interface AICheckResultModalProps {
   selectedWishlistItem?: WardrobeItem | null; // The wardrobe item being analyzed
   showSaveMock?: boolean; // Whether to show Save as Mock button (only on AI Assistant page)
   onSaveMock?: (mockData: any) => void; // Callback for saving mock data
+  // Wardrobe items for URL refreshing
+  wardrobeItems?: WardrobeItem[]; // Current wardrobe items with fresh URLs
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -65,7 +69,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   hideActions = false,
   selectedWishlistItem,
   showSaveMock = false,
-  onSaveMock
+  onSaveMock,
+  wardrobeItems = []
 }) => {
   // Use extracted mock save hook
   const { isSavingMock, mockSaveStatus, handleSaveMock } = useMockSave({
@@ -129,12 +134,21 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
       actions={actions}
       size="md"
     >
-        {imageUrl && (
+        {(selectedWishlistItem || imageUrl) && (
           <ImageContainer>
-            <PreviewImage 
-              src={imageUrl} 
-              alt="Analyzed item" 
-            />
+            {selectedWishlistItem ? (
+              <ConstrainedItemImage>
+                <ItemImage 
+                  item={selectedWishlistItem}
+                  alt="Analyzed item"
+                />
+              </ConstrainedItemImage>
+            ) : (
+              <PreviewImage 
+                src={imageUrl}
+                alt="Analyzed item" 
+              />
+            )}
           </ImageContainer>
         )}
         
@@ -147,6 +161,8 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           coverageGapsWithNoOutfits={coverageGapsWithNoOutfits}
           itemSubcategory={itemSubcategory}
           imageUrl={imageUrl}
+          compatibleItems={compatibleItems}
+          selectedWishlistItem={selectedWishlistItem}
         />
         
         {/* Final Recommendation - Full width, before other details */}

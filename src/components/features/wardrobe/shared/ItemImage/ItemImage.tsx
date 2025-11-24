@@ -51,7 +51,7 @@ const ItemImage: React.FC<ItemImageProps> = ({
 
   return (
     <img
-      src={finalImageUrl}
+      src={finalImageUrl!}
       alt={alt}
       className={className}
       onError={handleImageError}

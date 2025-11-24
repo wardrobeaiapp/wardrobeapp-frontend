@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ItemImage from '../../../wardrobe/shared/ItemImage/ItemImage';
 import {
   OutfitAnalysisContainer,
   OutfitAnalysisHeader,
@@ -12,7 +13,6 @@ import {
   OutfitImagesContainer,
   OutfitImageGrid,
   OutfitItemThumbnail,
-  ThumbnailImage,
   ThumbnailPlaceholder,
   IncompleteScenarios,
   IncompleteScenarioItem,
@@ -24,6 +24,8 @@ interface OutfitCombinationsProps {
   coverageGapsWithNoOutfits: any[];
   itemSubcategory: string;
   imageUrl?: string;
+  compatibleItems?: { [category: string]: any[] }; // Same refreshed items as the cards!
+  selectedWishlistItem?: any; // The main analyzed item with working URL
 }
 
 const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
@@ -31,10 +33,26 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
   seasonScenarioCombinations = [],
   coverageGapsWithNoOutfits = [],
   itemSubcategory = '',
-  imageUrl
+  imageUrl,
+  compatibleItems = {},
+  selectedWishlistItem
 }) => {
   // State for tracking which outfits have expanded images
   const [expandedOutfits, setExpandedOutfits] = useState<Set<string>>(new Set());
+
+  // Simple function to find refreshed item from compatible items (SAME DATA AS CARDS!)
+  const findRefreshedItem = (itemName: string): any => {
+    // Search through all categories of compatible items
+    for (const category of Object.values(compatibleItems)) {
+      const item = category.find((item: any) => 
+        item.name && item.name.toLowerCase() === itemName.toLowerCase()
+      );
+      if (item) {
+        return item;
+      }
+    }
+    return null;
+  };
 
   // Toggle function for outfit image visibility
   const toggleOutfitImages = (outfitId: string) => {
@@ -99,15 +117,17 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
               const outfitId = `${index}-${outfitIndex}`;
               const isExpanded = expandedOutfits.has(outfitId);
               
-              // Check if any items have images to show toggle (including analyzed item from modal)
+              // Check if any items have images to show toggle
               const hasImages = outfit.items?.some((item: any) => {
-                // Check if item has imageUrl OR if it's the analyzed item and modal has imageUrl
-                if (item.imageUrl) return true;
-                if (imageUrl) {
-                  const isAnalyzedItem = item.type === 'base-item' || 
-                    (item.name && itemNames[0] && item.name === itemNames[0]);
-                  if (isAnalyzedItem) return true;
-                }
+                // Check if item has imageUrl or can be found in compatible items
+                const refreshedItem = findRefreshedItem(item.name);
+                if (item.imageUrl || refreshedItem?.imageUrl) return true;
+                
+                // If no URL but this is the analyzed item, check selectedWishlistItem or imageUrl
+                const isAnalyzedItem = item.type === 'base-item' || 
+                  (item.name && itemNames[0] && item.name === itemNames[0]);
+                if (isAnalyzedItem && (selectedWishlistItem?.imageUrl || imageUrl)) return true;
+                
                 return false;
               }) || false;
               
@@ -131,27 +151,32 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
                     <OutfitImagesContainer $isExpanded={isExpanded}>
                       <OutfitImageGrid>
                         {outfit.items?.map((item: any, itemIndex: number) => {
-                          // Check if this is the analyzed item and inject the modal's imageUrl
-                          let itemImageUrl = item.imageUrl;
-                          if (!itemImageUrl && imageUrl) {
-                            // Try to match by name or if it's marked as the base item
+                          // Try to find refreshed item from compatible items (SAME DATA AS CARDS!)
+                          const refreshedItem = findRefreshedItem(item.name);
+                          
+                          // Use the refreshed item if found, otherwise try main analyzed item for base items
+                          let itemToRender = refreshedItem;
+                          if (!itemToRender) {
                             const isAnalyzedItem = item.type === 'base-item' || 
                               (item.name && itemNames[0] && item.name === itemNames[0]);
-                            if (isAnalyzedItem) {
-                              itemImageUrl = imageUrl;
+                            if (isAnalyzedItem && selectedWishlistItem) {
+                              // Use the main analyzed item with working URL
+                              itemToRender = selectedWishlistItem;
+                            } else if (isAnalyzedItem && imageUrl) {
+                              // Fallback to imageUrl if no selectedWishlistItem
+                              itemToRender = { imageUrl, name: item.name };
                             }
                           }
                           
                           return (
                             <OutfitItemThumbnail key={itemIndex}>
-                              {itemImageUrl ? (
-                                <ThumbnailImage
-                                  src={itemImageUrl}
-                                  alt={item.name}
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
+                              {itemToRender ? (
+                                <div style={{ width: '50px', height: '50px', borderRadius: '6px', overflow: 'hidden' }}>
+                                  <ItemImage 
+                                    item={itemToRender}
+                                    alt={item.name}
+                                  />
+                                </div>
                               ) : (
                                 <ThumbnailPlaceholder>
                                   No Image

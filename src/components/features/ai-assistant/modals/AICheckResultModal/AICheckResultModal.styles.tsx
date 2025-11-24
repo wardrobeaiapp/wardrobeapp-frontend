@@ -99,6 +99,26 @@ export const PreviewImage = styled.img`
   border-radius: 8px;
 `;
 
+export const ConstrainedItemImage = styled.div`
+  max-width: 100%;
+  max-height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  border-radius: 8px;
+  
+  /* Override ItemImage inline styles to match PreviewImage behavior */
+  img {
+    max-width: 100% !important;
+    max-height: 240px !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    border-radius: 8px !important;
+  }
+`;
+
 export const ErrorLabel = styled(DetailLabel)`
   color: #e11d48;
 `;

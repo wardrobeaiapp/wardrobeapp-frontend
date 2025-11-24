@@ -11,11 +11,11 @@ import {
 import { 
   ItemCard,
   ItemImageContainer,
-  ItemImage,
   PlaceholderImage,
   ItemContent,
   ItemName,
 } from '../../../wardrobe/forms/OutfitForm/OutfitForm.styles';
+import ItemImage from '../../../wardrobe/shared/ItemImage/ItemImage';
 
 interface CompatibleItemsSectionProps {
   compatibleItems?: { [category: string]: any[] };
@@ -69,8 +69,8 @@ const CompatibleItemsSection: React.FC<CompatibleItemsSectionProps> = ({
             {displayName}:
           </CompatibleCategoryTitle>
           <CompatibleCategoryContent>
-            {/* Check if we have full item objects with IDs for card display */}
-            {items.some((item: any) => item.id) ? (
+            {/* Check if we have full item objects with IDs and images for card display */}
+            {items.some((item: any) => item.id && item.imageUrl) ? (
               // Render as popup-style cards when we have full item objects
               <CompatibleItemsGrid>
                 {items.map((item: any, index: number) => (
@@ -78,11 +78,8 @@ const CompatibleItemsSection: React.FC<CompatibleItemsSectionProps> = ({
                     <ItemImageContainer>
                       {item.imageUrl ? (
                         <ItemImage 
-                          src={item.imageUrl} 
-                          alt={item.name} 
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = 'none';
-                          }}
+                          item={item}
+                          alt={item.name || 'Compatible item'} 
                         />
                       ) : (
                         <PlaceholderImage>No Image</PlaceholderImage>
