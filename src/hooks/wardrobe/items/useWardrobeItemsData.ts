@@ -11,7 +11,7 @@ export const useWardrobeItemsData = () => {
     if (items) {
       actions.setData(items);
     }
-  }, [items, actions.setData]);
+  }, [items, actions.setData, actions]);
 
   return {
     items: state.data,
