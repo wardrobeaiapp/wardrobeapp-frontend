@@ -98,9 +98,9 @@ const ProtectedRoute: React.FC<{ element: React.ReactElement }> = ({ element }) 
     }
   };
   
-  // If not authenticated by any method, redirect to welcome page
+  // If not authenticated by any method, redirect to demo page
   if (!isUserAuthenticated()) {
-    return <Navigate to="/welcome" replace />;
+    return <Navigate to="/demo" replace />;
   }
   
   // If authenticated but onboarding not completed, redirect to onboarding
@@ -137,8 +137,8 @@ const RedirectRoute: React.FC = () => {
     return <Navigate to="/onboarding" replace />;
   }
   
-  // If authenticated and onboarding completed, go to home page, otherwise go to welcome page
-  return <Navigate to={isAuthenticated ? "/" : "/welcome"} replace />;
+  // If authenticated and onboarding completed, go to home page, otherwise go to demo page
+  return <Navigate to={isAuthenticated ? "/" : "/demo"} replace />;
 };
 
 
