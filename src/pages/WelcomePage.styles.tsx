@@ -41,8 +41,6 @@ export const LogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: ${theme.colors.primary};
-  color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
 `;
@@ -406,8 +404,6 @@ export const FooterLogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: ${theme.colors.primary};
-  color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
 `;
@@ -470,7 +466,6 @@ export const MobileLogo = styled.div`
   margin-bottom: 2rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: ${theme.colors.primary};
 `;
 
 export const MobileLogoIcon = styled.span`
@@ -480,7 +475,6 @@ export const MobileLogoIcon = styled.span`
   width: 2rem;
   height: 2rem;
   margin-right: 0.5rem;
-  color: ${theme.colors.primary};
   font-size: 1.25rem;
 `;
 
@@ -488,13 +482,6 @@ export const MobileIllustration = styled.img`
   width: 100%;
   max-width: 300px;
   margin-bottom: 2rem;
-`;
-
-export const MobileTitle = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: #111827;
 `;
 
 export const MobileTagline = styled.div`

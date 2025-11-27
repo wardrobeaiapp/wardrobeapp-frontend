@@ -39,8 +39,6 @@ export const FooterLogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: #6366f1;
-  color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
 `;

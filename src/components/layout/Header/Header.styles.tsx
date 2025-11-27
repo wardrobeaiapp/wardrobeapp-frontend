@@ -30,8 +30,6 @@ export const LogoIcon = styled.span`
   width: 1.75rem;
   height: 1.75rem;
   margin-right: 0.5rem;
-  background-color: ${theme.colors.primary};
-  color: white;
   border-radius: 0.25rem;
   font-size: 1rem;
 `;

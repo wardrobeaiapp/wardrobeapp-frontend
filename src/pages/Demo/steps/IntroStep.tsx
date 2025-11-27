@@ -15,9 +15,14 @@ import {
 import { DemoStep } from '../types';
 
 const AppName = styled.h1`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   color: #4f46e5;
   font-size: 3rem;
   font-weight: 800;
+  margin-top: 0;
   margin-bottom: 8px;
   line-height: 1.1;
   text-align: center;
@@ -52,8 +57,11 @@ const IntroStep: React.FC<IntroStepProps> = ({ onNext, markStepCompleted }) => {
     <div>
       {/* Hero Block - Headers and Titles */}
       <HeroBlock>
-        <AppName>Sharni</AppName>
-        <SecondaryTitle>The First App That Tells You What NOT to Buy</SecondaryTitle>
+        <AppName>
+          <img src="/logo.svg" alt="Sharni Logo" style={{width: '112px', height: '112px'}} />
+          Sharni
+        </AppName>
+        <SecondaryTitle>The First Wardrobe App That Tells You What NOT to Buy</SecondaryTitle>
         <DemoSubtitle>
           Get personalized advice on every potential purchase. Our AI analyzes your wardrobe and lifestyle to show you what works, what doesn't, and why.
         </DemoSubtitle>

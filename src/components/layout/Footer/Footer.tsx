@@ -42,7 +42,9 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
       <FooterContent>
         <FooterColumn>
           <FooterLogo>
-            <FooterLogoIcon>👔</FooterLogoIcon>
+            <FooterLogoIcon>
+              <img src="/logo.svg" alt="Sharni Logo" style={{width: '32px', height: '32px'}} />
+            </FooterLogoIcon>
             Sharni
           </FooterLogo>
           <FooterTagline>

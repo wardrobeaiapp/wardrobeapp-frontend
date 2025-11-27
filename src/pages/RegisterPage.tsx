@@ -103,7 +103,9 @@ export const RegisterPage: React.FC = () => {
         <AuthCard>
           <LogoContainer>
             <LogoCircle>
-              <LogoIcon>👔</LogoIcon>
+              <LogoIcon>
+                <img src="/logo.svg" alt="Sharni Logo" style={{width: '56px', height: '56px'}} />
+              </LogoIcon>
             </LogoCircle>
             <BrandName>Sharni</BrandName>
             <Tagline>Dress smarter. Buy less. Feel better.</Tagline>

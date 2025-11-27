@@ -45,7 +45,6 @@ import {
   MobileLogo,
   MobileLogoIcon,
   MobileIllustration,
-  MobileTitle,
   MobileTagline,
   MobileButton
 } from './WelcomePage.styles';
@@ -67,18 +66,16 @@ const WelcomePage: React.FC = () => {
     return (
       <MobileContainer>
         <MobileLogo>
-          <MobileLogoIcon>👔</MobileLogoIcon>
-          Wardrobify
+          <MobileLogoIcon>
+            <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+          </MobileLogoIcon>
+          Sharni
         </MobileLogo>
         
         <MobileIllustration 
           src="/wardrobe-illustration.svg" 
           alt="Wardrobify Illustration" 
         />
-        
-        <MobileTitle>
-          Welcome to Wardrobify
-        </MobileTitle>
         
         <MobileTagline>
           <span>Dress smarter.</span>
@@ -98,7 +95,9 @@ const WelcomePage: React.FC = () => {
     <PageContainer>
       <Header>
         <Logo>
-          <LogoIcon>👔</LogoIcon>
+          <LogoIcon>
+            <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+          </LogoIcon>
           Sharni
         </Logo>
         <Nav>
@@ -213,7 +212,9 @@ const WelcomePage: React.FC = () => {
         <FooterContent>
           <FooterColumn>
             <FooterLogo>
-              <FooterLogoIcon>👔</FooterLogoIcon>
+              <FooterLogoIcon>
+                <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+              </FooterLogoIcon>
               Sharni
             </FooterLogo>
             <FooterTagline>Dress smarter. Buy less. Feel better.</FooterTagline>

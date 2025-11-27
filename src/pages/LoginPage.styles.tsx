@@ -29,14 +29,10 @@ export const LogoCircle = styled.div`
   justify-content: center;
   width: 3.5rem;
   height: 3.5rem;
-  background-color: ${theme.colors.primary};
-  border-radius: 50%;
-  margin-bottom: 0.75rem;
 `;
 
 export const LogoIcon = styled.span`
   font-size: 1.75rem;
-  color: white;
 `;
 
 export const BrandName = styled.h1`
