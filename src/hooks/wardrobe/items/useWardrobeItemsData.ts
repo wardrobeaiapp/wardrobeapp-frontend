@@ -11,7 +11,8 @@ export const useWardrobeItemsData = () => {
     if (items) {
       actions.setData(items);
     }
-  }, [items, actions.setData, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, actions.setData]); // Intentionally omit 'actions' to prevent infinite loops
 
   return {
     items: state.data,

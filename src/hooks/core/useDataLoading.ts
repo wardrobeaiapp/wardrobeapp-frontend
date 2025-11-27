@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 interface DataLoadingState<T> {
   data: T | null;
@@ -74,12 +74,12 @@ function useDataLoading<T = any>(
     });
   }, [initialData]);
 
-  const actions: DataLoadingActions<T> = {
+  const actions: DataLoadingActions<T> = useMemo(() => ({
     loadData,
     setData,
     setError,
     reset,
-  };
+  }), [loadData, setData, setError, reset]);
 
   return [state, actions];
 }
