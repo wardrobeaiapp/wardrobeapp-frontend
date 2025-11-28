@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import { theme } from '../../../styles/theme';
 import {
   DemoTitle,
   DemoSubtitle,
@@ -19,7 +20,7 @@ const AppName = styled.h1`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #4f46e5;
+  color: ${theme.colors.primary};
   font-size: 3rem;
   font-weight: 800;
   margin-top: 0;

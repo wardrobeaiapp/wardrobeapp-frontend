@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import styled from 'styled-components';
+import { theme } from '../../../styles/theme';
 import {
   DemoTitle,
   DemoSubtitle,
@@ -52,20 +53,16 @@ const DemoButtonGroup = styled.div`
   
   /* Second button (Start AI Check) - Primary */
   button:last-child {
-    background-color: #4f46e5 !important;
-    color: #ffffff !important;
-    border: 1px solid #4f46e5 !important;
+    border: 1px solid ${theme.colors.primary} !important;
     
     &:hover:not(:disabled) {
-      background-color: #4338ca !important;
-      border-color: #4338ca !important;
+      border-color: ${theme.colors.primaryHover} !important;
       transform: translateY(-1px) !important;
-      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3) !important;
+      box-shadow: 0 8px 25px ${theme.colors.purple[300]} !important;
     }
     
     &:active:not(:disabled) {
-      background-color: #3730a3 !important;
-      border-color: #3730a3 !important;
+      border-color: ${theme.colors.primaryActive} !important;
       transform: translateY(0) !important;
     }
     

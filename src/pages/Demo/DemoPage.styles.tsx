@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { theme } from '../../styles/theme';
 
 export const DemoPageWrapper = styled.div`
   min-height: 100vh;
@@ -25,7 +26,7 @@ export const StepContent = styled.div`
   }
   
   button {
-    background: #4f46e5;
+    background: ${theme.colors.primary};
     color: white;
     border: none;
     padding: 12px 24px;
@@ -36,7 +37,7 @@ export const StepContent = styled.div`
     transition: all 0.2s;
     
     &:hover {
-      background: #4338ca;
+      background: ${theme.colors.primaryHover};
       transform: translateY(-1px);
     }
     
@@ -61,8 +62,8 @@ export const StepContent = styled.div`
     
     &:focus {
       outline: none;
-      border-color: #4f46e5;
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      border-color: ${theme.colors.primary};
+      box-shadow: 0 0 0 3px ${theme.colors.purple[100]};
     }
   }
 `;
@@ -100,7 +101,7 @@ export const PersonaCard = styled.div`
   text-align: left;
   
   &:hover {
-    border-color: #4f46e5;
+    border-color: ${theme.colors.primary};
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
@@ -288,7 +289,7 @@ export const DemoStepsList = styled.ol`
     &:before {
       content: counter(step-counter);
       counter-increment: step-counter;
-      background: #4f46e5;
+      background: ${theme.colors.primary};
       color: white;
       width: 32px;
       height: 32px;
@@ -363,7 +364,7 @@ export const PersonaPreviewCard = styled.div`
   cursor: pointer;
   
   &:hover {
-    border-color: #4f46e5;
+    border-color: ${theme.colors.primary};
     transform: translateY(-2px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
@@ -400,7 +401,7 @@ export const PersonaPreviewCard = styled.div`
 `;
 
 export const CTAButton = styled.button`
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.primaryHover} 100%);
   color: white;
   border: none;
   padding: 16px 32px;
@@ -412,7 +413,7 @@ export const CTAButton = styled.button`
   
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 8px 25px ${theme.colors.purple[300]};
   }
   
   &:active {
@@ -479,7 +480,7 @@ export const InfoBlock = styled.div`
 export const InstructionsBlock = styled.div`
   background: white;
   border: 1px solid #e2e8f0;
-  border-left: 4px solid #4f46e5;
+  border-left: 4px solid ${theme.colors.primary};
   border-radius: 16px;
   padding: 40px;
   margin-bottom: 32px;
@@ -584,9 +585,9 @@ export const StepItem = styled.div<{ $active: boolean; $completed: boolean; $cli
   }
   
   ${props => props.$active && `
-    background: #4f46e5;
+    background: ${theme.colors.primary};
     color: white;
-    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    box-shadow: 0 2px 8px ${theme.colors.purple[300]};
   `}
   
   ${props => props.$completed && !props.$active && `
@@ -601,7 +602,7 @@ export const StepItem = styled.div<{ $active: boolean; $completed: boolean; $cli
   
   ${props => props.$clickable && `
     &:hover {
-      background: ${props.$active ? '#4338ca' : props.$completed ? '#e5e7eb' : '#f9fafb'};
+      background: ${props.$active ? theme.colors.primaryHover : props.$completed ? '#e5e7eb' : '#f9fafb'};
     }
   `}
   
@@ -625,7 +626,7 @@ export const StepNumber = styled.div<{ $active: boolean; $completed: boolean }>`
   
   ${props => props.$active && `
     background: white;
-    color: #4f46e5;
+    color: ${theme.colors.primary};
   `}
   
   ${props => props.$completed && !props.$active && `
@@ -710,8 +711,8 @@ export const EmailInput = styled.input<{ $hasError: boolean }>`
   transition: all 0.2s;
   
   &:focus {
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    border-color: ${theme.colors.primary};
+    box-shadow: 0 0 0 3px ${theme.colors.purple[100]};
   }
   
   &:disabled {
