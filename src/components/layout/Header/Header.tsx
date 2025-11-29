@@ -62,7 +62,7 @@ const Header: React.FC<HeaderProps> = ({
       ) : (
         <Logo>
           <LogoIcon>
-            <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+            <img src="/logo.svg" alt="Sharni Logo" style={{width: '28px', height: '28px'}} />
           </LogoIcon>
           <LogoText>Sharni</LogoText>
         </Logo>

@@ -67,7 +67,7 @@ const WelcomePage: React.FC = () => {
       <MobileContainer>
         <MobileLogo>
           <MobileLogoIcon>
-            <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+            <img src="/logo.svg" alt="Sharni Logo" style={{width: '28px', height: '28px'}} />
           </MobileLogoIcon>
           Sharni
         </MobileLogo>
@@ -96,7 +96,7 @@ const WelcomePage: React.FC = () => {
       <Header>
         <Logo>
           <LogoIcon>
-            <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+            <img src="/logo.svg" alt="Sharni Logo" style={{width: '28px', height: '28px'}} />
           </LogoIcon>
           Sharni
         </Logo>
@@ -213,7 +213,7 @@ const WelcomePage: React.FC = () => {
           <FooterColumn>
             <FooterLogo>
               <FooterLogoIcon>
-                <img src="/logo.svg" alt="Sharni Logo" style={{width: '36px', height: '36px'}} />
+                <img src="/logo.svg" alt="Sharni Logo" style={{width: '28px', height: '28px'}} />
               </FooterLogoIcon>
               Sharni
             </FooterLogo>
