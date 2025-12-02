@@ -78,7 +78,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     handleUrlLoad,
     isDownloadingImage,
     setPreviewImage,
-    setSelectedFile
+    setSelectedFile,
+    clearImage
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
     onImageError: (message) => {
@@ -252,7 +253,9 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             isUsingProcessedImage={backgroundRemoval.isUsingProcessedImage}
             isLoadingUrl={isDownloadingImage}
             isImageFromUrl={isImageFromUrl}
-              error={formState.errors.imageUrl || ''}
+            error={formState.errors.imageUrl || ''}
+            onClearImage={() => clearImage(formState.setImageUrl)}
+            isEditing={!!initialItem}
             />
           </Suspense>
         ) : renderPlaceholder('Loading image upload...')}

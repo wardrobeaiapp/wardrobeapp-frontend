@@ -1,9 +1,6 @@
-import { useState, useCallback } from 'react';
-import { detectImageTags, extractTopTags } from '../../../../../../services/ai/ximilarService';
+import { useState } from 'react';
 import { uploadImageBlob, saveImageToStorage } from '../../../../../../services/core/imageService';
 import { compressImage } from '../../../../../../utils/image/imageCompression';
-import { fileToBase64 } from '../../../../../../utils/file/fileConversion';
-import { convertToDetectedTagsFormat } from '../../../../../../utils/tags/tagFormatting';
 import { handleImageFromUrl, fetchImageAsFile, classifyUrlError, errorMessages, UrlImageErrorType } from '../../../../../../utils/image/urlImageHandling';
 import { validateImageFile, safeExecute, logError } from '../../../../../../utils/error/errorHandling';
 
@@ -22,7 +19,6 @@ export const useImageHandling = ({
   onImageError, 
   onImageSuccess,
   onNewImageSelected,
-  onTagsDetected,
   onSetIsImageFromUrl,
   onBackgroundRemovalReset
 }: UseImageHandlingProps) => {
@@ -31,28 +27,28 @@ export const useImageHandling = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detectedTags, setDetectedTags] = useState<Record<string, string>>({});
   
-  const detectAndLogTags = useCallback(async (imageSource: string | File) => {
-    try {
-      console.log('[Ximilar] Detecting tags for image...');
-      const response = await detectImageTags(
-        imageSource instanceof File ? await fileToBase64(imageSource) : imageSource
-      );
-      const topTags = extractTopTags(response);
-      console.log('[Ximilar] Detected tags:', topTags);
+  // const detectAndLogTags = useCallback(async (imageSource: string | File) => {
+  //   try {
+  //     console.log('[Ximilar] Detecting tags for image...');
+  //     const response = await detectImageTags(
+  //       imageSource instanceof File ? await fileToBase64(imageSource) : imageSource
+  //     );
+  //     const topTags = extractTopTags(response);
+  //     console.log('[Ximilar] Detected tags:', topTags);
       
-      // Convert to the format expected by FormAutoPopulationService
-      const detectedTagsFormat = convertToDetectedTagsFormat(topTags);
+  //     // Convert to the format expected by FormAutoPopulationService
+  //     const detectedTagsFormat = convertToDetectedTagsFormat(topTags);
       
-      // Update local state and notify parent component
-      setDetectedTags(topTags);
-      onTagsDetected?.(detectedTagsFormat);
+  //     // Update local state and notify parent component
+  //     setDetectedTags(topTags);
+  //     onTagsDetected?.(detectedTagsFormat);
       
-      return topTags;
-    } catch (error) {
-      console.error('[Ximilar] Error detecting tags:', error);
-      return {};
-    }
-  }, [onTagsDetected]);
+  //     return topTags;
+  //   } catch (error) {
+  //     console.error('[Ximilar] Error detecting tags:', error);
+  //     return {};
+  //   }
+  // }, [onTagsDetected]);
 
   // Using fileToBase64 from utils/file/fileConversion.ts
 
@@ -99,10 +95,10 @@ export const useImageHandling = ({
         const compressedImageUrl = await compressImage(file);
         setPreviewImage(compressedImageUrl);
         
-        // Detect and log tags for the uploaded file (in background)
-        detectAndLogTags(file).catch(error => {
-          logError('useImageHandling', 'Error detecting tags', error);
-        });
+        // TODO: Detect and log tags for the uploaded file (in background) - COMMENTED OUT FOR NOW
+        // detectAndLogTags(file).catch(error => {
+        //   logError('useImageHandling', 'Error detecting tags', error);
+        // });
         
         // Upload the file to Supabase storage (this gives us a permanent URL)
         const storedImageUrl = await uploadFileToStorage(file);
@@ -156,8 +152,8 @@ export const useImageHandling = ({
         setImageUrl(storedImageUrl);
         setPreviewImage(storedImageUrl);
         
-        // Detect tags for the image
-        await detectAndLogTags(storedImageUrl);
+        // TODO: Detect tags for the image - COMMENTED OUT FOR NOW
+        // await detectAndLogTags(storedImageUrl);
         
         onImageSuccess();
       },
@@ -225,6 +221,18 @@ export const useImageHandling = ({
     });
   };
 
+  // Clear/remove image function
+  const clearImage = (setImageUrl: (url: string) => void) => {
+    setPreviewImage(null);
+    setSelectedFile(null);
+    setDetectedTags({});
+    setImageUrl('');
+    onImageSuccess(); // Clear any error messages
+    onNewImageSelected?.(); // Reset background removal and other states
+    onSetIsImageFromUrl?.(false);
+    console.log('[useImageHandling] Image cleared successfully');
+  };
+
   return {
     previewImage,
     setPreviewImage,
@@ -238,6 +246,7 @@ export const useImageHandling = ({
     handleDragOver,
     handleUrlChange,
     handleUrlLoad,
+    clearImage,
     compressImage
   };
 };

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import styled from 'styled-components';
 import { MdCloudUpload, MdLink } from 'react-icons/md';
-import { FiScissors } from 'react-icons/fi';
+import { FiScissors, FiX } from 'react-icons/fi';
 import {
   PhotoUploadArea,
   PhotoUploadContent,
@@ -44,6 +44,35 @@ const RemoveBackgroundButton = styled.button`
     background: ${props => props.theme.colors.textSecondary};
     cursor: not-allowed;
     transform: none;
+  }
+  
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+`;
+
+const RemoveImageButton = styled.button<{ $isEditing?: boolean }>`
+  position: absolute;
+  top: 12px;
+  ${props => props.$isEditing ? 'right: 12px;' : 'left: 12px;'}
+  background: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
+  &:hover {
+    background: #c53030;
+    transform: translateY(-1px);
   }
   
   svg {
@@ -150,6 +179,8 @@ interface ImageUploadSectionProps {
   isLoadingUrl?: boolean;
   isImageFromUrl?: boolean;
   error?: string;
+  onClearImage?: () => void;
+  isEditing?: boolean;
 }
 
 export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
@@ -164,7 +195,9 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   isUsingProcessedImage = false,
   isLoadingUrl = false,
   isImageFromUrl = false,
-  error
+  error,
+  onClearImage,
+  isEditing = false
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
@@ -257,7 +290,18 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 borderRadius: '8px'
               }}
             />
-            {onRemoveBackground && !isUsingProcessedImage && (
+            {onClearImage && (
+              <RemoveImageButton
+                type="button"
+                onClick={onClearImage}
+                title="Remove current image and upload a new one"
+                $isEditing={isEditing}
+              >
+                <FiX />
+                Remove
+              </RemoveImageButton>
+            )}
+            {onRemoveBackground && !isUsingProcessedImage && !isEditing && (
               <RemoveBackgroundButton
                 type="button"
                 onClick={onRemoveBackground}
