@@ -155,6 +155,62 @@ export const saveImageFromUrl = async (imageUrl: string, folder: string = 'wardr
   }
 };
 
+/**
+ * Deletes an image from Supabase storage
+ * @param imageUrl The full URL or file path of the image to delete
+ * @returns Promise that resolves when deletion is complete
+ */
+export const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
+  try {
+    if (!imageUrl) {
+      console.log('[imageService] No image URL provided for deletion');
+      return;
+    }
+
+    // Only delete images from our Supabase bucket for safety
+    if (!imageUrl.includes('supabase.co') || !imageUrl.includes('/storage/v1/object/public/')) {
+      console.log('[imageService] Skipping deletion - not a Supabase storage URL:', imageUrl);
+      return;
+    }
+
+    // Extract file path from Supabase URL
+    // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+    const urlParts = imageUrl.split('/storage/v1/object/public/');
+    if (urlParts.length !== 2) {
+      console.error('[imageService] Invalid Supabase URL format:', imageUrl);
+      return;
+    }
+
+    const pathWithBucket = urlParts[1];
+    const pathParts = pathWithBucket.split('/');
+    const bucket = pathParts[0];
+    const filePath = pathParts.slice(1).join('/');
+
+    if (!bucket || !filePath) {
+      console.error('[imageService] Could not extract bucket/path from URL:', imageUrl);
+      return;
+    }
+
+    console.log(`[imageService] Deleting image from bucket "${bucket}" at path "${filePath}"`);
+
+    // Delete the file from Supabase storage
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([filePath]);
+
+    if (error) {
+      console.error('[imageService] Error deleting image:', error);
+      throw error;
+    }
+
+    console.log(`[imageService] Successfully deleted image: ${filePath}`);
+  } catch (error) {
+    console.error('[imageService] Failed to delete image:', error);
+    // Don't throw the error to prevent blocking the main operation
+    // Image cleanup is a nice-to-have, not critical
+  }
+};
+
 // Utility function to check if a string is a valid URL
 export const isValidImageUrl = (url: string): boolean => {
   try {

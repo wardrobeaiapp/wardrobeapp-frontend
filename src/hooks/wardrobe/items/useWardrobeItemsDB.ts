@@ -16,8 +16,7 @@ import {
   updateOptimisticItem,
   removeOptimisticItem,
   replaceOptimisticItem,
-  revertOptimisticUpdate,
-  restoreDeletedItem
+  revertOptimisticUpdate
 } from './utils/optimisticUpdates';
 
 interface UseWardrobeItemsDBReturn {
@@ -145,6 +144,17 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       console.log('HOOK: Final updates:', finalUpdates);
       const updatedItem = await updateWardrobeItem(id, finalUpdates);
       
+      // Clean up old image after successful update (if image was replaced)
+      if (updatedItem && file && currentItem.imageUrl && finalImageUrl && currentItem.imageUrl !== finalImageUrl) {
+        console.log('HOOK: Cleaning up old image after successful update:', currentItem.imageUrl);
+        // Import and call cleanup function (don't await to avoid blocking)
+        import('../../../services/core/imageService').then(({ deleteImageFromStorage }) => {
+          deleteImageFromStorage(currentItem.imageUrl!);
+        }).catch(error => {
+          console.error('HOOK: Error cleaning up old image:', error);
+        });
+      }
+      
       if (isMountedRef.current) {
         if (updatedItem) {
           // Update with server response
@@ -175,25 +185,38 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     if (!isMountedRef.current) return false;
     
     setIsLoading(true);
-    const itemToDelete = items.find(item => item.id === id);
-    if (!itemToDelete) {
+    const currentItem = items.find(item => item.id === id);
+    if (!currentItem) {
       setIsLoading(false);
       return false;
     }
     
-    // Optimistically remove the item from the UI
-    setItems(prevItems => removeOptimisticItem(prevItems, id));
+    // Apply optimistic update to UI immediately
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
     
     try {
       await deleteWardrobeItem(id);
+      
+      // Clean up image after successful deletion
+      if (currentItem.imageUrl) {
+        console.log('HOOK: Cleaning up image after successful deletion:', currentItem.imageUrl);
+        // Import and call cleanup function (don't await to avoid blocking)
+        import('../../../services/core/imageService').then(({ deleteImageFromStorage }) => {
+          deleteImageFromStorage(currentItem.imageUrl!);
+        }).catch(error => {
+          console.error('HOOK: Error cleaning up image after deletion:', error);
+        });
+      }
+      
+      // If we reach here, the deletion was successful
       return true;
     } catch (error) {
-      console.error('Error deleting item:', error);
-      // Revert the optimistic update on error
+      // If deletion failed, revert the optimistic update
       if (isMountedRef.current) {
-        setItems(prevItems => restoreDeletedItem(prevItems, itemToDelete));
+        setItems(prevItems => addOptimisticItem(prevItems, currentItem));
       }
-      throw error;
+      console.error('HOOK: Error deleting item:', error);
+      return false;
     } finally {
       if (isMountedRef.current) {
         setIsLoading(false);

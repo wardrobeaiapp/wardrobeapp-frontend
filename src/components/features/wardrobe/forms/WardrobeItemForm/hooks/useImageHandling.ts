@@ -9,7 +9,6 @@ interface UseImageHandlingProps {
   onImageError: (error: string) => void;
   onImageSuccess: () => void;
   onNewImageSelected?: () => void;
-  onTagsDetected?: (tags: any) => void;
   onSetIsImageFromUrl?: (isFromUrl: boolean) => void;
   onBackgroundRemovalReset?: () => void;
 }
@@ -50,29 +49,64 @@ export const useImageHandling = ({
   //   }
   // }, [onTagsDetected]);
 
-  // Using fileToBase64 from utils/file/fileConversion.ts
+  // Convert image to WebP format with high quality preservation
+  const convertToWebP = async (file: File, quality: number = 0.92): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+      
+      img.onload = () => {
+        // Set canvas dimensions to match image
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to WebP with specified quality (0.92 = 92% quality)
+        canvas.toBlob((blob) => {
+          if (blob) {
+            console.log(`[useImageHandling] WebP conversion successful. Original: ${(file.size / 1024 / 1024).toFixed(2)}MB → WebP: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+            resolve(blob);
+          } else {
+            reject(new Error('WebP conversion failed'));
+          }
+        }, 'image/webp', quality);
+      };
+      
+      img.onerror = () => {
+        reject(new Error('Failed to load image for WebP conversion'));
+      };
+      
+      // Load the image
+      img.src = URL.createObjectURL(file);
+    });
+  };
 
-  // Upload a file to Supabase storage and return a permanent URL
+  // Upload a file to Supabase storage with WebP conversion and return a permanent URL
   const uploadFileToStorage = async (file: File): Promise<string> => {
     return safeExecute(
       async () => {
-        console.log('[useImageHandling] Uploading file to Supabase storage:', file.name);
+        console.log('[useImageHandling] Converting and uploading file to Supabase storage:', file.name);
         
-        // Get file extension from file name
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-        
-        // Convert file to blob for upload
-        const blob = new Blob([await file.arrayBuffer()], { type: file.type });
+        // Convert to high-quality WebP format
+        const webpBlob = await convertToWebP(file, 0.92);
         
         // Use the imageService functions to upload to Supabase storage
-        const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-        const publicUrl = await saveImageToStorage(filePath, blob);
+        const { filePath } = await uploadImageBlob(webpBlob, 'webp', 'wardrobe');
+        const publicUrl = await saveImageToStorage(filePath, webpBlob);
         
-        console.log('[useImageHandling] File uploaded successfully:', publicUrl);
+        console.log('[useImageHandling] WebP file uploaded successfully:', publicUrl);
         return publicUrl;
       },
       (error) => {
-        throw new Error('Failed to upload image to storage');
+        throw new Error('Failed to convert and upload image to storage');
       },
       'useImageHandling'
     ) as Promise<string>; // Type assertion needed since safeExecute can return undefined
@@ -247,6 +281,6 @@ export const useImageHandling = ({
     handleUrlChange,
     handleUrlLoad,
     clearImage,
-    compressImage
+    convertToWebP
   };
 };

@@ -97,51 +97,6 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     },
     onBackgroundRemovalReset: () => {
       backgroundRemoval.resetProcessedState();
-    },
-    onTagsDetected: async (tags) => {
-      formState.setDetectedTags(tags);
-      
-      // Auto-fill form fields using the dedicated service
-      if (tags) {
-        // Defer auto-population to idle time to avoid blocking the UI
-        if ('requestIdleCallback' in window) {
-          requestIdleCallback(async () => {
-            try {
-              const { FormAutoPopulationService } = await import('../../../../../services/ai/formAutoPopulation');
-              
-              await FormAutoPopulationService.autoPopulateFromTags(
-                tags,
-                {
-                  setCategory: formState.setCategory,
-                  setSubcategory: formState.setSubcategory,
-                  setColor: formState.setColor,
-                  setPattern: formState.setPattern,
-                  setMaterial: formState.setMaterial,
-                  setBrand: formState.setBrand,
-                  setSilhouette: formState.setSilhouette,
-                  setLength: formState.setLength,
-                  setSleeves: formState.setSleeves,
-                  setStyle: formState.setStyle,
-                  setRise: formState.setRise,
-                  setNeckline: formState.setNeckline,
-                  setHeelHeight: formState.setHeelHeight,
-                  setBootHeight: formState.setBootHeight,
-                  setType: formState.setType,
-                  setName: formState.setName,
-                  toggleSeason: formState.toggleSeason,
-                },
-                {
-                  overwriteExisting: false,
-                  skipFields: [],
-                  debug: false,
-                }
-              );
-            } catch (error) {
-              console.error('[WardrobeItemForm] Auto-population failed:', error);
-            }
-          }, { timeout: 1000 });
-        }
-      }
     }
   });
 
