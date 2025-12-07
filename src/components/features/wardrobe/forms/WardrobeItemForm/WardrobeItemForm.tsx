@@ -110,7 +110,8 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     await backgroundRemoval.applyProcessedImage(
       setPreviewImage,
       formState.setImageUrl,
-      setSelectedFile
+      setSelectedFile,
+      formState.getFormData().imageUrl  // Pass current image URL for deletion
     );
   };
 

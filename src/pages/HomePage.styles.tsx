@@ -1,4 +1,4 @@
-import styled, { keyframes } from 'styled-components';
+import styled from 'styled-components';
 import { theme } from '../styles/theme';
 
 export const PageHeader = styled.header`
@@ -385,30 +385,6 @@ export const EmptyStateTitle = styled.h2`
 export const EmptyStateText = styled.p`
   color: #6b7280;
   margin-bottom: 1.5rem;
-`;
-
-export const LoadingContainer = styled.div`
-  text-align: center;
-  padding: 2rem;
-`;
-
-export const LoadingText = styled.p`
-  margin-bottom: 1rem;
-`;
-
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
-
-export const Spinner = styled.div`
-  display: inline-block;
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #3498db;
-  border-radius: 50%;
-  animation: ${spin} 1s linear infinite;
 `;
 
 export const ErrorContainer = styled.div`

@@ -13,11 +13,9 @@ import {
   EmptyState,
   EmptyStateTitle,
   EmptyStateText,
-  LoadingContainer,
-  LoadingText,
-  Spinner,
   ErrorContainer
 } from '../../../../pages/HomePage.styles';
+import Loader from '../../../common/Loader';
 
 interface OutfitsTabProps {
   outfits: Outfit[];
@@ -100,12 +98,7 @@ const OutfitsTab: React.FC<OutfitsTabProps> = ({
 
   return (
     <>
-      {isLoading && (
-        <LoadingContainer>
-          <LoadingText>Loading your outfits...</LoadingText>
-          <Spinner />
-        </LoadingContainer>
-      )}
+      {isLoading && <Loader text="Loading your outfits..." />}
       
       {error && (
         <ErrorContainer>

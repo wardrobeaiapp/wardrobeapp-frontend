@@ -12,11 +12,9 @@ import {
   EmptyState,
   EmptyStateTitle,
   EmptyStateText,
-  LoadingContainer,
-  LoadingText,
-  Spinner,
   ErrorContainer
 } from '../../../../pages/HomePage.styles';
+import Loader from '../../../common/Loader';
 
 interface CapsulesTabProps {
   capsules?: Capsule[];
@@ -181,12 +179,7 @@ const CapsulesTabComponent: React.FC<CapsulesTabProps> = ({
   
   // Render loading state
   if (isLoading) {
-    return (
-      <LoadingContainer>
-        <LoadingText>Loading your capsules...</LoadingText>
-        <Spinner />
-      </LoadingContainer>
-    );
+    return <Loader text="Loading your capsules..." />;
   }
   
   // Render error state

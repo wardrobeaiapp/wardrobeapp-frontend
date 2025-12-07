@@ -168,23 +168,40 @@ export const deleteImageFromStorage = async (imageUrl: string): Promise<void> =>
     }
 
     // Only delete images from our Supabase bucket for safety
-    if (!imageUrl.includes('supabase.co') || !imageUrl.includes('/storage/v1/object/public/')) {
+    if (!imageUrl.includes('supabase.co') || (!imageUrl.includes('/storage/v1/object/public/') && !imageUrl.includes('/storage/v1/object/sign/'))) {
       console.log('[imageService] Skipping deletion - not a Supabase storage URL:', imageUrl);
       return;
     }
 
-    // Extract file path from Supabase URL
-    // URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
-    const urlParts = imageUrl.split('/storage/v1/object/public/');
-    if (urlParts.length !== 2) {
-      console.error('[imageService] Invalid Supabase URL format:', imageUrl);
-      return;
-    }
+    let bucket = '';
+    let filePath = '';
 
-    const pathWithBucket = urlParts[1];
-    const pathParts = pathWithBucket.split('/');
-    const bucket = pathParts[0];
-    const filePath = pathParts.slice(1).join('/');
+    // Extract file path from Supabase URL (handle both public and signed URLs)
+    if (imageUrl.includes('/storage/v1/object/public/')) {
+      // Public URL format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+      const urlParts = imageUrl.split('/storage/v1/object/public/');
+      if (urlParts.length !== 2) {
+        console.error('[imageService] Invalid Supabase public URL format:', imageUrl);
+        return;
+      }
+      const pathWithBucket = urlParts[1];
+      const pathParts = pathWithBucket.split('/');
+      bucket = pathParts[0];
+      filePath = pathParts.slice(1).join('/');
+    } else if (imageUrl.includes('/storage/v1/object/sign/')) {
+      // Signed URL format: https://{project}.supabase.co/storage/v1/object/sign/{bucket}/{path}?token=...
+      const urlParts = imageUrl.split('/storage/v1/object/sign/');
+      if (urlParts.length !== 2) {
+        console.error('[imageService] Invalid Supabase signed URL format:', imageUrl);
+        return;
+      }
+      const pathWithBucketAndParams = urlParts[1];
+      // Remove query parameters (token, etc.)
+      const pathWithBucket = pathWithBucketAndParams.split('?')[0];
+      const pathParts = pathWithBucket.split('/');
+      bucket = pathParts[0];
+      filePath = pathParts.slice(1).join('/');
+    }
 
     if (!bucket || !filePath) {
       console.error('[imageService] Could not extract bucket/path from URL:', imageUrl);

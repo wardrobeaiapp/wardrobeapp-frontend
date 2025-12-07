@@ -9,12 +9,10 @@ import {
   EmptyState,
   EmptyStateTitle,
   EmptyStateText,
-  LoadingContainer,
-  LoadingText,
-  Spinner,
   ErrorContainer
 } from '../../../../pages/HomePage.styles';
 import WardrobeItemCard from '../cards/WardrobeItemCard';
+import Loader from '../../../common/Loader';
 
 interface WishlistTabProps {
   items: WardrobeItem[];
@@ -98,12 +96,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
   
 
   if (isLoading) {
-    return (
-      <LoadingContainer>
-        <Spinner />
-        <LoadingText>Loading wishlist items...</LoadingText>
-      </LoadingContainer>
-    );
+    return <Loader text="Loading your wishlist items..." />;
   }
 
   if (error) {

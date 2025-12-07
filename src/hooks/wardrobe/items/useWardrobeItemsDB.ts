@@ -144,8 +144,17 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
       console.log('HOOK: Final updates:', finalUpdates);
       const updatedItem = await updateWardrobeItem(id, finalUpdates);
       
+      // Debug: Check cleanup conditions
+      console.log('HOOK: Cleanup conditions check:', {
+        updatedItem: !!updatedItem,
+        file: !!file,
+        currentImageUrl: currentItem.imageUrl,
+        finalImageUrl: finalImageUrl,
+        urlsDifferent: currentItem.imageUrl !== finalImageUrl
+      });
+      
       // Clean up old image after successful update (if image was replaced)
-      if (updatedItem && file && currentItem.imageUrl && finalImageUrl && currentItem.imageUrl !== finalImageUrl) {
+      if (updatedItem && currentItem.imageUrl && finalImageUrl && currentItem.imageUrl !== finalImageUrl) {
         console.log('HOOK: Cleaning up old image after successful update:', currentItem.imageUrl);
         // Import and call cleanup function (don't await to avoid blocking)
         import('../../../services/core/imageService').then(({ deleteImageFromStorage }) => {
@@ -153,6 +162,8 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
         }).catch(error => {
           console.error('HOOK: Error cleaning up old image:', error);
         });
+      } else {
+        console.log('HOOK: Skipping image cleanup - conditions not met');
       }
       
       if (isMountedRef.current) {
