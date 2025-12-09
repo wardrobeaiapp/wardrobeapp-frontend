@@ -1,0 +1,24 @@
+[build]
+  # Build the React frontend
+  command = "npm run build"
+  publish = "build"
+
+# Redirect API calls to Netlify Functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Catch-all redirect for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers for API responses
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, x-auth-token"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"

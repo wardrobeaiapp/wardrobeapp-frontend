@@ -18,6 +18,7 @@ import {
   PrivacyText
 } from '../DemoPage.styles';
 import { DemoStep } from '../types';
+import { getApiUrl, API_ENDPOINTS } from '../../../config/api';
 
 interface WaitlistStepProps {
   markStepCompleted: (step: DemoStep) => void;
@@ -37,8 +38,8 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
   // Try Email Octopus through server API
   const handleEmailOctopusSubmit = async (email: string) => {
     try {
-      // Use our server's waitlist endpoint which includes Email Octopus integration
-      const response = await fetch('/api/waitlist', {
+      // Use our waitlist endpoint which includes Email Octopus integration
+      const response = await fetch(getApiUrl(API_ENDPOINTS.WAITLIST), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

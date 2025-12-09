@@ -38,7 +38,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm run build:functions && react-scripts build",
+    "build:functions": "cd netlify/functions && npm install",
     "test": "npm run test:frontend && npm run test:backend",
     "test:frontend": "react-scripts test --watchAll=false",
     "test:backend": "cd server && npm test",
