@@ -13,9 +13,9 @@ export const API_BASE_URL = (() => {
     return '';  // Empty string uses proxy defined in package.json
   }
   
-  // Production: API calls are handled by serverless functions
+  // Production: Direct function calls (bypassing redirects)
   if (isProduction) {
-    return '';  // Same origin (netlify functions are served at same domain)
+    return '/.netlify/functions';  // Direct path to Netlify functions
   }
   
   // Fallback
@@ -37,7 +37,7 @@ export const getApiUrl = (endpoint: string): string => {
  * API Endpoints
  */
 export const API_ENDPOINTS = {
-  WAITLIST: '/api/waitlist',
+  WAITLIST: isDevelopment ? '/api/waitlist' : '/waitlist',  // Dev: proxy, Prod: direct function
   WAITLIST_STATS: '/api/waitlist/stats',
   AUTH: '/api/auth',
   WARDROBE_ITEMS: '/api/wardrobe-items',
