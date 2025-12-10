@@ -7,7 +7,7 @@
 # Redirect API calls to Netlify Functions (specific routes first)
 [[redirects]]
   from = "/api/waitlist"
-  to = "/.netlify/functions/waitlist-simple"
+  to = "/.netlify/functions/waitlist"
   status = 200
   force = true
   
