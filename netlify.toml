@@ -4,21 +4,24 @@
   publish = "build"
   functions = "functions"
 
-# Redirect API calls to Netlify Functions
+# Redirect API calls to Netlify Functions (specific routes first)
 [[redirects]]
   from = "/api/waitlist"
   to = "/.netlify/functions/waitlist-simple"
   status = 200
-  
-[[redirects]]
-  from = "/api/waitlist-full"
-  to = "/.netlify/functions/waitlist"
-  status = 200
+  force = true
   
 [[redirects]]
   from = "/api/test"
   to = "/.netlify/functions/test"
   status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/waitlist-full"
+  to = "/.netlify/functions/waitlist"
+  status = 200
+  force = true
 
 [[redirects]]
   from = "/api/*"
