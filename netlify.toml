@@ -2,8 +2,24 @@
   # Build the React frontend
   command = "npm run build"
   publish = "build"
+  functions = "netlify/functions"
 
 # Redirect API calls to Netlify Functions
+[[redirects]]
+  from = "/api/waitlist"
+  to = "/.netlify/functions/waitlist-simple"
+  status = 200
+  
+[[redirects]]
+  from = "/api/waitlist-full"
+  to = "/.netlify/functions/waitlist"
+  status = 200
+  
+[[redirects]]
+  from = "/api/test"
+  to = "/.netlify/functions/test"
+  status = 200
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

@@ -38,6 +38,8 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
   // Try Email Octopus through server API
   const handleEmailOctopusSubmit = async (email: string) => {
     try {
+      console.log('🚀 Attempting submission to:', getApiUrl(API_ENDPOINTS.WAITLIST));
+      
       // Use our waitlist endpoint which includes Email Octopus integration
       const response = await fetch(getApiUrl(API_ENDPOINTS.WAITLIST), {
         method: 'POST',
@@ -46,6 +48,15 @@ const WaitlistStep: React.FC<WaitlistStepProps> = ({ markStepCompleted }) => {
         },
         body: JSON.stringify({ email }),
       });
+
+      console.log('📡 Response status:', response.status);
+      
+      // Check if we got HTML instead of JSON (indicates 404 or server error)
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        console.error('❌ Got HTML instead of JSON - function not deployed');
+        throw new Error('Waitlist service is not available yet. Please try again later.');
+      }
 
       const data = await response.json();
 

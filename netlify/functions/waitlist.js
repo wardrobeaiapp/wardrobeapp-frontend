@@ -1,4 +1,4 @@
-const axios = require('axios');
+// Using native fetch instead of axios to avoid dependency issues
 
 /**
  * Netlify Function for Waitlist API
@@ -98,17 +98,32 @@ exports.handler = async (event, context) => {
         email_address: email.toLowerCase()
       };
       
-      const emailOctopusResponse = await axios.post(
-        requestUrl,
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const emailOctopusResponse = await fetch(requestUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
 
-      console.log('✅ Email Octopus subscriber added:', emailOctopusResponse.data.email_address);
+      const responseData = await emailOctopusResponse.json();
+      
+      // Check if the request was successful
+      if (!emailOctopusResponse.ok) {
+        if (responseData.error?.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
+          return {
+            statusCode: 409,
+            headers,
+            body: JSON.stringify({
+              success: false,
+              message: 'This email is already on the waitlist'
+            })
+          };
+        }
+        throw new Error(responseData.error?.message || `HTTP ${emailOctopusResponse.status}`);
+      }
+      
+      console.log('✅ Email Octopus subscriber added:', responseData.email_address);
 
       // Success response
       return {
@@ -119,28 +134,16 @@ exports.handler = async (event, context) => {
           message: 'Successfully added to waitlist!',
           data: {
             email: email.toLowerCase(),
-            subscriber_id: emailOctopusResponse.data.id,
-            status: emailOctopusResponse.data.status,
+            subscriber_id: responseData.id,
+            status: responseData.status,
             estimated_launch: 'Q2 2025'
           }
         })
       };
 
     } catch (emailOctopusError) {
-      console.error('Email Octopus API error:', emailOctopusError.response?.data || emailOctopusError.message);
+      console.error('Email Octopus API error:', emailOctopusError.message);
       
-      // Handle specific Email Octopus errors
-      if (emailOctopusError.response?.data?.error?.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
-        return {
-          statusCode: 409,
-          headers,
-          body: JSON.stringify({
-            success: false,
-            message: 'This email is already on the waitlist'
-          })
-        };
-      }
-
       // Handle other API errors
       return {
         statusCode: 500,
