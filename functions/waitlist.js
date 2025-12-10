@@ -5,12 +5,6 @@
  * Handles POST /api/waitlist requests
  */
 exports.handler = async (event, context) => {
-  console.log('🚀 WAITLIST FUNCTION CALLED');
-  console.log('📋 HTTP Method:', event.httpMethod);
-  console.log('📍 Path:', event.path);
-  console.log('🔗 Headers:', JSON.stringify(event.headers, null, 2));
-  console.log('📦 Body:', event.body);
-  
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -18,12 +12,9 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Content-Type': 'application/json'
   };
-  
-  console.log('✅ Headers set for response');
 
   // Handle preflight OPTIONS requests
   if (event.httpMethod === 'OPTIONS') {
-    console.log('🔄 Handling OPTIONS preflight request');
     return {
       statusCode: 200,
       headers
@@ -32,7 +23,6 @@ exports.handler = async (event, context) => {
 
   // Only accept POST requests
   if (event.httpMethod !== 'POST') {
-    console.log('❌ Method not allowed:', event.httpMethod);
     return {
       statusCode: 405,
       headers,
@@ -43,16 +33,11 @@ exports.handler = async (event, context) => {
     };
   }
 
-  console.log('✅ POST method confirmed, proceeding with request');
-
   try {
-    console.log('🔍 Parsing request body...');
-    const { email } = JSON.parse(event.body || '{}');
-    console.log('📧 Extracted email:', email);
+    const { email } = JSON.parse(event.body);
 
     // Validate email
     if (!email) {
-      console.log('❌ No email provided');
       return {
         statusCode: 400,
         headers,
@@ -66,7 +51,6 @@ exports.handler = async (event, context) => {
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      console.log('❌ Invalid email format:', email);
       return {
         statusCode: 400,
         headers,
@@ -77,18 +61,14 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log(`✅ Valid email provided: ${email}`);
+    console.log(`📧 New waitlist signup: ${email}`);
 
     // Email Octopus API configuration from environment variables
-    console.log('🔑 Checking environment variables...');
     const EMAIL_OCTOPUS_API_KEY = process.env.EMAIL_OCTOPUS_API_KEY;
     const EMAIL_OCTOPUS_LIST_ID = process.env.EMAIL_OCTOPUS_LIST_ID;
-    
-    console.log('🔑 EMAIL_OCTOPUS_API_KEY exists:', !!EMAIL_OCTOPUS_API_KEY);
-    console.log('🔑 EMAIL_OCTOPUS_LIST_ID exists:', !!EMAIL_OCTOPUS_LIST_ID);
 
     if (!EMAIL_OCTOPUS_API_KEY) {
-      console.error('❌ EMAIL_OCTOPUS_API_KEY not configured');
+      console.error('EMAIL_OCTOPUS_API_KEY not configured');
       return {
         statusCode: 500,
         headers,
@@ -100,7 +80,7 @@ exports.handler = async (event, context) => {
     }
 
     if (!EMAIL_OCTOPUS_LIST_ID) {
-      console.error('❌ EMAIL_OCTOPUS_LIST_ID not configured');
+      console.error('EMAIL_OCTOPUS_LIST_ID not configured');
       return {
         statusCode: 500,
         headers,
@@ -111,20 +91,13 @@ exports.handler = async (event, context) => {
       };
     }
 
-    console.log('✅ Environment variables configured correctly');
-
     // Add subscriber to Email Octopus list
     try {
-      console.log('🐙 Preparing Email Octopus API call...');
       const requestUrl = `https://emailoctopus.com/api/1.6/lists/${EMAIL_OCTOPUS_LIST_ID}/contacts?api_key=${EMAIL_OCTOPUS_API_KEY}`;
       const requestData = {
         email_address: email.toLowerCase()
       };
       
-      console.log('🐙 Request URL:', requestUrl.replace(EMAIL_OCTOPUS_API_KEY, '[API_KEY_HIDDEN]'));
-      console.log('🐙 Request data:', requestData);
-      
-      console.log('🚀 Making fetch request to Email Octopus...');
       const emailOctopusResponse = await fetch(requestUrl, {
         method: 'POST',
         headers: {
@@ -133,17 +106,11 @@ exports.handler = async (event, context) => {
         body: JSON.stringify(requestData)
       });
 
-      console.log('📡 Email Octopus response status:', emailOctopusResponse.status);
-      console.log('📡 Email Octopus response ok:', emailOctopusResponse.ok);
-      
       const responseData = await emailOctopusResponse.json();
-      console.log('📦 Email Octopus response data:', JSON.stringify(responseData, null, 2));
       
       // Check if the request was successful
       if (!emailOctopusResponse.ok) {
-        console.log('❌ Email Octopus request failed');
         if (responseData.error?.code === 'MEMBER_EXISTS_WITH_EMAIL_ADDRESS') {
-          console.log('⚠️ Duplicate email address detected');
           return {
             statusCode: 409,
             headers,
@@ -156,11 +123,10 @@ exports.handler = async (event, context) => {
         throw new Error(responseData.error?.message || `HTTP ${emailOctopusResponse.status}`);
       }
       
-      console.log('✅ Email Octopus subscriber added successfully:', responseData.email_address);
+      console.log('✅ Email Octopus subscriber added:', responseData.email_address);
 
       // Success response
-      console.log('🎉 Preparing success response...');
-      const successResponse = {
+      return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
@@ -174,15 +140,11 @@ exports.handler = async (event, context) => {
           }
         })
       };
-      console.log('🎉 Returning success response');
-      return successResponse;
 
     } catch (emailOctopusError) {
-      console.error('❌ Email Octopus API error:', emailOctopusError.message);
-      console.error('❌ Full error:', emailOctopusError);
+      console.error('Email Octopus API error:', emailOctopusError.message);
       
       // Handle other API errors
-      console.log('🔄 Returning Email Octopus error response');
       return {
         statusCode: 500,
         headers,
@@ -194,9 +156,7 @@ exports.handler = async (event, context) => {
     }
 
   } catch (error) {
-    console.error('❌ General waitlist signup error:', error);
-    console.error('❌ Full error object:', error);
-    console.log('🔄 Returning general error response');
+    console.error('Waitlist signup error:', error);
     return {
       statusCode: 500,
       headers,

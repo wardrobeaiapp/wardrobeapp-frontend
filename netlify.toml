@@ -2,7 +2,9 @@
   # Build the React frontend
   command = "npm run build"
   publish = "build"
-  functions = "netlify/functions"
+
+[functions]
+  directory = "functions"
 
 # Redirect API calls to Netlify Functions
 [[redirects]]

@@ -3,12 +3,6 @@
  * Basic version without Email Octopus integration for testing
  */
 exports.handler = async (event, context) => {
-  console.log('🚀 WAITLIST-SIMPLE FUNCTION CALLED');
-  console.log('📋 HTTP Method:', event.httpMethod);
-  console.log('📍 Path:', event.path);
-  console.log('🔗 Headers:', JSON.stringify(event.headers, null, 2));
-  console.log('📦 Body:', event.body);
-  
   // Set CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -17,7 +11,6 @@ exports.handler = async (event, context) => {
     'Content-Type': 'application/json'
   };
 
-  console.log('✅ Headers set for response');
   console.log('📧 Waitlist function called:', event.httpMethod);
 
   // Handle preflight OPTIONS requests
