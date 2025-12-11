@@ -120,7 +120,7 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
         console.log(`[useImageUrl] Generating fresh URL for ${filePath}${isRetry ? ' (retry attempt ' + (retryCountRef.current + 1) + ')' : ''}`);
       });
       
-      const freshUrl = await generateSignedUrl(filePath, 604800); // 7 days for production
+      const freshUrl = await generateSignedUrl(filePath, 604800, item.userId); // 7 days for production, pass userId for demo detection
       
       if (!freshUrl) {
         throw new Error('Empty URL returned from generateSignedUrl');

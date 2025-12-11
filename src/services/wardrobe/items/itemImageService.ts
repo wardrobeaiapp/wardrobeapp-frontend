@@ -1,12 +1,25 @@
 import { supabase } from '../../../services/core';
+import { isDemoUser } from '../../../pages/Demo/services/demoWardrobeService';
+
+/**
+ * Check if we're in demo context by looking at current URL or stored demo state
+ */
+const isDemoContext = (): boolean => {
+  // Check if we're on the demo page
+  if (typeof window !== 'undefined') {
+    return window.location.pathname.includes('/demo');
+  }
+  return false;
+};
 
 /**
  * Generates a signed URL for an image
  * @param filePath File path in storage
  * @param expiresIn Expiration time in seconds
- * @returns Signed URL
+ * @param userId Optional user ID to check if it's a demo user
+ * @returns Signed URL or public URL for demo users
  */
-export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600): Promise<string> => {
+export const generateSignedUrl = async (filePath: string, expiresIn: number = 3600, userId?: string): Promise<string> => {
   // Clean up the file path if needed
   let processedFilePath = filePath;
   
@@ -22,6 +35,20 @@ export const generateSignedUrl = async (filePath: string, expiresIn: number = 36
     } catch (err) {
       console.warn('[itemImageService] Could not parse URL, using as-is:', err);
     }
+  }
+
+  // For demo users or demo context, use public URLs directly
+  const isDemoUser_check = userId ? isDemoUser(userId) : false;
+  const isDemo = isDemoUser_check || isDemoContext();
+  
+  if (isDemo) {
+    console.log('[itemImageService] Demo context detected, using public URL for path:', processedFilePath);
+    // Extract project ID from Supabase URL
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+    const projectId = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'gujpqecwdftbwkcnwiup';
+    const publicUrl = `https://${projectId}.supabase.co/storage/v1/object/public/wardrobe-images/${processedFilePath}`;
+    console.log('[itemImageService] Generated public URL for demo:', publicUrl);
+    return publicUrl;
   }
   
   console.log('[itemImageService] Calling generate-signed-url function for path:', processedFilePath);
@@ -50,7 +77,9 @@ export const generateSignedUrl = async (filePath: string, expiresIn: number = 36
   } catch (error) {
     console.error('[itemImageService] Failed to generate signed URL:', error);
     // If we can't generate a signed URL, try to construct a public URL as fallback
-    const publicUrl = `https://${process.env.SUPABASE_PROJECT_ID}.supabase.co/storage/v1/object/public/wardrobe-images/${processedFilePath}`;
+    const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
+    const projectId = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'gujpqecwdftbwkcnwiup';
+    const publicUrl = `https://${projectId}.supabase.co/storage/v1/object/public/wardrobe-images/${processedFilePath}`;
     console.log('[itemImageService] Falling back to public URL:', publicUrl);
     return publicUrl;
   }
