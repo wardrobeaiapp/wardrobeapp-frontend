@@ -76,6 +76,9 @@ const DemoPage: React.FC = () => {
     setCurrentStep(step);
     setSearchParams({ step });
     
+    // Scroll to top when changing steps (especially important on mobile)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     // Track analytics
     console.log('Demo Step:', step);
   }, [setSearchParams]);
