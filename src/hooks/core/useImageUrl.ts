@@ -170,7 +170,7 @@ export const useImageUrl = (item: WardrobeItem | null): UseImageUrlResult => {
     } finally {
       setIsLoading(false);
     }
-  }, [item?.id, item?.imageUrl, scheduleRenewal, deferToIdle]);
+  }, [item?.id, item?.imageUrl, item?.userId, scheduleRenewal, deferToIdle]);
   
   // Store the latest version of generateFreshUrl in the ref
   useEffect(() => {
