@@ -69,6 +69,14 @@ function getCategoryWeights(category, subcategory) {
       material: 5
     };
   }
+
+  if (cat === 'accessory') {
+    return {
+      color: 40,
+      type: 40,
+      material: 20
+    };
+  }
   
   // Default weights for other categories
   return { 

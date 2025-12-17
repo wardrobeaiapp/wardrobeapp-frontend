@@ -65,8 +65,18 @@ describe('categoryWeights', () => {
       });
     });
 
+    test('should return accessory weights for accessories', () => {
+      const weights = getCategoryWeights('accessory', 'bag');
+      
+      expect(weights).toEqual({
+        color: 40,
+        type: 40,
+        material: 20
+      });
+    });
+
     test('should return default weights for unknown category', () => {
-      const weights = getCategoryWeights('accessories', 'belt');
+      const weights = getCategoryWeights('unknown', 'belt');
       
       expect(weights).toEqual({
         color: 50,

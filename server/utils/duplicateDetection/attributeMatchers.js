@@ -111,12 +111,17 @@ function patternMatches(pattern1, pattern2) {
   return normalize(p1) === normalize(p2);
 }
 
+function typeMatches(type1, type2) {
+  return simpleMatch(type1, type2);
+}
+
 // Export all matchers
 module.exports = {
   simpleMatch,
   colorsMatch,
   silhouettesMatch,
   patternMatches,
+  typeMatches,
   
   // Simple matchers using the generic function
   styleMatches: simpleMatch,

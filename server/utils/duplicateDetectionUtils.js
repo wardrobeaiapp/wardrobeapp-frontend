@@ -39,6 +39,7 @@ function findCriticalDuplicates(newItem, existingItems) {
       subcategory: item.subcategory, 
       color: item.color, 
       silhouette: item.silhouette, 
+      type: item.type,
       style: item.style,
       pattern: item.pattern,
       material: item.material

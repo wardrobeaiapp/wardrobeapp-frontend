@@ -24,6 +24,7 @@ const filterPreFilledData = (preFilledData: WardrobeItem) => {
   if (preFilledData.color) filtered.color = preFilledData.color;
   if (preFilledData.style) filtered.style = preFilledData.style;
   if (preFilledData.silhouette) filtered.silhouette = preFilledData.silhouette;
+  if (preFilledData.type !== undefined && preFilledData.type !== null) filtered.type = preFilledData.type;
   if (preFilledData.material) filtered.material = preFilledData.material;
   if (preFilledData.pattern) filtered.pattern = preFilledData.pattern;
   if (preFilledData.length) filtered.length = preFilledData.length;
@@ -65,7 +66,26 @@ export const wardrobeAnalysisService = {
   async analyzeWardrobeItem(
     imageBase64: string, 
     detectedTags?: any, 
-    formData?: { category?: string; subcategory?: string; seasons?: string[]; color?: string; scenarios?: string[] },
+    formData?: {
+      category?: string;
+      subcategory?: string;
+      seasons?: string[];
+      color?: string;
+      scenarios?: string[];
+      type?: string;
+      material?: string;
+      pattern?: string;
+      style?: string;
+      silhouette?: string;
+      neckline?: string;
+      sleeves?: string;
+      rise?: string;
+      length?: string;
+      heelHeight?: string;
+      bootHeight?: string;
+      closure?: string;
+      details?: string;
+    },
     preFilledData?: WardrobeItem
   ): Promise<WardrobeItemAnalysis> {
     try {
@@ -259,9 +279,8 @@ export const wardrobeAnalysisService = {
           })) : undefined,
           // Include form data if provided
           formData: formData ? {
-            category: formData.category,
-            subcategory: formData.subcategory,
-            seasons: formData.seasons
+            ...formData,
+            type: (formData as any).type
           } : undefined,
           // Include wardrobe context for enhanced analysis (filtered to reduce payload)
           stylingContext: filteredStylingContext.length > 0 ? filteredStylingContext : undefined,

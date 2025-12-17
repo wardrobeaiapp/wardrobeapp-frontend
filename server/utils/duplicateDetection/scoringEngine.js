@@ -8,6 +8,7 @@ const {
   colorsMatch,
   silhouettesMatch,
   styleMatches,
+  typeMatches,
   materialMatches,
   patternMatches,
   necklineMatches,
@@ -29,13 +30,19 @@ function calculateApplicableWeights(weights, newItem, existingItem) {
   // Helper to check if attribute exists and isn't undefined/null
   const hasAttribute = (item, key) => {
     const value = item[key];
-    return value !== null && value !== undefined && value !== 'undefined' && value !== '';
+    if (value === null || value === undefined || value === 'undefined' || value === '') return false;
+    if (typeof value === 'string') {
+      const normalized = value.trim().toLowerCase();
+      if (normalized === 'unknown' || normalized === 'n/a') return false;
+    }
+    return true;
   };
   
   const attributeChecks = [
     { key: 'color', check: () => hasAttribute(newItem, 'color') && hasAttribute(existingItem, 'color') },
     { key: 'silhouette', check: () => hasAttribute(newItem, 'silhouette') && hasAttribute(existingItem, 'silhouette') },
     { key: 'style', check: () => hasAttribute(newItem, 'style') && hasAttribute(existingItem, 'style') },
+    { key: 'type', check: () => hasAttribute(newItem, 'type') && hasAttribute(existingItem, 'type') },
     { key: 'material', check: () => hasAttribute(newItem, 'material') && hasAttribute(existingItem, 'material') },
     { key: 'pattern', check: () => hasAttribute(newItem, 'pattern') && hasAttribute(existingItem, 'pattern') },
     { key: 'neckline', check: () => hasAttribute(newItem, 'neckline') && hasAttribute(existingItem, 'neckline') },
@@ -67,6 +74,7 @@ function calculateMatchScore(applicableWeights, newItem, existingItem) {
     color: () => colorsMatch(newItem.color, existingItem.color),
     silhouette: () => silhouettesMatch(newItem.silhouette, existingItem.silhouette, newItem.category, newItem.subcategory),
     style: () => styleMatches(newItem.style, existingItem.style),
+    type: () => typeMatches(newItem.type, existingItem.type),
     material: () => materialMatches(newItem.material, existingItem.material),
     pattern: () => patternMatches(newItem.pattern, existingItem.pattern),
     neckline: () => necklineMatches(newItem.neckline, existingItem.neckline),

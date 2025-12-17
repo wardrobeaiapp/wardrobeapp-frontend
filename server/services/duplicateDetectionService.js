@@ -44,20 +44,28 @@ class DuplicateDetectionService {
 
       // Step 2: Run algorithmic duplicate analysis
       console.log('=== STEP 2: Algorithmic Duplicate Analysis ===');
-      
+
+      const categoryLower = String(formData.category || '').toLowerCase();
+      const isAccessory = categoryLower === 'accessory';
+
       const enrichedItemData = {
         category: formData.category,
         subcategory: formData.subcategory,
         color: extractedAttributes.color,
-        silhouette: this.normalizeSilhouette(extractedAttributes.silhouette, formData.subcategory),
-        style: extractedAttributes.style,
+        ...(isAccessory
+          ? {}
+          : { silhouette: this.normalizeSilhouette(extractedAttributes.silhouette, formData.subcategory) }),
+        ...(extractedAttributes.style && extractedAttributes.style !== 'unknown' && extractedAttributes.style !== 'N/A'
+          ? { style: extractedAttributes.style }
+          : {}),
+        ...(formData.type ? { type: formData.type } : {}),
         seasons: formData.seasons,
         // Include additional attributes from formData if available
-        pattern: formData.pattern,
-        neckline: formData.neckline,
-        sleeves: formData.sleeves,
-        material: formData.material,
-        details: formData.details
+        ...(formData.pattern ? { pattern: formData.pattern } : {}),
+        ...(formData.neckline ? { neckline: formData.neckline } : {}),
+        ...(formData.sleeves ? { sleeves: formData.sleeves } : {}),
+        ...(formData.material ? { material: formData.material } : {}),
+        ...(formData.details ? { details: formData.details } : {})
       };
 
       const allContextItems = similarContext || [];
@@ -95,14 +103,17 @@ class DuplicateDetectionService {
 
     try {
       console.log('=== Using Form Data for Duplicate Analysis (Skip AI Extraction) ===');
-      
-      // Use the analysis data directly - it already has the correct values!
+
+      const categoryLower = String(analysisData.category || '').toLowerCase();
+      const isAccessory = categoryLower === 'accessory';
+
       const extractedAttributes = {
         color: analysisData.color || 'unknown',
-        silhouette: this.normalizeSilhouette(analysisData.silhouette, analysisData.subcategory), 
-        style: analysisData.style || 'unknown',
-        material: analysisData.material || 'unknown',
-        pattern: analysisData.pattern || 'unknown'
+        ...(isAccessory ? {} : { silhouette: this.normalizeSilhouette(analysisData.silhouette, analysisData.subcategory) }),
+        ...(analysisData.style && analysisData.style !== 'unknown' && analysisData.style !== 'N/A' ? { style: analysisData.style } : {}),
+        ...(analysisData.type && analysisData.type !== 'unknown' && analysisData.type !== 'N/A' ? { type: analysisData.type } : {}),
+        ...(analysisData.material && analysisData.material !== 'unknown' && analysisData.material !== 'N/A' ? { material: analysisData.material } : {}),
+        ...(analysisData.pattern && analysisData.pattern !== 'unknown' && analysisData.pattern !== 'N/A' ? { pattern: analysisData.pattern } : {})
       };
 
       console.log('Using attributes from analysis data:', extractedAttributes);
@@ -208,8 +219,19 @@ class DuplicateDetectionService {
     
     promptSection += `\nDETECTED ATTRIBUTES:`;
     promptSection += `\n- Color: ${extractedAttributes.color}`;
-    promptSection += `\n- Silhouette: ${extractedAttributes.silhouette || 'N/A'}`;
-    promptSection += `\n- Style: ${extractedAttributes.style}`;
+    if (extractedAttributes.silhouette && extractedAttributes.silhouette !== 'unknown' && extractedAttributes.silhouette !== 'N/A') {
+      promptSection += `\n- Silhouette: ${extractedAttributes.silhouette}`;
+    } else if (extractedAttributes.type && extractedAttributes.type !== 'unknown') {
+      promptSection += `\n- Type: ${extractedAttributes.type}`;
+    } else {
+      promptSection += `\n- Silhouette: ${extractedAttributes.silhouette || 'N/A'}`;
+    }
+    if (extractedAttributes.material && extractedAttributes.material !== 'unknown' && extractedAttributes.material !== 'N/A') {
+      promptSection += `\n- Material: ${extractedAttributes.material}`;
+    }
+    if (extractedAttributes.style && extractedAttributes.style !== 'unknown' && extractedAttributes.style !== 'N/A') {
+      promptSection += `\n- Style: ${extractedAttributes.style}`;
+    }
     
     promptSection += `\nDUPLICATE ANALYSIS:`;
     if (duplicateAnalysis.duplicate_analysis.found) {
