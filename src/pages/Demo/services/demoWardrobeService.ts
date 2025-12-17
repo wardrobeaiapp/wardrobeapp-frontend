@@ -8,7 +8,9 @@ const DEMO_USER_IDS = [
   'bdc94953-9f24-477d-9fea-30a8f7192f53', // Emma - Marketing Manager
   '4d3ab63a-ae73-4dcd-8309-231bdd734272', // Max - Freelance Graphic Designer  
   '9206c9a8-920a-4304-a99a-1129e308609e', // Lisa - Stay-At-Home Mom
-  'fba15166-e5e0-48ab-98f6-fee5a08e7945'  // Zoe - College Student
+  'fba15166-e5e0-48ab-98f6-fee5a08e7945', // Zoe - College Student
+  '7a92c24d-d2f8-4784-85eb-2de2476ba605', // Sofia - Hair Stylist
+  '12e2994d-e0da-4211-b8f6-2f9046e6067a'  // Nina - Nurse
 ];
 
 const DEMO_PERSONAS = {
@@ -31,6 +33,16 @@ const DEMO_PERSONAS = {
     name: 'Zoe',
     title: 'College Student',
     description: 'Casual looks for classes, work, and social events'
+  },
+  '7a92c24d-d2f8-4784-85eb-2de2476ba605': {
+    name: 'Sofia',
+    title: 'Hair Stylist',
+    description: 'Bold creative looks for salon days, industry events, and nightlife'
+  },
+  '12e2994d-e0da-4211-b8f6-2f9046e6067a': {
+    name: 'Nina',
+    title: 'Nurse',
+    description: 'Comfortable practical clothes for home recovery and outdoor weekends'
   }
 };
 

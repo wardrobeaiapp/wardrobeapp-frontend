@@ -4,7 +4,7 @@
 // Master color options - must match src/constants/wardrobeOptions.ts exactly
 const COLOR_OPTIONS = [
   'Black', 'White', 'Grey', 'Navy', 'Blue', 'Light Blue', 'Turquoise',
-  'Green', 'Yellow', 'Gold', 'Orange', 'Brown', 'Beige', 'Cream', 'Pink', 
+  'Green', 'Khaki', 'Yellow', 'Gold', 'Orange', 'Brown', 'Beige', 'Cream', 'Pink', 
   'Red', 'Burgundy', 'Purple', 'Silver', 'Multicolor', 'Patterned'
 ];
 

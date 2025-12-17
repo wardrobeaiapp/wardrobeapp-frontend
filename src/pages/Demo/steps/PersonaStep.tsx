@@ -45,6 +45,18 @@ const PERSONAS: Persona[] = [
     name: 'Zoe',
     title: 'College Student', 
     description: 'Rocks casual everyday looks for classes, part-time café job, and hanging out with friends. Goes to parties, concerts, and social events regularly, loves thrifting on weekends. Looking to define her personal style on a student budget.'
+  },
+  {
+    userId: '7a92c24d-d2f8-4784-85eb-2de2476ba605',
+    name: 'Sofia',
+    title: 'Hair Stylist', 
+    description: 'Expresses her creativity through bold, artistic outfits at the salon while staying comfortable on her feet. Attends industry events and enjoys vibrant nightlife, but also spends time at home. Building a wardrobe that showcases her unique style.'
+  },
+  {
+    userId: '12e2994d-e0da-4211-b8f6-2f9046e6067a',
+    name: 'Nina',
+    title: 'Nurse', 
+    description: 'Wears medical scrubs at work and relaxes at home after long shifts. Enjoys spending weekends outdoors with family, hiking and exploring nature. Looking for comfortable, practical clothes that work for both home and outdoor activities.'
   }
 ];
 

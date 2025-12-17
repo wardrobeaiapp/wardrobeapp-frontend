@@ -4,8 +4,10 @@ import { supabase } from '../core';
 const DEMO_USER_IDS = [
   'bdc94953-9f24-477d-9fea-30a8f7192f53', // Emma - Marketing Manager
   '4d3ab63a-ae73-4dcd-8309-231bdd734272', // Max - Freelance Graphic Designer  
-  'c5f8d2a9-3e6b-4d7c-8a1f-9e2d5c7b4a6e', // Lisa - Stay-At-Home Mom
-  '9f3e7b2c-6a4d-4f8e-b9c2-3f7a8d5e9c1b'  // Zoe - College Student
+  '9206c9a8-920a-4304-a99a-1129e308609e', // Lisa - Stay-At-Home Mom
+  'fba15166-e5e0-48ab-98f6-fee5a08e7945', // Zoe - College Student
+  '7a92c24d-d2f8-4784-85eb-2de2476ba605', // Sofia - Hair Stylist
+  '12e2994d-e0da-4211-b8f6-2f9046e6067a'  // Nina - Nurse
 ];
 
 /**

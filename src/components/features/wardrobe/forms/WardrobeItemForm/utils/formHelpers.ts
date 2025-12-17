@@ -84,7 +84,7 @@ export const getTypeOptions = (category: ItemCategory | '', subcategory?: string
       case 'jacket':
         return ['Baseball', 'Biker', 'Bomber', 'Puffer', 'Casual', 'Harrington', 'Knitted Poncho', 'Pilot', 'Racer', 'Poncho', 'Winter'];
       case 'coat':
-        return ['Duffle', 'Kimono', 'Peacoat', 'Raincoat', 'Winter', 'Wool'];
+        return ['Duffle', 'Kimono', 'Raincoat', 'Winter', 'Wool'];
       default:
         return [];
     }
@@ -104,7 +104,7 @@ export const getTypeOptions = (category: ItemCategory | '', subcategory?: string
   if (category === ItemCategory.ACCESSORY && subcategory) {
     switch (subcategory.toLowerCase()) {
       case 'bag':
-        return ['baguette', 'bucket', 'clutch', 'hobo', 'crossbody', 'tote', 'briefcase', 'satchel', 'messenger'];
+        return ['baguette', 'bucket', 'clutch', 'hobo', 'crossbody', 'tote', 'briefcase', 'satchel', 'messenger', 'backpack', 'shopper'];
       case 'jewelry':
         return ['Bracelet', 'Brooche', 'Cufflinks', 'Earrings', 'Necklace', 'Ring'];
       default:
@@ -150,7 +150,7 @@ export const getNecklineOptions = (): string[] => {
   return [
     'collar','scoop', 'v-neck', 'crew', 'boat', 'square', 'sweetheart', 'halter',
     'one shoulder', 'off shoulder', 'turtleneck', 'mock', 'asymmetric', 'jewel', 
-    'plunge', 'surplice', 'illusion', 'keyhole', 'queen anne', 'sabrina', 
+    'plunge', 'cowl', 'surplice', 'illusion', 'keyhole', 'queen anne', 'sabrina', 
     'straight', 'wrap', 'shoulder straps', 'spaghetti straps'
   ];
 };
@@ -191,7 +191,7 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
   // Handle based on category
   switch (category) {
     case ItemCategory.TOP:
-      return ['Fitted', 'Loose', 'Regular'];
+      return ['Fitted', 'Regular', 'Loose'];
     case ItemCategory.BOTTOM:
       if (subcategory?.toLowerCase() === 'skirt' || subcategory?.toLowerCase() === 'skirts') {
         return ['A-Line', 'Balloon', 'Mermaid', 'Pencil', 'Straight', 'Pleated', 'Tiered', 'Wrap'];
@@ -209,7 +209,7 @@ export const getSilhouetteOptions = (category: ItemCategory | '', subcategory?: 
       }
       return ['Slim Fit', 'Regular Fit', 'Relaxed Fit'];
     case ItemCategory.OUTERWEAR:
-      return ['Fitted', 'Loose', 'Regular'];
+      return ['Fitted', 'Regular', 'Loose'];
     case ItemCategory.FOOTWEAR:
     case ItemCategory.ACCESSORY:
     case ItemCategory.OTHER:
