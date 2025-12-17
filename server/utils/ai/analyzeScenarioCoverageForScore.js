@@ -327,8 +327,10 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     
     // Handle messaging for accessories and outerwear
     if (totalOutfits === -1 || isAccessoryOrOuterwear) {
+      const isBag = formData?.category?.toLowerCase() === 'accessory' &&
+                   formData?.subcategory?.toLowerCase() === 'bag';
       // Only add negative messaging if no compatible items found
-      if (totalCompatibleItems === 0) {
+      if (totalCompatibleItems === 0 && !isBag) {
         finalReason += " Unfortunately, this piece doesn't seem to work well with your current wardrobe items.";
       }
       // Otherwise no additional messaging needed for accessories/outerwear
