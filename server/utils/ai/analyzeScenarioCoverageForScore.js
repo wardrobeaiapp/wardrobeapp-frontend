@@ -228,7 +228,7 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     }
     console.log(`Standard scoring - Gap type '${gapType}': ${initialScore}`);
   }
-  
+
   // VARIETY ANALYSIS (only for expansion gaps)
   let varietyModifier = null;
   let finalScore = initialScore;

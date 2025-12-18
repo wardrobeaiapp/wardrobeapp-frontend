@@ -112,29 +112,15 @@ function generateRegularInstructions(seasonalGaps, userGoals = []) {
  */
 function generateMandatoryScoring(userGoals = []) {
   // Check if user has conservative/minimalist goals
-  const conservativeGoalIds = [
-    'optimize-my-wardrobe',     
-    'buy-less-shop-more-intentionally',
-    'declutter-downsize', 
-    'save-money'
-  ];
+  const { hasConservativeGoals, logConservativeGoalDetection } = require('./ai/conservativeGoalDetection');
   
-  const hasConservativeGoals = userGoals.some(goal => 
-    conservativeGoalIds.includes(goal.toLowerCase()) ||
-    goal.toLowerCase().includes('optimize') ||
-    goal.toLowerCase().includes('minimalist') ||
-    goal.toLowerCase().includes('buy less') ||
-    goal.toLowerCase().includes('declutter')
-  );
-  
-  // Debug logging
-  console.log(`🎯 User Goals Check:`, userGoals);
-  console.log(`🎯 Conservative Goals Detected:`, hasConservativeGoals);
+  const isConservative = hasConservativeGoals(userGoals);
+  logConservativeGoalDetection(userGoals, isConservative);
   
   let instructions = `\n\n**🚨 CRITICAL SCORING INSTRUCTION:**`;
   instructions += `\nYour final score MUST be based ONLY on the gap analysis above. DO NOT adjust for other factors.`;
   
-  if (hasConservativeGoals) {
+  if (isConservative) {
     instructions += `\n\n**⚠️ USER HAS CONSERVATIVE GOALS:** User wants to buy less, build capsule wardrobe, declutter, or save money.`;
     instructions += `\nBe MORE STRICT with scoring - recommend skipping items earlier than usual.`;
     
