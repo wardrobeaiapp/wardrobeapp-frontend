@@ -181,8 +181,13 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             reason += ` for ${prioritizedCoverage.season}`;
           }
           
-          if (prioritizedCoverage.scenarioName !== 'All scenarios' && suitableScenarios && suitableScenarios.length > 0) {
-            reason += `, especially for ${suitableScenarios.join(' and ')}`;
+          const relevantScenarioNames = [...new Set(
+            relevantCoverage
+              .map(c => c.scenarioName)
+              .filter(name => name && name !== 'All scenarios')
+          )];
+          if (relevantScenarioNames.length > 0) {
+            reason += `, especially for ${relevantScenarioNames.join(' and ')}`;
           }
         }
         reason += ". This would be a nice addition!";

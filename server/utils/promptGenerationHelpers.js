@@ -113,6 +113,7 @@ function generateRegularInstructions(seasonalGaps, userGoals = []) {
 function generateMandatoryScoring(userGoals = []) {
   // Check if user has conservative/minimalist goals
   const conservativeGoalIds = [
+    'optimize-my-wardrobe',     
     'buy-less-shop-more-intentionally',
     'declutter-downsize', 
     'save-money'
@@ -120,6 +121,7 @@ function generateMandatoryScoring(userGoals = []) {
   
   const hasConservativeGoals = userGoals.some(goal => 
     conservativeGoalIds.includes(goal.toLowerCase()) ||
+    goal.toLowerCase().includes('optimize') ||
     goal.toLowerCase().includes('minimalist') ||
     goal.toLowerCase().includes('buy less') ||
     goal.toLowerCase().includes('declutter')

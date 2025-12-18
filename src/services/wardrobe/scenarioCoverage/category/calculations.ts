@@ -1,7 +1,7 @@
 import { WardrobeItem, Season, ItemCategory } from '../../../../types';
 import { CategoryCoverage } from './types';
 import { Scenario } from '../../../scenarios/types';
-import { getOuterwearTargets, LifestyleAnalysis } from '../lifestyle/lifestyleDetectionService';
+import { getOuterwearTargets, LifestyleAnalysis, isHomeScenario } from '../lifestyle/lifestyleDetectionService';
 import { getCachedLifestyleAnalysis } from './lifestyleCache';
 import { parseFrequencyToSeasonalUse, calculateOutfitNeeds, calculateCategoryNeeds } from './categoryNeeds';
 import { determinePriorityLevel } from './coverageHelpers';
@@ -82,8 +82,27 @@ export const calculateCategoryCoverage = async (
     usesPerSeason = parseFrequencyToSeasonalUse(scenarioFrequency);
   }
   
+  // Apply home scenario reduction - repeats are normal for home scenarios
+  if (isHomeScenario(scenarioName)) {
+    // Reduce outfit needs for home scenarios since people repeat home outfits more often
+    usesPerSeason = Math.ceil(usesPerSeason * 0.6); // 40% reduction for home scenarios
+    console.log(`🏠 HOME SCENARIO - Reduced usage for ${scenarioName}: ${scenarioFrequency} -> ${usesPerSeason} uses per season`);
+  }
+  
   const outfitsNeeded = calculateOutfitNeeds(usesPerSeason);
   let categoryNeeds = calculateCategoryNeeds(outfitsNeeded, season);
+
+  // Apply home scenario reduction to final category needs to override hard-coded minimums
+  if (isHomeScenario(scenarioName) && category !== ItemCategory.OUTERWEAR) {
+    const originalIdeal = categoryNeeds[category].ideal;
+    categoryNeeds[category] = {
+      ...categoryNeeds[category],
+      min: Math.ceil(categoryNeeds[category].min * 0.6),
+      ideal: Math.ceil(categoryNeeds[category].ideal * 0.6), 
+      max: Math.ceil(categoryNeeds[category].max * 0.6)
+    };
+    console.log(`🏠 HOME SCENARIO - Reduced ${category} targets: ideal ${originalIdeal} -> ${categoryNeeds[category].ideal}`);
+  }
 
   // Apply realistic lifestyle targets for outerwear only (footwear now uses frequency + seasonal logic)
   if (lifestyleAnalysis && category === ItemCategory.OUTERWEAR) {
