@@ -222,9 +222,12 @@ export const deleteImageFromStorage = async (imageUrl: string): Promise<void> =>
 
     console.log(`[imageService] Successfully deleted image: ${filePath}`);
   } catch (error) {
-    console.error('[imageService] Failed to delete image:', error);
-    // Don't throw the error to prevent blocking the main operation
-    // Image cleanup is a nice-to-have, not critical
+    console.error('[imageService] CRITICAL: Failed to delete image:', error);
+    console.error('[imageService] URL that failed to delete:', imageUrl);
+    
+    // For debugging: temporarily throw the error to see what's happening
+    // Remove this after debugging to restore non-blocking behavior
+    throw new Error(`Image deletion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
 

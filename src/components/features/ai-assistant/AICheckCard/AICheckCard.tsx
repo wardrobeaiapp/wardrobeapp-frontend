@@ -95,7 +95,6 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
     showPreview,
     isUsingProcessedImage,
     processImage,
-    useOriginal,
     applyProcessedImage,
     closePreview,
   } = useBackgroundRemoval({
@@ -110,6 +109,23 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
   const handleRemoveBackground = async () => {
     if (!uploadedFile || !imageLink) return;
     await processImage(uploadedFile, imageLink);
+  };
+
+  // Handle using original image
+  const handleUseOriginal = () => {
+    console.log('[AICheckCard] User selected ORIGINAL image');
+    
+    // Manually trigger the background removal state cleanup
+    // This replicates what useOriginal does without calling the hook function
+    closePreview(); // This will clear the preview state
+    
+    // Reset the parent component to use original image
+    if (originalImage && onProcessedImageChange) {
+      console.log('[AICheckCard] Reverting to original image');
+      // Clear any processed image state - create empty blob for clearing
+      const emptyBlob = new Blob();
+      onProcessedImageChange('', emptyBlob);
+    }
   };
 
   // Handle using processed image
@@ -170,7 +186,7 @@ const AICheckCard: React.FC<AICheckCardProps> = ({
           isOpen={showPreview}
           originalImage={originalImage}
           processedImage={processedImage}
-          onUseOriginal={useOriginal}
+          onUseOriginal={handleUseOriginal}
           onUseProcessed={handleUseProcessed}
           onClose={closePreview}
           isProcessing={isProcessing}

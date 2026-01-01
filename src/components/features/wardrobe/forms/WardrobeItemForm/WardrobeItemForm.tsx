@@ -79,7 +79,11 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
     isDownloadingImage,
     setPreviewImage,
     setSelectedFile,
-    clearImage
+    clearImage,
+    cleanupUploadedImages,
+    markImageAsSaved,
+    trackUploadedImage,
+    uploadedImageUrls
   } = useImageHandling({
     initialImageUrl: initialItem?.imageUrl,
     onImageError: (message) => {
@@ -102,7 +106,10 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
 
   const handleRemoveBackground = () => {
     if (selectedFile && previewImage) {
-      backgroundRemoval.processImage(selectedFile, previewImage);
+      // Get the actual uploaded Supabase URL from the tracking array (last uploaded image)
+      const actualUploadedUrl = uploadedImageUrls[uploadedImageUrls.length - 1];
+      console.log('[WardrobeItemForm] Passing actual uploaded Supabase URL for deletion:', actualUploadedUrl);
+      backgroundRemoval.processImage(selectedFile, previewImage, actualUploadedUrl);
     }
   };
 
@@ -111,7 +118,18 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       setPreviewImage,
       formState.setImageUrl,
       setSelectedFile,
-      formState.getFormData().imageUrl  // Pass current image URL for deletion
+      formState.imageUrl, // current image URL for deletion
+      trackUploadedImage  // tracking callback for cleanup
+    );
+  };
+
+  const handleUseOriginal = () => {
+    // Use the original image URL from when background removal started
+    const originalImageUrl = backgroundRemoval.originalImage || formState.imageUrl;
+    backgroundRemoval.useOriginal(
+      setPreviewImage,
+      formState.setImageUrl,
+      originalImageUrl
     );
   };
 
@@ -169,6 +187,26 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   // Removed expensive debug logging for performance
 
   /**
+   * Handle form cancellation with image cleanup
+   */
+  const handleCancel = async () => {
+    console.log('[WardrobeItemForm] ===== FORM CANCELLATION STARTED =====');
+    console.log('[WardrobeItemForm] Uploaded images to cleanup:', uploadedImageUrls);
+    console.log('[WardrobeItemForm] Total images to cleanup:', uploadedImageUrls.length);
+    
+    if (uploadedImageUrls.length > 0) {
+      console.log('[WardrobeItemForm] Starting cleanup process...');
+      await cleanupUploadedImages();
+      console.log('[WardrobeItemForm] Cleanup process completed');
+    } else {
+      console.log('[WardrobeItemForm] No uploaded images to cleanup');
+    }
+    
+    console.log('[WardrobeItemForm] ===== CALLING onCancel() =====');
+    onCancel();
+  };
+
+  /**
    * Main form submission handler
    */
   const handleSubmit = (e: React.FormEvent) => {
@@ -179,6 +217,12 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       const finalImageUrl = formData.imageUrl || previewImage || '';
       const item = createWardrobeItem(formData, finalImageUrl);
       const fileToSubmit = determineImageToSubmit(finalImageUrl);
+      
+      // Mark the final image as saved (remove from cleanup list)
+      if (finalImageUrl) {
+        markImageAsSaved(finalImageUrl);
+        console.log('[WardrobeItemForm] Marked image as saved:', finalImageUrl);
+      }
       
       onSubmit(item, fileToSubmit);
     }
@@ -221,7 +265,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
             isOpen={backgroundRemoval.showPreview}
             originalImage={backgroundRemoval.originalImage || ''}
             processedImage={backgroundRemoval.processedImage || ''}
-            onUseOriginal={backgroundRemoval.useOriginal}
+            onUseOriginal={handleUseOriginal}
             onUseProcessed={handleUseProcessed}
             onClose={backgroundRemoval.closePreview}
             isProcessing={backgroundRemoval.isProcessing}
@@ -293,7 +337,7 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
         {loadedComponents.has('actions') ? (
           <Suspense fallback={<FormSectionLoading><LoadingSpinner />Loading actions...</FormSectionLoading>}>
             <FormActions
-              onCancel={onCancel}
+              onCancel={handleCancel}
               isSubmitting={formState.isSubmitting}
               isDownloadingImage={isDownloadingImage}
             />

@@ -27,6 +27,9 @@ export const useImageHandling = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [detectedTags, setDetectedTags] = useState<Record<string, string>>({});
   
+  // Track uploaded images for potential cleanup
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  
   // const detectAndLogTags = useCallback(async (imageSource: string | File) => {
   //   try {
   //     console.log('[Ximilar] Detecting tags for image...');
@@ -98,6 +101,10 @@ export const useImageHandling = ({
         
         // Upload the file to Supabase storage (this gives us a permanent URL)
         const storedImageUrl = await uploadFileToStorage(file);
+        
+        // Track this uploaded image for potential cleanup
+        setUploadedImageUrls(prev => [...prev, storedImageUrl]);
+        console.log('[useImageHandling] Tracking uploaded image for cleanup:', storedImageUrl);
         
         // Update the form with the permanent storage URL
         setImageUrl(storedImageUrl);
@@ -229,6 +236,50 @@ export const useImageHandling = ({
     console.log('[useImageHandling] Image cleared successfully');
   };
 
+  // Cleanup uploaded images function (for form cancellation)
+  const cleanupUploadedImages = async () => {
+    console.log('[useImageHandling] ===== CLEANUP FUNCTION CALLED =====');
+    console.log('[useImageHandling] uploadedImageUrls.length:', uploadedImageUrls.length);
+    console.log('[useImageHandling] uploadedImageUrls contents:', uploadedImageUrls);
+    
+    if (uploadedImageUrls.length === 0) {
+      console.log('[useImageHandling] ❌ No uploaded images to cleanup - exiting');
+      return;
+    }
+
+    console.log(`[useImageHandling] ✅ Starting cleanup of ${uploadedImageUrls.length} uploaded images...`);
+    
+    const { deleteImageFromStorage } = await import('../../../../../../services/core/imageService');
+    
+    for (let i = 0; i < uploadedImageUrls.length; i++) {
+      const imageUrl = uploadedImageUrls[i];
+      try {
+        console.log(`[useImageHandling] 🗑️  Deleting image ${i+1}/${uploadedImageUrls.length}:`, imageUrl);
+        await deleteImageFromStorage(imageUrl);
+        console.log(`[useImageHandling] ✅ Successfully deleted image ${i+1}`);
+      } catch (error) {
+        console.error(`[useImageHandling] ❌ Failed to delete image ${i+1}:`, imageUrl, error);
+        // Continue with other deletions even if one fails
+      }
+    }
+    
+    console.log('[useImageHandling] 🧹 Clearing uploadedImageUrls array...');
+    setUploadedImageUrls([]);
+    console.log('[useImageHandling] ===== CLEANUP COMPLETED =====');
+  };
+
+  // Mark image as saved (remove from cleanup list)
+  const markImageAsSaved = (imageUrl: string) => {
+    setUploadedImageUrls(prev => prev.filter(url => url !== imageUrl));
+    console.log('[useImageHandling] Image marked as saved, removed from cleanup:', imageUrl);
+  };
+
+  // Add image to tracking list (for background removal processed images)
+  const trackUploadedImage = (imageUrl: string) => {
+    setUploadedImageUrls(prev => [...prev, imageUrl]);
+    console.log('[useImageHandling] Tracking uploaded image for cleanup:', imageUrl);
+  };
+
   return {
     previewImage,
     setPreviewImage,
@@ -242,6 +293,10 @@ export const useImageHandling = ({
     handleDragOver,
     handleUrlChange,
     handleUrlLoad,
-    clearImage
+    clearImage,
+    cleanupUploadedImages,
+    markImageAsSaved,
+    trackUploadedImage,
+    uploadedImageUrls
   };
 };
