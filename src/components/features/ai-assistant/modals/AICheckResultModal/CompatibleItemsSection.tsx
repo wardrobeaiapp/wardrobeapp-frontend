@@ -69,8 +69,8 @@ const CompatibleItemsSection: React.FC<CompatibleItemsSectionProps> = ({
             {displayName}:
           </CompatibleCategoryTitle>
           <CompatibleCategoryContent>
-            {/* Check if we have full item objects with IDs and images for card display */}
-            {items.some((item: any) => item.id && item.imageUrl) ? (
+            {/* Check if we have full item objects with IDs for card display */}
+            {items.some((item: any) => item.id) ? (
               // Render as popup-style cards when we have full item objects
               <CompatibleItemsGrid>
                 {items.map((item: any, index: number) => (

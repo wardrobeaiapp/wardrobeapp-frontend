@@ -181,11 +181,18 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
             reason += ` for ${prioritizedCoverage.season}`;
           }
           
-          const relevantScenarioNames = [...new Set(
+          // Check if coverage is scenario-specific before using suitableScenarios
+          const coverageScenarioNames = [...new Set(
             relevantCoverage
               .map(c => c.scenarioName)
               .filter(name => name && name !== 'All scenarios')
           )];
+          
+          // Only use suitableScenarios if coverage is actually scenario-specific
+          const relevantScenarioNames = coverageScenarioNames.length > 0 && suitableScenarios && suitableScenarios.length > 0 
+            ? suitableScenarios.filter(name => name && name !== 'All scenarios')
+            : coverageScenarioNames;
+            
           if (relevantScenarioNames.length > 0) {
             reason += `, especially for ${relevantScenarioNames.join(' and ')}`;
           }

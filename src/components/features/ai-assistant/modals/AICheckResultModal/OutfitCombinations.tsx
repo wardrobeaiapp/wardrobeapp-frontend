@@ -119,9 +119,12 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
               
               // Check if any items have images to show toggle
               const hasImages = outfit.items?.some((item: any) => {
-                // Check if item has imageUrl or can be found in compatible items
+                // Check if refreshed item exists with imageUrl
                 const refreshedItem = findRefreshedItem(item.name);
-                if (item.imageUrl || refreshedItem?.imageUrl) return true;
+                if (refreshedItem?.imageUrl) return true;
+                
+                // Check if original item has imageUrl
+                if (item.imageUrl) return true;
                 
                 // If no URL but this is the analyzed item, check selectedWishlistItem or imageUrl
                 const isAnalyzedItem = item.type === 'base-item' || 
@@ -165,6 +168,9 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
                             } else if (isAnalyzedItem && imageUrl) {
                               // Fallback to imageUrl if no selectedWishlistItem
                               itemToRender = { imageUrl, name: item.name };
+                            } else if (item.imageUrl) {
+                              // Fallback to original item's imageUrl if it exists
+                              itemToRender = item;
                             }
                           }
                           

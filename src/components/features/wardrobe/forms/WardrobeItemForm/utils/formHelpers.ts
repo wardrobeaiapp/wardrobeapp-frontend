@@ -126,7 +126,7 @@ export const getLengthOptions = (subcategory?: string): string[] => {
   }
 
   if (subcategoryLower === 'shorts') {
-    return ['Micro', 'Mini', 'Midi', 'Bermuda', 'Knee-length'];
+    return ['Micro', 'Mini', 'Midi', 'Knee-length'];
   }
   
   if (subcategoryLower === 'skirt' || subcategoryLower === 'dress') {
