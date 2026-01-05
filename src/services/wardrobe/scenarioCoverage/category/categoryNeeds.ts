@@ -1,5 +1,6 @@
 import { Season, ItemCategory } from '../../../../types';
 import { CategoryNeeds } from './types';
+import { isHomeScenario } from '../lifestyle/lifestyleDetectionService';
 
 /**
  * Parse scenario frequency to seasonal usage count
@@ -22,14 +23,49 @@ export function parseFrequencyToSeasonalUse(frequency: string): number {
 }
 
 /**
- * Calculate outfit needs based on seasonal usage
+ * Get variety multiplier based on scenario type and description
+ * Unified system that handles all scenario-based variety requirements
  */
-export function calculateOutfitNeeds(usesPerSeason: number): number {
+export function getVarietyMultiplier(scenarioName: string, scenarioDescription?: string): number {
+  // HOME SCENARIOS - Direct integration (replaces existing separate logic)
+  if (isHomeScenario(scenarioName)) {
+    return 0.6; // 40% reduction for home scenarios
+  }
+  
+  // UNIFORM STUDENTS - Low variety since they wear the same thing daily
+  if (scenarioName === 'School/University' && 
+      scenarioDescription?.toLowerCase().includes('uniform')) {
+    return 0.4;
+  }
+  
+  // HIGH VARIETY (1.0) - Daily social visibility scenarios
+  if (scenarioName === 'Office Work' || 
+      scenarioName === 'Creative Work' ||
+      scenarioName === 'School/University') { // Non-uniform students
+    return 1.0;
+  }
+  
+  // MODERATE VARIETY (0.7) - Social scenarios
+  if (scenarioName.includes('Social Outings') || 
+      scenarioName.includes('social') ||
+      scenarioName.includes('dating')) {
+    return 0.7;
+  }
+  
+  // LOW VARIETY (0.4) - Everything else (sports, errands, physical work, etc.)
+  return 0.4;
+}
+
+/**
+ * Calculate outfit needs based on seasonal usage with variety adjustment
+ */
+export function calculateOutfitNeeds(usesPerSeason: number, varietyMultiplier: number = 1.0): number {
   const weeksPerSeason = 13;
-  const usesPerWeek = usesPerSeason / weeksPerSeason;
+  const adjustedUses = usesPerSeason * varietyMultiplier;
+  const usesPerWeek = adjustedUses / weeksPerSeason;
   
   if (usesPerWeek <= 1) {
-    return Math.max(1, Math.ceil(usesPerSeason / 4));
+    return Math.max(1, Math.ceil(adjustedUses / 4));
   } else {
     return Math.ceil(usesPerWeek * 2);
   }

@@ -130,8 +130,9 @@ async function orchestrateOutfitAnalysis({
       formData,
       userGoals,
       duplicateResult,
-      itemCategory,
-      totalCompatibleItems
+      formData.category,
+      totalCompatibleItems,
+      scenarios
     );
     
     return {
@@ -174,7 +175,8 @@ async function orchestrateOutfitAnalysis({
       userGoals,
       duplicateResult,
       outfitCombinations,
-      coverageGapsWithNoOutfits
+      coverageGapsWithNoOutfits,
+      scenarios // Pass valid scenarios for validation
     );
     
     return {
@@ -270,6 +272,7 @@ function performCoverageOutfitCrossReference(scenarioCoverage, outfitCombination
  * @param {Object} duplicateResult - Duplicate detection results
  * @param {Array} outfitCombinations - Generated outfits
  * @param {Array} coverageGapsWithNoOutfits - Coverage gaps with no outfits
+ * @param {Array} scenarios - Valid scenario objects for validation
  * @returns {Object} Scoring results
  */
 function calculateFinalScoreWithOutfits(
@@ -279,7 +282,8 @@ function calculateFinalScoreWithOutfits(
   userGoals,
   duplicateResult,
   outfitCombinations,
-  coverageGapsWithNoOutfits
+  coverageGapsWithNoOutfits,
+  scenarios
 ) {
   // Analyze scenario coverage to get score and objective reason
   // Pass duplicate analysis results to prioritize duplicate detection in scoring
@@ -302,7 +306,8 @@ function calculateFinalScoreWithOutfits(
     formData,
     userGoals,
     duplicateAnalysisForScore,
-    outfitDataForScoring
+    outfitDataForScoring,
+    scenarios // Pass valid scenarios for validation
   );
   
   const objectiveFinalReason = analysisResult.reason;
@@ -325,6 +330,7 @@ function calculateFinalScoreWithOutfits(
  * @param {Object} duplicateResult - Duplicate detection results
  * @param {string} itemCategory - Item category (accessory or outerwear)
  * @param {number} totalCompatibleItems - Total number of compatible items found
+ * @param {Array} scenarios - Valid scenario objects for validation
  * @returns {Object} Scoring results
  */
 function calculateFinalScoreWithoutOutfitPenalties(
@@ -334,7 +340,8 @@ function calculateFinalScoreWithoutOutfitPenalties(
   userGoals,
   duplicateResult,
   itemCategory,
-  totalCompatibleItems = 0
+  totalCompatibleItems = 0,
+  scenarios = []
 ) {
   // Analyze scenario coverage to get score and objective reason
   // Pass duplicate analysis results to prioritize duplicate detection in scoring
@@ -362,7 +369,8 @@ function calculateFinalScoreWithoutOutfitPenalties(
     formData,
     userGoals,
     duplicateAnalysisForScore,
-    outfitDataForScoring
+    outfitDataForScoring,
+    scenarios // Pass valid scenarios for validation
   );
   
   const objectiveFinalReason = analysisResult.reason;

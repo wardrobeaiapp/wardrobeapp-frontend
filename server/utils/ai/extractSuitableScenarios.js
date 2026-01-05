@@ -1,9 +1,10 @@
 /**
  * Extract suitable scenarios from Claude's analysis response
  * @param {string} analysisResponse - Raw response text from Claude
+ * @param {array} validScenarios - Array of valid scenario objects to validate against
  * @returns {string[]} Array of suitable scenario names
  */
-function extractSuitableScenarios(analysisResponse) {
+function extractSuitableScenarios(analysisResponse, validScenarios = []) {
   let suitableScenarios = [];
   
   // Try to match the new equals format first (=== SUITABLE SCENARIOS ===)
@@ -47,7 +48,31 @@ function extractSuitableScenarios(analysisResponse) {
             !systemWords.test(scenarioName) &&
             !/^(this|the|a|an|and|or|but|for|with|has|have|is|are|was|were)/i.test(scenarioName) // Not sentence fragments
         ) {
-          suitableScenarios.push(scenarioName);
+          // VALIDATE: Only include scenarios that match user's actual scenarios
+          if (validScenarios && validScenarios.length > 0) {
+            const validScenarioNames = validScenarios.map(s => s.name);
+            const matchingScenario = validScenarioNames.find(validName => 
+              // Exact match first
+              validName.toLowerCase() === scenarioName.toLowerCase() ||
+              // Partial match (Claude sometimes shortens or rephrases)
+              validName.toLowerCase().includes(scenarioName.toLowerCase()) ||
+              scenarioName.toLowerCase().includes(validName.toLowerCase())
+            );
+            
+            if (matchingScenario) {
+              // Use the exact scenario name from user's list, not Claude's version
+              console.log(`✅ Validated scenario: "${scenarioName}" → "${matchingScenario}"`);
+              if (!suitableScenarios.includes(matchingScenario)) {
+                suitableScenarios.push(matchingScenario);
+              }
+            } else {
+              console.log(`❌ Rejected non-matching scenario: "${scenarioName}"`);
+              console.log(`   Available scenarios: [${validScenarioNames.join(', ')}]`);
+            }
+          } else {
+            // Fallback: no validation scenarios provided, use Claude's names
+            suitableScenarios.push(scenarioName);
+          }
         }
       }
     }

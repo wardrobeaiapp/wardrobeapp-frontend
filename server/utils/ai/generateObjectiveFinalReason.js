@@ -26,7 +26,44 @@ function formatSeasons(seasonsArray) {
   return uniqueSeasons.join(' and ');
 }
 
-function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals) {
+/**
+ * Validate and filter scenario names to only include user's actual scenarios
+ * @param {string[]} scenarioNames - Array of scenario names to validate
+ * @param {array} validScenarios - Array of valid scenario objects
+ * @returns {string[]} Array of validated scenario names
+ */
+function validateScenarioNames(scenarioNames, validScenarios) {
+  if (!validScenarios || validScenarios.length === 0 || !scenarioNames || scenarioNames.length === 0) {
+    return scenarioNames || [];
+  }
+  
+  const validScenarioNames = validScenarios.map(s => s.name);
+  const validatedNames = [];
+  
+  for (const scenarioName of scenarioNames) {
+    const matchingScenario = validScenarioNames.find(validName => 
+      // Exact match first
+      validName.toLowerCase() === scenarioName.toLowerCase() ||
+      // Partial match (coverage data sometimes has variations)
+      validName.toLowerCase().includes(scenarioName.toLowerCase()) ||
+      scenarioName.toLowerCase().includes(validName.toLowerCase())
+    );
+    
+    if (matchingScenario) {
+      // Use the exact scenario name from user's list
+      if (!validatedNames.includes(matchingScenario)) {
+        validatedNames.push(matchingScenario);
+      }
+    } else {
+      console.log(`❌ FINAL REASON: Filtered out invalid scenario: "${scenarioName}"`);
+      console.log(`   Valid scenarios: [${validScenarioNames.join(', ')}]`);
+    }
+  }
+  
+  return validatedNames;
+}
+
+function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals, validScenarios = []) {
   if (!relevantCoverage || relevantCoverage.length === 0) {
     return "No coverage data available for analysis.";
   }
@@ -189,12 +226,15 @@ function generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenari
           )];
           
           // Only use suitableScenarios if coverage is actually scenario-specific
-          const relevantScenarioNames = coverageScenarioNames.length > 0 && suitableScenarios && suitableScenarios.length > 0 
+          const rawScenarioNames = coverageScenarioNames.length > 0 && suitableScenarios && suitableScenarios.length > 0 
             ? suitableScenarios.filter(name => name && name !== 'All scenarios')
             : coverageScenarioNames;
             
-          if (relevantScenarioNames.length > 0) {
-            reason += `, especially for ${relevantScenarioNames.join(' and ')}`;
+          // VALIDATE: Only use scenario names that match user's actual scenarios
+          const validatedScenarioNames = validateScenarioNames(rawScenarioNames, validScenarios);
+            
+          if (validatedScenarioNames.length > 0) {
+            reason += `, especially for ${validatedScenarioNames.join(' and ')}`;
           }
         }
         reason += ". This would be a nice addition!";

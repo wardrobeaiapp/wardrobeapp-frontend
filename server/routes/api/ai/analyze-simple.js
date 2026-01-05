@@ -216,7 +216,7 @@ router.post('/', async (req, res) => {
     analysisResponse = analysisResponse.replace(/REASON:?\s*[\s\S]*?$/i, '');
     analysisResponse = analysisResponse.trim();
     
-    const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse);
+    const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse, scenarios);
     
     // Note: Scenario coverage scoring will be calculated after outfit generation
     // to include practical outfit-based adjustments

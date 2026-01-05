@@ -37,18 +37,19 @@ function formatVarietyMessage(varietyModifier) {
 }
 
 /**
- * Analyze scenario coverage data and generate comprehensive score + reason
- * @param {Array} scenarioCoverage - Coverage data from scenario analysis
- * @param {Array} suitableScenarios - Scenarios from Claude analysis  
- * @param {Object} formData - Form data with category, subcategory, etc.
- * @param {Array} userGoals - User goals that affect scoring
+ * Analyze scenario coverage and calculate score with outfit-based adjustments
+ * @param {Array} scenarioCoverage - Coverage analysis data
+ * @param {Array} suitableScenarios - Suitable scenarios from Claude
+ * @param {Object} formData - Form data with category info
+ * @param {Array} userGoals - User goals that affect the response
  * @param {Object} duplicateAnalysis - Optional duplicate detection results
  * @param {Object} outfitData - Optional outfit combination data for practical scoring
  * @param {number} outfitData.totalOutfits - Total number of outfit combinations possible
  * @param {Array} outfitData.coverageGapsWithNoOutfits - Coverage gaps that have 0 outfits
+ * @param {Array} validScenarios - Valid scenario objects for validation
  * @returns {Object} Analysis results with score and reason data
  */
-function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysis, outfitData) {
+function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, formData, userGoals, duplicateAnalysis, outfitData, validScenarios = []) {
   // PRIORITY 1: Check for duplicates first
   if (duplicateAnalysis && duplicateAnalysis.duplicate_analysis && duplicateAnalysis.duplicate_analysis.found) {
     const duplicateCount = duplicateAnalysis.duplicate_analysis.count;
@@ -313,7 +314,7 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
   }
   
   // Generate objective final reason
-  const objectiveReason = generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals);
+  const objectiveReason = generateObjectiveFinalReason(relevantCoverage, gapType, suitableScenarios, hasConstraintGoals, formData, userGoals, validScenarios);
   
   // Add variety messaging if applicable
   let finalReason = objectiveReason;
