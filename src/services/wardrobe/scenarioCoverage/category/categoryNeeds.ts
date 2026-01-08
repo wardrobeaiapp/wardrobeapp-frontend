@@ -94,26 +94,98 @@ export function calculateSeasonalFootwearNeeds(outfitsNeeded: number, season: Se
 }
 
 /**
- * Calculate category needs based on outfit frequency with realistic baselines
- * These are reasonable defaults that get overridden by lifestyle logic for outerwear only
+ * Calculate seasonal top needs based on outfit frequency
+ * Spring/fall requires more variety for layering and weather transitions
+ */
+export function calculateSeasonalTopNeeds(outfitsNeeded: number, season: Season): { min: number; ideal: number; max: number } {
+  if (season === Season.TRANSITIONAL) { // spring/fall
+    // More variety needed: light layers, medium sweaters, cardigans, transitional pieces
+    return {
+      min: Math.max(2, Math.ceil(outfitsNeeded * 0.5)), // Higher minimum for layering needs
+      ideal: Math.max(3, Math.ceil(outfitsNeeded * 0.8)), // More variety for weather changes
+      max: Math.max(4, Math.ceil(outfitsNeeded * 1.1))     // Room for layering combinations
+    };
+  } else {
+    // Summer/winter - more consistent weather, standard variety
+    return {
+      min: Math.max(1, Math.ceil(outfitsNeeded * 0.4)),
+      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.7)), 
+      max: Math.max(3, Math.ceil(outfitsNeeded * 1.0))
+    };
+  }
+}
+
+/**
+ * Calculate seasonal bottom needs based on outfit frequency
+ * Spring/fall requires more variety for weather transitions
+ */
+export function calculateSeasonalBottomNeeds(outfitsNeeded: number, season: Season): { min: number; ideal: number; max: number } {
+  if (season === Season.TRANSITIONAL) { // spring/fall
+    // More variety needed: jeans, trousers, lighter pants for temperature changes
+    return {
+      min: Math.max(1, Math.ceil(outfitsNeeded * 0.25)), // Slightly higher minimum
+      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.4)), // More variety for weather
+      max: Math.max(3, Math.ceil(outfitsNeeded * 0.6))     // Extra room for different weights
+    };
+  } else {
+    // Summer/winter - more consistent weather, standard variety
+    return {
+      min: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
+      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.35)),
+      max: Math.max(3, Math.ceil(outfitsNeeded * 0.5))
+    };
+  }
+}
+
+/**
+ * Calculate seasonal one-piece needs based on outfit frequency
+ * Spring/fall requires more variety for different weather conditions
+ */
+export function calculateSeasonalOnePieceNeeds(outfitsNeeded: number, season: Season): { min: number; ideal: number; max: number } {
+  if (season === Season.TRANSITIONAL) { // spring/fall
+    // More variety needed: lighter dresses, midi-weight pieces for layering
+    return {
+      min: 0, // Still optional
+      ideal: Math.max(1, Math.ceil(outfitsNeeded * 0.25)), // Slightly more for weather variety
+      max: Math.max(2, Math.ceil(outfitsNeeded * 0.5))     // More room for different weights/lengths
+    };
+  } else {
+    // Summer/winter - standard variety
+    return {
+      min: 0, // Optional category
+      ideal: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
+      max: Math.max(2, Math.ceil(outfitsNeeded * 0.4))
+    };
+  }
+}
+
+/**
+ * Calculate category needs based on outfit frequency with seasonal adjustments
+ * Now includes seasonal logic for tops, bottoms, and one-pieces (not just outerwear/footwear)
  */
 export function calculateCategoryNeeds(outfitsNeeded: number, season?: Season): CategoryNeeds {
   return {
-    [ItemCategory.TOP]: {
-      min: Math.max(5, Math.ceil(outfitsNeeded * 0.4)),
-      ideal: Math.max(8, Math.ceil(outfitsNeeded * 0.7)), 
-      max: Math.max(12, Math.ceil(outfitsNeeded * 1.0))
-    },
-    [ItemCategory.BOTTOM]: {
-      min: Math.max(3, Math.ceil(outfitsNeeded * 0.25)),
-      ideal: Math.max(5, Math.ceil(outfitsNeeded * 0.5)),
-      max: Math.max(8, Math.ceil(outfitsNeeded * 0.8))
-    },
-    [ItemCategory.ONE_PIECE]: {
-      min: 0, // Optional category
-      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.2)),
-      max: Math.max(4, Math.ceil(outfitsNeeded * 0.4))
-    },
+    [ItemCategory.TOP]: season 
+      ? calculateSeasonalTopNeeds(outfitsNeeded, season)
+      : { // Fallback if no season provided
+          min: Math.max(1, Math.ceil(outfitsNeeded * 0.4)),
+          ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.7)), 
+          max: Math.max(3, Math.ceil(outfitsNeeded * 1.0))
+        },
+    [ItemCategory.BOTTOM]: season
+      ? calculateSeasonalBottomNeeds(outfitsNeeded, season)
+      : { // Fallback if no season provided
+          min: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
+          ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.35)),
+          max: Math.max(3, Math.ceil(outfitsNeeded * 0.5))
+        },
+    [ItemCategory.ONE_PIECE]: season
+      ? calculateSeasonalOnePieceNeeds(outfitsNeeded, season)
+      : { // Fallback if no season provided
+          min: 0, // Optional category
+          ideal: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
+          max: Math.max(2, Math.ceil(outfitsNeeded * 0.4))
+        },
     [ItemCategory.OUTERWEAR]: {
       // Will be overridden by seasonal logic anyway
       min: 2,
