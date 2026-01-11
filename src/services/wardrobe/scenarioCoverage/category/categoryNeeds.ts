@@ -101,16 +101,16 @@ export function calculateSeasonalTopNeeds(outfitsNeeded: number, season: Season)
   if (season === Season.TRANSITIONAL) { // spring/fall
     // More variety needed: light layers, medium sweaters, cardigans, transitional pieces
     return {
-      min: Math.max(2, Math.ceil(outfitsNeeded * 0.5)), // Higher minimum for layering needs
-      ideal: Math.max(3, Math.ceil(outfitsNeeded * 0.8)), // More variety for weather changes
-      max: Math.max(4, Math.ceil(outfitsNeeded * 1.1))     // Room for layering combinations
+      min: Math.max(3, Math.ceil(outfitsNeeded * 0.5)), // Higher minimum for layering needs
+      ideal: Math.max(4, Math.ceil(outfitsNeeded * 0.8)), // More variety for weather changes
+      max: Math.max(5, Math.ceil(outfitsNeeded * 1.1))     // Room for layering combinations
     };
   } else {
     // Summer/winter - more consistent weather, standard variety
     return {
-      min: Math.max(1, Math.ceil(outfitsNeeded * 0.4)),
-      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.7)), 
-      max: Math.max(3, Math.ceil(outfitsNeeded * 1.0))
+      min: Math.max(2, Math.ceil(outfitsNeeded * 0.4)),
+      ideal: Math.max(3, Math.ceil(outfitsNeeded * 0.7)), 
+      max: Math.max(4, Math.ceil(outfitsNeeded * 1.0))
     };
   }
 }
@@ -123,9 +123,9 @@ export function calculateSeasonalBottomNeeds(outfitsNeeded: number, season: Seas
   if (season === Season.TRANSITIONAL) { // spring/fall
     // More variety needed: jeans, trousers, lighter pants for temperature changes
     return {
-      min: Math.max(1, Math.ceil(outfitsNeeded * 0.25)), // Slightly higher minimum
-      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.4)), // More variety for weather
-      max: Math.max(3, Math.ceil(outfitsNeeded * 0.6))     // Extra room for different weights
+      min: Math.max(2, Math.ceil(outfitsNeeded * 0.25)), // Slightly higher minimum
+      ideal: Math.max(3, Math.ceil(outfitsNeeded * 0.4)), // More variety for weather
+      max: Math.max(4, Math.ceil(outfitsNeeded * 0.6))     // Extra room for different weights
     };
   } else {
     // Summer/winter - more consistent weather, standard variety
@@ -146,15 +146,15 @@ export function calculateSeasonalOnePieceNeeds(outfitsNeeded: number, season: Se
     // More variety needed: lighter dresses, midi-weight pieces for layering
     return {
       min: 0, // Still optional
-      ideal: Math.max(1, Math.ceil(outfitsNeeded * 0.25)), // Slightly more for weather variety
-      max: Math.max(2, Math.ceil(outfitsNeeded * 0.5))     // More room for different weights/lengths
+      ideal: Math.max(3, Math.ceil(outfitsNeeded * 0.25)), // Slightly more for weather variety
+      max: Math.max(4, Math.ceil(outfitsNeeded * 0.5))     // More room for different weights/lengths
     };
   } else {
     // Summer/winter - standard variety
     return {
       min: 0, // Optional category
-      ideal: Math.max(1, Math.ceil(outfitsNeeded * 0.2)),
-      max: Math.max(2, Math.ceil(outfitsNeeded * 0.4))
+      ideal: Math.max(2, Math.ceil(outfitsNeeded * 0.2)),
+      max: Math.max(3, Math.ceil(outfitsNeeded * 0.4))
     };
   }
 }

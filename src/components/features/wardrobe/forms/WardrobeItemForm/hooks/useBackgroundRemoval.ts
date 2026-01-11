@@ -35,9 +35,9 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
       const { convertToWebP } = await import('../../../../../../utils/image/webpConverter');
       
       // Upload processed image to storage during processing
-      const webpBlob = await convertToWebP(blob, 0.92); 
-      const { filePath } = await uploadImageBlob(webpBlob, 'webp', 'wardrobe');
-      const supabaseProcessedUrl = await saveImageToStorage(filePath, webpBlob);
+      const webpResult = await convertToWebP(blob, { quality: 1 }); 
+      const { filePath } = await uploadImageBlob(webpResult.blob, 'webp', 'wardrobe');
+      const supabaseProcessedUrl = await saveImageToStorage(filePath, webpResult.blob);
       
       console.log('[useBackgroundRemoval] ✅ Processed image uploaded during processing:', supabaseProcessedUrl);
       
@@ -118,9 +118,9 @@ export const useBackgroundRemoval = ({ onError, onSuccess }: UseBackgroundRemova
           const { convertToWebP } = await import('../../../../../../utils/image/webpConverter');
           
           // Upload processed image to storage immediately (replaces original workflow)  
-          const webpBlob = await convertToWebP(blob, 0.92); // Convert to WebP with high quality
-          const { filePath } = await uploadImageBlob(webpBlob, 'webp', 'wardrobe');
-          finalProcessedUrl = await saveImageToStorage(filePath, webpBlob);
+          const webpResult = await convertToWebP(blob, { quality: 1 }); // Convert to WebP with high quality
+          const { filePath } = await uploadImageBlob(webpResult.blob, 'webp', 'wardrobe');
+          finalProcessedUrl = await saveImageToStorage(filePath, webpResult.blob);
           
           console.log('[useBackgroundRemoval] Processed image uploaded:', finalProcessedUrl);
           

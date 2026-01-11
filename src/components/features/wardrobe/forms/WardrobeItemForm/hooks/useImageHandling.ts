@@ -3,7 +3,7 @@ import { uploadImageBlob, saveImageToStorage } from '../../../../../../services/
 import { compressImage } from '../../../../../../utils/image/imageCompression';
 import { handleImageFromUrl, fetchImageAsFile, classifyUrlError, errorMessages, UrlImageErrorType } from '../../../../../../utils/image/urlImageHandling';
 import { validateImageFile, safeExecute, logError } from '../../../../../../utils/error/errorHandling';
-import { convertToWebP } from '../../../../../../utils/image/webpConverter';
+import { convertToWebP, WebPPresets } from '../../../../../../utils/image/webpConverter';
 
 interface UseImageHandlingProps {
   initialImageUrl?: string;
@@ -54,18 +54,27 @@ export const useImageHandling = ({
   // }, [onTagsDetected]);
 
 
-  // Upload a file to Supabase storage with WebP conversion and return a permanent URL
+  // Upload a file to Supabase storage with smart WebP compression and return a permanent URL
   const uploadFileToStorage = async (file: File): Promise<string> => {
     return safeExecute(
       async () => {
         console.log('[useImageHandling] Converting and uploading file to Supabase storage:', file.name);
         
-        // Convert to high-quality WebP format
-        const webpBlob = await convertToWebP(file, 0.92);
+        // Convert to WebP format with smart compression (TinyPNG-like quality optimization)
+        const compressionResult = await convertToWebP(file, WebPPresets.WARDROBE_STANDARD);
+        
+        console.log('[useImageHandling] Smart compression stats:', {
+          original: `${(compressionResult.originalSize / 1024).toFixed(1)}KB`,
+          compressed: `${(compressionResult.compressedSize / 1024).toFixed(1)}KB`,
+          savings: `${compressionResult.compressionRatio.toFixed(1)}%`,
+          quality: `${((compressionResult.quality || 0.92) * 100).toFixed(0)}%`,
+          method: compressionResult.method,
+          dimensions: compressionResult.dimensions
+        });
         
         // Use the imageService functions to upload to Supabase storage
-        const { filePath } = await uploadImageBlob(webpBlob, 'webp', 'wardrobe');
-        const publicUrl = await saveImageToStorage(filePath, webpBlob);
+        const { filePath } = await uploadImageBlob(compressionResult.blob, 'webp', 'wardrobe');
+        const publicUrl = await saveImageToStorage(filePath, compressionResult.blob);
         
         console.log('[useImageHandling] WebP file uploaded successfully:', publicUrl);
         return publicUrl;

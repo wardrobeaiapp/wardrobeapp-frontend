@@ -1,21 +1,35 @@
-# Image Compression Implementation Guide
+# Enhanced Image Compression System
 
 ## Overview
 
-This document provides a comprehensive overview of the image compression solution implemented to resolve the "Payload Too Large" errors encountered when sending images to the Claude API for analysis.
+This document describes the advanced image compression system implemented for wardrobe items. The system provides **TinyPNG-like compression** with smart quality optimization to achieve maximum file size reduction while maintaining visual quality.
 
 ## Core Components
 
-### 1. Image Compression Utilities
+### 1. Smart Compression Engine
 
-Location: `src/utils/imageUtils.ts`
+Location: `src/utils/image/smartCompression.ts`
 
-Key functions:
-- **resizeImage**: Resizes an image to specified dimensions while maintaining aspect ratio
-- **compressImageToMaxSize**: Progressive multi-tier compression strategy
-  - First attempts quality reduction (0.8 → 0.05)
-  - Then tries dimension reduction (600px → 150px)
-  - Combines quality and dimension reduction at each step
+**Key Features:**
+- **Multi-pass quality optimization** using binary search algorithm
+- **Intelligent dimension scaling** with aspect ratio preservation
+- **Progressive optimization** that finds the sweet spot between quality and size
+- **Target-based compression** for specific file size requirements
+
+**Key Functions:**
+- **smartCompress**: Main compression function with advanced optimization
+- **findOptimalQuality**: Binary search for best quality/size ratio
+- **calculateOptimalDimensions**: Smart resizing while maintaining aspect ratio
+
+### 2. Enhanced WebP Converter
+
+Location: `src/utils/image/webpConverter.ts`
+
+**Features:**
+- **Two compression modes**: Smart (default) and Basic fallback
+- **Preset configurations** for different use cases
+- **Comprehensive result reporting** with compression statistics
+- **Backward compatibility** with existing code
 
 ### 2. Enhanced Claude Service
 
