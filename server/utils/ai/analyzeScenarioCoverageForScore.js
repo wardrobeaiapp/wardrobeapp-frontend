@@ -166,12 +166,17 @@ function analyzeScenarioCoverageForScore(scenarioCoverage, suitableScenarios, fo
     console.log(`Coverage: ${coverage.scenarioName} - ${coverage.category} - ${coverage.gapType}`);
     
     if (coverage.gapType) {
-      // Simple priority: critical > improvement > expansion > satisfied > oversaturated
+      // Priority: pick the gap type that would give the HIGHEST score (most reasonable to add item)
+      // Order by reasonableness to add: critical > improvement > expansion > satisfied > oversaturated
       if (!gapType || 
           (coverage.gapType === 'critical') ||
           (coverage.gapType === 'improvement' && gapType !== 'critical') ||
-          (coverage.gapType === 'expansion' && !['critical', 'improvement'].includes(gapType))) {
+          (coverage.gapType === 'expansion' && !['critical', 'improvement'].includes(gapType)) ||
+          (coverage.gapType === 'satisfied' && !['critical', 'improvement', 'expansion'].includes(gapType))) {
         gapType = coverage.gapType;
+        console.log(`🔍 DEBUG: Selected gap type "${gapType}" from scenario "${coverage.scenarioName}" (more reasonable to add item)`);
+      } else {
+        console.log(`🔍 DEBUG: Skipped gap type "${coverage.gapType}" from scenario "${coverage.scenarioName}" (current "${gapType}" is more reasonable)`);
       }
     }
   }
