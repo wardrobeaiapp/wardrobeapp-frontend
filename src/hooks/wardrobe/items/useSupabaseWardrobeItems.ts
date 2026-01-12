@@ -96,16 +96,28 @@ export const useSupabaseWardrobeItems = (initialItems: WardrobeItem[] = []) => {
     }
   };
 
-  // Upload an image to Supabase Storage
+  // Upload an image to Supabase Storage with WebP conversion
   const uploadImage = async (file: File): Promise<string> => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      // Convert to WebP format with compression
+      const { convertToWebP, WebPPresets } = await import('../../../utils/image/webpConverter');
+      const compressionResult = await convertToWebP(file, WebPPresets.WARDROBE_STANDARD);
+      
+      console.log('[useSupabaseWardrobeItems] WebP conversion stats:', {
+        original: `${(compressionResult.originalSize / 1024).toFixed(1)}KB`,
+        compressed: `${(compressionResult.compressedSize / 1024).toFixed(1)}KB`,
+        savings: `${compressionResult.compressionRatio.toFixed(1)}%`
+      });
+      
+      // Use WebP extension for filename
+      const fileName = `${Math.random().toString(36).substring(2, 15)}.webp`;
       const filePath = `wardrobe-items/${fileName}`;
       
       const { error: uploadError } = await supabase.storage
         .from('images')
-        .upload(filePath, file);
+        .upload(filePath, compressionResult.blob, {
+          contentType: 'image/webp'
+        });
         
       if (uploadError) throw uploadError;
       

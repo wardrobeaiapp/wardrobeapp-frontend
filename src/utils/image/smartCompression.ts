@@ -237,18 +237,38 @@ async function findSmartQuality(
 }
 
 /**
- * Convert canvas to blob with proper error handling
+ * Check WebP support in the current browser
+ */
+function supportsWebP(): boolean {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1;
+  canvas.height = 1;
+  return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+}
+
+/**
+ * Convert canvas to blob with proper error handling and WebP validation
  */
 function canvasToBlob(canvas: HTMLCanvasElement, format: string, quality: number): Promise<Blob> {
   return new Promise((resolve, reject) => {
-    const mimeType = format === 'webp' ? 'image/webp' : 
-                     format === 'jpeg' ? 'image/jpeg' : 'image/png';
+    // Ensure WebP is supported, fallback to JPEG if not
+    const actualFormat = (format === 'webp' && supportsWebP()) ? 'webp' : 
+                         (format === 'webp' && !supportsWebP()) ? 'jpeg' : format;
+    
+    const mimeType = actualFormat === 'webp' ? 'image/webp' : 
+                     actualFormat === 'jpeg' ? 'image/jpeg' : 'image/png';
+    
+    console.log(`[canvasToBlob] Converting to ${actualFormat} (requested: ${format}, MIME: ${mimeType})`);
     
     canvas.toBlob((blob) => {
       if (blob) {
+        console.log(`[canvasToBlob] Successfully created ${actualFormat} blob:`, {
+          size: `${(blob.size / 1024).toFixed(1)}KB`,
+          type: blob.type
+        });
         resolve(blob);
       } else {
-        reject(new Error('Failed to create blob from canvas'));
+        reject(new Error(`Failed to create ${actualFormat} blob from canvas`));
       }
     }, mimeType, quality);
   });

@@ -29,16 +29,22 @@ export const handleImageUpload = async (
     
     try {
       if (file) {
-        // Upload the file directly
+        // Convert to WebP format with compression before uploading
+        const { convertToWebP, WebPPresets } = await import('../../../../utils/image/webpConverter');
         const { uploadImageBlob, saveImageToStorage } = await import('../../../../services/core/imageService');
         
-        // Get file extension
-        const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+        // Convert file to WebP format with smart compression
+        const compressionResult = await convertToWebP(file, WebPPresets.WARDROBE_STANDARD);
         
-        // Convert file to blob and upload
-        const blob = new Blob([await file.arrayBuffer()], { type: file.type });
-        const { filePath } = await uploadImageBlob(blob, fileExt, 'wardrobe');
-        finalImageUrl = await saveImageToStorage(filePath, blob);
+        console.log('HOOK: WebP compression stats:', {
+          original: `${(compressionResult.originalSize / 1024).toFixed(1)}KB`,
+          compressed: `${(compressionResult.compressedSize / 1024).toFixed(1)}KB`,
+          savings: `${compressionResult.compressionRatio.toFixed(1)}%`
+        });
+        
+        // Upload as WebP format
+        const { filePath } = await uploadImageBlob(compressionResult.blob, 'webp', 'wardrobe');
+        finalImageUrl = await saveImageToStorage(filePath, compressionResult.blob);
         
         console.log('HOOK: File uploaded successfully to:', finalImageUrl);
         
