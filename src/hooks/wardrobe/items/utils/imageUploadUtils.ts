@@ -23,6 +23,18 @@ export const handleImageUpload = async (
   let finalImageUrl = imageUrl || '';
   let uploadSuccessful = true;
 
+  // Check if imageUrl is already a valid Supabase storage URL (from useImageHandling upload)
+  const isSupabaseUrl = imageUrl && imageUrl.includes('supabase.co/storage/v1/object/public/wardrobe-images/');
+  
+  // Skip file upload if we already have a valid storage URL (prevents duplicate uploads)
+  if (isSupabaseUrl && file) {
+    console.log('HOOK: Skipping file upload - image already uploaded to storage:', imageUrl);
+    return {
+      imageUrl: imageUrl,
+      uploadSuccessful: true
+    };
+  }
+
   // Handle file upload if we have a file or if imageUrl is a blob URL
   if (file || (imageUrl && imageUrl.startsWith('blob:'))) {
     console.log('HOOK: Uploading file to storage...');
