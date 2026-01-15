@@ -369,8 +369,35 @@ export const PersonaPreviewCard = styled.div`
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   }
   
+  .persona-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 16px;
+    overflow: hidden;
+    border-radius: 8px;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.2s ease;
+    }
+    
+    &:hover img {
+      transform: scale(1.05);
+    }
+  }
+  
   h3 {
     margin-top: 0;
+    color: #1f2937;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
   }
   
   h4 {

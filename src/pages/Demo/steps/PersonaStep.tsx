@@ -19,6 +19,7 @@ interface Persona {
   name: string;
   title: string;
   description: string;
+  imageUrl: string;
 }
 
 const PERSONAS: Persona[] = [
@@ -26,37 +27,43 @@ const PERSONAS: Persona[] = [
     userId: 'bdc94953-9f24-477d-9fea-30a8f7192f53',
     name: 'Emma',
     title: 'Marketing Manager',
-    description: 'Wears business casual outfits for office work and client meetings. Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year. Building a capsule wardrobe and trying to shop more intentionally.'
+    description: 'Wears business casual outfits for office work and client meetings. Enjoys after-work drinks with colleagues and weekend brunches, travels a few times a year. Building a capsule wardrobe and trying to shop more intentionally.',
+    imageUrl: '/images/personas/emma.png'
   },
   {
     userId: '4d3ab63a-ae73-4dcd-8309-231bdd734272', 
     name: 'Max',
     title: 'Freelance Graphic Designer',
-    description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together when working from home without overthinking it.'
+    description: 'Needs comfortable home wear that\'s still presentable for Zoom calls and coworking. Loves exploring local cafés and art galleries, works out at the gym regularly. Trying to look more put-together when working from home without overthinking it.',
+    imageUrl: '/images/personas/max.png'
   },
   {
     userId: '9206c9a8-920a-4304-a99a-1129e308609e',
     name: 'Lisa', 
     title: 'Stay-At-Home Mom',
-    description: 'Prefers practical clothes that work for both school runs and playground time. Spends time at home with kids, runs errands, occasionally meets friends for coffee. Wants to save money and make getting dressed faster with two kids.'
+    description: 'Prefers practical clothes that work for both school runs and playground time. Spends time at home with kids, runs errands, occasionally meets friends for coffee. Wants to save money and make getting dressed faster with two kids.',
+    imageUrl: '/images/personas/lisa.png'
   },
   {
     userId: 'fba15166-e5e0-48ab-98f6-fee5a08e7945',
     name: 'Zoe',
     title: 'College Student', 
-    description: 'Rocks casual everyday looks for classes, part-time café job, and hanging out with friends. Goes to parties, concerts, and social events regularly, loves thrifting on weekends. Looking to define her personal style on a student budget.'
+    description: 'Rocks casual everyday looks for classes, part-time café job, and hanging out with friends. Goes to parties, concerts, and social events regularly, loves thrifting on weekends. Looking to define her personal style on a student budget.',
+    imageUrl: '/images/personas/zoe.png'
   },
   {
     userId: '7a92c24d-d2f8-4784-85eb-2de2476ba605',
     name: 'Sofia',
     title: 'Hair Stylist', 
-    description: 'Expresses her creativity through bold, artistic outfits at the salon while staying comfortable on her feet. Attends industry events and enjoys vibrant nightlife, but also spends time at home. Building a wardrobe that showcases her unique style.'
+    description: 'Expresses her creativity through balancing artistic pieces with practical basics. Stays comfortable on her feet while working in the salon. Attends industry events and enjoys vibrant nightlife. Building a wardrobe that showcases her unique aesthetic.',
+    imageUrl: '/images/personas/sofia.png'
   },
   {
     userId: '12e2994d-e0da-4211-b8f6-2f9046e6067a',
     name: 'Nina',
     title: 'Nurse', 
-    description: 'Wears medical scrubs at work and relaxes at home after long shifts. Enjoys spending weekends outdoors with family, hiking and exploring nature. Looking for comfortable, practical clothes that work for both home and outdoor activities.'
+    description: 'Wears medical scrubs at work and relaxes at home after long shifts. Enjoys spending weekends outdoors with family, hiking and exploring nature. Looking for comfortable, practical clothes that work for both home and outdoor activities.',
+    imageUrl: '/images/personas/nina.png'
   }
 ];
 
@@ -93,6 +100,9 @@ const PersonaStep: React.FC<PersonaStepProps> = ({ onNext, markStepCompleted }) 
             onClick={() => handlePersonaSelect(persona)}
             data-user-id={persona.userId}
           >
+            <div className="persona-image">
+              <img src={persona.imageUrl} alt={persona.name} />
+            </div>
             <h3>{persona.name} - {persona.title}</h3>
             <p className="persona-quote">
               {persona.description}
