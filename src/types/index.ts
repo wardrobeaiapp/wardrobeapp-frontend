@@ -271,9 +271,66 @@ interface BaseAIHistoryItem {
 
 export interface AICheckHistoryItem extends BaseAIHistoryItem {
   type: 'check';
-  score?: number;
+  
+  // Core Analysis Results
+  score: number; // Made required - score from AI recommendation
+  feedback: string; // Core feedback from analysis
+  recommendationText?: string; // Human-readable explanation from gap analysis
+  
+  // Item Details (for history context)
+  itemId: string; // Wardrobe item ID that was analyzed
+  itemName: string; // Item name for title/display
+  itemCategory: ItemCategory; // Item category
+  itemSubcategory?: string; // Item subcategory
+  itemImageUrl?: string; // Item image for display
+  itemWishlistStatus?: WishlistStatus; // Wishlist status at time of analysis
+  
+  // Scenario & Compatibility Analysis
+  suitableScenarios: string[]; // Scenarios the item is suitable for
+  compatibleItems?: { [category: string]: any[] }; // Compatible items by category
+  
+  // Outfit Recommendations
+  outfitCombinations?: {
+    scenario: string;
+    season: string;
+    outfits: {
+      items: string[];
+      description?: string;
+    }[];
+  }[]; // Complete outfit recommendations organized by scenario/season
+  
+  // Coverage Analysis
+  seasonScenarioCombinations?: {
+    season: string;
+    scenario: string;
+    hasAllEssentials: boolean;
+    missingCategories?: string[];
+  }[]; // Season + scenario completion status
+  
+  coverageGapsWithNoOutfits?: {
+    category: string;
+    subcategory?: string;
+    season: string;
+    scenario: string;
+    gapType: 'critical' | 'improvement' | 'expansion';
+    gapCount: number;
+  }[]; // Coverage gaps that have 0 outfits available
+  
+  // Raw Analysis Data (for debugging/future use)
+  rawAnalysis?: string; // Complete analysis text from AI
+  analysisMetadata?: {
+    tokensUsed?: number;
+    processingTimeMs?: number;
+    aiModel?: string;
+    analysisVersion?: string;
+  };
+  
+  // Legacy support (deprecated but kept for backward compatibility)
+  /** @deprecated Use specific fields above instead */
   itemsChecked?: number;
+  /** @deprecated Use itemImageUrl instead */
   image?: string;
+  /** @deprecated Use structured fields above instead */
   analysisResults?: {
     recommendations: string[];
     issues: string[];

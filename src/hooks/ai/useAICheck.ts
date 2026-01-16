@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { claudeService } from '../../services/ai/claudeService';
+import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
 import { DetectedTags } from '../../services/ai/formAutoPopulation/types';
 import { WishlistStatus, WardrobeItem } from '../../types';
 import { detectImageTags, extractTopTags } from '../../services/ai/ximilarService';
@@ -126,6 +127,46 @@ export const useAICheck = () => {
       setOutfitCombinations(response.outfitCombinations || []);
       setSeasonScenarioCombinations(response.seasonScenarioCombinations || []);
       setCoverageGapsWithNoOutfits(response.coverageGapsWithNoOutfits || []);
+
+      // Save analysis results to history if we have item data
+      if (preFilledData) {
+        try {
+          console.log('Saving AI Check analysis to history...');
+          
+          // Create the analysis data object
+          const analysisData = {
+            analysis: analysisResult,
+            score: score,
+            feedback: response.feedback || analysisResult,
+            recommendationText: response.recommendationText,
+            suitableScenarios: response.suitableScenarios || [],
+            compatibleItems: response.compatibleItems || {},
+            outfitCombinations: response.outfitCombinations || [],
+            seasonScenarioCombinations: response.seasonScenarioCombinations || [],
+            coverageGapsWithNoOutfits: response.coverageGapsWithNoOutfits || [],
+            error: undefined,
+            details: undefined
+          };
+
+          // Create item data with current image
+          const itemData = {
+            ...preFilledData,
+            imageUrl: imageLink // Use the current image from the analysis
+          };
+
+          // Save to history (don't block on this)
+          const historyResult = await aiCheckHistoryService.saveAnalysisToHistory(analysisData, itemData);
+          
+          if (historyResult.success) {
+            console.log('AI Check analysis saved to history successfully');
+          } else {
+            console.warn('Failed to save AI Check analysis to history:', historyResult.error);
+          }
+        } catch (historyError) {
+          console.error('Error saving AI Check analysis to history:', historyError);
+          // Don't fail the main analysis if history saving fails
+        }
+      }
 
       // Data extraction complete
 

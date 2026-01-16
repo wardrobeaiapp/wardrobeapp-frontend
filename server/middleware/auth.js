@@ -3,8 +3,14 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase client for token verification
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZUI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+console.log(' Auth middleware using Supabase:', {
+  url: supabaseUrl,
+  keyType: process.env.SUPABASE_ANON_KEY ? 'from_env' : 'hardcoded',
+  keyPrefix: supabaseKey.substring(0, 20) + '...'
+});
 
 // Middleware to verify JWT token
 const auth = async (req, res, next) => {

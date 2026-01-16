@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FaTrash, FaSearch, FaMagic, FaTshirt } from 'react-icons/fa';
-import { UserActionStatus } from '../../../../types';
+import { FaTrash, FaSearch, FaMagic, FaTshirt, FaSpinner } from 'react-icons/fa';
+import { UserActionStatus, AICheckHistoryItem } from '../../../../types';
 import { AIHistoryItem } from '../../../../types/ai';
+import { aiCheckHistoryService } from '../../../../services/ai/aiCheckHistoryService';
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
 import { PageHeader } from '../../../../components/common/Typography/PageHeader';
@@ -33,6 +34,14 @@ interface AIHistoryDashboardProps {
   onHistoryItemClick?: (item: AIHistoryItem) => void;
 }
 
+interface HistoryStats {
+  total: number;
+  avgScore: number;
+  byCategory: Record<string, number>;
+  byStatus: Record<string, number>;
+  recentCount: number;
+}
+
 const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
   activityFilter,
   onFilterChange,
@@ -45,7 +54,51 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
   onHistoryItemClick,
 }) => {
   const [visibleItemsCount, setVisibleItemsCount] = useState(10);
+  const [stats, setStats] = useState<HistoryStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [aiCheckHistory, setAiCheckHistory] = useState<AICheckHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
   const ITEMS_PER_PAGE = 10;
+
+  // Load AI Check history stats on component mount
+  useEffect(() => {
+    const loadHistoryStats = async () => {
+      try {
+        setStatsLoading(true);
+        const result = await aiCheckHistoryService.getHistoryStats();
+        
+        if (result.success && result.stats) {
+          setStats(result.stats);
+        } else {
+          console.error('Failed to load AI Check history stats:', result.error);
+        }
+      } catch (error) {
+        console.error('Error loading AI Check history stats:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    const loadAICheckHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const result = await aiCheckHistoryService.getHistory({ limit: 100 });
+        
+        if (result.success && result.history) {
+          setAiCheckHistory(result.history);
+        } else {
+          console.error('Failed to load AI Check history:', result.error);
+        }
+      } catch (error) {
+        console.error('Error loading AI Check history:', error);
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+
+    loadHistoryStats();
+    loadAICheckHistory();
+  }, []);
 
   // Reset visible items when any filter changes
   useEffect(() => {
@@ -121,7 +174,9 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
       <StatsGrid>
         <StatCard>
           <StatContent>
-            <StatValue>47</StatValue>
+            <StatValue>
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.total || 0}
+            </StatValue>
             <StatLabel>Total AI Checks</StatLabel>
           </StatContent>
           <StatIcon className="check">
@@ -131,8 +186,10 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         
         <StatCard>
           <StatContent>
-            <StatValue>23</StatValue>
-            <StatLabel>Recommendations</StatLabel>
+            <StatValue>
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.avgScore?.toFixed(1) || '0.0'}
+            </StatValue>
+            <StatLabel>Average Score</StatLabel>
           </StatContent>
           <StatIcon className="recommendation">
             <FaMagic size={20} />
@@ -141,8 +198,10 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         
         <StatCard className="wishlist">
           <StatContent>
-            <StatValue>15</StatValue>
-            <StatLabel>Added to Wardrobe</StatLabel>
+            <StatValue>
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.byStatus?.applied || 0}
+            </StatValue>
+            <StatLabel>Applied Suggestions</StatLabel>
           </StatContent>
           <StatIcon className="wishlist">
             <FaTshirt size={20} />
@@ -151,8 +210,10 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         
         <StatCard>
           <StatContent>
-            <StatValue>8</StatValue>
-            <StatLabel>Dismissed Items</StatLabel>
+            <StatValue>
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.recentCount || 0}
+            </StatValue>
+            <StatLabel>Recent Checks (30d)</StatLabel>
           </StatContent>
           <StatIcon className="discarded">
             <FaTrash size={20} />
