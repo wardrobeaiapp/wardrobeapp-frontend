@@ -157,7 +157,9 @@ router.get('/', auth, async (req, res) => {
     const user_id = req.user.id;
     const { limit = 50, offset = 0, category, min_score, max_score } = req.query;
     
-    console.log('Fetching AI Check history for user:', user_id);
+    console.log('🎯 GET /api/ai-check-history called');
+    console.log('🔍 User ID:', user_id);
+    console.log('🔍 Query params:', { limit, offset, category, min_score, max_score });
 
     // Build query
     let query = supabase
@@ -190,20 +192,37 @@ router.get('/', auth, async (req, res) => {
     // Apply pagination
     query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
+    console.log('🔄 Executing database query...');
     const { data: historyRecords, error: historyError } = await query;
 
+    console.log('🔍 Database query result:', {
+      hasData: !!historyRecords,
+      dataLength: historyRecords?.length || 0,
+      hasError: !!historyError,
+      errorDetails: historyError
+    });
+
     if (historyError) {
-      console.error('Error fetching AI Check history:', historyError);
+      console.error('❌ Error fetching AI Check history:', historyError);
       return res.status(500).json({ 
         error: 'Failed to fetch AI Check history',
         details: historyError.message 
       });
     }
 
+    console.log('🔍 Raw database records:', historyRecords?.slice(0, 1)); // Show first record for debugging
+
     // Transform data back to frontend format
     const transformedRecords = historyRecords.map(record => transformDatabaseToFrontend(record));
 
-    console.log(`Fetched ${transformedRecords.length} AI Check history records for user ${user_id}`);
+    console.log('✅ Transformed records:', {
+      count: transformedRecords.length,
+      firstRecord: transformedRecords[0] ? {
+        id: transformedRecords[0].id,
+        title: transformedRecords[0].title,
+        type: transformedRecords[0].type
+      } : null
+    });
     
     res.json({
       success: true,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTrash, FaSearch, FaMagic, FaTshirt, FaSpinner } from 'react-icons/fa';
-import { UserActionStatus, AICheckHistoryItem } from '../../../../types';
-import { AIHistoryItem } from '../../../../types/ai';
+import { UserActionStatus } from '../../../../types';
+import { AIHistoryItem, AICheckHistoryItem } from '../../../../types/ai';
 import { aiCheckHistoryService } from '../../../../services/ai/aiCheckHistoryService';
 import AIHistoryItemComponent from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
@@ -85,7 +85,21 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         const result = await aiCheckHistoryService.getHistory({ limit: 100 });
         
         if (result.success && result.history) {
-          setAiCheckHistory(result.history);
+          // Transform enhanced AICheckHistoryItem to simpler AIHistoryItem format
+          const transformedHistory = result.history.map((item: any): AICheckHistoryItem => ({
+            id: item.id,
+            type: 'check' as const,
+            title: item.title || `AI Check: ${item.itemName}`,
+            description: item.description || item.feedback || 'AI analysis completed',
+            summary: item.summary || `Score: ${item.score}/10`,
+            score: item.score || 0,
+            image: item.itemImageUrl,
+            date: new Date(item.analysisDate || item.createdAt),
+            status: item.itemWishlistStatus || item.status || 'pending',
+            userActionStatus: item.userActionStatus || 'pending'
+          }));
+          
+          setAiCheckHistory(transformedHistory);
         } else {
           console.error('Failed to load AI Check history:', result.error);
         }
@@ -109,8 +123,37 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
     setVisibleItemsCount(prev => prev + ITEMS_PER_PAGE);
   };
 
-  const visibleItems = filteredHistoryItems.slice(0, visibleItemsCount);
-  const hasMoreItems = filteredHistoryItems.length > visibleItemsCount;
+  // Filter real AI Check history data based on current filters
+  const filteredData = aiCheckHistory.filter(item => {
+    // Activity filter (only show 'check' type items for AI Check history)
+    if (activityFilter !== 'all' && activityFilter !== 'check') {
+      return false;
+    }
+    
+    // Status filter (check items don't have status in the same way)
+    if (checkStatusFilter !== 'all') {
+      // Map our userActionStatus to the expected filter values
+      const statusMap: { [key: string]: string } = {
+        'pending': 'pending',
+        'purchased': 'applied', 
+        'dismissed': 'discarded'
+      };
+      const mappedStatus = statusMap[item.userActionStatus || 'pending'];
+      if (mappedStatus !== checkStatusFilter) {
+        return false;
+      }
+    }
+    
+    // User action filter
+    if (userActionFilter !== 'all' && item.userActionStatus !== userActionFilter) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const visibleItems = filteredData.slice(0, visibleItemsCount);
+  const hasMoreItems = filteredData.length > visibleItemsCount;
 
   return (
     <DashboardContainer>
@@ -226,11 +269,18 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
           <ActivityTitle>Recent Activity</ActivityTitle>
         </ActivityHeader>
         
-        {/* Dynamic filtered history items */}
+        {/* Real AI Check history items */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {filteredHistoryItems.length === 0 ? (
+          {historyLoading ? (
             <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-              No {activityFilter === 'all' ? '' : activityFilter === 'check' ? 'AI Check' : 'Recommendation'} activities found.
+              <FaSpinner className="fa-spin" size={20} /> Loading AI Check history...
+            </div>
+          ) : filteredData.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              {aiCheckHistory.length === 0 ? 
+                'No AI Check history found. Try checking some wishlist items!' :
+                `No ${activityFilter === 'all' ? '' : 'AI Check'} activities found with current filters.`
+              }
             </div>
           ) : (
             visibleItems.map((item) => (
