@@ -1,105 +1,18 @@
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
 const auth = require('../../../middleware/auth');
+const supabaseConfig = require('../../../shared/supabaseConfig');
+const { 
+  transformAnalysisForDatabase, 
+  transformDatabaseToFrontend,
+  calculateHistoryStats 
+} = require('../../../utils/aiCheckTransforms');
 
 const router = express.Router();
 
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+// Get Supabase client
+const supabase = supabaseConfig.getClient();
 
-// Use service role key for server-side operations to bypass RLS
-const supabaseKey = supabaseServiceKey || supabaseAnonKey;
-
-console.log('🔑 Supabase client for ai-check-history using:', 
-  process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE_KEY (can bypass RLS)' : 'ANON_KEY (RLS applied)');
-
-let supabase = null;
-let supabaseConfigured = false;
-
-if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase configuration for ai-check-history');
-  supabaseConfigured = false;
-} else {
-  try {
-    supabase = createClient(supabaseUrl, supabaseKey);
-    supabaseConfigured = true;
-    console.log('Supabase client initialized for ai-check-history');
-  } catch (error) {
-    console.error('Failed to initialize Supabase client for ai-check-history:', error);
-    supabaseConfigured = false;
-  }
-}
-
-/**
- * Transform WardrobeItemAnalysis data to database format
- */
-function transformAnalysisForDatabase(analysisData, itemData) {
-  const now = new Date().toISOString();
-  
-  // Generate title using item name
-  const title = `AI Check: ${itemData.name}`;
-  
-  // Create description from core analysis
-  const description = analysisData.feedback || 'AI analysis completed';
-  
-  // Create summary from score and key findings
-  let summary = `Score: ${analysisData.score}/10`;
-  if (analysisData.suitableScenarios && analysisData.suitableScenarios.length > 0) {
-    summary += ` | Suitable for: ${analysisData.suitableScenarios.slice(0, 2).join(', ')}`;
-    if (analysisData.suitableScenarios.length > 2) {
-      summary += ` and ${analysisData.suitableScenarios.length - 2} more`;
-    }
-  }
-  
-  return {
-    // Base fields
-    title,
-    description,
-    summary,
-    analysis_date: now,
-    status: itemData.wishlistStatus || null,
-    user_action_status: 'pending', // Default to pending
-    
-    // Core analysis results
-    score: analysisData.score,
-    feedback: analysisData.feedback || '',
-    recommendation_text: analysisData.recommendationText || null,
-    
-    // Item details
-    item_id: itemData.id,
-    item_name: itemData.name,
-    item_category: itemData.category,
-    item_subcategory: itemData.subcategory || null,
-    item_image_url: itemData.imageUrl || null,
-    item_wishlist_status: itemData.wishlistStatus || null,
-    
-    // Analysis data (stored as JSON)
-    suitable_scenarios: JSON.stringify(analysisData.suitableScenarios || []),
-    compatible_items: JSON.stringify(analysisData.compatibleItems || {}),
-    outfit_combinations: JSON.stringify(analysisData.outfitCombinations || []),
-    season_scenario_combinations: JSON.stringify(analysisData.seasonScenarioCombinations || []),
-    coverage_gaps_with_no_outfits: JSON.stringify(analysisData.coverageGapsWithNoOutfits || []),
-    
-    // Raw analysis data
-    raw_analysis: analysisData.analysis || null,
-    analysis_metadata: JSON.stringify({
-      analysisVersion: '1.0',
-      aiModel: 'claude-3',
-      processingTimeMs: analysisData.processingTimeMs || null,
-      tokensUsed: analysisData.tokensUsed || null
-    }),
-    
-    // Legacy support
-    items_checked: 1,
-    legacy_analysis_results: JSON.stringify({
-      recommendations: analysisData.recommendationText ? [analysisData.recommendationText] : [],
-      issues: [],
-      suggestions: analysisData.suitableScenarios || []
-    })
-  };
-}
+// Routes for AI Check History management
 
 // @route   POST /api/ai-check-history
 // @desc    Save AI Check analysis result to history
@@ -110,7 +23,7 @@ router.post('/', auth, async (req, res) => {
     console.log('🔍 req.user exists:', !!req.user);
     console.log('🔍 req.user:', req.user);
     
-    if (!supabaseConfigured) {
+    if (!supabaseConfig.isConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -173,11 +86,14 @@ router.post('/', auth, async (req, res) => {
       has_outfit_combinations: JSON.parse(historyData.outfit_combinations).length > 0
     });
 
-    // Insert history record
-    console.log('🔄 Step 2: Starting database insert');
+    // Upsert history record (insert or update if exists)
+    console.log('🔄 Step 2: Starting database upsert');
     const { data: historyRecord, error: historyError } = await supabase
       .from('ai_check_history')
-      .insert(historyData)
+      .upsert(historyData, { 
+        onConflict: 'user_id,item_id',
+        ignoreDuplicates: false 
+      })
       .select('id, title, score, created_at')
       .single();
       
@@ -231,7 +147,7 @@ router.post('/', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.get('/', auth, async (req, res) => {
   try {
-    if (!supabaseConfigured) {
+    if (!supabaseConfig.isConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -285,45 +201,7 @@ router.get('/', auth, async (req, res) => {
     }
 
     // Transform data back to frontend format
-    const transformedRecords = historyRecords.map(record => ({
-      id: record.id,
-      type: 'check',
-      title: record.title,
-      description: record.description,
-      summary: record.summary,
-      date: new Date(record.analysis_date),
-      status: record.status,
-      userActionStatus: record.user_action_status,
-      
-      // Core analysis results
-      score: record.score,
-      feedback: record.feedback,
-      recommendationText: record.recommendation_text,
-      
-      // Item details
-      itemId: record.item_id,
-      itemName: record.item_name,
-      itemCategory: record.item_category,
-      itemSubcategory: record.item_subcategory,
-      itemImageUrl: record.item_image_url,
-      itemWishlistStatus: record.item_wishlist_status,
-      
-      // Analysis data (parse JSON)
-      suitableScenarios: JSON.parse(record.suitable_scenarios || '[]'),
-      compatibleItems: JSON.parse(record.compatible_items || '{}'),
-      outfitCombinations: JSON.parse(record.outfit_combinations || '[]'),
-      seasonScenarioCombinations: JSON.parse(record.season_scenario_combinations || '[]'),
-      coverageGapsWithNoOutfits: JSON.parse(record.coverage_gaps_with_no_outfits || '[]'),
-      
-      // Raw analysis data
-      rawAnalysis: record.raw_analysis,
-      analysisMetadata: JSON.parse(record.analysis_metadata || '{}'),
-      
-      // Legacy support
-      itemsChecked: record.items_checked,
-      image: record.item_image_url, // Legacy field mapping
-      analysisResults: JSON.parse(record.legacy_analysis_results || '{}')
-    }));
+    const transformedRecords = historyRecords.map(record => transformDatabaseToFrontend(record));
 
     console.log(`Fetched ${transformedRecords.length} AI Check history records for user ${user_id}`);
     
@@ -349,7 +227,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.get('/:id', auth, async (req, res) => {
   try {
-    if (!supabaseConfigured) {
+    if (!supabaseConfig.isConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -444,7 +322,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.put('/:id/status', auth, async (req, res) => {
   try {
-    if (!supabaseConfigured) {
+    if (!supabaseConfig.isConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
