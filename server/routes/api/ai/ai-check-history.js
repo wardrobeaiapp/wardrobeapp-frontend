@@ -19,9 +19,6 @@ const supabase = supabaseConfig.getClient();
 // @access  Private (requires authentication)
 router.post('/', auth, async (req, res) => {
   try {
-    console.log('🎯 AI Check History route executing');
-    console.log('🔍 req.user exists:', !!req.user);
-    console.log('🔍 req.user:', req.user);
     
     if (!supabaseConfig.isConfigured()) {
       return res.status(503).json({ 
@@ -40,13 +37,6 @@ router.post('/', auth, async (req, res) => {
 
     const { analysis_data, item_data } = req.body;
     const user_id = req.user.id;
-    
-    console.log('Saving AI Check history:', {
-      user_id,
-      item_name: item_data?.name,
-      item_id: item_data?.id,
-      analysis_score: analysis_data?.score
-    });
     
     // Validate required fields
     if (!analysis_data) {
@@ -68,26 +58,17 @@ router.post('/', auth, async (req, res) => {
     }
 
     // Transform analysis data for database storage
-    console.log('🔄 Step 1: Starting data transformation');
     let historyData;
     try {
       historyData = transformAnalysisForDatabase(analysis_data, item_data);
       historyData.user_id = user_id;
-      console.log('✅ Step 1: Data transformation successful');
     } catch (transformError) {
       console.error('❌ Step 1: Data transformation failed:', transformError);
       throw transformError;
     }
 
-    console.log('🔍 Transformed history data:', {
-      title: historyData.title,
-      score: historyData.score,
-      suitable_scenarios_count: JSON.parse(historyData.suitable_scenarios).length,
-      has_outfit_combinations: JSON.parse(historyData.outfit_combinations).length > 0
-    });
 
     // Upsert history record (insert or update if exists)
-    console.log('🔄 Step 2: Starting database upsert');
     const { data: historyRecord, error: historyError } = await supabase
       .from('ai_check_history')
       .upsert(historyData, { 
@@ -97,11 +78,6 @@ router.post('/', auth, async (req, res) => {
       .select('id, title, score, created_at')
       .single();
       
-    console.log('🔍 Database operation result:', {
-      hasData: !!historyRecord,
-      hasError: !!historyError,
-      errorDetails: historyError
-    });
 
     if (historyError) {
       console.error('Error saving AI Check history:', {
@@ -117,11 +93,6 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
-    console.log('AI Check history saved successfully:', {
-      id: historyRecord.id,
-      title: historyRecord.title,
-      score: historyRecord.score
-    });
     
     res.json({
       success: true,
@@ -157,10 +128,6 @@ router.get('/', auth, async (req, res) => {
     const user_id = req.user.id;
     const { limit = 50, offset = 0, category, min_score, max_score } = req.query;
     
-    console.log('🎯 GET /api/ai-check-history called');
-    console.log('🔍 User ID:', user_id);
-    console.log('🔍 Query params:', { limit, offset, category, min_score, max_score });
-
     // Build query
     let query = supabase
       .from('ai_check_history')
@@ -192,15 +159,7 @@ router.get('/', auth, async (req, res) => {
     // Apply pagination
     query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
 
-    console.log('🔄 Executing database query...');
     const { data: historyRecords, error: historyError } = await query;
-
-    console.log('🔍 Database query result:', {
-      hasData: !!historyRecords,
-      dataLength: historyRecords?.length || 0,
-      hasError: !!historyError,
-      errorDetails: historyError
-    });
 
     if (historyError) {
       console.error('❌ Error fetching AI Check history:', historyError);
@@ -210,20 +169,9 @@ router.get('/', auth, async (req, res) => {
       });
     }
 
-    console.log('🔍 Raw database records:', historyRecords?.slice(0, 1)); // Show first record for debugging
-
     // Transform data back to frontend format
     const transformedRecords = historyRecords.map(record => transformDatabaseToFrontend(record));
 
-    console.log('✅ Transformed records:', {
-      count: transformedRecords.length,
-      firstRecord: transformedRecords[0] ? {
-        id: transformedRecords[0].id,
-        title: transformedRecords[0].title,
-        type: transformedRecords[0].type
-      } : null
-    });
-    
     res.json({
       success: true,
       history: transformedRecords,
@@ -256,8 +204,6 @@ router.get('/:id', auth, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
     
-    console.log('Fetching AI Check history record:', { id, user_id });
-
     const { data: record, error: fetchError } = await supabase
       .from('ai_check_history')
       .select('*')
@@ -320,8 +266,6 @@ router.get('/:id', auth, async (req, res) => {
       analysisResults: JSON.parse(record.legacy_analysis_results || '{}')
     };
 
-    console.log('Fetched AI Check history record successfully');
-    
     res.json({
       success: true,
       record: transformedRecord
@@ -352,8 +296,6 @@ router.put('/:id/status', auth, async (req, res) => {
     const { user_action_status } = req.body;
     const user_id = req.user.id;
     
-    console.log('Updating AI Check history status:', { id, user_action_status, user_id });
-
     // Validate status
     const validStatuses = ['saved', 'dismissed', 'pending', 'applied'];
     if (!validStatuses.includes(user_action_status)) {
@@ -385,7 +327,6 @@ router.put('/:id/status', auth, async (req, res) => {
       });
     }
 
-    console.log('AI Check history status updated successfully');
     
     res.json({
       success: true,
