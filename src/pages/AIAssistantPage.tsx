@@ -21,7 +21,6 @@ import WishlistSelectionModal from '../components/features/ai-assistant/modals/W
 import AICheckResultModal from '../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
 import AICheckModal from '../components/features/ai-assistant/modals/AICheckModal/AICheckModal';
 import RecommendationModal from '../components/features/ai-assistant/modals/RecommendationModal/RecommendationModal';
-import HistoryDetailModal from '../components/features/ai-assistant/modals/HistoryDetailModal/HistoryDetailModal';
 import { PageContainer } from '../components/layout/PageContainer';
 import { CardsContainer } from './AIAssistantPage.styles';
 
@@ -352,14 +351,24 @@ const AIAssistantPage: React.FC = () => {
         />
       )}
 
-      {/* History Detail Modal - Only render when there's a selected item and modal is open */}
-      {isHistoryDetailModalOpen && selectedHistoryItem && (
-        <HistoryDetailModal
+      {/* History Detail Modal - Use rich AICheckResultModal for visual format */}
+      {isHistoryDetailModalOpen && selectedHistoryItem && selectedHistoryItem.richData && (
+        <AICheckResultModal
           isOpen={true}
           onClose={handleCloseHistoryDetailModal}
-          item={selectedHistoryItem}
-          onMoveToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}
-          onDismiss={() => handleDismissHistoryItem(selectedHistoryItem.id)}
+          analysisResult={selectedHistoryItem.richData.analysis || selectedHistoryItem.richData.rawAnalysis || ''}
+          suitableScenarios={selectedHistoryItem.richData.suitableScenarios || []}
+          compatibleItems={selectedHistoryItem.richData.compatibleItems || {}}
+          outfitCombinations={selectedHistoryItem.richData.outfitCombinations || []}
+          seasonScenarioCombinations={selectedHistoryItem.richData.seasonScenarioCombinations || []}
+          coverageGapsWithNoOutfits={selectedHistoryItem.richData.coverageGapsWithNoOutfits || []}
+          score={selectedHistoryItem.score}
+          imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
+          recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
+          status={selectedHistoryItem.status as any}
+          hideActions={false}
+          onAddToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}
+          onSkip={() => handleDismissHistoryItem(selectedHistoryItem.id)}
         />
       )}
     </>

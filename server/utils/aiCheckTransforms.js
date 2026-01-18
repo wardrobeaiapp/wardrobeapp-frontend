@@ -77,8 +77,8 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
  * Transform database record to frontend format (simplified structure)
  */
 function transformDatabaseToFrontend(dbRecord) {
-  // Parse analysis_data - this is the same format as analysis-mocks
-  const analysisData = safeJsonParse(dbRecord.analysis_data, {});
+  // analysis_data is already an object from Supabase JSONB field (no need to parse)
+  const analysisData = dbRecord.analysis_data || {};
   
   console.log('🎯 Transforming simplified ai_check_history record:', {
     id: dbRecord.id,
