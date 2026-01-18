@@ -11,6 +11,9 @@ import {
   DetailLabel,
   DetailValue,
 } from '../../../wardrobe/modals/modalCommon.styles';
+import CompatibleItemsSection from '../AICheckResultModal/CompatibleItemsSection';
+import OutfitCombinations from '../AICheckResultModal/OutfitCombinations';
+import RecommendationSection from '../AICheckResultModal/RecommendationSection';
 
 interface HistoryDetailModalProps {
   isOpen: boolean;
@@ -96,6 +99,25 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
     }
   }
 
+  // Debug logging - only for check items
+  if (item.type === 'check') {
+    const checkItem = item as any; // Type assertion for debugging
+    console.log('🔍 HistoryDetailModal - Debug item data:', {
+      itemType: item.type,
+      hasRichData: !!checkItem.richData,
+      compatibleItemsKeys: checkItem.richData ? Object.keys(checkItem.richData.compatibleItems || {}) : [],
+      outfitCombinationsLength: checkItem.richData?.outfitCombinations?.length || 0,
+      fullItem: item
+    });
+  }
+
+  // Check if we have rich data to display visual format (only for check items)
+  const hasRichData = item.type === 'check' && (item as any).richData && 
+    (Object.keys((item as any).richData.compatibleItems || {}).length > 0 || 
+     (item as any).richData.outfitCombinations?.length > 0);
+
+  console.log('🎯 HistoryDetailModal - hasRichData:', hasRichData);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -110,14 +132,42 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
             </ItemImageContainer>
           )}
 
-          {item.description && (
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ 
-                color: '#6b7280', 
-                lineHeight: '1.5',
-                margin: '0'
-              }}>{item.description}</p>
-            </div>
+          {hasRichData ? (
+            <>
+              {/* Rich visual display - same as AICheckResultModal */}
+              <CompatibleItemsSection compatibleItems={(item as any).richData.compatibleItems} />
+
+              <OutfitCombinations
+                outfitCombinations={(item as any).richData.outfitCombinations}
+                seasonScenarioCombinations={(item as any).richData.seasonScenarioCombinations}
+                coverageGapsWithNoOutfits={(item as any).richData.coverageGapsWithNoOutfits}
+                itemSubcategory={(item as any).richData.itemDetails?.subcategory || ''}
+                imageUrl={item.image}
+                compatibleItems={(item as any).richData.compatibleItems}
+                selectedWishlistItem={(item as any).richData.itemDetails}
+              />
+
+              {(item as any).richData.recommendationText && (
+                <RecommendationSection 
+                  recommendationAction="RECOMMEND"
+                  recommendationText={(item as any).richData.recommendationText}
+                  score={item.score}
+                />
+              )}
+            </>
+          ) : (
+            <>
+              {/* Fallback to text display when no rich data */}
+              {item.description && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <p style={{ 
+                    color: '#6b7280', 
+                    lineHeight: '1.5',
+                    margin: '0'
+                  }}>{item.description}</p>
+                </div>
+              )}
+            </>
           )}
 
           <ItemDetails>

@@ -19,14 +19,38 @@ export class AICheckHistoryService {
   /**
    * Get authentication headers for API requests
    */
-  private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('token');
+  private async getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json'
     };
     
+    try {
+      // Try Supabase session first (like other services)
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+      const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseAnonKey) {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session?.access_token) {
+          headers['x-auth-token'] = sessionData.session.access_token;
+          console.log('🔑 Using Supabase session token for ai-check-history');
+          return headers;
+        }
+      }
+    } catch (error) {
+      console.warn('🔑 Supabase session not available, falling back to localStorage token');
+    }
+    
+    // Fallback to localStorage token
+    const token = localStorage.getItem('token');
     if (token) {
       headers['x-auth-token'] = token;
+      console.log('🔑 Using localStorage token for ai-check-history');
+    } else {
+      console.warn('🔑 No authentication token available');
     }
     
     return headers;
@@ -46,13 +70,11 @@ export class AICheckHistoryService {
         score: analysisData.score
       });
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${API_URL}/api/ai-check-history`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          analysis_data: analysisData,
-          item_data: itemData
-        })
+        headers: headers,
+        body: JSON.stringify({ analysis_data: analysisData, item_data: itemData })
       });
 
       const result = await response.json();
@@ -79,38 +101,47 @@ export class AICheckHistoryService {
   /**
    * Get AI Check history for the current user
    */
-  async getHistory(options?: {
+  async getHistory(options: {
     limit?: number;
     offset?: number;
-    category?: string;
-    minScore?: number;
-    maxScore?: number;
-  }): Promise<{ success: boolean; history?: AICheckHistoryItem[]; total?: number; error?: string }> {
+    filters?: any;
+  } = {}): Promise<{ success: boolean; history?: AICheckHistoryItem[]; total?: number; error?: string }> {
     try {
+      console.log('🔍 aiCheckHistoryService.getHistory - Starting with options:', options);
+
       const queryParams = new URLSearchParams();
       
-      if (options?.limit) queryParams.append('limit', options.limit.toString());
-      if (options?.offset) queryParams.append('offset', options.offset.toString());
-      if (options?.category) queryParams.append('category', options.category);
-      if (options?.minScore !== undefined) queryParams.append('min_score', options.minScore.toString());
-      if (options?.maxScore !== undefined) queryParams.append('max_score', options.maxScore.toString());
+      if (options.limit) queryParams.append('limit', options.limit.toString());
+      if (options.offset) queryParams.append('offset', options.offset.toString());
+      if (options.filters) queryParams.append('filters', JSON.stringify(options.filters));
 
-      const url = `${API_URL}/api/ai-check-history${queryParams.toString() ? `?${queryParams}` : ''}`;
+      const url = `${API_URL}/api/ai-check-history?${queryParams}`;
+      const headers = await this.getAuthHeaders();
       
-      console.log('Fetching AI Check history:', { url, options });
+      console.log('🔍 aiCheckHistoryService.getHistory - Request details:', { 
+        url, 
+        headers, 
+        queryString: queryParams.toString() 
+      });
 
       const response = await fetch(url, {
         method: 'GET',
-        headers: this.getAuthHeaders()
+        headers: headers
       });
 
+      console.log('🔍 aiCheckHistoryService.getHistory - Response status:', response.status);
+      console.log('🔍 aiCheckHistoryService.getHistory - Response headers:', Object.fromEntries(response.headers.entries()));
+
       const result = await response.json();
+      console.log('🔍 aiCheckHistoryService.getHistory - Raw response:', result);
 
       if (!response.ok) {
+        console.error('🔍 aiCheckHistoryService.getHistory - HTTP error:', response.status, result);
         throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
 
-      console.log(`Fetched ${result.history?.length || 0} AI Check history records`);
+      console.log('🔍 aiCheckHistoryService.getHistory - Success! Records:', result.history?.length || 0);
+      console.log('🔍 aiCheckHistoryService.getHistory - First record sample:', result.history?.[0]);
 
       return {
         success: true,
@@ -118,7 +149,7 @@ export class AICheckHistoryService {
         total: result.total
       };
     } catch (error) {
-      console.error('Error fetching AI Check history:', error);
+      console.error('🔍 aiCheckHistoryService.getHistory - Error occurred:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -133,9 +164,10 @@ export class AICheckHistoryService {
     try {
       console.log('Fetching AI Check history record:', id);
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${API_URL}/api/ai-check-history/${id}`, {
         method: 'GET',
-        headers: this.getAuthHeaders()
+        headers: headers
       });
 
       const result = await response.json();
@@ -169,9 +201,10 @@ export class AICheckHistoryService {
     try {
       console.log('Updating AI Check history record status:', { id, status });
 
+      const headers = await this.getAuthHeaders();
       const response = await fetch(`${API_URL}/api/ai-check-history/${id}/status`, {
         method: 'PUT',
-        headers: this.getAuthHeaders(),
+        headers: headers,
         body: JSON.stringify({
           user_action_status: status
         })

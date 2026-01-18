@@ -14,6 +14,17 @@ export interface AICheckHistoryItem {
   errorType?: string;
   errorDetails?: string;
   extractedTags?: any;
+  // Rich data for visual display in detail modal
+  richData?: {
+    compatibleItems: { [category: string]: any[] };
+    outfitCombinations: any[];
+    suitableScenarios: string[];
+    seasonScenarioCombinations: any[];
+    coverageGapsWithNoOutfits: any[];
+    itemDetails: any;
+    recommendationText?: string;
+    rawAnalysis?: string;
+  };
 }
 
 export interface AIRecommendationHistoryItem {

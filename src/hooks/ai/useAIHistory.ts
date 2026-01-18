@@ -24,19 +24,83 @@ export const useAIHistory = () => {
         const result = await aiCheckHistoryService.getHistory({ limit: 20 }); // Limit for recent activity
         
         if (result.success && result.history) {
-          // Transform the enhanced data to the simpler AIHistoryItem format
-          const transformedHistory: AIHistoryItem[] = result.history.map((item: any) => ({
-            id: item.id,
-            type: 'check' as const,
-            title: item.title || `AI Check: ${item.itemName}`,
-            description: item.description || item.feedback || 'AI analysis completed',
-            summary: item.summary || `Score: ${item.score}/10`,
-            score: item.score || 0,
-            image: item.itemImageUrl,
-            date: new Date(item.analysisDate || item.createdAt),
-            status: item.itemWishlistStatus || item.status || 'pending',
-            userActionStatus: item.userActionStatus || 'pending'
-          }));
+          console.log('🔍 useAIHistory - Raw service response:', {
+            resultSuccess: result.success,
+            historyLength: result.history?.length,
+            firstItem: result.history?.[0]
+          });
+          
+          // Preserve rich data from database while maintaining AIHistoryItem compatibility
+          const transformedHistory: AIHistoryItem[] = result.history.map((item: any, index: number) => {
+            console.log(`🔍 useAIHistory - Transforming item ${index}:`, {
+              itemId: item.id,
+              serviceResponseFields: Object.keys(item),
+              compatibleItemsField: item.compatibleItems,
+              outfitCombinationsField: item.outfitCombinations,
+              hasCompatibleItems: !!item.compatibleItems,
+              hasOutfitCombinations: !!item.outfitCombinations && item.outfitCombinations.length > 0,
+              itemDetails: item.itemDetails
+            });
+            
+            // Check if compatibleItems and outfitCombinations exist and have data
+            const hasRealCompatibleItems = item.compatibleItems && 
+              typeof item.compatibleItems === 'object' && 
+              Object.keys(item.compatibleItems).length > 0;
+            
+            const hasRealOutfitCombinations = item.outfitCombinations && 
+              Array.isArray(item.outfitCombinations) && 
+              item.outfitCombinations.length > 0;
+
+            console.log(`🔍 useAIHistory - Rich data check for item ${index}:`, {
+              hasRealCompatibleItems,
+              hasRealOutfitCombinations,
+              compatibleItemsType: typeof item.compatibleItems,
+              outfitCombinationsType: typeof item.outfitCombinations
+            });
+            
+            // Create richData object
+            const richDataObject = {
+              compatibleItems: item.compatibleItems || {},
+              outfitCombinations: item.outfitCombinations || [],
+              suitableScenarios: item.suitableScenarios || [],
+              seasonScenarioCombinations: item.seasonScenarioCombinations || [],
+              coverageGapsWithNoOutfits: item.coverageGapsWithNoOutfits || [],
+              itemDetails: item.itemDetails || {},
+              recommendationText: item.recommendationText,
+              rawAnalysis: item.rawAnalysis
+            };
+            
+            console.log(`🔍 useAIHistory - Created richData for item ${index}:`, {
+              richDataKeys: Object.keys(richDataObject),
+              compatibleItemsKeys: Object.keys(richDataObject.compatibleItems),
+              outfitCombinationsLength: richDataObject.outfitCombinations.length,
+              fullRichData: richDataObject
+            });
+            
+            const transformedItem = {
+              id: item.id,
+              type: 'check' as const,
+              title: item.title || `AI Check: ${item.itemDetails?.name || 'Unknown Item'}`,
+              description: item.description || item.feedback || 'AI analysis completed',
+              summary: item.summary || `Score: ${item.score}/10`,
+              score: item.score || 0,
+              image: item.itemDetails?.imageUrl,
+              date: new Date(item.analysisDate || item.createdAt),
+              status: item.itemDetails?.wishlistStatus || item.status || 'pending',
+              userActionStatus: item.userActionStatus || 'pending',
+              // Preserve rich analysis data for detail modal
+              richData: richDataObject
+            };
+            
+            console.log(`🔍 useAIHistory - Final transformed item ${index}:`, {
+              transformedItemId: transformedItem.id,
+              hasRichDataField: !!transformedItem.richData,
+              richDataCompatibleItemsKeys: Object.keys(transformedItem.richData.compatibleItems),
+              richDataOutfitCombinationsLength: transformedItem.richData.outfitCombinations.length
+            });
+            
+            return transformedItem;
+          });
           
           setHistoryItems(transformedHistory);
         } else {
@@ -92,9 +156,27 @@ export const useAIHistory = () => {
     setShowFullHistory(false);
   };
 
-  const handleHistoryItemClick = (item: any) => {
-    setSelectedHistoryItem(item);
-    setIsHistoryDetailModalOpen(true);
+  const handleHistoryItemClick = (itemIdOrItem: any) => {
+    console.log('🔍 handleHistoryItemClick called with:', itemIdOrItem, typeof itemIdOrItem);
+    
+    // Handle both ID string and full item object
+    let fullItem;
+    if (typeof itemIdOrItem === 'string') {
+      // Find the transformed item with richData by ID
+      fullItem = historyItems.find(item => item.id === itemIdOrItem);
+      console.log('🔍 Found full item by ID:', fullItem?.id, !!(fullItem as any)?.richData);
+    } else {
+      // Use the full item object directly
+      fullItem = itemIdOrItem;
+      console.log('🔍 Using full item object:', fullItem?.id, !!fullItem?.richData);
+    }
+    
+    if (fullItem) {
+      setSelectedHistoryItem(fullItem);
+      setIsHistoryDetailModalOpen(true);
+    } else {
+      console.error('🔍 Could not find history item:', itemIdOrItem);
+    }
   };
 
   const handleCloseHistoryDetailModal = () => {
