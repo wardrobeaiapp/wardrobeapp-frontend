@@ -58,17 +58,38 @@ export const useAIHistory = () => {
               outfitCombinationsType: typeof item.outfitCombinations
             });
             
-            // Create richData object
-            const richDataObject = {
-              compatibleItems: item.compatibleItems || {},
-              outfitCombinations: item.outfitCombinations || [],
-              suitableScenarios: item.suitableScenarios || [],
-              seasonScenarioCombinations: item.seasonScenarioCombinations || [],
-              coverageGapsWithNoOutfits: item.coverageGapsWithNoOutfits || [],
-              itemDetails: item.itemDetails || {},
-              recommendationText: item.recommendationText,
-              rawAnalysis: item.rawAnalysis
-            };
+            // CRITICAL FIX: Use analysis_data if available (like analysis-mocks format)
+            // This enables the same rich visual format as demo
+            let richDataObject;
+            
+            if (item.analysisData) {
+              // Use the rich analysis_data format (same as analysis-mocks)
+              console.log(`🎯 useAIHistory - Using rich analysisData for item ${index}:`, item.analysisData);
+              richDataObject = {
+                compatibleItems: item.analysisData.compatibleItems || {},
+                outfitCombinations: item.analysisData.outfitCombinations || [],
+                suitableScenarios: item.analysisData.suitableScenarios || [],
+                seasonScenarioCombinations: item.analysisData.seasonScenarioCombinations || [],
+                coverageGapsWithNoOutfits: item.analysisData.coverageGapsWithNoOutfits || [],
+                itemDetails: item.analysisData.itemDetails || item.itemDetails || {},
+                recommendationText: item.analysisData.recommendationText || item.recommendationText,
+                analysis: item.analysisData.analysis || item.analysis,
+                rawAnalysis: item.rawAnalysis
+              };
+            } else {
+              // Fallback to individual fields (backward compatibility)
+              console.log(`🔄 useAIHistory - Using individual fields for item ${index} (no analysisData)`);
+              richDataObject = {
+                compatibleItems: item.compatibleItems || {},
+                outfitCombinations: item.outfitCombinations || [],
+                suitableScenarios: item.suitableScenarios || [],
+                seasonScenarioCombinations: item.seasonScenarioCombinations || [],
+                coverageGapsWithNoOutfits: item.coverageGapsWithNoOutfits || [],
+                itemDetails: item.itemDetails || {},
+                recommendationText: item.recommendationText,
+                rawAnalysis: item.rawAnalysis
+              };
+            }
             
             console.log(`🔍 useAIHistory - Created richData for item ${index}:`, {
               richDataKeys: Object.keys(richDataObject),

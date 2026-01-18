@@ -1,119 +1,147 @@
 /**
- * Transform WardrobeItemAnalysis data to database format
+ * Map frontend category values to database constraint values
  */
-function transformAnalysisForDatabase(analysisData, itemData) {
-  const now = new Date().toISOString();
+function mapCategoryToDbFormat(category) {
+  const categoryMap = {
+    'tops': 'top',
+    'top': 'top',
+    'bottoms': 'bottom', 
+    'bottom': 'bottom',
+    'dresses': 'one_piece',
+    'one_piece': 'one_piece',
+    'dress': 'one_piece',
+    'outerwear': 'outerwear',
+    'shoes': 'footwear',
+    'footwear': 'footwear',
+    'accessories': 'accessory',
+    'accessory': 'accessory'
+  };
   
-  // Generate title using item name
-  const title = `AI Check: ${itemData.name}`;
-  
-  // Create description from core analysis
-  const description = analysisData.feedback || 'AI analysis completed';
-  
-  // Create summary from score and key findings
-  let summary = `Score: ${analysisData.score}/10`;
-  if (analysisData.suitableScenarios && analysisData.suitableScenarios.length > 0) {
-    summary += ` | Suitable for: ${analysisData.suitableScenarios.slice(0, 2).join(', ')}`;
-    if (analysisData.suitableScenarios.length > 2) {
-      summary += ` and ${analysisData.suitableScenarios.length - 2} more`;
-    }
-  }
-  
-  return {
-    // Base fields
-    title,
-    description,
-    summary,
-    analysis_date: now,
-    status: itemData.wishlistStatus || null,
-    user_action_status: 'pending', // Default to pending
-    
-    // Core analysis results
+  return categoryMap[category?.toLowerCase()] || 'other';
+}
+
+/**
+ * Transform WardrobeItemAnalysis data to database format (EXACT SAME AS ANALYSIS-MOCKS + status fields)
+ */
+function transformAnalysisForDatabase(analysisData, itemData, userId) {
+  // Build rich analysis_data object (EXACT same format as analysis-mocks)
+  const analysis_data = {
+    analysis: analysisData.analysis || analysisData.feedback || '',
     score: analysisData.score,
     feedback: analysisData.feedback || '',
-    recommendation_text: analysisData.recommendationText || null,
+    recommendationText: analysisData.recommendationText || null,
+    suitableScenarios: analysisData.suitableScenarios || [],
+    compatibleItems: analysisData.compatibleItems || {},
+    outfitCombinations: analysisData.outfitCombinations || [],
+    seasonScenarioCombinations: analysisData.seasonScenarioCombinations || [],
+    coverageGapsWithNoOutfits: analysisData.coverageGapsWithNoOutfits || [],
+    itemDetails: {
+      id: itemData.id,
+      name: itemData.name,
+      category: mapCategoryToDbFormat(itemData.category),
+      subcategory: itemData.subcategory || null,
+      imageUrl: itemData.imageUrl || null,
+      wishlistStatus: itemData.wishlistStatus || null
+    }
+  };
+  
+  // Return EXACT SAME format as analysis-mocks (all 17 columns) + 1 additional status field
+  return {
+    // Original 7 columns from analysis-mocks
+    wardrobe_item_id: itemData.id,
+    analysis_data: analysis_data, // Rich JSONB object (not stringified)
+    created_from_real_analysis: true,
+    created_by: userId,
+    updated_at: new Date().toISOString(),
+    // created_at and id are handled by database defaults
     
-    // Item details
-    item_id: itemData.id,
-    item_name: itemData.name,
-    item_category: itemData.category,
+    // Additional 10 columns from optimize migration (populate from analysisData)
+    compatibility_score: Math.round(analysisData.score * 10) || 0, // Convert 0-10 to 0-100 
+    suitable_scenarios: analysisData.suitableScenarios || [],
     item_subcategory: itemData.subcategory || null,
-    item_image_url: itemData.imageUrl || null,
-    item_wishlist_status: itemData.wishlistStatus || null,
+    recommendation_action: analysisData.score >= 7 ? 'add_to_wardrobe' : 'consider_carefully',
+    recommendation_text: analysisData.recommendationText || analysisData.feedback || null,
+    wishlist_status: itemData.wishlistStatus || 'not_reviewed',
+    has_compatible_items: Object.keys(analysisData.compatibleItems || {}).length > 0,
+    outfit_combinations_count: (analysisData.outfitCombinations || []).length,
+    analysis_error: null, // No error since we have successful analysis
+    analysis_error_details: null,
     
-    // Analysis data (stored as JSON)
-    suitable_scenarios: JSON.stringify(analysisData.suitableScenarios || []),
-    compatible_items: JSON.stringify(analysisData.compatibleItems || {}),
-    outfit_combinations: JSON.stringify(analysisData.outfitCombinations || []),
-    season_scenario_combinations: JSON.stringify(analysisData.seasonScenarioCombinations || []),
-    coverage_gaps_with_no_outfits: JSON.stringify(analysisData.coverageGapsWithNoOutfits || []),
-    
-    // Raw analysis data
-    raw_analysis: analysisData.analysis || null,
-    analysis_metadata: JSON.stringify({
-      analysisVersion: '1.0',
-      aiModel: 'claude-3',
-      processingTimeMs: analysisData.processingTimeMs || null,
-      tokensUsed: analysisData.tokensUsed || null
-    }),
-    
-    // Legacy support
-    items_checked: 1,
-    legacy_analysis_results: JSON.stringify({
-      recommendations: analysisData.recommendationText ? [analysisData.recommendationText] : [],
-      issues: [],
-      suggestions: analysisData.suitableScenarios || []
-    })
+    // ✅ ADDITIONAL STATUS FIELD (only difference from mocks)
+    user_action_status: 'pending'
+    // Note: wishlist_status already handled above in mocks columns
   };
 }
 
 /**
- * Transform database record to frontend format
+ * Transform database record to frontend format (simplified structure)
  */
 function transformDatabaseToFrontend(dbRecord) {
+  // Parse analysis_data - this is the same format as analysis-mocks
+  const analysisData = safeJsonParse(dbRecord.analysis_data, {});
+  
+  console.log('🎯 Transforming simplified ai_check_history record:', {
+    id: dbRecord.id,
+    hasAnalysisData: !!analysisData && Object.keys(analysisData).length > 0,
+    compatibleItemsKeys: analysisData?.compatibleItems ? Object.keys(analysisData.compatibleItems) : [],
+    outfitCombinationsLength: analysisData?.outfitCombinations?.length || 0,
+    hasItemDetails: !!analysisData?.itemDetails
+  });
+
+  // Build title and description from analysis_data
+  const itemName = analysisData.itemDetails?.name || 'Unknown Item';
+  const title = `AI Check: ${itemName}`;
+  const description = analysisData.feedback || 'AI analysis completed';
+  const summary = `Score: ${analysisData.score || 0}/10`;
+
   return {
     id: dbRecord.id,
     type: 'check',
-    title: dbRecord.title,
-    description: dbRecord.description,
-    summary: dbRecord.summary,
-    score: dbRecord.score,
-    feedback: dbRecord.feedback,
-    recommendationText: dbRecord.recommendation_text,
-    analysisDate: dbRecord.analysis_date,
-    status: dbRecord.status,
+    title,
+    description,
+    summary,
+    date: new Date(dbRecord.created_at),
+    status: dbRecord.wishlist_status,
     userActionStatus: dbRecord.user_action_status,
     
-    // Item details
-    itemDetails: {
-      id: dbRecord.item_id,
-      name: dbRecord.item_name,
-      category: dbRecord.item_category,
-      subcategory: dbRecord.item_subcategory,
-      imageUrl: dbRecord.item_image_url,
-      wishlistStatus: dbRecord.item_wishlist_status
+    // Simplified structure matching new interface
+    wardrobeItemId: dbRecord.wardrobe_item_id,
+    analysisData: analysisData, // Rich analysis data (same as analysis_mocks)
+    wishlistStatus: dbRecord.wishlist_status,
+    createdAt: dbRecord.created_at,
+    updatedAt: dbRecord.updated_at,
+    
+    // For backward compatibility - extract from analysisData
+    score: analysisData.score,
+    feedback: analysisData.feedback,
+    recommendationText: analysisData.recommendationText,
+    analysisDate: dbRecord.created_at,
+    
+    // Extract rich data for frontend consumption
+    itemDetails: analysisData.itemDetails || {},
+    suitableScenarios: analysisData.suitableScenarios || [],
+    compatibleItems: analysisData.compatibleItems || {},
+    outfitCombinations: analysisData.outfitCombinations || [],
+    seasonScenarioCombinations: analysisData.seasonScenarioCombinations || [],
+    coverageGapsWithNoOutfits: analysisData.coverageGapsWithNoOutfits || [],
+    analysis: analysisData.analysis,
+    
+    // Legacy fields (extract from analysisData since old columns don't exist)
+    itemsChecked: 1, // Default value
+    analysisResults: {
+      recommendations: analysisData.suitableScenarios || [],
+      issues: [],
+      suggestions: analysisData.suitableScenarios || []
     },
     
-    // Parse JSON fields
-    suitableScenarios: safeJsonParse(dbRecord.suitable_scenarios, []),
-    compatibleItems: safeJsonParse(dbRecord.compatible_items, {}),
-    outfitCombinations: safeJsonParse(dbRecord.outfit_combinations, []),
-    seasonScenarioCombinations: safeJsonParse(dbRecord.season_scenario_combinations, []),
-    coverageGapsWithNoOutfits: safeJsonParse(dbRecord.coverage_gaps_with_no_outfits, []),
-    analysisMetadata: safeJsonParse(dbRecord.analysis_metadata, {}),
+    // Raw data from analysisData
+    rawAnalysis: analysisData.analysis,
     
-    // Legacy fields
-    itemsChecked: dbRecord.items_checked,
-    analysisResults: safeJsonParse(dbRecord.legacy_analysis_results, {
-      recommendations: [],
-      issues: [],
-      suggestions: []
-    }),
+    // Image for display from analysisData
+    image: analysisData.itemDetails?.imageUrl || null,
     
-    // Raw data
-    rawAnalysis: dbRecord.raw_analysis,
-    createdAt: dbRecord.created_at,
-    updatedAt: dbRecord.updated_at
+    // Other fields from simplified structure
+    userId: dbRecord.user_id || null
   };
 }
 

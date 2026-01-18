@@ -60,22 +60,28 @@ router.post('/', auth, async (req, res) => {
     // Transform analysis data for database storage
     let historyData;
     try {
-      historyData = transformAnalysisForDatabase(analysis_data, item_data);
-      historyData.user_id = user_id;
+      historyData = transformAnalysisForDatabase(analysis_data, item_data, user_id);
+      
+      // Debug log to verify analysis_data is included
+      console.log('🔍 historyData includes analysis_data:', {
+        hasAnalysisData: !!historyData.analysis_data,
+        analysisDataSize: historyData.analysis_data ? JSON.stringify(historyData.analysis_data).length : 0,
+        allFields: Object.keys(historyData)
+      });
     } catch (transformError) {
       console.error('❌ Step 1: Data transformation failed:', transformError);
       throw transformError;
     }
 
 
-    // Upsert history record (insert or update if exists)
+    // Upsert history record (insert or update if exists) - SAME AS ANALYSIS-MOCKS
     const { data: historyRecord, error: historyError } = await supabase
       .from('ai_check_history')
       .upsert(historyData, { 
-        onConflict: 'user_id,item_id',
+        onConflict: 'wardrobe_item_id,created_by', // SAME PATTERN AS MOCKS
         ignoreDuplicates: false 
       })
-      .select('id, title, score, created_at')
+      .select('id, wardrobe_item_id, compatibility_score, created_at')
       .single();
       
 
@@ -129,31 +135,31 @@ router.get('/', auth, async (req, res) => {
     const { limit = 50, offset = 0, category, min_score, max_score } = req.query;
     
     // Build query
+    // Query ALL 18 columns (complete ai_analysis_mocks structure + user_action_status)
     let query = supabase
       .from('ai_check_history')
       .select(`
-        id, title, description, summary, analysis_date, status, user_action_status,
-        score, feedback, recommendation_text,
-        item_id, item_name, item_category, item_subcategory, item_image_url, item_wishlist_status,
-        suitable_scenarios, compatible_items, outfit_combinations,
-        season_scenario_combinations, coverage_gaps_with_no_outfits,
-        raw_analysis, analysis_metadata, items_checked,
-        created_at, updated_at
+        id, wardrobe_item_id, analysis_data, created_from_real_analysis, created_by,
+        created_at, updated_at,
+        compatibility_score, suitable_scenarios, item_subcategory, recommendation_action,
+        recommendation_text, wishlist_status, has_compatible_items, outfit_combinations_count,
+        analysis_error, analysis_error_details,
+        user_action_status
       `)
-      .eq('user_id', user_id)
-      .order('analysis_date', { ascending: false });
+      .eq('created_by', user_id) // SAME AS MOCKS: filter by created_by not user_id
+      .order('created_at', { ascending: false });
 
-    // Apply filters
+    // Apply filters on JSONB analysis_data field (same as analysis-mocks approach)
     if (category) {
-      query = query.eq('item_category', category);
+      query = query.contains('analysis_data', { itemDetails: { category } });
     }
     
     if (min_score !== undefined) {
-      query = query.gte('score', parseFloat(min_score));
+      query = query.gte('analysis_data->score', parseFloat(min_score));
     }
     
     if (max_score !== undefined) {
-      query = query.lte('score', parseFloat(max_score));
+      query = query.lte('analysis_data->score', parseFloat(max_score));
     }
 
     // Apply pagination

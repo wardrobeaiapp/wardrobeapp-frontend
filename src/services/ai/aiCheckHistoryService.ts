@@ -247,45 +247,71 @@ export class AICheckHistoryService {
       const { success, history, error } = await this.getHistory({ limit: 1000 });
       
       if (!success || !history) {
-        return { success: false, error: error || 'Failed to fetch history for stats' };
+        return {
+          success: false,
+          error: error || 'Failed to fetch history for statistics'
+        };
       }
 
-      // Calculate statistics
+      // Calculate statistics using simplified structure
       const total = history.length;
-      const avgScore = total > 0 ? history.reduce((sum, item) => sum + (item.score || 0), 0) / total : 0;
+      const avgScore = total > 0 ? history.reduce((sum, item) => {
+        const score = item.analysisData?.score || 0;
+        return sum + score;
+      }, 0) / total : 0;
       
       const byCategory: Record<string, number> = {};
       const byStatus: Record<string, number> = {};
+      const byScore: Record<string, number> = {
+        'high': 0, // 8-10
+        'medium': 0, // 5-7
+        'low': 0 // 0-4
+      };
       
-      // Count recent records (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const recentCount = history.filter(item => new Date(item.date) > thirtyDaysAgo).length;
-
-      // Aggregate by category and status
+      // Calculate recent count (last 7 days)
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      let recentCount = 0;
+      
       history.forEach(item => {
-        // Count by category
-        const category = item.itemCategory || 'other';
+        // Count by category - access from analysisData.itemDetails
+        const category = item.analysisData?.itemDetails?.category || 'other';
         byCategory[category] = (byCategory[category] || 0) + 1;
         
         // Count by user action status
         const status = item.userActionStatus || 'pending';
         byStatus[status] = (byStatus[status] || 0) + 1;
+        
+        // Count by score range - access from analysisData
+        const score = item.analysisData?.score || 0;
+        if (score >= 8) {
+          byScore['high']++;
+        } else if (score >= 5) {
+          byScore['medium']++;
+        } else {
+          byScore['low']++;
+        }
+
+        // Count recent items
+        const itemDate = new Date(item.createdAt);
+        if (itemDate > weekAgo) {
+          recentCount++;
+        }
       });
 
-      const stats = {
-        total,
-        avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
-        byCategory,
-        byStatus,
-        recentCount
+      return {
+        success: true,
+        stats: {
+          total,
+          avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
+          byCategory,
+          byStatus,
+          recentCount
+        }
       };
 
-      console.log('AI Check history stats calculated:', stats);
-
-      return { success: true, stats };
     } catch (error) {
-      console.error('Error calculating AI Check history stats:', error);
+      console.error('Error calculating AI Check history statistics:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred'

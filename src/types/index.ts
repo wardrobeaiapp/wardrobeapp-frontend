@@ -272,52 +272,15 @@ interface BaseAIHistoryItem {
 export interface AICheckHistoryItem extends BaseAIHistoryItem {
   type: 'check';
   
-  // Core Analysis Results
-  score: number; // Made required - score from AI recommendation
-  feedback: string; // Core feedback from analysis
-  recommendationText?: string; // Human-readable explanation from gap analysis
+  // Simplified structure to match ai_analysis_mocks + status fields
+  wardrobeItemId: string; // UUID of the wardrobe item that was analyzed
+  analysisData: any; // Rich analysis data (same as analysis_mocks structure)
+  userActionStatus?: UserActionStatus; // User's action on this analysis
+  wishlistStatus?: WishlistStatus; // Wishlist status at analysis time
   
-  // Item Details (for history context)
-  itemId: string; // Wardrobe item ID that was analyzed
-  itemName: string; // Item name for title/display
-  itemCategory: ItemCategory; // Item category
-  itemSubcategory?: string; // Item subcategory
-  itemImageUrl?: string; // Item image for display
-  itemWishlistStatus?: WishlistStatus; // Wishlist status at time of analysis
-  
-  // Scenario & Compatibility Analysis
-  suitableScenarios: string[]; // Scenarios the item is suitable for
-  compatibleItems?: { [category: string]: any[] }; // Compatible items by category
-  
-  // Outfit Recommendations
-  outfitCombinations?: {
-    scenario: string;
-    season: string;
-    outfits: {
-      items: string[];
-      description?: string;
-    }[];
-  }[]; // Complete outfit recommendations organized by scenario/season
-  
-  // Coverage Analysis
-  seasonScenarioCombinations?: {
-    season: string;
-    scenario: string;
-    hasAllEssentials: boolean;
-    missingCategories?: string[];
-  }[]; // Season + scenario completion status
-  
-  coverageGapsWithNoOutfits?: {
-    category: string;
-    subcategory?: string;
-    season: string;
-    scenario: string;
-    gapType: 'critical' | 'improvement' | 'expansion';
-    gapCount: number;
-  }[]; // Coverage gaps that have 0 outfits available
-  
-  // Raw Analysis Data (for debugging/future use)
-  rawAnalysis?: string; // Complete analysis text from AI
+  // Metadata
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
   analysisMetadata?: {
     tokensUsed?: number;
     processingTimeMs?: number;
