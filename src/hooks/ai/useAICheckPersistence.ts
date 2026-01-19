@@ -62,6 +62,14 @@ export const useAICheckPersistence = () => {
       }
 
       // Update wardrobe item's wishlist status if it's a wishlist item
+      console.log('Checking wardrobe item update conditions:', {
+        hasWishlist: !!preFilledData.wishlist,
+        hasId: !!preFilledData.id,
+        wishlistValue: preFilledData.wishlist,
+        itemId: preFilledData.id,
+        willUpdate: !!(preFilledData.wishlist && preFilledData.id)
+      });
+      
       if (preFilledData.wishlist && preFilledData.id) {
         try {
           console.log('Updating wardrobe item wishlist status:', {

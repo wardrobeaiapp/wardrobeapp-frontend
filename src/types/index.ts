@@ -2,7 +2,7 @@ export enum WishlistStatus {
   APPROVED = 'approved',
   POTENTIAL_ISSUE = 'potential_issue',
   NOT_REVIEWED = 'not_reviewed',
-  NOT_RECOMMENDED = 'not_recommended'
+  NOT_RECOMMENDED = 'not_recommended',
 }
 
 export enum UserActionStatus {
