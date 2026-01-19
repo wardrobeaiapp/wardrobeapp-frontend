@@ -139,6 +139,7 @@ const WishlistTab: React.FC<WishlistTabProps> = ({
             options={[
               { value: WishlistStatus.APPROVED, label: 'Approved' },
               { value: WishlistStatus.POTENTIAL_ISSUE, label: 'Potential Issue' },
+              { value: WishlistStatus.NOT_RECOMMENDED, label: 'Not Recommended' },
               { value: WishlistStatus.NOT_REVIEWED, label: 'Not Reviewed' }
             ]}
             includeAllOption={true}

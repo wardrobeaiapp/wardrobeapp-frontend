@@ -66,6 +66,8 @@ export const StatusIcon = styled.div<{ $status: WishlistStatus }>`
         return theme.colors.green[500];
       case WishlistStatus.POTENTIAL_ISSUE:
         return theme.colors.warning;
+      case WishlistStatus.NOT_RECOMMENDED:
+        return '#dc2626'; // Red color for not recommended
       case WishlistStatus.NOT_REVIEWED:
       default:
         return theme.colors.gray[500];

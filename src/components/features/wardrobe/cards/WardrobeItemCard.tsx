@@ -56,7 +56,8 @@ const WardrobeItemCard: React.FC<WardrobeItemCardProps> = ({ item, onView, onEdi
         {item.wishlist && !hideStatusIcon && (
           <StatusIcon $status={item.wishlistStatus || WishlistStatus.NOT_REVIEWED}>
             {item.wishlistStatus === WishlistStatus.APPROVED ? '✓' : 
-             item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? '!' : '?'}
+             item.wishlistStatus === WishlistStatus.POTENTIAL_ISSUE ? '!' :
+             item.wishlistStatus === WishlistStatus.NOT_RECOMMENDED ? '✗' : '?'}
           </StatusIcon>
         )}
         

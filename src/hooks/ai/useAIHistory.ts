@@ -4,7 +4,7 @@ import { WishlistStatus, UserActionStatus } from '../../types';
 import { AIHistoryItem } from '../../types/ai';
 
 export type ActivityType = 'all' | 'check' | 'recommendation';
-export type CheckStatus = 'all' | 'approved' | 'potential_issue' | 'not_reviewed';
+export type CheckStatus = 'all' | 'approved' | 'potential_issue' | 'not_recommended' | 'not_reviewed';
 
 export const useAIHistory = () => {
   const [historyItems, setHistoryItems] = useState<AIHistoryItem[]>([]);
@@ -156,6 +156,9 @@ export const useAIHistory = () => {
           return false;
         }
         if (checkStatusFilter === 'not_reviewed' && item.status !== WishlistStatus.NOT_REVIEWED) {
+          return false;
+        }
+        if (checkStatusFilter === 'not_recommended' && item.status !== WishlistStatus.NOT_RECOMMENDED) {
           return false;
         }
       }

@@ -54,6 +54,8 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
         return 'Potential Issue';
       case WishlistStatus.NOT_REVIEWED:
         return 'Not Reviewed';
+      case WishlistStatus.NOT_RECOMMENDED:
+        return 'Not Recommended';
       default:
         return status;
     }
