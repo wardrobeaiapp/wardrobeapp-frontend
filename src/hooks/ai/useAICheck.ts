@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { claudeService } from '../../services/ai/claudeService';
 import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
-import { DetectedTags } from '../../services/ai/formAutoPopulation/types';
+import { updateWardrobeItem } from '../../services/wardrobe/items';
 import { WishlistStatus, WardrobeItem } from '../../types';
+import { DetectedTags } from '../../services/ai/formAutoPopulation/types';
 import { detectImageTags, extractTopTags } from '../../services/ai/ximilarService';
 
 export const useAICheck = () => {
@@ -102,11 +103,13 @@ export const useAICheck = () => {
       analysisResult = response.analysis;
       score = response.score || 0;
       
-      // Determine status based on score
+      // Determine status based on score to match AI recommendation
       if (score >= 8) {
-        status = WishlistStatus.APPROVED;
+        status = WishlistStatus.APPROVED; // RECOMMEND
+      } else if (score >= 6) {
+        status = WishlistStatus.POTENTIAL_ISSUE; // MAYBE
       } else {
-        status = WishlistStatus.POTENTIAL_ISSUE;
+        status = WishlistStatus.NOT_RECOMMENDED; // SKIP
       }
 
       // Extract clean data from the new API response structure
@@ -148,10 +151,11 @@ export const useAICheck = () => {
             details: undefined
           };
 
-          // Create item data with current image
+          // Create item data with current image and AI-computed wishlist status
           const itemData = {
             ...preFilledData,
-            imageUrl: imageLink // Use the current image from the analysis
+            imageUrl: imageLink, // Use the current image from the analysis
+            wishlistStatus: status // Update with AI recommendation status
           };
 
           // Save to history (don't block on this)
@@ -161,6 +165,30 @@ export const useAICheck = () => {
             console.log('AI Check analysis saved to history successfully');
           } else {
             console.warn('Failed to save AI Check analysis to history:', historyResult.error);
+          }
+
+          // Update wardrobe item's wishlist status if it's a wishlist item
+          if (preFilledData.wishlist && preFilledData.id) {
+            try {
+              console.log('Updating wardrobe item wishlist status:', {
+                itemId: preFilledData.id,
+                oldStatus: preFilledData.wishlistStatus,
+                newStatus: status
+              });
+              
+              const updatedItem = await updateWardrobeItem(preFilledData.id, {
+                wishlistStatus: status
+              });
+              
+              if (updatedItem) {
+                console.log('Wardrobe item wishlist status updated successfully');
+              } else {
+                console.warn('Failed to update wardrobe item wishlist status');
+              }
+            } catch (updateError) {
+              console.error('Error updating wardrobe item wishlist status:', updateError);
+              // Don't fail the main analysis if wardrobe item update fails
+            }
           }
         } catch (historyError) {
           console.error('Error saving AI Check analysis to history:', historyError);
