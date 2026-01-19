@@ -7,19 +7,17 @@ import { useAIAnalysis } from './useAIAnalysis';
 import { useAICheckPersistence } from './useAICheckPersistence';
 
 export const useAICheck = () => {
-  // Use the extracted image handling hook
-  const imageHandling = useImageHandling();
-  // Use the extracted tag detection hook  
-  const tagDetection = useTagDetection();
-  // Use the extracted AI analysis hook
-  const aiAnalysis = useAIAnalysis();
-  // Use the extracted persistence hook
-  const persistence = useAICheckPersistence();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [itemSubcategory, setItemSubcategory] = useState('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
+
+  // Compose specialized hooks
+  const imageHandling = useImageHandling();
+  const tagDetection = useTagDetection();
+  const aiAnalysis = useAIAnalysis();
+  const persistence = useAICheckPersistence();
 
   const handleFileUpload = (file: File) => {
     imageHandling.setFile(file);
@@ -101,8 +99,6 @@ export const useAICheck = () => {
         );
       }
 
-      // Data extraction complete
-
       return { 
         analysisResult, 
         status, 
@@ -128,7 +124,6 @@ export const useAICheck = () => {
     setErrorType('');
     setErrorDetails('');
   };
-
 
   // Compute recommendation action from score (same logic as backend had)
   const recommendationAction = (() => {
