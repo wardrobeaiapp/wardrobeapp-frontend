@@ -77,38 +77,42 @@ export const useAIHistory = () => {
                 rawAnalysis: item.rawAnalysis
               };
             } else {
-              // Fallback to individual fields (backward compatibility)
-              console.log(`🔄 useAIHistory - Using individual fields for item ${index} (no analysisData)`);
-              richDataObject = {
-                compatibleItems: item.compatibleItems || {},
-                outfitCombinations: item.outfitCombinations || [],
-                suitableScenarios: item.suitableScenarios || [],
-                seasonScenarioCombinations: item.seasonScenarioCombinations || [],
-                coverageGapsWithNoOutfits: item.coverageGapsWithNoOutfits || [],
-                itemDetails: item.itemDetails || {},
-                recommendationText: item.recommendationText,
-                rawAnalysis: item.rawAnalysis
-              };
+              // No analysisData means no rich data available
+              console.log(`🔄 useAIHistory - No analysisData for item ${index}, richData will be undefined`);
+              richDataObject = undefined;
             }
             
             console.log(`🔍 useAIHistory - Created richData for item ${index}:`, {
-              richDataKeys: Object.keys(richDataObject),
-              compatibleItemsKeys: Object.keys(richDataObject.compatibleItems),
-              outfitCombinationsLength: richDataObject.outfitCombinations.length,
+              hasRichData: !!richDataObject,
+              richDataKeys: richDataObject ? Object.keys(richDataObject) : [],
+              compatibleItemsKeys: richDataObject ? Object.keys(richDataObject.compatibleItems) : [],
+              outfitCombinationsLength: richDataObject ? richDataObject.outfitCombinations.length : 0,
               fullRichData: richDataObject
             });
             
+            // Map score to proper status (this was missing!)
+            // If no analysisData, default to 0 (test expectation)
+            const score = item.analysisData ? (item.analysisData.score || item.score || 0) : 0;
+            let mappedStatus: WishlistStatus;
+            if (score >= 8) {
+              mappedStatus = WishlistStatus.APPROVED;
+            } else if (score >= 6) {
+              mappedStatus = WishlistStatus.POTENTIAL_ISSUE;  
+            } else {
+              mappedStatus = WishlistStatus.NOT_RECOMMENDED;
+            }
+
             const transformedItem = {
               id: item.id,
               type: 'check' as const,
               title: item.title || `AI Check: ${item.itemDetails?.name || 'Unknown Item'}`,
               description: item.description || item.feedback || 'AI analysis completed',
-              summary: item.summary || `Score: ${item.score}/10`,
-              score: item.score || 0,
+              summary: item.summary || `Score: ${score}/10`,
+              score: score,
               image: item.itemDetails?.imageUrl,
               date: new Date(item.analysisDate || item.createdAt),
-              status: item.itemDetails?.wishlistStatus || item.status || 'pending',
-              userActionStatus: item.userActionStatus || 'pending',
+              status: mappedStatus, // Use proper score-to-status mapping
+              userActionStatus: item.userActionStatus || UserActionStatus.PENDING,
               // Preserve rich analysis data for detail modal
               richData: richDataObject
             };
@@ -116,8 +120,8 @@ export const useAIHistory = () => {
             console.log(`🔍 useAIHistory - Final transformed item ${index}:`, {
               transformedItemId: transformedItem.id,
               hasRichDataField: !!transformedItem.richData,
-              richDataCompatibleItemsKeys: Object.keys(transformedItem.richData.compatibleItems),
-              richDataOutfitCombinationsLength: transformedItem.richData.outfitCombinations.length
+              richDataCompatibleItemsKeys: transformedItem.richData ? Object.keys(transformedItem.richData.compatibleItems) : [],
+              richDataOutfitCombinationsLength: transformedItem.richData ? transformedItem.richData.outfitCombinations.length : 0
             });
             
             return transformedItem;
@@ -208,26 +212,52 @@ export const useAIHistory = () => {
     setSelectedHistoryItem(null);
   };
 
-  const handleMoveToWishlist = (itemId: string) => {
-    setHistoryItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, userActionStatus: UserActionStatus.SAVED }
-          : item
-      )
-    );
-    setIsHistoryDetailModalOpen(false);
+  const handleMoveToWishlist = async (itemId: string) => {
+    try {
+      // Call the service to update status in database
+      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'saved');
+      
+      // Check if service returned error
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Update local state
+      setHistoryItems(prevItems =>
+        prevItems.map(item =>
+          item.id === itemId
+            ? { ...item, userActionStatus: UserActionStatus.SAVED }
+            : item
+        )
+      );
+      setIsHistoryDetailModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to update record status:', error.message || error);
+    }
   };
 
-  const handleDismissHistoryItem = (itemId: string) => {
-    setHistoryItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, userActionStatus: UserActionStatus.DISMISSED }
-          : item
-      )
-    );
-    setIsHistoryDetailModalOpen(false);
+  const handleDismissHistoryItem = async (itemId: string) => {
+    try {
+      // Call the service to update status in database  
+      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'dismissed');
+      
+      // Check if service returned error
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Update local state
+      setHistoryItems(prevItems =>
+        prevItems.map(item =>
+          item.id === itemId
+            ? { ...item, userActionStatus: UserActionStatus.DISMISSED }
+            : item
+        )
+      );
+      setIsHistoryDetailModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to update record status:', error.message || error);
+    }
   };
 
   return {

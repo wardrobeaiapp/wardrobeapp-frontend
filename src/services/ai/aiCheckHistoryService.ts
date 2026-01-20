@@ -1,5 +1,6 @@
 import { WardrobeItem, AICheckHistoryItem } from '../../types';
 import { WardrobeItemAnalysis } from './types';
+import { supabase } from '../core/supabase';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -25,20 +26,13 @@ export class AICheckHistoryService {
     };
     
     try {
-      // Try Supabase session first (like other services)
-      const { createClient } = await import('@supabase/supabase-js');
-      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-      const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+      // Use shared Supabase client to prevent multiple GoTrueClient instances
+      const { data: sessionData } = await supabase.auth.getSession();
       
-      if (supabaseUrl && supabaseAnonKey) {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData?.session?.access_token) {
-          headers['x-auth-token'] = sessionData.session.access_token;
-          console.log('🔑 Using Supabase session token for ai-check-history');
-          return headers;
-        }
+      if (sessionData?.session?.access_token) {
+        headers['x-auth-token'] = sessionData.session.access_token;
+        console.log('🔑 Using Supabase session token for ai-check-history');
+        return headers;
       }
     } catch (error) {
       console.warn('🔑 Supabase session not available, falling back to localStorage token');
@@ -130,7 +124,7 @@ export class AICheckHistoryService {
       });
 
       console.log('🔍 aiCheckHistoryService.getHistory - Response status:', response.status);
-      console.log('🔍 aiCheckHistoryService.getHistory - Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('🔍 aiCheckHistoryService.getHistory - Response headers:', response.headers);
 
       const result = await response.json();
       console.log('🔍 aiCheckHistoryService.getHistory - Raw response:', result);

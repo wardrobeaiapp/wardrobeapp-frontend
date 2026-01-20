@@ -138,6 +138,24 @@ export const useAICheck = () => {
     return 'SKIP';
   })();
 
+  // Wrapper for fetchTags that handles error state
+  const fetchTags = async (imageUrl: string) => {
+    try {
+      setError('');
+      setErrorType('');
+      const result = await tagDetection.fetchTags(imageUrl);
+      if (result === null) {
+        setError('Error fetching image tags');
+        setErrorType('FETCH_TAGS_ERROR');
+      }
+      return result;
+    } catch (error) {
+      setError('Error fetching image tags');
+      setErrorType('FETCH_TAGS_ERROR');
+      return null;
+    }
+  };
+
   return {
     // State
     imageLink: imageHandling.imageLink,
@@ -166,6 +184,6 @@ export const useAICheck = () => {
     handleProcessedImageChange,
     checkItem,
     resetCheck,
-    fetchTags: tagDetection.fetchTags,
+    fetchTags,
   };
 };

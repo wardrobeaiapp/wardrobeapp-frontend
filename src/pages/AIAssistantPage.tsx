@@ -7,13 +7,10 @@ import {
   useAICheck,
   useAIRecommendation,
   useAIHistory,
-  useAIModals,
-  type ActivityType,
-  type CheckStatus
+  useAIModals
 } from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
 import type { WardrobeItem } from '../types';
-import AIHistoryDashboard from '../components/features/ai-assistant/AIHistoryDashboard/AIHistoryDashboard';
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
