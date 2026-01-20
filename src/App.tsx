@@ -12,6 +12,7 @@ import EmailVerificationCallback from './pages/EmailVerificationCallback';
 import OnboardingPage from './pages/OnboardingPage';
 import HomePage from './pages/HomePage';
 import AIAssistantPage from './pages/AIAssistantPage';
+import AIHistoryPage from './pages/AIHistoryPage';
 import CalendarPage from './pages/CalendarPage';
 import ProfilePage from './pages/ProfilePage';
 import TestImageUpload from './pages/TestImageUpload';
@@ -188,6 +189,7 @@ function App() {
                   {/* Protected routes - require auth and completed onboarding */}
                   <Route path="/" element={<ProtectedRoute element={<HomePage />} />} />
                   <Route path="/ai-assistant" element={<ProtectedRoute element={<AIAssistantPage />} />} />
+                  <Route path="/ai-history" element={<ProtectedRoute element={<AIHistoryPage />} />} />
                   <Route path="/calendar" element={<ProtectedRoute element={<CalendarPage />} />} />
                   <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
                   

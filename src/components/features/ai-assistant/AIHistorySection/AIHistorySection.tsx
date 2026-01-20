@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AIHistoryItem as AIHistoryItemType } from '../../../../types/ai';
 import AIHistoryItem from '../AIHistoryItem/AIHistoryItem';
 import Button from '../../../common/Button';
@@ -12,17 +13,21 @@ import {
 
 interface AIHistorySectionProps {
   historyItems: AIHistoryItemType[];
-  onViewAllHistory: () => void;
   onHistoryItemClick?: (item: AIHistoryItemType) => void;
 }
 
 const AIHistorySection: React.FC<AIHistorySectionProps> = ({
   historyItems,
-  onViewAllHistory,
   onHistoryItemClick,
 }) => {
+  const navigate = useNavigate();
+  
   // Limit history items to first 3 for preview
   const limitedHistoryItems = historyItems.slice(0, 3);
+
+  const handleViewAllHistory = () => {
+    navigate('/ai-history');
+  };
 
   return (
     <HistorySection>
@@ -30,7 +35,7 @@ const AIHistorySection: React.FC<AIHistorySectionProps> = ({
         <HistoryTitle>Recent Activity</HistoryTitle>
         <Button 
           variant="link" 
-          onClick={onViewAllHistory}
+          onClick={handleViewAllHistory}
           style={{ textDecoration: 'none' }}
         >
           View All <MdArrowForward />

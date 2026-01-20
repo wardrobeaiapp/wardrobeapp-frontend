@@ -201,24 +201,14 @@ const AIAssistantPage: React.FC = () => {
     // resetRecommendation is currently unused but may be needed in the future
   } = useAIRecommendation();
 
-  // AI History hook
+  // AI History hook - simplified for recent activity only
   const {
     // State
     historyItems,
-    showFullHistory,
-    activityFilter,
-    checkStatusFilter,
-    userActionFilter,
-    filteredHistoryItems,
     selectedHistoryItem,
     isHistoryDetailModalOpen,
 
     // Handlers
-    setActivityFilter,
-    setCheckStatusFilter,
-    setUserActionFilter,
-    handleViewAllHistory,
-    handleBackToMain,
     handleHistoryItemClick,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
@@ -229,28 +219,8 @@ const AIAssistantPage: React.FC = () => {
     <>
       <Header />
       <PageContainer>
-        {showFullHistory ? (
-          <AIHistoryDashboard
-            activityFilter={activityFilter}
-            onFilterChange={(filter: string) => {
-              // Type assertion is safe here because we control the filter values
-              setActivityFilter(filter as ActivityType);
-            }}
-            checkStatusFilter={checkStatusFilter}
-            onCheckStatusFilterChange={(filter: string) => {
-              // Type assertion is safe here because we control the filter values
-              setCheckStatusFilter(filter as CheckStatus);
-            }}
-            userActionFilter={userActionFilter}
-            onUserActionFilterChange={setUserActionFilter}
-            filteredHistoryItems={filteredHistoryItems}
-            onBackToMain={handleBackToMain}
-            onHistoryItemClick={handleHistoryItemClick}
-          />
-        ) : (
-          <>
-            {/* Main View - Show AI cards and limited history */}
-            <CardsContainer>
+        {/* Main View - Show AI cards and limited history */}
+        <CardsContainer>
               <AICheckCard
                 imageLink={imageLink}
                 onImageLinkChange={(value) => {
@@ -288,16 +258,13 @@ const AIAssistantPage: React.FC = () => {
                 isLoading={isRecommendationLoading}
                 error={recommendationError}
               />
-            </CardsContainer>
+        </CardsContainer>
 
-            {/* History Section - Limited Items */}
-            <AIHistorySection
-              historyItems={historyItems}
-              onViewAllHistory={handleViewAllHistory}
-              onHistoryItemClick={(item: AIHistoryItem) => handleHistoryItemClick(item.id)}
-            />
-          </>
-        )}
+        {/* History Section - Limited Items */}
+        <AIHistorySection
+          historyItems={historyItems}
+          onHistoryItemClick={(item: AIHistoryItem) => handleHistoryItemClick(item.id)}
+        />
       </PageContainer>
 
       {/* Wishlist Selection Modal - Only render when open */}
