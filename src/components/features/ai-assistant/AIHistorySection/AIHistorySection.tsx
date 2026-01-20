@@ -38,13 +38,19 @@ const AIHistorySection: React.FC<AIHistorySectionProps> = ({
       </HistoryHeader>
       
       <HistoryList>
-        {limitedHistoryItems.map((item) => (
-          <AIHistoryItem 
-            key={item.id} 
-            item={item} 
-            onClick={onHistoryItemClick}
-          />
-        ))}
+        {limitedHistoryItems.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+            No recent activity. Start by checking some wishlist items!
+          </div>
+        ) : (
+          limitedHistoryItems.map((item) => (
+            <AIHistoryItem 
+              key={item.id} 
+              item={item} 
+              onClick={onHistoryItemClick}
+            />
+          ))
+        )}
       </HistoryList>
     </HistorySection>
   );

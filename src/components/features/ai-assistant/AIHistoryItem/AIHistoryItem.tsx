@@ -5,7 +5,6 @@ import {
   CardIcon,
   HistoryContent,
   HistoryItemTitle,
-  HistoryItemDescription,
   HistoryTime,
   StatusBadge,
   DashboardHistoryItem,
@@ -80,10 +79,8 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
             </StatusBadge>
           )}
         </HistoryItemTitle>
-        {/* Show summary for check items, styled tags for recommendations */}
-        {item.type === 'check' ? (
-          <HistoryItemDescription>{item.summary}</HistoryItemDescription>
-        ) : (
+        {/* Show styled tags for recommendations */}
+        {item.type === 'recommendation' && (
           <TagsContainer>
             {item.scenario && (
               <ScenarioTag>

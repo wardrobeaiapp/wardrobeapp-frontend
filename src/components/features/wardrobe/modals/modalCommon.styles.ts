@@ -6,6 +6,7 @@ export const DetailRow = styled.div`
   align-items: center;
   padding: 0.5rem 0;
   border-bottom: 1px solid #f1f5f9;
+  height: 100%;
   
   &:last-child {
     border-bottom: none;

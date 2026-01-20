@@ -370,7 +370,6 @@ export const ScoreContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
 `;
 
 export const ScoreDisplay = styled.div`
