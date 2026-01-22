@@ -35,7 +35,7 @@ interface AIHistoryDashboardProps {
 }
 
 interface HistoryStats {
-  totalCount: number;
+  total: number;
   avgScore: number;
   byCategory: Record<string, number>;
   byStatus: Record<string, number>;
@@ -65,8 +65,8 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         setStatsLoading(true);
         const result = await aiCheckHistoryService.getHistoryStats();
         
-        if (result.success && result.data) {
-          setStats(result.data);
+        if (result.success && result.stats) {
+          setStats(result.stats);
         } else {
           console.error('Failed to load AI Check history stats:', result.error);
         }
@@ -159,7 +159,7 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         <StatCard>
           <StatContent>
             <StatValue>
-              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.totalCount || 0}
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.total || 0}
             </StatValue>
             <StatLabel>Total AI Checks</StatLabel>
           </StatContent>

@@ -268,8 +268,8 @@ export class AICheckHistoryService {
    */
   async getHistoryStats(): Promise<{ 
     success: boolean; 
-    data?: {
-      totalCount: number;
+    stats?: {
+      total: number;
       avgScore: number;
       byCategory: { [key: string]: number };
       byStatus: { [key: string]: number };
@@ -336,8 +336,8 @@ export class AICheckHistoryService {
 
       return {
         success: true,
-        data: {
-          totalCount: total,
+        stats: {
+          total: total,
           avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
           byCategory,
           byStatus,
