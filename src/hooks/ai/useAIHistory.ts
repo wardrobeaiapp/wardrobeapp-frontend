@@ -236,6 +236,54 @@ export const useAIHistory = () => {
     }
   };
 
+  const handleMarkAsPurchased = async (itemId: string) => {
+    try {
+      // Call the service to update status in database
+      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'obtained');
+      
+      // Check if service returned error
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Update local state
+      setHistoryItems(prevItems =>
+        prevItems.map(item =>
+          item.id === itemId
+            ? { ...item, userActionStatus: UserActionStatus.OBTAINED }
+            : item
+        )
+      );
+      setIsHistoryDetailModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to mark item as purchased:', error.message || error);
+    }
+  };
+
+  const handleRemoveFromWishlist = async (itemId: string) => {
+    try {
+      // Call the service to update status in database
+      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'dismissed');
+      
+      // Check if service returned error
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // Update local state
+      setHistoryItems(prevItems =>
+        prevItems.map(item =>
+          item.id === itemId
+            ? { ...item, userActionStatus: UserActionStatus.DISMISSED }
+            : item
+        )
+      );
+      setIsHistoryDetailModalOpen(false);
+    } catch (error: any) {
+      console.error('Failed to remove item from wishlist:', error.message || error);
+    }
+  };
+
   const handleDismissHistoryItem = async (itemId: string) => {
     try {
       // Call the service to update status in database  
@@ -282,6 +330,8 @@ export const useAIHistory = () => {
     handleHistoryItemClick,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
+    handleMarkAsPurchased,
+    handleRemoveFromWishlist,
     handleDismissHistoryItem,
   };
 };

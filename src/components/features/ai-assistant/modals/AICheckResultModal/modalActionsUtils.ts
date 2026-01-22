@@ -3,14 +3,19 @@ import { WardrobeItem } from '../../../../../types';
 
 interface CreateModalActionsProps {
   hideActions: boolean;
-  showSaveMock: boolean;
-  isSavingMock: boolean;
-  mockSaveStatus: 'idle' | 'success' | 'error';
+  showSaveMock?: boolean;
+  isSavingMock?: boolean;
+  mockSaveStatus?: 'idle' | 'success' | 'error';
   selectedWishlistItem?: WardrobeItem | null;
-  onAddToWishlist: () => void;
+  isHistoryItem?: boolean; // Whether this modal is displaying a history item
+  itemStatus?: string; // Current status of the history item for context-aware buttons
+  onAddToWishlist: () => void; // For new items: open wishlist selection popup
+  onApproveForPurchase?: () => void; // For wishlist items: mark as "want to buy" (SAVED status)
+  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (OBTAINED status)
+  onRemoveFromWishlist?: () => void; // Remove from wishlist (DISMISSED status)
   onSkip: () => void;
   onDecideLater: () => void;
-  onSaveMock: () => void;
+  onSaveMock?: () => void;
 }
 
 export const createModalActions = ({
@@ -19,7 +24,12 @@ export const createModalActions = ({
   isSavingMock,
   mockSaveStatus,
   selectedWishlistItem,
+  isHistoryItem,
+  itemStatus,
   onAddToWishlist,
+  onApproveForPurchase,
+  onMarkAsPurchased,
+  onRemoveFromWishlist,
   onSkip,
   onDecideLater,
   onSaveMock
@@ -29,17 +39,81 @@ export const createModalActions = ({
     return [];
   }
 
-  const actions: ModalAction[] = [
-    {
-      label: 'Add to wishlist',
-      onClick: onAddToWishlist,
+  // For history items, determine if this was from a wishlist item
+  const isFromWishlistItem = isHistoryItem && (
+    selectedWishlistItem !== null && selectedWishlistItem !== undefined
+  );
+
+  const actions: ModalAction[] = [];
+
+  // Context-aware buttons based on item status
+  if (isHistoryItem && itemStatus) {
+    if (itemStatus === 'saved') {
+      // For saved items, show 2 buttons: Mark as purchased, Remove from wishlist
+      actions.push(
+        {
+          label: 'Mark as purchased',
+          onClick: () => onMarkAsPurchased?.(),
+          variant: 'primary',
+          fullWidth: true
+        },
+        {
+          label: 'Remove from wishlist',
+          onClick: () => onRemoveFromWishlist?.(),
+          variant: 'secondary',
+          fullWidth: true
+        }
+      );
+    } else if (itemStatus === 'pending') {
+      // For pending items, show Want to buy / Add to wishlist
+      actions.push({
+        label: isFromWishlistItem ? 'Want to buy' : 'Add to wishlist',
+        onClick: () => {
+          if (isFromWishlistItem) {
+            onApproveForPurchase?.();
+          } else {
+            onAddToWishlist();
+          }
+        },
+        variant: 'primary',
+        fullWidth: true
+      });
+    } else if (itemStatus === 'dismissed') {
+      // For dismissed items, show option to add back
+      actions.push({
+        label: 'Add back to wishlist',
+        onClick: () => onApproveForPurchase?.(), // Changes status back to saved
+        variant: 'primary',
+        fullWidth: true
+      });
+    } else if (itemStatus === 'obtained') {
+      // For purchased items, show confirmation or option to remove
+      actions.push({
+        label: 'Remove from wishlist',
+        onClick: () => onRemoveFromWishlist?.(),
+        variant: 'secondary',
+        fullWidth: true
+      });
+    }
+  } else {
+    // For fresh analysis (non-history items)
+    actions.push({
+      label: selectedWishlistItem ? 'Want to buy' : 'Add to wishlist',
+      onClick: () => {
+        if (selectedWishlistItem) {
+          onApproveForPurchase?.();
+        } else {
+          onAddToWishlist();
+        }
+      },
       variant: 'primary',
       fullWidth: true
-    }
-  ];
+    });
+  }
 
   // Add Save as Mock button only when showSaveMock is true (AI Assistant page only)
-  if (showSaveMock) {
+  // Button temporarily hidden per user request - functionality preserved
+  if (false && showSaveMock) {
     actions.push({
       label: isSavingMock 
         ? 'Saving...' 
@@ -62,22 +136,24 @@ export const createModalActions = ({
     } as ModalAction);
   }
 
-  // Add remaining actions
-  actions.push(
-    {
-      label: 'Dismiss',
-      onClick: onSkip,
-      variant: 'secondary',
-      fullWidth: true
-    },
-    {
-      label: 'Decide later',
-      onClick: onDecideLater,
-      variant: 'secondary',
-      fullWidth: true,
-      outlined: true
-    }
-  );
+  // Add remaining actions only for non-history items (fresh analysis)
+  if (!isHistoryItem) {
+    actions.push(
+      {
+        label: selectedWishlistItem ? 'Remove from wishlist' : 'Dismiss',
+        onClick: onSkip,
+        variant: 'secondary',
+        fullWidth: true
+      },
+      {
+        label: 'Decide later',
+        onClick: onDecideLater,
+        variant: 'secondary',
+        fullWidth: true,
+        outlined: true
+      }
+    );
+  }
 
   return actions;
 };

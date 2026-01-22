@@ -29,7 +29,10 @@ interface AICheckResultModalProps {
   status?: WishlistStatus;
   imageUrl?: string;
   extractedTags?: DetectedTags | null;
-  onAddToWishlist?: () => void;
+  onAddToWishlist?: () => void; // For new items: open wishlist selection popup
+  onApproveForPurchase?: () => void; // For wishlist items: mark as "want to buy" (SAVED status)
+  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (OBTAINED status)
+  onRemoveFromWishlist?: () => void; // Remove from wishlist (DISMISSED status)  
   onSkip?: () => void;
   onDecideLater?: () => void;
   error?: string; // Error type from Claude API
@@ -43,6 +46,8 @@ interface AICheckResultModalProps {
   onSaveMock?: (mockData: any) => void; // Callback for saving mock data
   // Wardrobe items for URL refreshing
   wardrobeItems?: WardrobeItem[]; // Current wardrobe items with fresh URLs
+  // Flag to distinguish between fresh analysis and history item display
+  isHistoryItem?: boolean; // Whether this modal is displaying a history item
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -60,6 +65,9 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   imageUrl,
   extractedTags,
   onAddToWishlist,
+  onApproveForPurchase,
+  onMarkAsPurchased,
+  onRemoveFromWishlist,
   onSkip,
   onDecideLater,
   error,
@@ -70,10 +78,11 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   selectedWishlistItem,
   showSaveMock = false,
   onSaveMock,
-  wardrobeItems = []
+  wardrobeItems = [],
+  isHistoryItem = false
 }) => {
   // Use extracted mock save hook
-  const { isSavingMock, mockSaveStatus, handleSaveMock } = useMockSave({
+  const { handleSaveMock } = useMockSave({
     selectedWishlistItem,
     onSaveMock
   });
@@ -113,14 +122,34 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
     });
   };
 
+  // Handler for approving wishlist items for purchase (status PENDING → SAVED)
+  const handleApproveForPurchase = () => {
+    onApproveForPurchase?.();
+    onClose();
+  };
+
+  // Handler for marking items as purchased (status SAVED → OBTAINED)
+  const handleMarkAsPurchased = () => {
+    onMarkAsPurchased?.();
+    onClose();
+  };
+
+  // Handler for removing from wishlist (status → DISMISSED)
+  const handleRemoveFromWishlist = () => {
+    onRemoveFromWishlist?.();
+    onClose();
+  };
+
   // Use extracted actions utility
   const actions = createModalActions({
     hideActions,
-    showSaveMock,
-    isSavingMock,
-    mockSaveStatus,
     selectedWishlistItem,
+    isHistoryItem,
+    itemStatus: status as string, // Pass current status for context-aware buttons
     onAddToWishlist: handleAddToWishlist,
+    onApproveForPurchase: handleApproveForPurchase,
+    onMarkAsPurchased: handleMarkAsPurchased,
+    onRemoveFromWishlist: handleRemoveFromWishlist,
     onSkip: handleSkip,
     onDecideLater: handleDecideLater,
     onSaveMock: handleMockSave

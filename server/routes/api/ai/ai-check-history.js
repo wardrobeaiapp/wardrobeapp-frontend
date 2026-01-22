@@ -303,7 +303,7 @@ router.put('/:id/status', auth, async (req, res) => {
     const user_id = req.user.id;
     
     // Validate status
-    const validStatuses = ['saved', 'dismissed', 'pending', 'applied'];
+    const validStatuses = ['saved', 'dismissed', 'pending', 'applied', 'obtained'];
     if (!validStatuses.includes(user_action_status)) {
       return res.status(400).json({ 
         error: 'Invalid user_action_status',
@@ -315,7 +315,7 @@ router.put('/:id/status', auth, async (req, res) => {
       .from('ai_check_history')
       .update({ user_action_status })
       .eq('id', id)
-      .eq('user_id', user_id)
+      .eq('created_by', user_id)
       .select('id, user_action_status, updated_at')
       .single();
 

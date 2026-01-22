@@ -134,7 +134,6 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
               <option value="all">All Statuses</option>
               <option value="approved">Approved</option>
               <option value="potential_issue">Potential Issues</option>
-              <option value="not_reviewed">Not Reviewed</option>
               <option value="not_recommended">Not Recommended</option>
             </FormSelect>
           </FormField>

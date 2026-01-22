@@ -76,6 +76,33 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
     }
   };
 
+  // Determine if this was an analysis of an existing wishlist item
+  // Try multiple detection methods since wishlist origin info may not be preserved
+  const isFromWishlistItem = item.type === 'check' && (
+    // Method 1: Check richData.itemDetails.wishlist (original approach)
+    (item as any).richData?.itemDetails?.wishlist === true ||
+    // Method 2: Check if itemDetails has an ID (indicates it came from wardrobe/wishlist)
+    !!(item as any).richData?.itemDetails?.id ||
+    // Method 3: Check if itemDetails has wardrobe-specific fields
+    (item as any).richData?.itemDetails?.dateAdded ||
+    (item as any).richData?.itemDetails?.wishlistStatus
+  );
+
+  // Debug logging to understand what data we actually have
+  console.log('🔍 HistoryDetailModal - Detection debug:', {
+    itemId: item.id,
+    hasRichData: !!(item as any).richData,
+    itemDetails: (item as any).richData?.itemDetails,
+    detectionResults: {
+      hasWishlistProp: (item as any).richData?.itemDetails?.wishlist === true,
+      hasItemId: !!(item as any).richData?.itemDetails?.id,
+      hasDateAdded: !!(item as any).richData?.itemDetails?.dateAdded,
+      hasWishlistStatus: !!(item as any).richData?.itemDetails?.wishlistStatus,
+    },
+    finalResult: isFromWishlistItem
+  });
+
+
   const showActionButtons = (item.type === 'check' && item.userActionStatus === UserActionStatus.PENDING) ||
                              (item.type === 'recommendation' && item.userActionStatus === UserActionStatus.SAVED) ||
                              (item.type === 'recommendation' && item.userActionStatus === UserActionStatus.DISMISSED);
@@ -94,9 +121,35 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
         { label: 'Save', onClick: () => onMoveToWishlist?.(item), variant: 'primary', fullWidth: true }
       );
     } else {
+      // Apply contextual button logic based on whether item was from wishlist
       actions.push(
-        { label: 'Move to Wishlist', onClick: () => onMoveToWishlist?.(item), variant: 'primary', fullWidth: true },
-        { label: 'Dismiss', onClick: () => onDismiss?.(item), variant: 'secondary', fullWidth: true }
+        { 
+          label: isFromWishlistItem ? 'Want to buy' : 'Add to wishlist', 
+          onClick: () => {
+            if (isFromWishlistItem) {
+              // For wishlist items: Just update status to SAVED (no popup)
+              onMoveToWishlist?.(item);
+            } else {
+              // For new items: Open wishlist selection popup
+              onMoveToWishlist?.(item);
+            }
+          }, 
+          variant: 'primary', 
+          fullWidth: true 
+        },
+        { 
+          label: isFromWishlistItem ? 'Remove from wishlist' : 'Dismiss', 
+          onClick: () => onDismiss?.(item), 
+          variant: 'secondary', 
+          fullWidth: true 
+        },
+        { 
+          label: 'Decide later', 
+          onClick: onClose, // Close modal but keep item status as pending
+          variant: 'secondary', 
+          fullWidth: true, 
+          outlined: true 
+        }
       );
     }
   }

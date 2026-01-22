@@ -26,6 +26,8 @@ const AIHistoryPage: React.FC = () => {
     handleHistoryItemClick,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
+    handleMarkAsPurchased,
+    handleRemoveFromWishlist,
     handleDismissHistoryItem,
   } = useAIHistory();
 
@@ -70,9 +72,14 @@ const AIHistoryPage: React.FC = () => {
           score={selectedHistoryItem.score}
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
           recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.status as any}
+          status={selectedHistoryItem.userActionStatus as any}
           hideActions={false}
+          isHistoryItem={true}
+          selectedWishlistItem={selectedHistoryItem.richData.itemDetails?.id ? selectedHistoryItem.richData.itemDetails as any : null}
           onAddToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}
+          onApproveForPurchase={() => handleMoveToWishlist(selectedHistoryItem.id)}
+          onMarkAsPurchased={() => handleMarkAsPurchased(selectedHistoryItem.id)}
+          onRemoveFromWishlist={() => handleRemoveFromWishlist(selectedHistoryItem.id)}
           onSkip={() => handleDismissHistoryItem(selectedHistoryItem.id)}
         />
       )}

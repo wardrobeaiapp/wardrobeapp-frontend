@@ -190,7 +190,7 @@ export class AICheckHistoryService {
    */
   async updateRecordStatus(
     id: string, 
-    status: 'saved' | 'dismissed' | 'pending' | 'applied'
+    status: 'saved' | 'dismissed' | 'pending' | 'applied' | 'obtained'
   ): Promise<{ success: boolean; error?: string }> {
     try {
       console.log('Updating AI Check history record status:', { id, status });

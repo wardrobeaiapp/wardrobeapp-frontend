@@ -88,18 +88,25 @@ const AIAssistantPage: React.FC = () => {
     if (selectedWishlistItem && (imageLink || uploadedFile)) {
       console.log('Processing wishlist item with pre-filled data:', selectedWishlistItem);
       
+      // Store the wishlist item reference to preserve it through the analysis
+      const wishlistItemRef = selectedWishlistItem;
+      
       // Create form data from the wishlist item
       const formData = {
-        category: selectedWishlistItem.category as string,
-        subcategory: selectedWishlistItem.subcategory || '',
-        seasons: (selectedWishlistItem.season || []).map(s => s as string)
+        category: wishlistItemRef.category as string,
+        subcategory: wishlistItemRef.subcategory || '',
+        seasons: (wishlistItemRef.season || []).map(s => s as string)
       };
       
       console.log('Bypassing AI Check Settings modal for wishlist item. Using data:', formData);
       
       // Call the AI check directly with the wishlist item data
-      const result = await handleCheckItemRaw(formData, selectedWishlistItem);
+      const result = await handleCheckItemRaw(formData, wishlistItemRef);
       if (result) {
+        // Ensure selectedWishlistItem is still set for the modal
+        if (!selectedWishlistItem) {
+          setSelectedWishlistItem(wishlistItemRef);
+        }
         // Open the result modal if analysis was successful
         handleOpenCheckResultModal();
       }
@@ -209,6 +216,8 @@ const AIAssistantPage: React.FC = () => {
     handleHistoryItemClick,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
+    handleMarkAsPurchased,
+    handleRemoveFromWishlist,
     handleDismissHistoryItem,
   } = useAIHistory();
 
@@ -329,9 +338,14 @@ const AIAssistantPage: React.FC = () => {
           score={selectedHistoryItem.score}
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
           recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.status as any}
+          status={selectedHistoryItem.userActionStatus as any}
           hideActions={false}
+          isHistoryItem={true}
+          selectedWishlistItem={selectedHistoryItem.richData.itemDetails?.id ? selectedHistoryItem.richData.itemDetails as any : null}
           onAddToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}
+          onApproveForPurchase={() => handleMoveToWishlist(selectedHistoryItem.id)}
+          onMarkAsPurchased={() => handleMarkAsPurchased(selectedHistoryItem.id)}
+          onRemoveFromWishlist={() => handleRemoveFromWishlist(selectedHistoryItem.id)}
           onSkip={() => handleDismissHistoryItem(selectedHistoryItem.id)}
         />
       )}
