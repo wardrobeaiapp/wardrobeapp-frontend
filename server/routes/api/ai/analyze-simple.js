@@ -335,6 +335,52 @@ router.post('/', async (req, res) => {
       objectiveFinalReason
     } = outfitAnalysisResults;
 
+    // ===== SAVE TO AI HISTORY =====
+    console.log('\n=== STEP: Save Image-Only Analysis to History ===');
+    
+    // Save analysis results to ai_check_history for future reference
+    if (userId) {
+      try {
+        const supabase = require('../../../shared/supabaseConfig').getClient();
+        const { transformAnalysisForDatabase } = require('../../../utils/aiCheckTransforms');
+        
+        // Prepare analysis data for history saving
+        const historyAnalysisData = {
+          analysis: analysisResponse,
+          score: analysisResult.score,
+          feedback: objectiveFinalReason,
+          recommendationText: objectiveFinalReason,
+          suitableScenarios: suitableScenarios,
+          compatibleItems: consolidatedCompatibleItems,
+          outfitCombinations: outfitCombinations,
+          seasonScenarioCombinations: seasonScenarioCombinations,
+          coverageGapsWithNoOutfits: coverageGapsWithNoOutfits
+        };
+        
+        // Transform for database using formData for image-only analysis  
+        // formData contains category/subcategory from the popup selection
+        const historyData = transformAnalysisForDatabase(historyAnalysisData, formData, userId);
+        
+        // Insert new history record (always insert for image-only analyses)
+        const { data: historyRecord, error: historyError } = await supabase
+          .from('ai_check_history')
+          .insert(historyData)
+          .select('id, wardrobe_item_id, compatibility_score, created_at')
+          .single();
+          
+        if (historyError) {
+          console.warn('⚠️ Failed to save image-only analysis to history:', historyError.message);
+        } else {
+          console.log('✅ Image-only analysis saved to history with ID:', historyRecord.id);
+        }
+      } catch (historyError) {
+        console.warn('⚠️ Error saving to AI history:', historyError.message);
+        // Don't fail the request if history saving fails
+      }
+    } else {
+      console.log('ℹ️ No userId provided - skipping history save');
+    }
+
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
       // MAIN ANALYSIS (required field for frontend popup trigger)

@@ -71,8 +71,10 @@ const AIHistoryPage: React.FC = () => {
           coverageGapsWithNoOutfits={selectedHistoryItem.richData.coverageGapsWithNoOutfits || []}
           score={selectedHistoryItem.score}
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
+          recommendationAction={selectedHistoryItem.richData.recommendationAction || 'RECOMMEND'}
           recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.userActionStatus as any}
+          status={selectedHistoryItem.richData.wishlistStatus || 'approved'}
+          userActionStatus={selectedHistoryItem.userActionStatus}
           hideActions={false}
           isHistoryItem={true}
           selectedWishlistItem={selectedHistoryItem.richData.itemDetails?.id ? selectedHistoryItem.richData.itemDetails as any : null}

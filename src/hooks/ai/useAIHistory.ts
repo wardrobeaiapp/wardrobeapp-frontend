@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
+import { updateWardrobeItem } from '../../services/wardrobe/items/itemCrudService';
 import { WishlistStatus, UserActionStatus } from '../../types';
 import { AIHistoryItem } from '../../types/ai';
 
@@ -262,13 +263,46 @@ export const useAIHistory = () => {
 
   const handleRemoveFromWishlist = async (itemId: string) => {
     try {
-      // Call the service to update status in database
+      // Find the history item to get the wardrobe item details
+      const historyItem = historyItems.find(item => item.id === itemId);
+      if (!historyItem) {
+        throw new Error('History item not found');
+      }
+
+      // First, update the AI history status to dismissed (preserves AI history)
       const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'dismissed');
       
       // Check if service returned error
       if (!result.success) {
         throw new Error(result.error);
       }
+      
+      console.log('✅ AI history status updated to dismissed');
+
+      // Update associated wardrobe item if it exists (hide completely)
+      if (historyItem.type === 'check' && historyItem.richData?.itemDetails?.id) {
+        const wardrobeItemId = historyItem.richData.itemDetails.id;
+        try {
+          await updateWardrobeItem(wardrobeItemId, { 
+            wishlist: false
+          });
+          console.log('✅ Associated wardrobe item removed from wishlist (moved to items tab)');
+        } catch (error) {
+          console.warn('⚠️ Failed to update wardrobe item status:', error);
+        }
+      } else {
+        console.log('ℹ️ No associated wardrobe item - AI check from image only');
+      }
+
+      // Clean up heavy data from AI history (images, combinations) but keep essentials
+      const cleanupResult = await aiCheckHistoryService.cleanupRichData(itemId);
+      if (cleanupResult.success) {
+        console.log('✅ AI history cleaned up - kept recommendation/status/score, removed heavy data');
+      } else {
+        console.warn('⚠️ Failed to clean up AI history data:', cleanupResult.error);
+      }
+
+      console.log('✅ Item removed from wishlist - AI history preserved, wardrobe item updated');
       
       // Update local state
       setHistoryItems(prevItems =>
@@ -281,6 +315,8 @@ export const useAIHistory = () => {
       setIsHistoryDetailModalOpen(false);
     } catch (error: any) {
       console.error('Failed to remove item from wishlist:', error.message || error);
+      // Show user-friendly error message
+      alert('Failed to remove item from wishlist. Please try again.');
     }
   };
 

@@ -376,7 +376,6 @@ const AICheckStep: React.FC<AICheckStepProps> = ({ onNext, markStepCompleted }) 
           coverageGapsWithNoOutfits={aiCheckData.coverageGapsWithNoOutfits}
           imageUrl={aiCheckData.imageUrl}
           selectedWishlistItem={selectedItem}
-          wardrobeItems={wardrobeItems}
           hideActions={true}
         />
       )}

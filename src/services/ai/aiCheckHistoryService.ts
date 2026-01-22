@@ -223,18 +223,59 @@ export class AICheckHistoryService {
   }
 
   /**
+   * Clean up rich data from AI history record (remove images, combinations, keep essentials)
+   */
+  async cleanupRichData(recordId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      if (!apiUrl) {
+        throw new Error('API URL not configured');
+      }
+
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${apiUrl}/api/ai/ai-check-history/${recordId}/cleanup`, {
+        method: 'PUT',
+        headers: headers
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+      }
+
+      console.log('AI Check history rich data cleaned up successfully');
+      return { success: true };
+    } catch (error) {
+      console.error('Error cleaning up AI Check history rich data:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
    * Get AI Check history statistics for dashboard
    */
   async getHistoryStats(): Promise<{ 
     success: boolean; 
-    stats?: {
-      total: number;
+    data?: {
+      totalCount: number;
       avgScore: number;
-      byCategory: Record<string, number>;
-      byStatus: Record<string, number>;
+      byCategory: { [key: string]: number };
+      byStatus: { [key: string]: number };
       recentCount: number;
-    }; 
-    error?: string 
+    };
+    error?: string;
   }> {
     try {
       // Get all history records for stats calculation
@@ -295,8 +336,8 @@ export class AICheckHistoryService {
 
       return {
         success: true,
-        stats: {
-          total,
+        data: {
+          totalCount: total,
           avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
           byCategory,
           byStatus,

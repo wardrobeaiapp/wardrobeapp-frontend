@@ -36,19 +36,19 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
     seasonScenarioCombinations: analysisData.seasonScenarioCombinations || [],
     coverageGapsWithNoOutfits: analysisData.coverageGapsWithNoOutfits || [],
     itemDetails: {
-      id: itemData.id,
-      name: itemData.name,
-      category: mapCategoryToDbFormat(itemData.category),
-      subcategory: itemData.subcategory || null,
-      imageUrl: itemData.imageUrl || null,
-      wishlistStatus: itemData.wishlistStatus || null
+      id: itemData?.id || null, // Support null for image-only analyses
+      name: itemData?.name || 'Image Analysis',
+      category: mapCategoryToDbFormat(itemData?.category),
+      subcategory: itemData?.subcategory || null,
+      imageUrl: itemData?.imageUrl || null,
+      wishlistStatus: itemData?.wishlistStatus || null
     }
   };
   
   // Return EXACT SAME format as analysis-mocks (all 17 columns) + 1 additional status field
   return {
     // Original 7 columns from analysis-mocks
-    wardrobe_item_id: itemData.id,
+    wardrobe_item_id: itemData?.id || '00000000-0000-0000-0000-000000000000', // Use placeholder UUID for image-only analyses
     analysis_data: analysis_data, // Rich JSONB object (not stringified)
     created_from_real_analysis: true,
     created_by: userId,
@@ -58,7 +58,7 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
     // Additional 10 columns from optimize migration (populate from analysisData)
     compatibility_score: Math.round(analysisData.score * 10) || 0, // Convert 0-10 to 0-100 
     suitable_scenarios: analysisData.suitableScenarios || [],
-    item_subcategory: itemData.subcategory || null,
+    item_subcategory: itemData?.subcategory || null,
     recommendation_action: analysisData.score >= 7 ? 'add_to_wardrobe' : 'consider_carefully',
     recommendation_text: analysisData.recommendationText || analysisData.feedback || null,
     wishlist_status: itemData.wishlistStatus || 'not_reviewed',

@@ -45,9 +45,11 @@ router.post('/', auth, async (req, res) => {
       });
     }
     
-    if (!item_data || !item_data.id || !item_data.name) {
+    // item_data is optional for image-only analyses (wardrobe_item_id will be null)
+    // But if provided, it must have required fields
+    if (item_data && (!item_data.id || !item_data.name)) {
       return res.status(400).json({ 
-        error: 'item_data with id and name is required' 
+        error: 'item_data must include id and name if provided' 
       });
     }
     
@@ -74,15 +76,34 @@ router.post('/', auth, async (req, res) => {
     }
 
 
-    // Upsert history record (insert or update if exists) - SAME AS ANALYSIS-MOCKS
-    const { data: historyRecord, error: historyError } = await supabase
-      .from('ai_check_history')
-      .upsert(historyData, { 
-        onConflict: 'wardrobe_item_id,created_by', // SAME PATTERN AS MOCKS
-        ignoreDuplicates: false 
-      })
-      .select('id, wardrobe_item_id, compatibility_score, created_at')
-      .single();
+    // For image-only analyses (placeholder wardrobe_item_id), always insert new records
+    // For wardrobe item analyses, upsert to avoid duplicates
+    let historyRecord, historyError;
+    
+    const isImageOnlyAnalysis = historyData.wardrobe_item_id === '00000000-0000-0000-0000-000000000000';
+    
+    if (!isImageOnlyAnalysis) {
+      // Wardrobe item analysis - use upsert to avoid duplicates
+      const result = await supabase
+        .from('ai_check_history')
+        .upsert(historyData, { 
+          onConflict: 'wardrobe_item_id,created_by',
+          ignoreDuplicates: false 
+        })
+        .select('id, wardrobe_item_id, compatibility_score, created_at')
+        .single();
+      historyRecord = result.data;
+      historyError = result.error;
+    } else {
+      // Image-only analysis - always insert new record (uses placeholder UUID)
+      const result = await supabase
+        .from('ai_check_history')
+        .insert(historyData)
+        .select('id, wardrobe_item_id, compatibility_score, created_at')
+        .single();
+      historyRecord = result.data;
+      historyError = result.error;
+    }
       
 
     if (historyError) {
@@ -333,15 +354,99 @@ router.put('/:id/status', auth, async (req, res) => {
       });
     }
 
-    
     res.json({
       success: true,
       message: 'Status updated successfully',
-      record: updatedRecord
+      data: updatedRecord
     });
 
   } catch (error) {
-    console.error('Error in PUT /api/ai-check-history/:id/status:', error);
+    console.error('Error in PUT /ai/ai-check-history/:id/status:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
+  }
+});
+
+// @route   PUT /api/ai-check-history/:id/cleanup
+// @desc    Clean up rich data and break foreign key reference to prevent cascade delete
+// @access  Private (requires authentication)
+router.put('/:id/cleanup', auth, async (req, res) => {
+  try {
+    if (!supabaseConfig.isConfigured()) {
+      return res.status(503).json({ 
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
+    const { id } = req.params;
+    const user_id = req.user.id;
+    
+    // Get the current record to extract essential data
+    const { data: currentRecord, error: fetchError } = await supabase
+      .from('ai_check_history')
+      .select('rich_data')
+      .eq('id', id)
+      .eq('created_by', user_id)
+      .single();
+
+    if (fetchError || !currentRecord) {
+      return res.status(404).json({ 
+        error: 'AI Check history record not found' 
+      });
+    }
+
+    // Extract only essential data from rich_data
+    let cleanedRichData = null;
+    if (currentRecord.rich_data) {
+      const richData = currentRecord.rich_data;
+      cleanedRichData = {
+        // Keep essential analysis data
+        recommendationText: richData.recommendationText,
+        rawAnalysis: richData.rawAnalysis,
+        // Remove heavy data: compatibleItems, outfitCombinations, itemDetails, etc.
+        // Only keep lightweight reference data if needed
+        suitableScenarios: richData.suitableScenarios
+      };
+    }
+
+    // Update the record with cleaned rich_data AND break foreign key reference
+    const { data: updatedRecord, error: updateError } = await supabase
+      .from('ai_check_history')
+      .update({ 
+        rich_data: cleanedRichData,
+        wardrobe_item_id: null, // Break foreign key reference to prevent cascade delete
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .eq('created_by', user_id)
+      .select('id, updated_at')
+      .single();
+
+    if (updateError) {
+      console.error('Error cleaning up AI Check history rich data:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to clean up AI Check history rich data',
+        details: updateError.message 
+      });
+    }
+
+    if (!updatedRecord) {
+      return res.status(404).json({ 
+        error: 'AI Check history record not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Rich data cleaned up and foreign key reference removed successfully',
+      data: updatedRecord
+    });
+
+  } catch (error) {
+    console.error('Error in PUT /ai/ai-check-history/:id/cleanup:', error);
     res.status(500).json({ 
       error: 'Internal server error',
       details: error.message 

@@ -65,27 +65,30 @@ export const createModalActions = ({
         }
       );
     } else if (itemStatus === 'pending') {
-      // For pending items, show Want to buy / Add to wishlist
-      actions.push({
-        label: isFromWishlistItem ? 'Want to buy' : 'Add to wishlist',
-        onClick: () => {
-          if (isFromWishlistItem) {
-            onApproveForPurchase?.();
-          } else {
-            onAddToWishlist();
-          }
+      // For pending items, show Want to buy / Add to wishlist + Dismiss
+      actions.push(
+        {
+          label: isFromWishlistItem ? 'Want to buy' : 'Add to wishlist',
+          onClick: () => {
+            if (isFromWishlistItem) {
+              onApproveForPurchase?.();
+            } else {
+              onAddToWishlist();
+            }
+          },
+          variant: 'primary',
+          fullWidth: true
         },
-        variant: 'primary',
-        fullWidth: true
-      });
+        {
+          label: isFromWishlistItem ? 'Remove from wishlist' : 'Dismiss',
+          onClick: () => onRemoveFromWishlist?.(),
+          variant: 'secondary',
+          fullWidth: true
+        }
+      );
     } else if (itemStatus === 'dismissed') {
-      // For dismissed items, show option to add back
-      actions.push({
-        label: 'Add back to wishlist',
-        onClick: () => onApproveForPurchase?.(), // Changes status back to saved
-        variant: 'primary',
-        fullWidth: true
-      });
+      // For dismissed items, no actions available (removal is final)
+      // Items are permanently removed from wishlist
     } else if (itemStatus === 'obtained') {
       // For purchased items, show confirmation or option to remove
       actions.push({
@@ -141,7 +144,7 @@ export const createModalActions = ({
     actions.push(
       {
         label: selectedWishlistItem ? 'Remove from wishlist' : 'Dismiss',
-        onClick: onSkip,
+        onClick: selectedWishlistItem ? () => onRemoveFromWishlist?.() : onSkip,
         variant: 'secondary',
         fullWidth: true
       },

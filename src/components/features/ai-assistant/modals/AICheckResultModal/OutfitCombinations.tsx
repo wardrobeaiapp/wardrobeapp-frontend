@@ -42,6 +42,11 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
 
   // Simple function to find refreshed item from compatible items (SAME DATA AS CARDS!)
   const findRefreshedItem = (itemName: string): any => {
+    // Check if itemName is valid
+    if (!itemName || typeof itemName !== 'string') {
+      return null;
+    }
+    
     // Search through all categories of compatible items
     for (const category of Object.values(compatibleItems)) {
       const item = category.find((item: any) => 

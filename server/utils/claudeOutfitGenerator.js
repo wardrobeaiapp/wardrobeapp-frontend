@@ -188,7 +188,7 @@ function parseClaudeOutfitResponse(claudeResponse, baseItemData, itemsByCategory
     const explanation = lines.find(line => line.toLowerCase().startsWith('explanation:')) || '';
     
     // Parse item names from the line
-    const itemNames = itemsLine.split('+').map(name => name.trim());
+    const itemNames = itemsLine.split('+').map(name => name.trim()).filter(name => name && name.length > 0);
     const outfitItems = [];
     
     // Add base item first
@@ -199,7 +199,8 @@ function parseClaudeOutfitResponse(claudeResponse, baseItemData, itemsByCategory
     
     // Find matching items from available items
     itemNames.forEach(itemName => {
-      if (itemName.toLowerCase() === baseItemData.name.toLowerCase()) return; // Skip base item
+      if (!itemName || typeof itemName !== 'string') return; // Skip invalid item names
+      if (baseItemData.name && itemName.toLowerCase() === baseItemData.name.toLowerCase()) return; // Skip base item
       
       // Search for this item in available items
       Object.values(itemsByCategory).forEach(categoryItems => {

@@ -1,11 +1,12 @@
-import React from 'react';
-import { WishlistStatus, WardrobeItem } from '../../../../../types';
+import React, { useState } from 'react';
 import { Modal } from '../../../../common/Modal';
 import { 
   ImageContainer,
   PreviewImage,
   ConstrainedItemImage
 } from './AICheckResultModal.styles';
+import DeleteConfirmationModal from '../../../wardrobe/modals/DeleteConfirmationModal';
+import { WishlistStatus, WardrobeItem } from '../../../../../types';
 import { DetectedTags } from '../../../../../services/ai/formAutoPopulation';
 import OutfitCombinations from './OutfitCombinations';
 import CompatibleItemsSection from './CompatibleItemsSection';
@@ -43,11 +44,9 @@ interface AICheckResultModalProps {
   // New props for saving as mock
   selectedWishlistItem?: WardrobeItem | null; // The wardrobe item being analyzed
   showSaveMock?: boolean; // Whether to show Save as Mock button (only on AI Assistant page)
-  onSaveMock?: (mockData: any) => void; // Callback for saving mock data
-  // Wardrobe items for URL refreshing
-  wardrobeItems?: WardrobeItem[]; // Current wardrobe items with fresh URLs
-  // Flag to distinguish between fresh analysis and history item display
+  onSaveMock?: (mockData: any) => Promise<void>;
   isHistoryItem?: boolean; // Whether this modal is displaying a history item
+  userActionStatus?: string; // User action status for context-aware button logic
 }
 
 const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
@@ -78,9 +77,12 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   selectedWishlistItem,
   showSaveMock = false,
   onSaveMock,
-  wardrobeItems = [],
-  isHistoryItem = false
+  isHistoryItem = false,
+  userActionStatus
 }) => {
+  // State for confirmation modal
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
+
   // Use extracted mock save hook
   const { handleSaveMock } = useMockSave({
     selectedWishlistItem,
@@ -136,7 +138,13 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
 
   // Handler for removing from wishlist (status → DISMISSED)
   const handleRemoveFromWishlist = () => {
+    setIsConfirmationModalOpen(true);
+  };
+
+  // Handler for confirming removal
+  const handleConfirmRemoval = () => {
     onRemoveFromWishlist?.();
+    setIsConfirmationModalOpen(false);
     onClose();
   };
 
@@ -145,7 +153,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
     hideActions,
     selectedWishlistItem,
     isHistoryItem,
-    itemStatus: status as string, // Pass current status for context-aware buttons
+    itemStatus: userActionStatus || status as string, // Use userActionStatus for button logic, fallback to status
     onAddToWishlist: handleAddToWishlist,
     onApproveForPurchase: handleApproveForPurchase,
     onMarkAsPurchased: handleMarkAsPurchased,
@@ -156,6 +164,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   });
 
   return (
+    <>
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -208,6 +217,18 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
           status={status}
         />
     </Modal>
+
+    {/* Confirmation Modal for Remove from Wishlist */}
+    <DeleteConfirmationModal
+      isOpen={isConfirmationModalOpen}
+      onClose={() => setIsConfirmationModalOpen(false)}
+      onConfirm={handleConfirmRemoval}
+      title="Remove from Wishlist"
+      message="Remove this item from wishlist permanently? This will delete all analysis data and cannot be undone."
+      confirmText="Remove"
+      cancelText="Cancel"
+    />
+  </>
   );
 };
 
