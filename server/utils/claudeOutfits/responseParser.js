@@ -43,10 +43,20 @@ function parseClaudeOutfitResponse(claudeResponse, baseItemData, itemsByCategory
     
     // Add base item first (with null safety)
     if (baseItemData) {
-      outfitItems.push({
+      const baseItemForOutfit = {
         ...baseItemData,
         compatibilityTypes: ['base-item']
-      });
+      };
+      
+      console.log(`   📦 Adding base item to outfit ${index + 1}:`);
+      console.log('     - Name:', baseItemForOutfit.name || 'MISSING NAME');
+      console.log('     - Category:', baseItemForOutfit.category || 'MISSING CATEGORY');
+      console.log('     - Has imageUrl:', !!baseItemForOutfit.imageUrl);
+      console.log('     - ImageUrl preview:', baseItemForOutfit.imageUrl ? baseItemForOutfit.imageUrl.substring(0, 50) + '...' : 'NO IMAGE URL');
+      
+      outfitItems.push(baseItemForOutfit);
+    } else {
+      console.log(`   ❌ NO BASE ITEM DATA for outfit ${index + 1}`);
     }
     
     // Find matching items from available items

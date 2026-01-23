@@ -314,8 +314,48 @@ router.post('/', async (req, res) => {
     // ===== OUTFIT ANALYSIS ORCHESTRATION =====
     console.log('\n=== STEP: Outfit Analysis Orchestration ===');
     
+    // Prepare base item data with image for outfit thumbnails
+    let itemDataForOutfits = { ...formData };
+    if (preFilledData) {
+      itemDataForOutfits = { ...itemDataForOutfits, ...preFilledData };
+    }
+    
+    // Debug conditions for image enhancement
+    console.log('🔍 IMAGE ENHANCEMENT CONDITIONS CHECK:');
+    console.log('   - preFilledData:', preFilledData ? 'EXISTS' : 'NULL');
+    console.log('   - preFilledData.imageUrl:', preFilledData?.imageUrl ? 'EXISTS (wishlist)' : 'MISSING (uploaded)');
+    console.log('   - imageBase64:', imageBase64 ? 'EXISTS' : 'MISSING');
+    console.log('   - Should enhance?', !preFilledData?.imageUrl && imageBase64 ? 'YES' : 'NO');
+    
+    // For uploaded images, add the image data and ensure name exists
+    // Check for missing imageUrl (uploaded images) vs existing imageUrl (wishlist items)
+    if (!preFilledData?.imageUrl && imageBase64) {
+      // Convert base64 to data URL format for frontend display
+      const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
+      itemDataForOutfits.imageUrl = imageDataUrl;
+      
+      // Ensure name exists for uploaded images (generate if missing)
+      if (!itemDataForOutfits.name) {
+        const category = itemDataForOutfits.category || 'Item';
+        const subcategory = itemDataForOutfits.subcategory || '';
+        const color = itemDataForOutfits.color || '';
+        itemDataForOutfits.name = `${color ? color + ' ' : ''}${subcategory || category}`.trim();
+      }
+      
+      console.log('🖼️ Added image data and name to base item for outfit thumbnails');
+      console.log('   - Name:', itemDataForOutfits.name);
+      console.log('   - ImageUrl length:', imageDataUrl.length);
+    }
+    
+    console.log('🔍 Base item data for outfits:', {
+      name: itemDataForOutfits.name,
+      category: itemDataForOutfits.category,
+      hasImageUrl: !!itemDataForOutfits.imageUrl,
+      imageUrlLength: itemDataForOutfits.imageUrl ? itemDataForOutfits.imageUrl.length : 0
+    });
+    
     const outfitAnalysisResults = await orchestrateOutfitAnalysis({
-      formData,
+      formData: itemDataForOutfits,
       preFilledData,
       suitableScenarios,
       consolidatedCompatibleItems,

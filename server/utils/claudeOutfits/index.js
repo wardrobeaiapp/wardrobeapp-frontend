@@ -20,6 +20,14 @@ const { parseClaudeOutfitResponse } = require('./responseParser');
 async function generateOutfitsWithClaude(itemData, itemsByCategory, season, scenario, anthropicClient) {
   console.log(`   🤖 Asking Claude to create outfits for ${season} ${scenario}...`);
   
+  // Debug base item data for outfit generation
+  console.log('   🔍 BASE ITEM DEBUG in generateOutfitsWithClaude:');
+  console.log('   - Name:', itemData?.name);
+  console.log('   - Category:', itemData?.category);
+  console.log('   - Has imageUrl:', !!itemData?.imageUrl);
+  console.log('   - ImageUrl type:', typeof itemData?.imageUrl);
+  console.log('   - ImageUrl preview:', itemData?.imageUrl ? itemData.imageUrl.substring(0, 50) + '...' : 'none');
+  
   // Build comprehensive prompt with item details
   const outfitPrompt = buildOutfitCreationPrompt(itemData, itemsByCategory, season, scenario);
   

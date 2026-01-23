@@ -66,10 +66,17 @@ async function orchestrateOutfitAnalysis({
   }
   
   const itemDataWithScenarios = {
-    ...formData,
+    ...formData, // Use the enhanced formData that includes image and name for uploaded images
     ...preFilledData,
     scenarios: finalScenarios
   };
+  
+  // Debug: Check if image and name data exists in itemDataWithScenarios
+  console.log('🔍 [orchestrateOutfitAnalysis] itemDataWithScenarios data check:');
+  console.log('   - name:', itemDataWithScenarios.name || 'MISSING NAME');
+  console.log('   - category:', itemDataWithScenarios.category || 'MISSING CATEGORY');
+  console.log('   - hasImageUrl:', !!itemDataWithScenarios.imageUrl);
+  console.log('   - imageUrl preview:', itemDataWithScenarios.imageUrl ? itemDataWithScenarios.imageUrl.substring(0, 50) + '...' : 'NO IMAGE URL');
   
   // Debug: Check if seasons data exists
   console.log('🔍 [orchestrateOutfitAnalysis] itemDataWithScenarios debug:');
