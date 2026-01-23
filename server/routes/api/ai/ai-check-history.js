@@ -1,16 +1,8 @@
 const express = require('express');
 const auth = require('../../../middleware/auth');
-const supabaseConfig = require('../../../shared/supabaseConfig');
-const { 
-  transformAnalysisForDatabase, 
-  transformDatabaseToFrontend,
-  calculateHistoryStats 
-} = require('../../../utils/aiCheckTransforms');
+const aiCheckHistoryDbService = require('../../../services/aiCheckHistoryDbService');
 
 const router = express.Router();
-
-// Get Supabase client
-const supabase = supabaseConfig.getClient();
 
 // Routes for AI Check History management
 
@@ -20,7 +12,7 @@ const supabase = supabaseConfig.getClient();
 router.post('/', auth, async (req, res) => {
   try {
     
-    if (!supabaseConfig.isConfigured()) {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -59,66 +51,12 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
-    // Transform analysis data for database storage
-    let historyData;
-    try {
-      historyData = transformAnalysisForDatabase(analysis_data, item_data, user_id);
-      
-      // Debug log to verify analysis_data is included
-      console.log('🔍 historyData includes analysis_data:', {
-        hasAnalysisData: !!historyData.analysis_data,
-        analysisDataSize: historyData.analysis_data ? JSON.stringify(historyData.analysis_data).length : 0,
-        allFields: Object.keys(historyData)
-      });
-    } catch (transformError) {
-      console.error('❌ Step 1: Data transformation failed:', transformError);
-      throw transformError;
-    }
-
-
-    // For image-only analyses (placeholder wardrobe_item_id), always insert new records
-    // For wardrobe item analyses, upsert to avoid duplicates
-    let historyRecord, historyError;
-    
-    const isImageOnlyAnalysis = historyData.wardrobe_item_id === '00000000-0000-0000-0000-000000000000';
-    
-    if (!isImageOnlyAnalysis) {
-      // Wardrobe item analysis - use upsert to avoid duplicates
-      const result = await supabase
-        .from('ai_check_history')
-        .upsert(historyData, { 
-          onConflict: 'wardrobe_item_id,created_by',
-          ignoreDuplicates: false 
-        })
-        .select('id, wardrobe_item_id, compatibility_score, created_at')
-        .single();
-      historyRecord = result.data;
-      historyError = result.error;
-    } else {
-      // Image-only analysis - always insert new record (uses placeholder UUID)
-      const result = await supabase
-        .from('ai_check_history')
-        .insert(historyData)
-        .select('id, wardrobe_item_id, compatibility_score, created_at')
-        .single();
-      historyRecord = result.data;
-      historyError = result.error;
-    }
-      
-
-    if (historyError) {
-      console.error('Error saving AI Check history:', {
-        error: historyError,
-        code: historyError.code,
-        message: historyError.message,
-        details: historyError.details
-      });
-      return res.status(500).json({ 
-        error: 'Failed to save AI Check history',
-        details: historyError.message,
-        code: historyError.code
-      });
-    }
+    // Save analysis to history using database service
+    const historyRecord = await aiCheckHistoryDbService.saveAnalysisToHistory(
+      analysis_data, 
+      item_data, 
+      user_id
+    );
 
     
     res.json({
@@ -145,7 +83,7 @@ router.post('/', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.get('/', auth, async (req, res) => {
   try {
-    if (!supabaseConfig.isConfigured()) {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -153,58 +91,25 @@ router.get('/', auth, async (req, res) => {
     }
 
     const user_id = req.user.id;
-    const { limit = 50, offset = 0, category, min_score, max_score } = req.query;
+    const { limit = 50, offset = 0 } = req.query;
     
-    // Build query
-    // Query ALL 18 columns (complete ai_analysis_mocks structure + user_action_status)
-    let query = supabase
-      .from('ai_check_history')
-      .select(`
-        id, wardrobe_item_id, analysis_data, created_from_real_analysis, created_by,
-        created_at, updated_at,
-        compatibility_score, suitable_scenarios, item_subcategory, recommendation_action,
-        recommendation_text, wishlist_status, has_compatible_items, outfit_combinations_count,
-        analysis_error, analysis_error_details,
-        user_action_status
-      `)
-      .eq('created_by', user_id) // SAME AS MOCKS: filter by created_by not user_id
-      .order('created_at', { ascending: false });
-
-    // Apply filters on JSONB analysis_data field (same as analysis-mocks approach)
-    if (category) {
-      query = query.contains('analysis_data', { itemDetails: { category } });
-    }
+    // Calculate page from offset
+    const page = Math.floor(parseInt(offset) / parseInt(limit)) + 1;
     
-    if (min_score !== undefined) {
-      query = query.gte('analysis_data->score', parseFloat(min_score));
-    }
-    
-    if (max_score !== undefined) {
-      query = query.lte('analysis_data->score', parseFloat(max_score));
-    }
-
-    // Apply pagination
-    query = query.range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
-
-    const { data: historyRecords, error: historyError } = await query;
-
-    if (historyError) {
-      console.error('❌ Error fetching AI Check history:', historyError);
-      return res.status(500).json({ 
-        error: 'Failed to fetch AI Check history',
-        details: historyError.message 
-      });
-    }
-
-    // Transform data back to frontend format
-    const transformedRecords = historyRecords.map(record => transformDatabaseToFrontend(record));
+    // Get history using database service
+    const result = await aiCheckHistoryDbService.getHistoryForUser(user_id, {
+      page,
+      limit: parseInt(limit)
+    });
 
     res.json({
       success: true,
-      history: transformedRecords,
-      total: transformedRecords.length,
+      history: result.records,
+      stats: result.stats,
+      total: result.records.length,
       offset: parseInt(offset),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      hasMore: result.pagination.hasMore
     });
 
   } catch (error) {
@@ -221,7 +126,7 @@ router.get('/', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.get('/:id', auth, async (req, res) => {
   try {
-    if (!supabaseConfig.isConfigured()) {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -231,71 +136,18 @@ router.get('/:id', auth, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
     
-    const { data: record, error: fetchError } = await supabase
-      .from('ai_check_history')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', user_id)
-      .single();
-
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ 
-          error: 'AI Check history record not found' 
-        });
-      }
-      
-      console.error('Error fetching AI Check history record:', fetchError);
-      return res.status(500).json({ 
-        error: 'Failed to fetch AI Check history record',
-        details: fetchError.message 
+    // Get record using database service
+    const record = await aiCheckHistoryDbService.getHistoryById(id, user_id);
+    
+    if (!record) {
+      return res.status(404).json({ 
+        error: 'AI Check history record not found' 
       });
     }
 
-    // Transform to frontend format (same as GET / route)
-    const transformedRecord = {
-      id: record.id,
-      type: 'check',
-      title: record.title,
-      description: record.description,
-      summary: record.summary,
-      date: new Date(record.analysis_date),
-      status: record.status,
-      userActionStatus: record.user_action_status,
-      
-      // Core analysis results
-      score: record.score,
-      feedback: record.feedback,
-      recommendationText: record.recommendation_text,
-      
-      // Item details
-      itemId: record.item_id,
-      itemName: record.item_name,
-      itemCategory: record.item_category,
-      itemSubcategory: record.item_subcategory,
-      itemImageUrl: record.item_image_url,
-      itemWishlistStatus: record.item_wishlist_status,
-      
-      // Analysis data (parse JSON)
-      suitableScenarios: JSON.parse(record.suitable_scenarios || '[]'),
-      compatibleItems: JSON.parse(record.compatible_items || '{}'),
-      outfitCombinations: JSON.parse(record.outfit_combinations || '[]'),
-      seasonScenarioCombinations: JSON.parse(record.season_scenario_combinations || '[]'),
-      coverageGapsWithNoOutfits: JSON.parse(record.coverage_gaps_with_no_outfits || '[]'),
-      
-      // Raw analysis data
-      rawAnalysis: record.raw_analysis,
-      analysisMetadata: JSON.parse(record.analysis_metadata || '{}'),
-      
-      // Legacy support
-      itemsChecked: record.items_checked,
-      image: record.item_image_url,
-      analysisResults: JSON.parse(record.legacy_analysis_results || '{}')
-    };
-
     res.json({
       success: true,
-      record: transformedRecord
+      record: record
     });
 
   } catch (error) {
@@ -312,7 +164,7 @@ router.get('/:id', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.put('/:id/status', auth, async (req, res) => {
   try {
-    if (!supabaseConfig.isConfigured()) {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -332,21 +184,8 @@ router.put('/:id/status', auth, async (req, res) => {
       });
     }
 
-    const { data: updatedRecord, error: updateError } = await supabase
-      .from('ai_check_history')
-      .update({ user_action_status })
-      .eq('id', id)
-      .eq('created_by', user_id)
-      .select('id, user_action_status, updated_at')
-      .single();
-
-    if (updateError) {
-      console.error('Error updating AI Check history status:', updateError);
-      return res.status(500).json({ 
-        error: 'Failed to update AI Check history status',
-        details: updateError.message 
-      });
-    }
+    // Update status using database service
+    const updatedRecord = await aiCheckHistoryDbService.updateHistoryStatus(id, user_id, user_action_status);
 
     if (!updatedRecord) {
       return res.status(404).json({ 
@@ -374,7 +213,7 @@ router.put('/:id/status', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.put('/:id/cleanup', auth, async (req, res) => {
   try {
-    if (!supabaseConfig.isConfigured()) {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
         details: 'Supabase configuration is missing'
@@ -384,55 +223,9 @@ router.put('/:id/cleanup', auth, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
     
-    // Get the current record to extract essential data
-    const { data: currentRecord, error: fetchError } = await supabase
-      .from('ai_check_history')
-      .select('rich_data')
-      .eq('id', id)
-      .eq('created_by', user_id)
-      .single();
-
-    if (fetchError || !currentRecord) {
-      return res.status(404).json({ 
-        error: 'AI Check history record not found' 
-      });
-    }
-
-    // Extract only essential data from rich_data
-    let cleanedRichData = null;
-    if (currentRecord.rich_data) {
-      const richData = currentRecord.rich_data;
-      cleanedRichData = {
-        // Keep essential analysis data
-        recommendationText: richData.recommendationText,
-        rawAnalysis: richData.rawAnalysis,
-        // Remove heavy data: compatibleItems, outfitCombinations, itemDetails, etc.
-        // Only keep lightweight reference data if needed
-        suitableScenarios: richData.suitableScenarios
-      };
-    }
-
-    // Update the record with cleaned rich_data AND break foreign key reference
-    const { data: updatedRecord, error: updateError } = await supabase
-      .from('ai_check_history')
-      .update({ 
-        rich_data: cleanedRichData,
-        wardrobe_item_id: null, // Break foreign key reference to prevent cascade delete
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('created_by', user_id)
-      .select('id, updated_at')
-      .single();
-
-    if (updateError) {
-      console.error('Error cleaning up AI Check history rich data:', updateError);
-      return res.status(500).json({ 
-        error: 'Failed to clean up AI Check history rich data',
-        details: updateError.message 
-      });
-    }
-
+    // Clean up rich data using database service
+    const updatedRecord = await aiCheckHistoryDbService.cleanupHistoryRichData(id, user_id);
+    
     if (!updatedRecord) {
       return res.status(404).json({ 
         error: 'AI Check history record not found' 
