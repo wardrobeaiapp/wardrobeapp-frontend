@@ -3,19 +3,20 @@ const { Anthropic } = require('@anthropic-ai/sdk');
 const router = express.Router();
 
 // Import services
-const duplicateDetectionService = require('../../../services/duplicateDetectionService');
 const compatibilityAnalysisService = require('../../../services/compatibilityAnalysisService');
 const { orchestrateOutfitAnalysis } = require('../../../services/outfitAnalysisOrchestrator');
+const { performClaudeAnalysis } = require('../../../services/claudeAnalysisService');
+const { saveAnalysisToHistory } = require('../../../services/aiHistoryService');
+const { performDuplicateDetectionWorkflow } = require('../../../services/duplicateDetectionWorkflow');
 
 // Import utilities
 const extractSuitableScenarios = require('../../../utils/ai/extractSuitableScenarios');
 const imageValidator = require('../../../utils/imageValidator');
 
-// Import new modular utilities
-const { getAnalysisScope } = require('../../../utils/ai/analysisScopeUtils');
+// Import utilities still used in this file
 const { extractItemCharacteristics } = require('../../../utils/ai/characteristicExtractionUtils');
-const { buildEnhancedAnalysisPrompt } = require('../../../utils/ai/enhancedPromptBuilder');
 const { consolidateCompatibilityResults } = require('../../../utils/ai/compatibilityResultsUtils');
+const { enhanceBaseItemForOutfits } = require('../../../utils/ai/baseItemEnhancer');
 
 // Check and initialize Claude client
 console.log('🔑 ANTHROPIC_API_KEY status:', process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET');
@@ -126,95 +127,22 @@ router.post('/', async (req, res) => {
     const mediaType = imageValidation.mediaType || 'image/jpeg'; // Use detected media type with fallback
     console.log('🖼️ Using media type for Claude API:', mediaType);
 
-    // === ENHANCED CHARACTERISTIC ANALYSIS ===
-    console.log('=== STEP: Enhanced Characteristic Analysis Setup ===');
-    
-    // Merge form data with pre-filled wishlist data
-    const analysisData = {
-      ...formData,
-      ...(preFilledData || {}), // Wishlist data takes precedence where available
-      isFromWishlist: !!preFilledData
-    };
-    
-    // Determine analysis scope based on category/subcategory (using DetailsFields.tsx logic)
-    console.log('🔍 SCOPE INPUT DEBUG:');
-    console.log('  - analysisData.category:', analysisData.category);
-    console.log('  - analysisData.subcategory:', analysisData.subcategory);
-    console.log('  - Expected for TOP/Blouse: sleeves = true');
-    
-    const analysisScope = getAnalysisScope(analysisData.category, analysisData.subcategory);
-    
-    console.log('📊 Analysis data:', analysisData);
-    console.log('🔍 Analysis scope:', analysisScope);
-    
-    // Debug specific sleeve scope issue
-    if (analysisData.category === 'TOP' && analysisData.subcategory === 'Blouse') {
-      console.log('🎯 TOP/Blouse detected - sleeves should be true, actual:', analysisScope.conditional.sleeves);
-    }
-    if (preFilledData) {
-      console.log('👗 Pre-filled wishlist data detected - will verify/correct/complete');
-    }
-
-    // Initialize duplicate prompt section as empty (will be populated after image analysis)
-    let duplicatePromptSection = '';
-
-    // Build comprehensive system prompt using modular approach
-    const systemPrompt = buildEnhancedAnalysisPrompt(
+    // === CLAUDE ANALYSIS ===
+    const {
+      rawAnalysisResponse,
+      analysisResponse,
+      finalReason,
+      claudeRecommendation,
       analysisData,
-      analysisScope,
+      analysisScope
+    } = await performClaudeAnalysis({
+      formData,
       preFilledData,
       scenarios,
-      duplicatePromptSection
-    );
-
-    // Call Claude API
-    const response = await anthropic.messages.create({
-      model: "claude-3-haiku-20240307",
-      max_tokens: 1024,
-      temperature: 0.5,
-      system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: mediaType,
-                data: base64Data
-              }
-            },
-            {
-              type: "text",
-              text: "Please analyze this clothing item as potential purchase for my wardrobe."
-            }
-          ]
-        }
-      ]
+      mediaType,
+      base64Data,
+      anthropicClient: anthropic
     });
-
-    // Get the raw response text
-    const rawAnalysisResponse = response.content[0].text;
-    
-    // Extract final reason and recommendation from raw text BEFORE cleaning
-    let finalReason = "";
-    const finalReasonMatch = rawAnalysisResponse.match(/REASON:?\s*([\s\S]*?)(?=FINAL RECOMMENDATION:?|$)/i);
-    if (finalReasonMatch && finalReasonMatch[1]) {
-      finalReason = finalReasonMatch[1].trim();
-    }
-    
-    let claudeRecommendation = "";
-    const finalRecommendationMatch = rawAnalysisResponse.match(/FINAL RECOMMENDATION:?\s*([\s\S]*?)(?=SCORE:?|$)/i);
-    if (finalRecommendationMatch && finalRecommendationMatch[1]) {
-      claudeRecommendation = finalRecommendationMatch[1].trim();
-    }
-    
-    // Clean up the analysis text for display (remove Claude's recommendation sections)
-    let analysisResponse = rawAnalysisResponse;
-    analysisResponse = analysisResponse.replace(/FINAL RECOMMENDATION:?\s*[\s\S]*?(?=REASON:|$)/i, '');
-    analysisResponse = analysisResponse.replace(/REASON:?\s*[\s\S]*?$/i, '');
-    analysisResponse = analysisResponse.trim();
     
     const suitableScenarios = extractSuitableScenarios(rawAnalysisResponse, scenarios);
     
@@ -233,47 +161,11 @@ router.post('/', async (req, res) => {
     console.log('🏷️ Extracted characteristics:', extractedCharacteristics);
 
     // === DUPLICATE DETECTION ===
-    console.log('=== STEP: Duplicate Detection ===');
-    
-    // Check if we have similar items in context for duplicate analysis
-    console.log('🔍 DEBUG - similarContext:', similarContext ? `${similarContext.length} items` : 'none');
-    console.log('🔍 DEBUG - formData:', `${formData?.name} (${formData?.category}/${formData?.subcategory})`);
-    
-    // Enhanced debugging - show summary only
-    if (similarContext && similarContext.length > 0) {
-      const categoryMatches = similarContext.filter(item => 
-        item.category?.toLowerCase() === formData.category?.toLowerCase()
-      ).length;
-      const subcategoryMatches = similarContext.filter(item => 
-        item.subcategory?.toLowerCase() === formData.subcategory?.toLowerCase()
-      ).length;
-      
-      console.log(`🔍 DEBUG - Target: "${formData.category}/${formData.subcategory}"`);
-      console.log(`🔍 DEBUG - Matches: ${categoryMatches} category, ${subcategoryMatches} subcategory`);
-    }
-    
-    // Use analysis data (form data + pre-filled data) for duplicate detection  
-    const duplicateResult = await duplicateDetectionService.analyzeWithFormData(
-      analysisData, similarContext
-    );
-    
-    // Update the duplicatePromptSection (already declared earlier)
-    if (duplicateResult) {
-      duplicatePromptSection = duplicateDetectionService.generatePromptSection(
-        duplicateResult.extractedAttributes, 
-        duplicateResult.duplicateAnalysis
-      );
-      console.log('✅ Duplicate analysis completed using form data');
-      console.log('   - Duplicates found:', duplicateResult.duplicateAnalysis.duplicate_analysis.found);
-      console.log('   - Count:', duplicateResult.duplicateAnalysis.duplicate_analysis.count);
-      console.log('   - Items:', duplicateResult.duplicateAnalysis.duplicate_analysis.items);
-      console.log('   - Severity:', duplicateResult.duplicateAnalysis.duplicate_analysis.severity);
-      console.log('   - Form data attributes:', duplicateResult.extractedAttributes);
-      console.log('🔍 DEBUG - Generated duplicate prompt section:');
-      console.log(duplicatePromptSection);
-    } else {
-      console.log('⚠️ Duplicate analysis skipped (insufficient data)');
-    }
+    const { duplicateResult, duplicatePromptSection } = await performDuplicateDetectionWorkflow({
+      analysisData,
+      similarContext,
+      formData
+    });
 
     // === UNIFIED COMPATIBILITY ANALYSIS ===
     console.log('\n=== STEP: Unified Compatibility Analysis ===');
@@ -314,66 +206,15 @@ router.post('/', async (req, res) => {
     // ===== OUTFIT ANALYSIS ORCHESTRATION =====
     console.log('\n=== STEP: Outfit Analysis Orchestration ===');
     
-    // Prepare base item data with image for outfit thumbnails
-    let itemDataForOutfits = { ...formData };
-    if (preFilledData) {
-      itemDataForOutfits = { ...itemDataForOutfits, ...preFilledData };
-    }
-    
-    // Debug conditions for image enhancement
-    console.log('🔍 IMAGE ENHANCEMENT CONDITIONS CHECK:');
-    console.log('   - preFilledData:', preFilledData ? 'EXISTS' : 'NULL');
-    console.log('   - preFilledData.imageUrl:', preFilledData?.imageUrl ? 'EXISTS (wishlist)' : 'MISSING (uploaded)');
-    console.log('   - imageBase64:', imageBase64 ? 'EXISTS' : 'MISSING');
-    console.log('   - Should enhance?', !preFilledData?.imageUrl && imageBase64 ? 'YES' : 'NO');
-    
-    // For uploaded images, add the image data and ensure name exists
-    // Check for missing imageUrl (uploaded images) vs existing imageUrl (wishlist items)
-    if (!preFilledData?.imageUrl && imageBase64) {
-      // Convert base64 to data URL format for frontend display
-      const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
-      itemDataForOutfits.imageUrl = imageDataUrl;
-      
-      // Always regenerate name for uploaded images to include primary color
-      const category = itemDataForOutfits.category || 'Item';
-      const subcategory = itemDataForOutfits.subcategory || '';
-      
-      // Extract primary color directly from raw analysis text
-      let primaryColor = null;
-      const primaryColorMatch = rawAnalysisResponse?.match(/Primary color:\s*([^,\n\r]+)/i);
-      if (primaryColorMatch) {
-        primaryColor = primaryColorMatch[1].trim();
-      }
-      
-      console.log('🔍 COLOR EXTRACTION DEBUG:');
-      console.log('   - Raw analysis text contains primary color:', !!primaryColorMatch);
-      console.log('   - Extracted primary color:', primaryColor);
-      console.log('   - Fallback color from form:', itemDataForOutfits.color);
-      
-      // Use extracted color or fall back to form data
-      const finalColor = primaryColor || itemDataForOutfits.color;
-      
-      // Generate name with proper case formatting
-      const colorPart = finalColor ? 
-        finalColor.charAt(0).toUpperCase() + finalColor.slice(1).toLowerCase() + ' ' : '';
-      const itemPart = subcategory ? 
-        subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase() : 
-        category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-      
-      itemDataForOutfits.name = (colorPart + itemPart).trim();
-      console.log('   - Generated name:', itemDataForOutfits.name);
-      
-      console.log('🖼️ Added image data and name to base item for outfit thumbnails');
-      console.log('   - Name:', itemDataForOutfits.name);
-      console.log('   - ImageUrl length:', imageDataUrl.length);
-    }
-    
-    console.log('🔍 Base item data for outfits:', {
-      name: itemDataForOutfits.name,
-      category: itemDataForOutfits.category,
-      hasImageUrl: !!itemDataForOutfits.imageUrl,
-      imageUrlLength: itemDataForOutfits.imageUrl ? itemDataForOutfits.imageUrl.length : 0
-    });
+    // Enhance base item data for outfit thumbnails (extracted utility)
+    const itemDataForOutfits = enhanceBaseItemForOutfits(
+      formData, 
+      preFilledData, 
+      imageBase64, 
+      mediaType, 
+      base64Data, 
+      rawAnalysisResponse
+    );
     
     const outfitAnalysisResults = await orchestrateOutfitAnalysis({
       formData: itemDataForOutfits,
@@ -397,50 +238,18 @@ router.post('/', async (req, res) => {
     } = outfitAnalysisResults;
 
     // ===== SAVE TO AI HISTORY =====
-    console.log('\n=== STEP: Save Image-Only Analysis to History ===');
-    
-    // Save analysis results to ai_check_history for future reference
-    if (userId) {
-      try {
-        const supabase = require('../../../shared/supabaseConfig').getClient();
-        const { transformAnalysisForDatabase } = require('../../../utils/aiCheckTransforms');
-        
-        // Prepare analysis data for history saving
-        const historyAnalysisData = {
-          analysis: analysisResponse,
-          score: analysisResult.score,
-          feedback: objectiveFinalReason,
-          recommendationText: objectiveFinalReason,
-          suitableScenarios: suitableScenarios,
-          compatibleItems: consolidatedCompatibleItems,
-          outfitCombinations: outfitCombinations,
-          seasonScenarioCombinations: seasonScenarioCombinations,
-          coverageGapsWithNoOutfits: coverageGapsWithNoOutfits
-        };
-        
-        // Transform for database using formData for image-only analysis  
-        // formData contains category/subcategory from the popup selection
-        const historyData = transformAnalysisForDatabase(historyAnalysisData, formData, userId);
-        
-        // Insert new history record (always insert for image-only analyses)
-        const { data: historyRecord, error: historyError } = await supabase
-          .from('ai_check_history')
-          .insert(historyData)
-          .select('id, wardrobe_item_id, compatibility_score, created_at')
-          .single();
-          
-        if (historyError) {
-          console.warn('⚠️ Failed to save image-only analysis to history:', historyError.message);
-        } else {
-          console.log('✅ Image-only analysis saved to history with ID:', historyRecord.id);
-        }
-      } catch (historyError) {
-        console.warn('⚠️ Error saving to AI history:', historyError.message);
-        // Don't fail the request if history saving fails
-      }
-    } else {
-      console.log('ℹ️ No userId provided - skipping history save');
-    }
+    await saveAnalysisToHistory({
+      userId,
+      analysisResponse,
+      analysisResult,
+      objectiveFinalReason,
+      suitableScenarios,
+      consolidatedCompatibleItems,
+      outfitCombinations,
+      seasonScenarioCombinations,
+      coverageGapsWithNoOutfits,
+      formData
+    });
 
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({
