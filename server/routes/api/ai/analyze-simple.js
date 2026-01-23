@@ -334,13 +334,34 @@ router.post('/', async (req, res) => {
       const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
       itemDataForOutfits.imageUrl = imageDataUrl;
       
-      // Ensure name exists for uploaded images (generate if missing)
-      if (!itemDataForOutfits.name) {
-        const category = itemDataForOutfits.category || 'Item';
-        const subcategory = itemDataForOutfits.subcategory || '';
-        const color = itemDataForOutfits.color || '';
-        itemDataForOutfits.name = `${color ? color + ' ' : ''}${subcategory || category}`.trim();
+      // Always regenerate name for uploaded images to include primary color
+      const category = itemDataForOutfits.category || 'Item';
+      const subcategory = itemDataForOutfits.subcategory || '';
+      
+      // Extract primary color directly from raw analysis text
+      let primaryColor = null;
+      const primaryColorMatch = rawAnalysisResponse?.match(/Primary color:\s*([^,\n\r]+)/i);
+      if (primaryColorMatch) {
+        primaryColor = primaryColorMatch[1].trim();
       }
+      
+      console.log('🔍 COLOR EXTRACTION DEBUG:');
+      console.log('   - Raw analysis text contains primary color:', !!primaryColorMatch);
+      console.log('   - Extracted primary color:', primaryColor);
+      console.log('   - Fallback color from form:', itemDataForOutfits.color);
+      
+      // Use extracted color or fall back to form data
+      const finalColor = primaryColor || itemDataForOutfits.color;
+      
+      // Generate name with proper case formatting
+      const colorPart = finalColor ? 
+        finalColor.charAt(0).toUpperCase() + finalColor.slice(1).toLowerCase() + ' ' : '';
+      const itemPart = subcategory ? 
+        subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase() : 
+        category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
+      
+      itemDataForOutfits.name = (colorPart + itemPart).trim();
+      console.log('   - Generated name:', itemDataForOutfits.name);
       
       console.log('🖼️ Added image data and name to base item for outfit thumbnails');
       console.log('   - Name:', itemDataForOutfits.name);
