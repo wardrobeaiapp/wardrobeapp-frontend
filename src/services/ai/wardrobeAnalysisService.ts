@@ -41,9 +41,13 @@ const filterPreFilledData = (preFilledData: WardrobeItem) => {
   // CRITICAL: Include scenarios for wishlist items - these are the user's pre-selected scenarios
   if (preFilledData.scenarios) filtered.scenarios = preFilledData.scenarios;
   
+  // CRITICAL: Include id to distinguish existing wardrobe items from new items
+  // This prevents duplicate AI history records
+  if (preFilledData.id) filtered.id = preFilledData.id;
+  
   // Explicitly exclude metadata fields:
   // - imageUrl: AI already has the image
-  // - id, userId: Not descriptive of the item
+  // - userId: Not descriptive of the item
   // - dateAdded, imageExpiry: Timestamps irrelevant for analysis
   // - wishlist: Not about the item itself
   // - tags: Complex object, not needed for basic verification

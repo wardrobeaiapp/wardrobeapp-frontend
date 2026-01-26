@@ -239,18 +239,35 @@ router.post('/', async (req, res) => {
     } = outfitAnalysisResults;
 
     // ===== SAVE TO AI HISTORY =====
-    await saveAnalysisToHistory({
-      userId,
-      analysisResponse,
-      analysisResult,
-      objectiveFinalReason,
-      suitableScenarios,
-      consolidatedCompatibleItems,
-      outfitCombinations,
-      seasonScenarioCombinations,
-      coverageGapsWithNoOutfits,
-      formData: itemDataForOutfits // Use enhanced item data with proper name
+    // Only save to history if this is NOT an existing wardrobe item (existing items are saved by frontend persistence)
+    console.log('🔍 [analyze-simple] Checking backend save conditions:', {
+      hasPreFilledData: !!preFilledData,
+      preFilledDataId: preFilledData?.id,
+      preFilledDataName: preFilledData?.name,
+      preFilledDataWishlist: preFilledData?.wishlist,
+      isExistingWardrobeItem: !!(preFilledData && preFilledData.id),
+      willSave: !(preFilledData && preFilledData.id)
     });
+    
+    const isExistingWardrobeItem = preFilledData && preFilledData.id;
+    
+    if (!isExistingWardrobeItem) {
+      console.log('📝 [analyze-simple] Saving to AI history (new item analysis)');
+      await saveAnalysisToHistory({
+        userId,
+        analysisResponse,
+        analysisResult,
+        objectiveFinalReason,
+        suitableScenarios,
+        consolidatedCompatibleItems,
+        outfitCombinations,
+        seasonScenarioCombinations,
+        coverageGapsWithNoOutfits,
+        formData: itemDataForOutfits // Use enhanced item data with proper name
+      });
+    } else {
+      console.log('⏭️ [analyze-simple] Skipping AI history save (existing wardrobe item - handled by frontend persistence)');
+    }
 
     // Return the analysis with coverage-based score and comprehensive characteristics
     res.json({

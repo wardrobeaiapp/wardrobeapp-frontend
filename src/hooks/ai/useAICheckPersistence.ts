@@ -52,13 +52,18 @@ export const useAICheckPersistence = () => {
         wishlistStatus: status // Update with AI recommendation status
       };
 
-      // Save to history (don't block on this)
-      const historyResult = await aiCheckHistoryService.saveAnalysisToHistory(analysisData, itemData);
-      
-      if (historyResult.success) {
-        console.log('AI Check analysis saved to history successfully');
+      // Save to history only for existing wardrobe items (don't block on this)
+      if (preFilledData.id) {
+        console.log('💾 Saving AI Check analysis to history (existing wardrobe item)');
+        const historyResult = await aiCheckHistoryService.saveAnalysisToHistory(analysisData, itemData);
+        
+        if (historyResult.success) {
+          console.log('AI Check analysis saved to history successfully');
+        } else {
+          console.warn('Failed to save AI Check analysis to history:', historyResult.error);
+        }
       } else {
-        console.warn('Failed to save AI Check analysis to history:', historyResult.error);
+        console.log('⏭️ Skipping AI history save (new item - will be handled by backend)');
       }
 
       // Update wardrobe item's wishlist status if it's a wishlist item

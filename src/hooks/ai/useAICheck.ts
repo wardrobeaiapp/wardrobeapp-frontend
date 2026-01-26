@@ -89,8 +89,17 @@ export const useAICheck = () => {
       
       tagDetection.setExtractedTags(detectedTags);
 
-      // Save analysis results using the persistence hook
-      if (preFilledData) {
+      // Save analysis results using the persistence hook (only for existing wardrobe items)
+      console.log('🔍 [useAICheck] Checking persistence conditions:', {
+        hasPreFilledData: !!preFilledData,
+        preFilledDataId: preFilledData?.id,
+        preFilledDataName: preFilledData?.name,
+        preFilledDataWishlist: preFilledData?.wishlist,
+        willSave: !!(preFilledData && preFilledData.id)
+      });
+      
+      if (preFilledData && preFilledData.id) {
+        console.log('💾 [useAICheck] Saving via frontend persistence (existing wardrobe item)');
         await persistence.saveAnalysisResults(
           analysisResult,
           score,
@@ -99,6 +108,8 @@ export const useAICheck = () => {
           imageHandling.imageLink,
           preFilledData
         );
+      } else {
+        console.log('⏭️ [useAICheck] Skipping frontend persistence (new item)');
       }
 
       // Data extraction complete
