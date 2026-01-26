@@ -71,7 +71,7 @@ const getSubcategorySelectOptions = (category: ItemCategory | "") => {
   if (!category) return [];
   const subcategories = getSubcategoryOptions(category);
   return subcategories.map((subcategory) => ({
-    value: subcategory.toUpperCase().replace(/\s+/g, "_"),
+    value: subcategory.charAt(0).toUpperCase() + subcategory.slice(1).toLowerCase(),
     label: subcategory,
   }));
 };

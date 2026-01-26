@@ -207,13 +207,14 @@ router.post('/', async (req, res) => {
     console.log('\n=== STEP: Outfit Analysis Orchestration ===');
     
     // Enhance base item data for outfit thumbnails (extracted utility)
-    const itemDataForOutfits = enhanceBaseItemForOutfits(
+    const itemDataForOutfits = await enhanceBaseItemForOutfits(
       formData, 
       preFilledData, 
       imageBase64, 
       mediaType, 
       base64Data, 
-      rawAnalysisResponse
+      rawAnalysisResponse,
+      req
     );
     
     const outfitAnalysisResults = await orchestrateOutfitAnalysis({
@@ -248,7 +249,7 @@ router.post('/', async (req, res) => {
       outfitCombinations,
       seasonScenarioCombinations,
       coverageGapsWithNoOutfits,
-      formData
+      formData: itemDataForOutfits // Use enhanced item data with proper name
     });
 
     // Return the analysis with coverage-based score and comprehensive characteristics

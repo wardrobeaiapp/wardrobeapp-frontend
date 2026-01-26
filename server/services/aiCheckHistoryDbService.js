@@ -30,8 +30,8 @@ async function saveAnalysisToHistory(analysisData, itemData, userId) {
 
   let historyRecord, historyError;
   
-  // For image-only analyses (placeholder wardrobe_item_id), always insert new records
   // For wardrobe item analyses, upsert to avoid duplicates
+  // For image-only analyses, always insert new records
   if (itemData && itemData.id) {
     // Wardrobe item analysis - upsert to prevent duplicates
     const { data, error } = await supabase

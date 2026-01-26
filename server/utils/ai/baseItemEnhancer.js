@@ -5,6 +5,8 @@
  * This fixes the "No Image" issue where uploaded images weren't showing in outfit thumbnails.
  */
 
+const { processBase64Image } = require('../../services/imageService');
+
 /**
  * Enhances base item data for uploaded images by adding image URL and color-based name
  * 
@@ -14,21 +16,38 @@
  * @param {string} mediaType - Image media type (e.g., 'image/webp')
  * @param {string} base64Data - Processed base64 data
  * @param {string} rawAnalysisResponse - Raw analysis text from Claude
- * @returns {Object} Enhanced item data with imageUrl and name
+ * @param {Object} req - Express request object for image processing
+ * @returns {Promise<Object>} Enhanced item data with imageUrl and name
  */
-function enhanceBaseItemForOutfits(formData, preFilledData, imageBase64, mediaType, base64Data, rawAnalysisResponse) {
+async function enhanceBaseItemForOutfits(formData, preFilledData, imageBase64, mediaType, base64Data, rawAnalysisResponse, req) {
   // Prepare base item data with image for outfit thumbnails
   let itemDataForOutfits = { ...formData };
   if (preFilledData) {
     itemDataForOutfits = { ...itemDataForOutfits, ...preFilledData };
   }
   
-  // For uploaded images, add the image data and ensure name exists
+  // For uploaded images, save to local storage like wardrobe items
   // Check for missing imageUrl (uploaded images) vs existing imageUrl (wishlist items)
   if (!preFilledData?.imageUrl && imageBase64) {
-    // Convert base64 to data URL format for frontend display
-    const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
-    itemDataForOutfits.imageUrl = imageDataUrl;
+    try {
+      // Use the same image processing as wardrobe items
+      const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
+      const savedImageUrl = await processBase64Image(imageDataUrl, req);
+      
+      if (savedImageUrl) {
+        itemDataForOutfits.imageUrl = savedImageUrl;
+        console.log('🖼️ Saved AI history image to local storage:', savedImageUrl);
+      } else {
+        // Fallback to data URL if save fails
+        itemDataForOutfits.imageUrl = imageDataUrl;
+        console.log('⚠️ Failed to save AI history image, using data URL fallback');
+      }
+    } catch (uploadError) {
+      console.error('❌ Failed to save AI history image, falling back to data URL:', uploadError);
+      // Fallback to data URL if upload fails
+      const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
+      itemDataForOutfits.imageUrl = imageDataUrl;
+    }
     
     // Always regenerate name for uploaded images to include primary color
     const category = itemDataForOutfits.category || 'Item';

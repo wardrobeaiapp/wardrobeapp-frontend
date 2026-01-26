@@ -110,7 +110,7 @@ export const useAIHistory = () => {
               description: item.description || item.feedback || 'AI analysis completed',
               summary: item.summary || `Score: ${score}/10`,
               score: score,
-              image: item.itemDetails?.imageUrl,
+              image: item.image_url || item.itemDetails?.imageUrl,
               date: new Date(item.analysisDate || item.createdAt),
               status: mappedStatus, // Use proper score-to-status mapping
               userActionStatus: item.userActionStatus || UserActionStatus.PENDING,

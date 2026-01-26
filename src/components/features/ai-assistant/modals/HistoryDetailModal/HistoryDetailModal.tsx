@@ -34,8 +34,6 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
 }) => {
   if (!isOpen || !item) return null;
 
-
-
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
       year: 'numeric',

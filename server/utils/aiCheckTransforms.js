@@ -1,4 +1,27 @@
 /**
+ * Generate item name from color and subcategory (same format as outfit combinations)
+ */
+function generateItemName(itemData) {
+  if (itemData?.name) {
+    return itemData.name;
+  }
+  
+  // For image-only analyses, generate name from color + subcategory
+  const color = itemData?.color;
+  const subcategory = itemData?.subcategory;
+  
+  if (color && subcategory) {
+    return `${color} ${subcategory}`;
+  } else if (subcategory) {
+    return subcategory;
+  } else if (color) {
+    return `${color} Item`;
+  } else {
+    return 'Image Analysis';
+  }
+}
+
+/**
  * Map frontend category values to database constraint values
  */
 function mapCategoryToDbFormat(category) {
@@ -37,7 +60,7 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
     coverageGapsWithNoOutfits: analysisData.coverageGapsWithNoOutfits || [],
     itemDetails: {
       id: itemData?.id || null, // Support null for image-only analyses
-      name: itemData?.name || 'Image Analysis',
+      name: generateItemName(itemData),
       category: mapCategoryToDbFormat(itemData?.category),
       subcategory: itemData?.subcategory || null,
       imageUrl: itemData?.imageUrl || null,
@@ -48,11 +71,12 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
   // Return EXACT SAME format as analysis-mocks (all 17 columns) + 1 additional status field
   return {
     // Original 7 columns from analysis-mocks
-    wardrobe_item_id: itemData?.id || '00000000-0000-0000-0000-000000000000', // Use placeholder UUID for image-only analyses
+    wardrobe_item_id: itemData?.id || null, // Use null for image-only analyses
     analysis_data: analysis_data, // Rich JSONB object (not stringified)
     created_from_real_analysis: true,
     created_by: userId,
     updated_at: new Date().toISOString(),
+    image_url: itemData?.imageUrl || null, // Store image URL like wardrobe_items
     // created_at and id are handled by database defaults
     
     // Additional 10 columns from optimize migration (populate from analysisData)
