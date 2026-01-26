@@ -48,7 +48,9 @@ export const useAICheckPersistence = () => {
       // Create item data with current image and AI-computed wishlist status
       const itemData = {
         ...preFilledData,
-        imageUrl: imageLink, // Use the current image from the analysis
+        // For existing wardrobe items, preserve their original imageUrl
+        // For new items, use the AI analysis imageLink
+        imageUrl: preFilledData.imageUrl || imageLink,
         wishlistStatus: status // Update with AI recommendation status
       };
 

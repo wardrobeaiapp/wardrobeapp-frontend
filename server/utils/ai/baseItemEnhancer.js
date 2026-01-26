@@ -26,9 +26,9 @@ async function enhanceBaseItemForOutfits(formData, preFilledData, imageBase64, m
     itemDataForOutfits = { ...itemDataForOutfits, ...preFilledData };
   }
   
-  // For uploaded images, save to local storage like wardrobe items
-  // Check for missing imageUrl (uploaded images) vs existing imageUrl (wishlist items)
-  if (!preFilledData?.imageUrl && imageBase64) {
+  // For new items (no ID), save image to local storage like wardrobe items
+  // For existing wardrobe items, use their existing imageUrl
+  if (!preFilledData?.id && imageBase64) {
     try {
       // Use the same image processing as wardrobe items
       const imageDataUrl = `data:${mediaType};base64,${base64Data}`;
