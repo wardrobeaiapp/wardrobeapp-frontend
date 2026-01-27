@@ -1,6 +1,7 @@
 const express = require('express');
 const { Anthropic } = require('@anthropic-ai/sdk');
 const router = express.Router();
+const auth = require('../../../middleware/auth');
 
 // Import services
 const compatibilityAnalysisService = require('../../../services/compatibilityAnalysisService');
@@ -35,7 +36,7 @@ const anthropic = new Anthropic({
 // @route   POST /api/analyze-wardrobe-item-simple
 // @desc    Simple analysis of wardrobe item with Claude - just basic prompt
 // @access  Public
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   console.log('🚨🚨🚨 ANALYZE SIMPLE ENDPOINT HIT - Request received! 🚨🚨🚨');
   
   // Check if API key is available before processing

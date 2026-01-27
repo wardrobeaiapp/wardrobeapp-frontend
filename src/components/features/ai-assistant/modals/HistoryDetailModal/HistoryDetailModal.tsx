@@ -6,7 +6,6 @@ import { Modal, ModalAction } from '../../../../common/Modal';
 import { ItemDetails } from '../../../wardrobe/modals/ItemViewModal.styles';
 import {
   ItemImageContainer,
-  ItemImage,
   DetailRow,
   DetailLabel,
   DetailValue,
@@ -181,7 +180,19 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
     >
           {item.type === 'check' && item.image && (
             <ItemImageContainer>
-              <ItemImage src={item.image} alt="Outfit check" />
+              <img 
+                src={item.image} 
+                alt="Outfit check" 
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  // Hide broken image
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
             </ItemImageContainer>
           )}
 
