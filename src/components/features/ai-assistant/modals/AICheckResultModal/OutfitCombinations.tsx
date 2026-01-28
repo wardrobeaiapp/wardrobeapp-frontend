@@ -216,30 +216,6 @@ const OutfitCombinations: React.FC<OutfitCombinationsProps> = ({
           ))}
         </IncompleteScenarios>
       )}
-      
-      {/* Coverage Gaps With No Outfits */}
-      {coverageGapsWithNoOutfits && coverageGapsWithNoOutfits.length > 0 && (
-        <div style={{ marginTop: '1rem' }}>
-          <div style={{
-            fontWeight: '700',
-            color: '#dc2626',
-            marginBottom: '0.5rem',
-            fontSize: '1rem'
-          }}>
-            ⚠️ COVERAGE GAPS CONFIRMED:
-          </div>
-          {coverageGapsWithNoOutfits.map((gap: any, index: number) => (
-            <div key={index} style={{
-              marginLeft: '1rem',
-              marginBottom: '0.25rem',
-              fontSize: '0.9rem',
-              color: '#6b7280'
-            }}>
-              • {gap.description} ({gap.gapType}) - No outfits possible with current wardrobe
-            </div>
-          ))}
-        </div>
-      )}
     </OutfitAnalysisContainer>
   );
 };
