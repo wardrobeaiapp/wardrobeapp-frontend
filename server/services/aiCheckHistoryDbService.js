@@ -217,24 +217,36 @@ async function updateHistoryStatus(recordId, userId, status) {
  * @returns {Object} Updated history record
  */
 async function cleanupHistoryRichData(recordId, userId) {
-  const { data: updatedRecord, error: updateError } = await supabase
-    .from('ai_check_history')
-    .update({ 
-      analysis_data: null, // Remove rich analysis data
-      wardrobe_item_id: null, // Break foreign key reference
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', recordId)
-    .eq('created_by', userId)
-    .select('id, updated_at')
-    .single();
+  console.log('🔄 Starting cleanup for record:', recordId, 'user:', userId);
+  console.log('🔍 About to perform Supabase update operation...');
+  
+  try {
+    // Update record - only set wardrobe_item_id to null, keep analysis_data unchanged
+    const { data: updatedRecord, error: updateError } = await supabase
+      .from('ai_check_history')
+      .update({ 
+        wardrobe_item_id: null, // Set to null as requested
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', recordId)
+      .eq('created_by', userId)
+      .select('id, updated_at, wardrobe_item_id')
+      .single();
 
-  if (updateError) {
-    console.error('Error cleaning up AI Check history rich data:', updateError);
-    throw new Error(`Failed to clean up AI Check history rich data: ${updateError.message}`);
+    console.log('🔍 Supabase operation completed');
+    console.log('🔍 Update result:', { updatedRecord, updateError });
+
+    if (updateError) {
+      console.error('❌ Supabase update error:', updateError);
+      throw new Error(`Failed to clean up AI Check history rich data: ${updateError.message}`);
+    }
+
+    console.log('✅ AI Check history cleaned up - wardrobe_item_id set to null');
+    return updatedRecord;
+  } catch (err) {
+    console.error('❌ Exception in cleanupHistoryRichData:', err);
+    throw err;
   }
-
-  return updatedRecord;
 }
 
 /**

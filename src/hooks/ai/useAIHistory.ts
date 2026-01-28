@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
 import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
-import { updateWardrobeItem } from '../../services/wardrobe/items/itemCrudService';
 import { WishlistStatus, UserActionStatus } from '../../types';
 import { AIHistoryItem } from '../../types/ai';
 
@@ -269,40 +268,17 @@ export const useAIHistory = () => {
         throw new Error('History item not found');
       }
 
-      // First, update the AI history status to dismissed (preserves AI history)
-      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'dismissed');
+      console.log('🔄 Remove from wishlist clicked - setting wardrobe_item_id to null');
+      console.log('📋 History item found:', historyItem.id);
       
-      // Check if service returned error
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      
-      console.log('✅ AI history status updated to dismissed');
-
-      // Update associated wardrobe item if it exists (hide completely)
-      if (historyItem.type === 'check' && historyItem.richData?.itemDetails?.id) {
-        const wardrobeItemId = historyItem.richData.itemDetails.id;
-        try {
-          await updateWardrobeItem(wardrobeItemId, { 
-            wishlist: false
-          });
-          console.log('✅ Associated wardrobe item removed from wishlist (moved to items tab)');
-        } catch (error) {
-          console.warn('⚠️ Failed to update wardrobe item status:', error);
-        }
-      } else {
-        console.log('ℹ️ No associated wardrobe item - AI check from image only');
-      }
-
-      // Clean up heavy data from AI history (images, combinations) but keep essentials
+      // Only update AI history to set wardrobe_item_id to null
       const cleanupResult = await aiCheckHistoryService.cleanupRichData(itemId);
       if (cleanupResult.success) {
-        console.log('✅ AI history cleaned up - kept recommendation/status/score, removed heavy data');
+        console.log('✅ AI history updated - wardrobe_item_id set to null');
       } else {
-        console.warn('⚠️ Failed to clean up AI history data:', cleanupResult.error);
+        console.warn('⚠️ Failed to update AI history:', cleanupResult.error);
+        throw new Error(`Failed to update AI history: ${cleanupResult.error}`);
       }
-
-      console.log('✅ Item removed from wishlist - AI history preserved, wardrobe item updated');
       
       // Update local state
       setHistoryItems(prevItems =>

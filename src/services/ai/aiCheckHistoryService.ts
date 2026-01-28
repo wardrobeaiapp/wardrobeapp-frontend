@@ -227,30 +227,27 @@ export class AICheckHistoryService {
    */
   async cleanupRichData(recordId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
       if (!apiUrl) {
         throw new Error('API URL not configured');
       }
 
-      const token = localStorage.getItem('token');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      // Use the proper authentication method
+      const headers = await this.getAuthHeaders();
 
-      const response = await fetch(`${apiUrl}/api/ai/ai-check-history/${recordId}/cleanup`, {
+      const response = await fetch(`${apiUrl}/api/ai-check-history/${recordId}/cleanup`, {
         method: 'PUT',
         headers: headers
       });
 
-      const result = await response.json();
-
+      // Check if response is OK before trying to parse JSON
       if (!response.ok) {
-        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Cleanup API error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
+
+      const result = await response.json();
 
       console.log('AI Check history rich data cleaned up successfully');
       return { success: true };

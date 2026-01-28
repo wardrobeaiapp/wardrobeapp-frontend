@@ -213,6 +213,8 @@ router.put('/:id/status', auth, async (req, res) => {
 // @access  Private (requires authentication)
 router.put('/:id/cleanup', auth, async (req, res) => {
   try {
+    console.log('🔄 Cleanup route hit for ID:', req.params.id, 'user:', req.user?.id);
+    
     if (!aiCheckHistoryDbService.isDbConfigured()) {
       return res.status(503).json({ 
         error: 'Database configuration not available',
@@ -223,8 +225,12 @@ router.put('/:id/cleanup', auth, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
     
+    console.log('🔍 About to call cleanupHistoryRichData with:', { id, user_id });
+    
     // Clean up rich data using database service
     const updatedRecord = await aiCheckHistoryDbService.cleanupHistoryRichData(id, user_id);
+    
+    console.log('✅ Cleanup completed successfully:', updatedRecord);
     
     if (!updatedRecord) {
       return res.status(404).json({ 
@@ -239,7 +245,11 @@ router.put('/:id/cleanup', auth, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error in PUT /ai/ai-check-history/:id/cleanup:', error);
+    console.error('❌ Error in PUT /api/ai-check-history/:id/cleanup:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     res.status(500).json({ 
       error: 'Internal server error',
       details: error.message 
