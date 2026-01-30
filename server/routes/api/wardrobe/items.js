@@ -5,7 +5,11 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gujpqecwdftbwkcnwiup.supabase.co';
-const supabaseKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd1anBxZWN3ZGZ0YndrY253aXVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1MTU0NDksImV4cCI6MjA2ODA5MTQ0OX0.1_ViFuaH4PAiTk_QkSm7S9srp1rQa_Zv7D2a8pJx5So';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 console.log('🔴 TRYING TO IMPORT scenarioCoverageTriggers...');
@@ -325,19 +329,14 @@ router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
+    console.log('[API] DELETE wardrobe item:', { itemId: id, userId: req.user.id });
+    
     // Use in-memory storage for tests
     if (process.env.NODE_ENV === 'test' && global.inMemoryWardrobeItems) {
-      const item = global.inMemoryWardrobeItems.find(item => item.id === id);
-      if (!item) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      // Check if user owns the item
-      if (item.user !== req.user.id) {
-        return res.status(401).json({ message: 'Not authorized' });
-      }
+      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === id && item.user === req.user.id);
       
-      // Delete the item
-      const itemIndex = global.inMemoryWardrobeItems.findIndex(item => item.id === id);
+      if (itemIndex === -1) return res.status(404).json({ message: 'Item not found' });
+      
       global.inMemoryWardrobeItems.splice(itemIndex, 1);
       return res.json({ message: 'Item removed' });
     }
@@ -351,15 +350,14 @@ router.delete('/:id', auth, async (req, res) => {
       .select();
 
     if (error) {
-      console.error('Supabase delete error:', error);
+      console.error('❌ Supabase delete error:', error);
       return res.status(500).json({ error: 'Failed to delete item from database', details: error.message });
     }
 
-    if (!data || data.length === 0) {
-      return res.status(404).json({ message: 'Item not found' });
-    }
+    if (!data || data.length === 0) return res.status(404).json({ message: 'Item not found' });
 
     const deletedItem = data[0];
+    console.log('[API] Wardrobe item deleted:', { itemId: deletedItem.id, userId: req.user.id });
 
     // Trigger scenario coverage recalculation (async, don't block response)
     onItemDeleted(req.user.id, deletedItem).catch(error => {

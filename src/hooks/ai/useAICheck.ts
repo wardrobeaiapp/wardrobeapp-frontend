@@ -20,6 +20,7 @@ export const useAICheck = () => {
   const [itemSubcategory, setItemSubcategory] = useState('');
   const [errorType, setErrorType] = useState('');
   const [errorDetails, setErrorDetails] = useState('');
+  const [historyRecordId, setHistoryRecordId] = useState<string | null>(null);
 
   const handleFileUpload = (file: File) => {
     imageHandling.setFile(file);
@@ -100,7 +101,7 @@ export const useAICheck = () => {
       
       if (preFilledData && preFilledData.id) {
         console.log('💾 [useAICheck] Saving via frontend persistence (existing wardrobe item)');
-        await persistence.saveAnalysisResults(
+        const persistenceResult = await persistence.saveAnalysisResults(
           analysisResult,
           score,
           status,
@@ -108,6 +109,10 @@ export const useAICheck = () => {
           imageHandling.imageLink,
           preFilledData
         );
+
+        if (persistenceResult.success && persistenceResult.historyRecordId) {
+          setHistoryRecordId(persistenceResult.historyRecordId);
+        }
       } else {
         console.log('⏭️ [useAICheck] Skipping frontend persistence (new item)');
       }
@@ -138,6 +143,7 @@ export const useAICheck = () => {
     setError('');
     setErrorType('');
     setErrorDetails('');
+    setHistoryRecordId(null);
   };
 
 
@@ -186,6 +192,7 @@ export const useAICheck = () => {
     seasonScenarioCombinations: aiAnalysis.seasonScenarioCombinations, // Season + scenario completion status
     coverageGapsWithNoOutfits: aiAnalysis.coverageGapsWithNoOutfits, // Coverage gaps with 0 outfits
     itemSubcategory, // Item subcategory from form data
+    historyRecordId,
     errorType,
     errorDetails,
     

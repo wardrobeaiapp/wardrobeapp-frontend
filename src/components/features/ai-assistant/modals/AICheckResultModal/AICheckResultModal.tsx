@@ -145,7 +145,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
   const handleConfirmRemoval = () => {
     onRemoveFromWishlist?.();
     setIsConfirmationModalOpen(false);
-    onClose();
+    // Don't call onClose() here - the hook will handle closing after cleanup completes
   };
 
   // Use extracted actions utility

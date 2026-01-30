@@ -8,6 +8,7 @@ export interface AICheckHistoryItem {
   summary: string;
   score: number;
   image?: string;  // Made optional to match mock data
+  wardrobeItemId?: string;
   date: Date;
   status: WishlistStatus;
   userActionStatus: UserActionStatus;

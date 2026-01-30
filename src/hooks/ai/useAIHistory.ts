@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
+import { supabase } from '../../services/core/supabaseClient';
 import { WishlistStatus, UserActionStatus } from '../../types';
 import { AIHistoryItem } from '../../types/ai';
 
@@ -24,47 +25,15 @@ export const useAIHistory = () => {
         const result = await aiCheckHistoryService.getHistory({ limit: 20 }); // Limit for recent activity
         
         if (result.success && result.history) {
-          console.log('🔍 useAIHistory - Raw service response:', {
-            resultSuccess: result.success,
-            historyLength: result.history?.length,
-            firstItem: result.history?.[0]
-          });
+          console.log('[AIHistory] Loaded history items:', result.history.length);
           
           // Preserve rich data from database while maintaining AIHistoryItem compatibility
           const transformedHistory: AIHistoryItem[] = result.history.map((item: any, index: number) => {
-            console.log(`🔍 useAIHistory - Transforming item ${index}:`, {
-              itemId: item.id,
-              serviceResponseFields: Object.keys(item),
-              compatibleItemsField: item.compatibleItems,
-              outfitCombinationsField: item.outfitCombinations,
-              hasCompatibleItems: !!item.compatibleItems,
-              hasOutfitCombinations: !!item.outfitCombinations && item.outfitCombinations.length > 0,
-              itemDetails: item.itemDetails
-            });
-            
-            // Check if compatibleItems and outfitCombinations exist and have data
-            const hasRealCompatibleItems = item.compatibleItems && 
-              typeof item.compatibleItems === 'object' && 
-              Object.keys(item.compatibleItems).length > 0;
-            
-            const hasRealOutfitCombinations = item.outfitCombinations && 
-              Array.isArray(item.outfitCombinations) && 
-              item.outfitCombinations.length > 0;
-
-            console.log(`🔍 useAIHistory - Rich data check for item ${index}:`, {
-              hasRealCompatibleItems,
-              hasRealOutfitCombinations,
-              compatibleItemsType: typeof item.compatibleItems,
-              outfitCombinationsType: typeof item.outfitCombinations
-            });
-            
             // CRITICAL FIX: Use analysis_data if available (like analysis-mocks format)
             // This enables the same rich visual format as demo
             let richDataObject;
             
             if (item.analysisData) {
-              // Use the rich analysis_data format (same as analysis-mocks)
-              console.log(`🎯 useAIHistory - Using rich analysisData for item ${index}:`, item.analysisData);
               richDataObject = {
                 compatibleItems: item.analysisData.compatibleItems || {},
                 outfitCombinations: item.analysisData.outfitCombinations || [],
@@ -77,18 +46,8 @@ export const useAIHistory = () => {
                 rawAnalysis: item.rawAnalysis
               };
             } else {
-              // No analysisData means no rich data available
-              console.log(`🔄 useAIHistory - No analysisData for item ${index}, richData will be undefined`);
               richDataObject = undefined;
             }
-            
-            console.log(`🔍 useAIHistory - Created richData for item ${index}:`, {
-              hasRichData: !!richDataObject,
-              richDataKeys: richDataObject ? Object.keys(richDataObject) : [],
-              compatibleItemsKeys: richDataObject ? Object.keys(richDataObject.compatibleItems) : [],
-              outfitCombinationsLength: richDataObject ? richDataObject.outfitCombinations.length : 0,
-              fullRichData: richDataObject
-            });
             
             // Map score to proper status (this was missing!)
             // If no analysisData, default to 0 (test expectation)
@@ -110,20 +69,13 @@ export const useAIHistory = () => {
               summary: item.summary || `Score: ${score}/10`,
               score: score,
               image: item.image_url || item.itemDetails?.imageUrl,
+              wardrobeItemId: item.wardrobe_item_id || item.wardrobeItemId,
               date: new Date(item.analysisDate || item.createdAt),
               status: mappedStatus, // Use proper score-to-status mapping
               userActionStatus: item.userActionStatus || UserActionStatus.PENDING,
               // Preserve rich analysis data for detail modal
               richData: richDataObject
             };
-            
-            console.log(`🔍 useAIHistory - Final transformed item ${index}:`, {
-              transformedItemId: transformedItem.id,
-              hasRichDataField: !!transformedItem.richData,
-              richDataCompatibleItemsKeys: transformedItem.richData ? Object.keys(transformedItem.richData.compatibleItems) : [],
-              richDataOutfitCombinationsLength: transformedItem.richData ? transformedItem.richData.outfitCombinations.length : 0
-            });
-            
             return transformedItem;
           });
           
@@ -184,19 +136,13 @@ export const useAIHistory = () => {
     setShowFullHistory(false);
   };
 
-  const handleHistoryItemClick = (itemIdOrItem: any) => {
-    console.log('🔍 handleHistoryItemClick called with:', itemIdOrItem, typeof itemIdOrItem);
-    
+  const handleOpenHistoryDetailModal = async (itemIdOrItem: string | AIHistoryItem) => {
     // Handle both ID string and full item object
     let fullItem;
     if (typeof itemIdOrItem === 'string') {
-      // Find the transformed item with richData by ID
       fullItem = historyItems.find(item => item.id === itemIdOrItem);
-      console.log('🔍 Found full item by ID:', fullItem?.id, !!(fullItem as any)?.richData);
     } else {
-      // Use the full item object directly
       fullItem = itemIdOrItem;
-      console.log('🔍 Using full item object:', fullItem?.id, !!fullItem?.richData);
     }
     
     if (fullItem) {
@@ -260,39 +206,125 @@ export const useAIHistory = () => {
     }
   };
 
-  const handleRemoveFromWishlist = async (itemId: string) => {
+  const handleRemoveFromWishlist = async (itemId: string): Promise<boolean> => {
     try {
-      // Find the history item to get the wardrobe item details
+      // Find the history item to get the wardrobe item details.
+      // NOTE: Right after an AI check, the history record may exist in DB but not yet be in local state.
       const historyItem = historyItems.find(item => item.id === itemId);
-      if (!historyItem) {
-        throw new Error('History item not found');
+
+      // Capture wardrobe item id BEFORE cleanup detaches it in DB
+      let wardrobeItemId = historyItem?.type === 'check' ? historyItem.wardrobeItemId : undefined;
+
+      if (!wardrobeItemId) {
+        const recordResult = await aiCheckHistoryService.getHistoryRecord(itemId);
+        if (!recordResult.success || !recordResult.record) {
+          throw new Error(recordResult.error || 'History item not found');
+        }
+        const recordAny = recordResult.record as any;
+        wardrobeItemId = recordAny.wardrobe_item_id || recordAny.wardrobeItemId;
       }
 
-      console.log('🔄 Remove from wishlist clicked - setting wardrobe_item_id to null');
-      console.log('📋 History item found:', historyItem.id);
+      console.log('[AIHistory] Remove from wishlist: cleanup');
       
-      // Only update AI history to set wardrobe_item_id to null
+      // Step 1: Clean extra data from AI history item
       const cleanupResult = await aiCheckHistoryService.cleanupRichData(itemId);
       if (cleanupResult.success) {
-        console.log('✅ AI history updated - wardrobe_item_id set to null');
+        // ok
       } else {
-        console.warn('⚠️ Failed to update AI history:', cleanupResult.error);
-        throw new Error(`Failed to update AI history: ${cleanupResult.error}`);
+        console.warn('⚠️ Failed to clean AI history data:', cleanupResult.error);
+        throw new Error(`Failed to clean AI history data: ${cleanupResult.error}`);
       }
       
-      // Update local state
-      setHistoryItems(prevItems =>
-        prevItems.map(item =>
+      // Step 2: Remove the wardrobe item from wardrobe table (MUST use real wardrobeItemId)
+      if (wardrobeItemId) {
+        console.log('[AIHistory] Remove from wishlist: delete wardrobe item');
+        try {
+          const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+          // Prefer Supabase session token to avoid stale/expired localStorage tokens
+          let authToken = '';
+          try {
+            const { data: sessionData } = await supabase.auth.getSession();
+            if (sessionData?.session?.access_token) {
+              authToken = sessionData.session.access_token;
+            }
+          } catch (e) {
+            // Ignore and fallback to localStorage
+          }
+          if (!authToken) {
+            authToken = localStorage.getItem('token') || '';
+          }
+          
+          const response = await fetch(`${apiUrl}/api/wardrobe-items/${wardrobeItemId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-auth-token': authToken
+            }
+          });
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Failed to delete wardrobe item:', errorText);
+            throw new Error(`Failed to delete wardrobe item: ${response.status} - ${errorText}`);
+          }
+        } catch (error) {
+          console.error('❌ Error deleting wardrobe item:', error);
+          throw new Error(`Failed to delete wardrobe item: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+      } else {
+        throw new Error('No wardrobeItemId found on history item; cannot delete wardrobe item safely');
+      }
+
+      // Step 2.5: Persist status change ONLY AFTER wardrobe item is deleted
+      console.log('[AIHistory] Remove from wishlist: set dismissed status');
+      const statusResult = await aiCheckHistoryService.updateRecordStatus(itemId, 'dismissed');
+      if (!statusResult.success) {
+        throw new Error(statusResult.error || 'Failed to set dismissed status');
+      }
+      
+      // Step 3: Update local state - clear rich data and update status to dismissed
+      setHistoryItems(prevItems => {
+        if (!prevItems.some(item => item.id === itemId)) return prevItems;
+
+        const updatedItems = prevItems.map(item =>
           item.id === itemId
-            ? { ...item, userActionStatus: UserActionStatus.DISMISSED }
+            ? { 
+                ...item, 
+                userActionStatus: UserActionStatus.DISMISSED, // Step 3: Change status to dismissed
+                // Only clear richData if it exists (only on AICheckHistoryItem)
+                ...(item.type === 'check' && item.richData ? {
+                  richData: {
+                    ...item.richData,
+                    // Clear heavy data immediately
+                    compatibleItems: {},
+                    outfitCombinations: [],
+                    itemDetails: item.richData?.itemDetails ? {
+                      name: item.richData.itemDetails.name,
+                      // Remove imageUrl and other heavy fields
+                      imageUrl: undefined
+                    } : undefined
+                  }
+                } : {}),
+                // Also clear the wardrobe item reference
+                wardrobeItemId: undefined
+              }
             : item
-        )
-      );
+        );
+        return updatedItems;
+      });
+
+      console.log('[AIHistory] Remove from wishlist: done');
+      
+      // Close modal AFTER all steps are complete
       setIsHistoryDetailModalOpen(false);
+      setSelectedHistoryItem(null);
+      return true;
     } catch (error: any) {
       console.error('Failed to remove item from wishlist:', error.message || error);
       // Show user-friendly error message
       alert('Failed to remove item from wishlist. Please try again.');
+      return false;
     }
   };
 
@@ -339,7 +371,7 @@ export const useAIHistory = () => {
     setUserActionFilter,
     handleViewAllHistory,
     handleBackToMain,
-    handleHistoryItemClick,
+    handleOpenHistoryDetailModal,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
     handleMarkAsPurchased,

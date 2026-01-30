@@ -26,9 +26,11 @@ export const useAICheckPersistence = () => {
     response: any,
     imageLink: string,
     preFilledData: WardrobeItem
-  ): Promise<{ success: boolean; error?: string }> => {
+  ): Promise<{ success: boolean; historyRecordId?: string; error?: string }> => {
     try {
       console.log('Saving AI Check analysis to history...');
+
+      let historyRecordId: string | undefined;
       
       // Create the analysis data object
       const analysisData: AnalysisData = {
@@ -61,6 +63,7 @@ export const useAICheckPersistence = () => {
         
         if (historyResult.success) {
           console.log('AI Check analysis saved to history successfully');
+          historyRecordId = historyResult.historyRecord?.id;
         } else {
           console.warn('Failed to save AI Check analysis to history:', historyResult.error);
         }
@@ -100,7 +103,7 @@ export const useAICheckPersistence = () => {
         }
       }
 
-      return { success: true };
+      return { success: true, historyRecordId };
     } catch (error) {
       console.error('Error in saveAnalysisResults:', error);
       return { 

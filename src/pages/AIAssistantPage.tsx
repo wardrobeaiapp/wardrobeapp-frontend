@@ -70,6 +70,7 @@ const AIAssistantPage: React.FC = () => {
     seasonScenarioCombinations,
     coverageGapsWithNoOutfits,
     itemSubcategory,
+    historyRecordId,
     errorType,
     errorDetails,
 
@@ -213,7 +214,7 @@ const AIAssistantPage: React.FC = () => {
     isHistoryDetailModalOpen,
 
     // Handlers
-    handleHistoryItemClick,
+    handleOpenHistoryDetailModal,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
     handleMarkAsPurchased,
@@ -269,7 +270,7 @@ const AIAssistantPage: React.FC = () => {
         {/* History Section - Limited Items */}
         <AIHistorySection
           historyItems={historyItems}
-          onHistoryItemClick={(item: AIHistoryItem) => handleHistoryItemClick(item.id)}
+          onHistoryItemClick={(item: AIHistoryItem) => handleOpenHistoryDetailModal(item.id)}
         />
       </PageContainer>
 
@@ -306,6 +307,14 @@ const AIAssistantPage: React.FC = () => {
           errorDetails={errorDetails}
           onSkip={handleResetCheck}
           onDecideLater={handleCloseCheckResultModal}
+          onRemoveFromWishlist={
+            selectedWishlistItem && historyRecordId
+              ? async () => {
+                  const ok = await handleRemoveFromWishlist(historyRecordId);
+                  if (ok) handleCloseCheckResultModal();
+                }
+              : undefined
+          }
           // New props for save as mock functionality
           selectedWishlistItem={selectedWishlistItem}
           showSaveMock={true}
@@ -327,6 +336,7 @@ const AIAssistantPage: React.FC = () => {
       {/* History Detail Modal - Use rich AICheckResultModal for visual format */}
       {isHistoryDetailModalOpen && selectedHistoryItem && selectedHistoryItem.richData && (
         <AICheckResultModal
+          key={`${selectedHistoryItem.id}-${selectedHistoryItem.userActionStatus}`}
           isOpen={true}
           onClose={handleCloseHistoryDetailModal}
           analysisResult={selectedHistoryItem.richData.analysis || selectedHistoryItem.richData.rawAnalysis || ''}
@@ -339,7 +349,7 @@ const AIAssistantPage: React.FC = () => {
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
           recommendationAction={selectedHistoryItem.richData.recommendationAction || 'RECOMMEND'}
           recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.richData.wishlistStatus || 'approved'}
+          status={selectedHistoryItem.status}
           userActionStatus={selectedHistoryItem.userActionStatus}
           hideActions={false}
           isHistoryItem={true}

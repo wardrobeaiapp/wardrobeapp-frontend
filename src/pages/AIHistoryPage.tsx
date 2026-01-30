@@ -23,7 +23,7 @@ const AIHistoryPage: React.FC = () => {
     setActivityFilter,
     setCheckStatusFilter,
     setUserActionFilter,
-    handleHistoryItemClick,
+    handleOpenHistoryDetailModal,
     handleCloseHistoryDetailModal,
     handleMoveToWishlist,
     handleMarkAsPurchased,
@@ -54,13 +54,14 @@ const AIHistoryPage: React.FC = () => {
           onUserActionFilterChange={setUserActionFilter}
           filteredHistoryItems={filteredHistoryItems}
           onBackToMain={handleBackToMain}
-          onHistoryItemClick={handleHistoryItemClick}
+          onHistoryItemClick={handleOpenHistoryDetailModal}
         />
       </PageContainer>
 
       {/* History Detail Modal - Use rich AICheckResultModal for visual format */}
       {isHistoryDetailModalOpen && selectedHistoryItem && selectedHistoryItem.richData && (
         <AICheckResultModal
+          key={`${selectedHistoryItem.id}-${selectedHistoryItem.userActionStatus}`}
           isOpen={true}
           onClose={handleCloseHistoryDetailModal}
           analysisResult={selectedHistoryItem.richData.analysis || selectedHistoryItem.richData.rawAnalysis || ''}
@@ -73,7 +74,7 @@ const AIHistoryPage: React.FC = () => {
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
           recommendationAction={selectedHistoryItem.richData.recommendationAction || 'RECOMMEND'}
           recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.richData.wishlistStatus || 'approved'}
+          status={selectedHistoryItem.status}
           userActionStatus={selectedHistoryItem.userActionStatus}
           hideActions={false}
           isHistoryItem={true}

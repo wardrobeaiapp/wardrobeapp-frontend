@@ -247,7 +247,7 @@ export class AICheckHistoryService {
         throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
-      const result = await response.json();
+      await response.json();
 
       console.log('AI Check history rich data cleaned up successfully');
       return { success: true };

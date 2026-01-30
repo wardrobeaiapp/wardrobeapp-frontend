@@ -147,27 +147,40 @@ async function getHistoryForUser(userId, options = {}) {
  * @returns {Object} History record with full details
  */
 async function getHistoryById(recordId, userId) {
-  const { data: historyRecord, error: fetchError } = await supabase
+  let query = supabase
     .from('ai_check_history')
     .select(`
-      *,
+      id,
+      wardrobe_item_id,
+      compatibility_score,
+      user_action_status,
+      created_at,
+      updated_at,
+      analysis_data,
+      wishlist_status,
+      image_url,
       wardrobeItems:wardrobe_item_id (
         id,
         name,
         category,
         subcategory,
-        brand,
-        color,
         image_url,
-        purchase_date,
-        cost,
-        tags,
-        notes
+        brand
       )
     `)
     .eq('id', recordId)
-    .eq('created_by', userId)
-    .single();
+    .eq('created_by', userId);
+
+  // Supabase v2 supports maybeSingle(); keep a safe fallback for older clients.
+  let historyRecord;
+  let fetchError;
+  if (typeof query.maybeSingle === 'function') {
+    ({ data: historyRecord, error: fetchError } = await query.maybeSingle());
+  } else {
+    const resp = await query.limit(1);
+    historyRecord = resp.data && resp.data.length > 0 ? resp.data[0] : null;
+    fetchError = resp.error;
+  }
 
   if (fetchError) {
     if (fetchError.code === 'PGRST116') {
@@ -176,6 +189,8 @@ async function getHistoryById(recordId, userId) {
     console.error('Error fetching AI Check history record:', fetchError);
     throw new Error(`Failed to fetch AI Check history record: ${fetchError.message}`);
   }
+
+  if (!historyRecord) return null;
 
   // Transform for frontend
   return transformDatabaseToFrontend(historyRecord);
@@ -218,22 +233,57 @@ async function updateHistoryStatus(recordId, userId, status) {
  */
 async function cleanupHistoryRichData(recordId, userId) {
   console.log('🔄 Starting cleanup for record:', recordId, 'user:', userId);
-  console.log('🔍 About to perform Supabase update operation...');
+  console.log('🔍 About to fetch current record for essential data...');
   
   try {
-    // Update record - only set wardrobe_item_id to null, keep analysis_data unchanged
+    // First get the current record to preserve essential fields
+    const { data: currentRecord, error: fetchError } = await supabase
+      .from('ai_check_history')
+      .select('analysis_data, wishlist_status, user_action_status')
+      .eq('id', recordId)
+      .eq('created_by', userId)
+      .single();
+
+    if (fetchError) {
+      console.error('❌ Error fetching current record:', fetchError);
+      throw new Error(`Failed to fetch current record: ${fetchError.message}`);
+    }
+
+    console.log('🔍 Current record fetched successfully');
+
+    // Prepare cleaned analysis_data with only essential fields
+    let cleanedAnalysisData = null;
+    if (currentRecord.analysis_data) {
+      cleanedAnalysisData = {
+        // Keep only essential fields
+        recommendation_block: currentRecord.analysis_data.recommendation_block,
+        score: currentRecord.analysis_data.score,
+        // Keep item name to prevent "unknown item" display
+        itemDetails: currentRecord.analysis_data.itemDetails ? {
+          name: currentRecord.analysis_data.itemDetails.name
+          // Remove other heavy fields like imageUrl, etc.
+        } : undefined,
+        // Remove heavy data fields like compatibleItems, outfitCombinations, full itemDetails, images, etc.
+      };
+    }
+
+    console.log('🔍 About to update record with cleaned data...');
+
+    // Update record - set wardrobe_item_id to null, keep only essential analysis_data, and clear image_url
     const { data: updatedRecord, error: updateError } = await supabase
       .from('ai_check_history')
       .update({ 
         wardrobe_item_id: null, // Set to null as requested
+        analysis_data: cleanedAnalysisData, // Keep only essential fields
+        image_url: null, // Clear the image_url column as well
         updated_at: new Date().toISOString()
       })
       .eq('id', recordId)
       .eq('created_by', userId)
-      .select('id, updated_at, wardrobe_item_id')
+      .select('id, updated_at, wardrobe_item_id, analysis_data, wishlist_status, user_action_status, image_url')
       .single();
 
-    console.log('🔍 Supabase operation completed');
+    console.log('🔍 Supabase update operation completed');
     console.log('🔍 Update result:', { updatedRecord, updateError });
 
     if (updateError) {
@@ -241,7 +291,7 @@ async function cleanupHistoryRichData(recordId, userId) {
       throw new Error(`Failed to clean up AI Check history rich data: ${updateError.message}`);
     }
 
-    console.log('✅ AI Check history cleaned up - wardrobe_item_id set to null');
+    console.log('✅ AI Check history cleaned up - wardrobe_item_id set to null, essential data preserved');
     return updatedRecord;
   } catch (err) {
     console.error('❌ Exception in cleanupHistoryRichData:', err);
