@@ -121,6 +121,42 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/ai-check-history/by-wardrobe-item/:wardrobeItemId
+// @desc    Get most recent AI Check history record for a wardrobe item
+// @access  Private (requires authentication)
+router.get('/by-wardrobe-item/:wardrobeItemId', auth, async (req, res) => {
+  try {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
+      return res.status(503).json({
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
+    const { wardrobeItemId } = req.params;
+    const user_id = req.user.id;
+
+    const record = await aiCheckHistoryDbService.getHistoryByWardrobeItemId(wardrobeItemId, user_id);
+
+    if (!record) {
+      return res.status(404).json({
+        error: 'AI Check history record not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      record
+    });
+  } catch (error) {
+    console.error('Error in GET /api/ai-check-history/by-wardrobe-item/:wardrobeItemId:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message
+    });
+  }
+});
+
 // @route   GET /api/ai-check-history/:id
 // @desc    Get specific AI Check history record
 // @access  Private (requires authentication)
@@ -204,6 +240,43 @@ router.put('/:id/status', auth, async (req, res) => {
     res.status(500).json({ 
       error: 'Internal server error',
       details: error.message 
+    });
+  }
+});
+
+// @route   PUT /api/ai-check-history/:id/detach
+// @desc    Detach history record from wardrobe item (set wardrobe_item_id to null) to prevent cascade delete
+// @access  Private (requires authentication)
+router.put('/:id/detach', auth, async (req, res) => {
+  try {
+    if (!aiCheckHistoryDbService.isDbConfigured()) {
+      return res.status(503).json({
+        error: 'Database configuration not available',
+        details: 'Supabase configuration is missing'
+      });
+    }
+
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+    const updatedRecord = await aiCheckHistoryDbService.detachHistoryWardrobeItem(id, user_id);
+
+    if (!updatedRecord) {
+      return res.status(404).json({
+        error: 'AI Check history record not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'History record detached successfully',
+      data: updatedRecord
+    });
+  } catch (error) {
+    console.error('Error in PUT /api/ai-check-history/:id/detach:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error.message
     });
   }
 });

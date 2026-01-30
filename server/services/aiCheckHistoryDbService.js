@@ -140,6 +140,25 @@ async function getHistoryForUser(userId, options = {}) {
 }
 
 /**
+ * Gets the most recent AI Check history record for a specific wardrobe item
+ *
+ * @param {string} wardrobeItemId - Wardrobe item ID
+ * @param {string} userId - User ID for authorization
+ * @returns {Object|null} The most recent matching history record (frontend format) or null
+ */
+async function getHistoryByWardrobeItemId(wardrobeItemId, userId) {
+  if (!wardrobeItemId) return null;
+
+  const result = await getHistoryForUser(userId, {
+    page: 1,
+    limit: 1,
+    wardrobeItemId
+  });
+
+  return result.records && result.records.length > 0 ? result.records[0] : null;
+}
+
+/**
  * Gets a specific AI Check history record by ID
  * 
  * @param {string} recordId - History record ID
@@ -219,6 +238,26 @@ async function updateHistoryStatus(recordId, userId, status) {
   if (updateError) {
     console.error('Error updating AI Check history status:', updateError);
     throw new Error(`Failed to update AI Check history status: ${updateError.message}`);
+  }
+
+  return updatedRecord;
+}
+
+async function detachHistoryWardrobeItem(recordId, userId) {
+  const { data: updatedRecord, error: updateError } = await supabase
+    .from('ai_check_history')
+    .update({
+      wardrobe_item_id: null,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', recordId)
+    .eq('created_by', userId)
+    .select('id, wardrobe_item_id, updated_at')
+    .single();
+
+  if (updateError) {
+    console.error('Error detaching AI Check history wardrobe_item_id:', updateError);
+    throw new Error(`Failed to detach AI Check history wardrobe_item_id: ${updateError.message}`);
   }
 
   return updatedRecord;
@@ -311,8 +350,10 @@ function isDbConfigured() {
 module.exports = {
   saveAnalysisToHistory,
   getHistoryForUser,
+  getHistoryByWardrobeItemId,
   getHistoryById,
   updateHistoryStatus,
+  detachHistoryWardrobeItem,
   cleanupHistoryRichData,
   isDbConfigured
 };

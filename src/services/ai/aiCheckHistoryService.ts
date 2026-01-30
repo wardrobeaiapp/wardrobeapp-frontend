@@ -93,6 +93,63 @@ export class AICheckHistoryService {
   }
 
   /**
+   * Detach history record from wardrobe item (set wardrobe_item_id to null)
+   */
+  async detachHistoryRecord(recordId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`${API_URL}/api/ai-check-history/${recordId}/detach`, {
+        method: 'PUT',
+        headers
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+      }
+
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
+   * Get the most recent AI Check history record for a wardrobe item
+   */
+  async getHistoryByWardrobeItemId(
+    wardrobeItemId: string
+  ): Promise<{ success: boolean; record?: AICheckHistoryItem; error?: string }> {
+    try {
+      const headers = await this.getAuthHeaders();
+      const response = await fetch(`${API_URL}/api/ai-check-history/by-wardrobe-item/${wardrobeItemId}`, {
+        method: 'GET',
+        headers
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
+      }
+
+      return {
+        success: true,
+        record: result.record
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      };
+    }
+  }
+
+  /**
    * Get AI Check history for the current user
    */
   async getHistory(options: {

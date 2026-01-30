@@ -1,6 +1,7 @@
 // External imports
 import { supabase } from '../../../services/core';
 import { WardrobeItem, WishlistStatus, Season, Scenario } from '../../../types';
+import { aiCheckHistoryService } from '../../ai/aiCheckHistoryService';
 
 // Internal imports
 import { removeItemFromAllOutfits } from '../outfits';
@@ -181,7 +182,7 @@ export const addWardrobeItem = async (item: Partial<WardrobeItem>): Promise<Ward
   }
   
   // Trigger scenario coverage recalculation after item is added
-  if (createdItem && userId) {
+  if (createdItem && userId && createdItem.wishlist !== true) {
     try {
       const items = await getWardrobeItems(userId);
       const scenarios = await getScenariosForUser(userId);
@@ -209,6 +210,9 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
   // Extract scenarios before updating item (they're stored in a join table)
   const scenarios = updatesToApply.scenarios;
   delete updatesToApply.scenarios;
+
+  // Get the old item for comparison before updating
+  const oldItem = await getWardrobeItem(id);
   
   const snakeCaseUpdates = camelToSnakeCase(updatesToApply);
 
@@ -227,9 +231,6 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
   // Get the updated item
   const updatedItem = convertToWardrobeItem(data[0]) as WardrobeItem;
   
-  // Get the old item for comparison before updating scenarios
-  const oldItem = await getWardrobeItem(id);
-  
   // If scenarios were provided, update them in the join table
   if (scenarios !== undefined) {
     await replaceItemScenarios(id, scenarios || []);
@@ -243,6 +244,14 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
     const userId = await getCurrentUserId();
     if (userId) {
       try {
+        const oldWasWishlist = oldItem.wishlist === true;
+        const newIsWishlist = updatedItem.wishlist === true;
+        const wishlistChanged = oldWasWishlist !== newIsWishlist;
+
+        if (newIsWishlist && !wishlistChanged) {
+          return updatedItem;
+        }
+
         const items = await getWardrobeItems(userId);
         const scenarios = await getScenariosForUser(userId);
         
@@ -289,6 +298,32 @@ export const deleteWardrobeItem = async (id: string): Promise<void> => {
   // Get the item before deleting it for scenario coverage calculation
   const deletedItem = await getWardrobeItem(id);
   const userId = await getCurrentUserId();
+
+  let historyRecordIdToCleanup: string | null = null;
+  const shouldCleanupHistory =
+    deletedItem?.wishlist === true &&
+    !!deletedItem.wishlistStatus &&
+    deletedItem.wishlistStatus !== WishlistStatus.NOT_REVIEWED;
+
+  if (shouldCleanupHistory) {
+    const historyResult = await aiCheckHistoryService.getHistoryByWardrobeItemId(id);
+    if (historyResult.success && historyResult.record?.id) {
+      historyRecordIdToCleanup = historyResult.record.id;
+
+      // IMPORTANT: Prevent ON DELETE CASCADE from removing the history record
+      // by detaching the FK link BEFORE deleting the wardrobe item.
+      const detachResult = await aiCheckHistoryService.detachHistoryRecord(historyRecordIdToCleanup);
+      if (!detachResult.success) {
+        throw new Error(detachResult.error || 'Failed to detach AI history record from wardrobe item');
+      }
+
+      // After detaching, clean heavy data from analysis_data
+      const cleanupResult = await aiCheckHistoryService.cleanupRichData(historyRecordIdToCleanup);
+      if (!cleanupResult.success) {
+        throw new Error(cleanupResult.error || 'Failed to clean AI history rich data');
+      }
+    }
+  }
   
   // First, remove this item from all outfits
   await removeItemFromAllOutfits(id);
@@ -299,9 +334,13 @@ export const deleteWardrobeItem = async (id: string): Promise<void> => {
     .eq('id', id);
 
   handleSupabaseError(error, 'deleting wardrobe item');
+
+  if (historyRecordIdToCleanup) {
+    await aiCheckHistoryService.updateRecordStatus(historyRecordIdToCleanup, 'dismissed');
+  }
   
   // Trigger scenario coverage recalculation after item is deleted
-  if (deletedItem && userId) {
+  if (deletedItem && userId && deletedItem.wishlist !== true) {
     try {
       const items = await getWardrobeItems(userId);
       const scenarios = await getScenariosForUser(userId);
