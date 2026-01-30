@@ -8,6 +8,7 @@ export type ActivityType = 'all' | 'check' | 'recommendation';
 export type CheckStatus = 'all' | 'approved' | 'potential_issue' | 'not_recommended' | 'not_reviewed';
 
 export const useAIHistory = () => {
+  const HISTORY_CREATED_EVENT = 'ai-history:created';
   const [historyItems, setHistoryItems] = useState<AIHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [showFullHistory, setShowFullHistory] = useState(false);
@@ -16,6 +17,51 @@ export const useAIHistory = () => {
   const [userActionFilter, setUserActionFilter] = useState<string>('all');
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any>(null);
   const [isHistoryDetailModalOpen, setIsHistoryDetailModalOpen] = useState(false);
+
+  const transformHistoryRecord = (item: any): AIHistoryItem => {
+    let richDataObject;
+
+    if (item.analysisData) {
+      richDataObject = {
+        compatibleItems: item.analysisData.compatibleItems || {},
+        outfitCombinations: item.analysisData.outfitCombinations || [],
+        suitableScenarios: item.analysisData.suitableScenarios || [],
+        seasonScenarioCombinations: item.analysisData.seasonScenarioCombinations || [],
+        coverageGapsWithNoOutfits: item.analysisData.coverageGapsWithNoOutfits || [],
+        itemDetails: item.analysisData.itemDetails || item.itemDetails || {},
+        recommendationText: item.analysisData.recommendationText || item.recommendationText,
+        analysis: item.analysisData.analysis || item.analysis,
+        rawAnalysis: item.rawAnalysis
+      };
+    } else {
+      richDataObject = undefined;
+    }
+
+    const score = item.analysisData ? (item.analysisData.score || item.score || 0) : 0;
+    let mappedStatus: WishlistStatus;
+    if (score >= 8) {
+      mappedStatus = WishlistStatus.APPROVED;
+    } else if (score >= 6) {
+      mappedStatus = WishlistStatus.POTENTIAL_ISSUE;
+    } else {
+      mappedStatus = WishlistStatus.NOT_RECOMMENDED;
+    }
+
+    return {
+      id: item.id,
+      type: 'check' as const,
+      title: item.title || `AI Check: ${item.itemDetails?.name || 'Unknown Item'}`,
+      description: item.description || item.feedback || 'AI analysis completed',
+      summary: item.summary || `Score: ${score}/10`,
+      score: score,
+      image: item.image_url || item.itemDetails?.imageUrl,
+      wardrobeItemId: item.wardrobe_item_id || item.wardrobeItemId,
+      date: new Date(item.analysisDate || item.createdAt),
+      status: mappedStatus,
+      userActionStatus: item.userActionStatus || UserActionStatus.PENDING,
+      richData: richDataObject
+    };
+  };
 
   // Load real AI Check history data on component mount
   useEffect(() => {
@@ -28,56 +74,7 @@ export const useAIHistory = () => {
           console.log('[AIHistory] Loaded history items:', result.history.length);
           
           // Preserve rich data from database while maintaining AIHistoryItem compatibility
-          const transformedHistory: AIHistoryItem[] = result.history.map((item: any, index: number) => {
-            // CRITICAL FIX: Use analysis_data if available (like analysis-mocks format)
-            // This enables the same rich visual format as demo
-            let richDataObject;
-            
-            if (item.analysisData) {
-              richDataObject = {
-                compatibleItems: item.analysisData.compatibleItems || {},
-                outfitCombinations: item.analysisData.outfitCombinations || [],
-                suitableScenarios: item.analysisData.suitableScenarios || [],
-                seasonScenarioCombinations: item.analysisData.seasonScenarioCombinations || [],
-                coverageGapsWithNoOutfits: item.analysisData.coverageGapsWithNoOutfits || [],
-                itemDetails: item.analysisData.itemDetails || item.itemDetails || {},
-                recommendationText: item.analysisData.recommendationText || item.recommendationText,
-                analysis: item.analysisData.analysis || item.analysis,
-                rawAnalysis: item.rawAnalysis
-              };
-            } else {
-              richDataObject = undefined;
-            }
-            
-            // Map score to proper status (this was missing!)
-            // If no analysisData, default to 0 (test expectation)
-            const score = item.analysisData ? (item.analysisData.score || item.score || 0) : 0;
-            let mappedStatus: WishlistStatus;
-            if (score >= 8) {
-              mappedStatus = WishlistStatus.APPROVED;
-            } else if (score >= 6) {
-              mappedStatus = WishlistStatus.POTENTIAL_ISSUE;  
-            } else {
-              mappedStatus = WishlistStatus.NOT_RECOMMENDED;
-            }
-
-            const transformedItem = {
-              id: item.id,
-              type: 'check' as const,
-              title: item.title || `AI Check: ${item.itemDetails?.name || 'Unknown Item'}`,
-              description: item.description || item.feedback || 'AI analysis completed',
-              summary: item.summary || `Score: ${score}/10`,
-              score: score,
-              image: item.image_url || item.itemDetails?.imageUrl,
-              wardrobeItemId: item.wardrobe_item_id || item.wardrobeItemId,
-              date: new Date(item.analysisDate || item.createdAt),
-              status: mappedStatus, // Use proper score-to-status mapping
-              userActionStatus: item.userActionStatus || UserActionStatus.PENDING,
-              // Preserve rich analysis data for detail modal
-              richData: richDataObject
-            };
-            return transformedItem;
-          });
+          const transformedHistory: AIHistoryItem[] = result.history.map((item: any) => transformHistoryRecord(item));
           
           setHistoryItems(transformedHistory);
         } else {
@@ -94,6 +91,33 @@ export const useAIHistory = () => {
     };
 
     loadHistoryData();
+  }, []);
+
+  useEffect(() => {
+    const handler = async (event: Event) => {
+      const customEvent = event as CustomEvent<{ historyRecordId?: string }>;
+      const historyRecordId = customEvent?.detail?.historyRecordId;
+      if (!historyRecordId) return;
+
+      const recordResult = await aiCheckHistoryService.getHistoryRecord(historyRecordId);
+      if (!recordResult.success || !recordResult.record) return;
+
+      const newItem = transformHistoryRecord(recordResult.record as any);
+
+      setHistoryItems(prev => {
+        const next = prev.some(i => i.id === newItem.id)
+          ? prev.map(i => (i.id === newItem.id ? newItem : i))
+          : [newItem, ...prev];
+
+        const sorted = [...next].sort((a, b) => b.date.getTime() - a.date.getTime());
+        return sorted.slice(0, 20);
+      });
+    };
+
+    window.addEventListener(HISTORY_CREATED_EVENT, handler as EventListener);
+    return () => {
+      window.removeEventListener(HISTORY_CREATED_EVENT, handler as EventListener);
+    };
   }, []);
 
   const filteredHistoryItems = useMemo(() => {
@@ -268,6 +292,10 @@ export const useAIHistory = () => {
             console.error('❌ Failed to delete wardrobe item:', errorText);
             throw new Error(`Failed to delete wardrobe item: ${response.status} - ${errorText}`);
           }
+
+          window.dispatchEvent(
+            new CustomEvent('wardrobe:changed', { detail: { type: 'deleted', id: wardrobeItemId } })
+          );
         } catch (error) {
           console.error('❌ Error deleting wardrobe item:', error);
           throw new Error(`Failed to delete wardrobe item: ${error instanceof Error ? error.message : 'Unknown error'}`);

@@ -23,6 +23,7 @@ export interface AICheckHistoryItem {
     seasonScenarioCombinations: any[];
     coverageGapsWithNoOutfits: any[];
     itemDetails: any;
+    analysis?: string;
     recommendationText?: string;
     rawAnalysis?: string;
   };

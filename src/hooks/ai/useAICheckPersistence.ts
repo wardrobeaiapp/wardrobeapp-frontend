@@ -17,6 +17,7 @@ interface AnalysisData {
 }
 
 export const useAICheckPersistence = () => {
+  const HISTORY_CREATED_EVENT = 'ai-history:created';
   
   // Save AI Check results to history and update wardrobe item
   const saveAnalysisResults = async (
@@ -64,6 +65,14 @@ export const useAICheckPersistence = () => {
         if (historyResult.success) {
           console.log('AI Check analysis saved to history successfully');
           historyRecordId = historyResult.historyRecord?.id;
+
+          if (historyRecordId) {
+            window.dispatchEvent(
+              new CustomEvent(HISTORY_CREATED_EVENT, {
+                detail: { historyRecordId }
+              })
+            );
+          }
         } else {
           console.warn('Failed to save AI Check analysis to history:', historyResult.error);
         }

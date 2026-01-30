@@ -286,6 +286,10 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
       }
     }
   }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wardrobe:changed', { detail: { type: 'updated', id } }));
+  }
   
   return updatedItem;
 };
@@ -351,6 +355,10 @@ export const deleteWardrobeItem = async (id: string): Promise<void> => {
     } catch (error) {
       console.error('🔴 SCENARIO COVERAGE - Failed to trigger coverage calculation:', error);
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('wardrobe:changed', { detail: { type: 'deleted', id } }));
   }
 };
 

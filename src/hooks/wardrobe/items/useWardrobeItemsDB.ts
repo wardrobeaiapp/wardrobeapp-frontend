@@ -66,6 +66,17 @@ export const useWardrobeItemsDB = (initialItems: WardrobeItem[] = []): UseWardro
     };
   }, [loadItems]);
 
+  useEffect(() => {
+    const handler = () => {
+      loadItems();
+    };
+
+    window.addEventListener('wardrobe:changed', handler as EventListener);
+    return () => {
+      window.removeEventListener('wardrobe:changed', handler as EventListener);
+    };
+  }, [loadItems]);
+
   // Add a new item with optimistic updates and image upload
   const addItem = useCallback(async (item: Omit<WardrobeItem, 'id'>, file?: File): Promise<WardrobeItem | null> => {
     if (!isMountedRef.current) return null;
