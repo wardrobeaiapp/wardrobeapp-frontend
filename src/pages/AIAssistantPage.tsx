@@ -13,10 +13,7 @@ import type { AIHistoryItem } from '../types/ai';
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
-import WishlistSelectionModal from '../components/features/ai-assistant/modals/WishlistSelectionModal/WishlistSelectionModal';
-import AICheckResultModal from '../components/features/ai-assistant/modals/AICheckResultModal/AICheckResultModal';
-import AICheckModal from '../components/features/ai-assistant/modals/AICheckModal/AICheckModal';
-import RecommendationModal from '../components/features/ai-assistant/modals/RecommendationModal/RecommendationModal';
+import AIAssistantModals from '../components/features/ai-assistant/AIAssistantModals';
 import { PageContainer } from '../components/layout/PageContainer';
 import { CardsContainer } from './AIAssistantPage.styles';
 
@@ -195,14 +192,6 @@ const AIAssistantPage: React.FC = () => {
                 onProcessedImageChange={handleProcessedImageChange}
                 isWishlistItem={!!selectedWishlistItem}
               />
-              <AICheckModal
-                isOpen={isAICheckModalOpen}
-                onClose={() => setIsAICheckModalOpen(false)}
-                onApply={handleApplyAICheck}
-                imageUrl={imageLink}
-                onFetchTags={fetchTags}
-              />
-
               <AIRecommendationCard
                 selectedSeason={selectedSeason}
                 onSeasonChange={setSelectedSeason}
@@ -223,94 +212,62 @@ const AIAssistantPage: React.FC = () => {
         />
       </PageContainer>
 
-      {/* Wishlist Selection Modal - Only render when open */}
-      {isWishlistModalOpen && (
-        <WishlistSelectionModal
-          isOpen={true}
-          onClose={handleCloseWishlistModal}
-          items={items}
-          onSelectItem={handleSelectWishlistItem}
-        />
-      )}
+      {/* All Modals - Extracted to separate component */}
+      <AIAssistantModals
+        // Modal states
+        isAICheckModalOpen={isAICheckModalOpen}
+        isWishlistModalOpen={isWishlistModalOpen}
+        isCheckResultModalOpen={isCheckResultModalOpen}
+        isRecommendationModalOpen={isRecommendationModalOpen}
+        isHistoryDetailModalOpen={isHistoryDetailModalOpen}
 
-      {/* AI Check Result Modal - Only render when needed */}
-      {isCheckResultModalOpen && itemCheckResponse && (
-        <AICheckResultModal
-          isOpen={true}
-          onClose={handleCloseCheckResultModal}
-          analysisResult={itemCheckResponse}
-          suitableScenarios={suitableScenarios}
-          compatibleItems={compatibleItems}
-          outfitCombinations={outfitCombinations}
-          seasonScenarioCombinations={seasonScenarioCombinations}
-          coverageGapsWithNoOutfits={coverageGapsWithNoOutfits}
-          itemSubcategory={itemSubcategory}
-          score={itemCheckScore}
-          status={itemCheckStatus}
-          imageUrl={imageLink}
-          extractedTags={extractedTags}
-          recommendationAction={recommendationAction}
-          recommendationText={recommendationText}
-          onAddToWishlist={handleOpenWishlistModal}
-          onApproveForPurchase={handleApproveForPurchase}
-          error={errorType}
-          errorDetails={errorDetails}
-          onSkip={handleResetCheck}
-          onDecideLater={handleCloseCheckResultModal}
-          onRemoveFromWishlist={
-            selectedWishlistItem && historyRecordId
-              ? async () => {
-                  const ok = await handleRemoveFromWishlist(historyRecordId);
-                  if (ok) handleCloseCheckResultModal();
-                }
-              : undefined
-          }
-          // New props for save as mock functionality
-          selectedWishlistItem={selectedWishlistItem}
-          showSaveMock={true}
-          onSaveMock={handleSaveMock}
-        />
-      )}
+        // Modal handlers
+        setIsAICheckModalOpen={setIsAICheckModalOpen}
+        handleCloseWishlistModal={handleCloseWishlistModal}
+        handleSelectWishlistItem={handleSelectWishlistItem}
+        handleCloseCheckResultModal={handleCloseCheckResultModal}
+        handleCloseRecommendationModal={handleCloseRecommendationModal}
+        handleSaveRecommendation={handleSaveRecommendation}
+        handleSkipRecommendation={handleSkipRecommendation}
+        handleCloseHistoryDetailModal={handleCloseHistoryDetailModal}
 
-      {/* Recommendation Modal - Only render when open */}
-      {isRecommendationModalOpen && recommendationText && (
-        <RecommendationModal
-          isOpen={true}
-          onClose={handleCloseRecommendationModal}
-          recommendation={recommendationText}
-          onSave={handleSaveRecommendation}
-          onSkip={handleSkipRecommendation}
-        />
-      )}
+        // AI Check handlers
+        handleApplyAICheck={handleApplyAICheck}
+        handleSaveMock={handleSaveMock}
+        fetchTags={fetchTags}
 
-      {/* History Detail Modal - Use rich AICheckResultModal for visual format */}
-      {isHistoryDetailModalOpen && selectedHistoryItem && selectedHistoryItem.richData && (
-        <AICheckResultModal
-          key={`${selectedHistoryItem.id}-${selectedHistoryItem.userActionStatus}`}
-          isOpen={true}
-          onClose={handleCloseHistoryDetailModal}
-          analysisResult={selectedHistoryItem.richData.analysis || selectedHistoryItem.richData.rawAnalysis || ''}
-          suitableScenarios={selectedHistoryItem.richData.suitableScenarios || []}
-          compatibleItems={selectedHistoryItem.richData.compatibleItems || {}}
-          outfitCombinations={selectedHistoryItem.richData.outfitCombinations || []}
-          seasonScenarioCombinations={selectedHistoryItem.richData.seasonScenarioCombinations || []}
-          coverageGapsWithNoOutfits={selectedHistoryItem.richData.coverageGapsWithNoOutfits || []}
-          score={selectedHistoryItem.score}
-          imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
-          recommendationAction={selectedHistoryItem.richData.recommendationAction || 'RECOMMEND'}
-          recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
-          status={selectedHistoryItem.status}
-          userActionStatus={selectedHistoryItem.userActionStatus}
-          hideActions={false}
-          isHistoryItem={true}
-          selectedWishlistItem={selectedHistoryItem.richData.itemDetails?.id ? selectedHistoryItem.richData.itemDetails as any : null}
-          onAddToWishlist={() => handleMoveToWishlist(selectedHistoryItem.id)}
-          onApproveForPurchase={() => handleMoveToWishlist(selectedHistoryItem.id)}
-          onMarkAsPurchased={() => handleMarkAsPurchased(selectedHistoryItem.id)}
-          onRemoveFromWishlist={() => handleRemoveFromWishlist(selectedHistoryItem.id)}
-          onSkip={() => handleDismissHistoryItem(selectedHistoryItem.id)}
-        />
-      )}
+        // History handlers
+        handleMoveToWishlist={handleMoveToWishlist}
+        handleMarkAsPurchased={handleMarkAsPurchased}
+        handleRemoveFromWishlist={handleRemoveFromWishlist}
+        handleDismissHistoryItem={handleDismissHistoryItem}
+        handleApproveForPurchase={handleApproveForPurchase}
+        handleResetCheck={handleResetCheck}
+        handleOpenWishlistModal={handleOpenWishlistModal}
+
+        // Data props
+        items={items}
+        selectedWishlistItem={selectedWishlistItem}
+        selectedHistoryItem={selectedHistoryItem}
+        historyRecordId={historyRecordId}
+
+        // AI Check data
+        itemCheckResponse={itemCheckResponse}
+        suitableScenarios={suitableScenarios}
+        compatibleItems={compatibleItems}
+        outfitCombinations={outfitCombinations}
+        seasonScenarioCombinations={seasonScenarioCombinations}
+        coverageGapsWithNoOutfits={coverageGapsWithNoOutfits}
+        itemSubcategory={itemSubcategory}
+        itemCheckScore={itemCheckScore}
+        itemCheckStatus={itemCheckStatus}
+        imageLink={imageLink}
+        extractedTags={extractedTags}
+        recommendationAction={recommendationAction}
+        recommendationText={recommendationText}
+        errorType={errorType}
+        errorDetails={errorDetails}
+      />
     </>
   );
 };
