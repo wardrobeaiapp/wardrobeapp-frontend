@@ -1,17 +1,15 @@
-import React, { ChangeEvent, useState } from 'react';
+import React from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
-import { supabase } from '../services/core';
-import { mockDataHelpers } from '../types/aiAnalysisMocks';
 import { aiCheckHistoryService } from '../services/ai/aiCheckHistoryService';
 import Header from '../components/layout/Header/Header';
 import {
   useAICheck,
+  useAICheckHandlers,
   useAIRecommendation,
   useAIHistory,
-  useAIModals
+  useAIAssistantModals
 } from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
-import type { WardrobeItem } from '../types';
 import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
 import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
@@ -24,35 +22,8 @@ import { CardsContainer } from './AIAssistantPage.styles';
 
 const AIAssistantPage: React.FC = () => {
   const { items } = useWardrobe();
-  const [isAICheckModalOpen, setIsAICheckModalOpen] = useState(false);
-  const [selectedWishlistItem, setSelectedWishlistItem] = useState<WardrobeItem | null>(null);
 
-  // Modal hooks - Must be declared before they're used in other handlers
-  const {
-    // Modal states
-    isWishlistModalOpen,
-    isCheckResultModalOpen,
-    isRecommendationModalOpen,
-
-    // Handlers
-    handleOpenWishlistModal,
-    handleCloseWishlistModal,
-    handleSelectWishlistItem,
-    handleOpenCheckResultModal,
-    handleCloseCheckResultModal,
-    handleCloseRecommendationModal,
-    handleSaveRecommendation,
-    handleSkipRecommendation,
-  } = useAIModals({
-    onItemSelect: (imageUrl, selectedItem) => {
-      // Update image link when an item is selected from wishlist
-      setImageLink(imageUrl);
-      // Store the selected wishlist item data
-      setSelectedWishlistItem(selectedItem || null);
-    }
-  });
-
-  // AI Check hook
+  // AI Check hook - needs to be declared first to get setImageLink
   const {
     // State
     imageLink,
@@ -83,6 +54,50 @@ const AIAssistantPage: React.FC = () => {
     resetCheck: handleResetCheck,
     fetchTags,
   } = useAICheck();
+
+  // Modal management hook
+  const {
+    // Modal states
+    isAICheckModalOpen,
+    isWishlistModalOpen,
+    isCheckResultModalOpen,
+    isRecommendationModalOpen,
+    selectedWishlistItem,
+
+    // Handlers
+    setIsAICheckModalOpen,
+    handleOpenWishlistModal,
+    handleCloseWishlistModal,
+    handleSelectWishlistItem,
+    clearSelectedWishlistItem,
+    handleOpenCheckResultModal,
+    handleCloseCheckResultModal,
+    handleCloseRecommendationModal,
+    handleSaveRecommendation,
+    handleSkipRecommendation,
+  } = useAIAssistantModals({
+    onImageLinkChange: setImageLink,
+    onWishlistItemSelect: (item) => {
+      // Additional logic can be added here if needed
+    }
+  });
+
+  // AI Check handlers hook
+  const {
+    handleCheckItem,
+    handleApplyAICheck,
+    handleFileUpload,
+    handleSaveMock
+  } = useAICheckHandlers({
+    imageLink,
+    uploadedFile,
+    handleCheckItemRaw,
+    handleFileUploadRaw,
+    selectedWishlistItem,
+    setIsAICheckModalOpen,
+    clearSelectedWishlistItem,
+    handleOpenCheckResultModal
+  });
 
   // Handler for "Want to buy" button in AI Check Complete popup
   const handleApproveForPurchase = async () => {
@@ -123,112 +138,6 @@ const AIAssistantPage: React.FC = () => {
     }
   };
 
-  // Handlers for the AI Check feature
-  const handleCheckItem = async () => {
-    // If we have a selected wishlist item, skip the modal and use the item's data directly
-    if (selectedWishlistItem && (imageLink || uploadedFile)) {
-      console.log('Processing wishlist item with pre-filled data:', selectedWishlistItem);
-      
-      // Store the wishlist item reference to preserve it through the analysis
-      const wishlistItemRef = selectedWishlistItem;
-      
-      // Create form data from the wishlist item
-      const formData = {
-        category: wishlistItemRef.category as string,
-        subcategory: wishlistItemRef.subcategory || '',
-        seasons: (wishlistItemRef.season || []).map(s => s as string)
-      };
-      
-      console.log('Bypassing AI Check Settings modal for wishlist item. Using data:', formData);
-      
-      // Call the AI check directly with the wishlist item data
-      const result = await handleCheckItemRaw(formData, wishlistItemRef);
-      if (result) {
-        // Ensure selectedWishlistItem is still set for the modal
-        if (!selectedWishlistItem) {
-          setSelectedWishlistItem(wishlistItemRef);
-        }
-        // Open the result modal if analysis was successful
-        handleOpenCheckResultModal();
-      }
-    } else if (imageLink || uploadedFile) {
-      // For regular uploads/URLs, show the settings modal
-      setIsAICheckModalOpen(true);
-    } else {
-      // No image provided
-      const result = await handleCheckItemRaw();
-      if (result) {
-        // Open the result modal if analysis was successful
-        handleOpenCheckResultModal();
-      }
-    }
-  };
-
-  const handleApplyAICheck = async (data: { category: string; subcategory: string; seasons: string[] }) => {
-    setIsAICheckModalOpen(false);
-    // Clear selected wishlist item since we're using manual form data
-    setSelectedWishlistItem(null);
-    // Pass the form data to the AI check function
-    const result = await handleCheckItemRaw(data);
-    if (result) {
-      // Open the result modal if analysis was successful
-      handleOpenCheckResultModal();
-    }
-  };
-
-  // Wrap file upload handler to handle ChangeEvent
-  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      handleFileUploadRaw(event.target.files[0]);
-      // Clear selected wishlist item when user uploads a new file
-      setSelectedWishlistItem(null);
-    }
-  };
-
-  // Handler for saving analysis result as mock data
-  const handleSaveMock = async (mockData: any) => {
-    if (!selectedWishlistItem) {
-      console.error('Cannot save mock: no wardrobe item selected');
-      throw new Error('No wardrobe item selected');
-    }
-
-    try {
-      // Get authenticated user from Supabase
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not authenticated');
-      }
-
-      console.log('💾 Saving analysis as mock for item:', selectedWishlistItem.id, 'user:', user.id);
-      
-      // Extract optimized fields using helper function
-      const optimizedFields = mockDataHelpers.extractOptimizedFields(mockData);
-      
-      // Save with optimized structure to Supabase
-      const { data, error } = await supabase
-        .from('ai_analysis_mocks')
-        .upsert({
-          wardrobe_item_id: selectedWishlistItem.id,
-          ...optimizedFields,
-          // Metadata
-          created_from_real_analysis: true,
-          created_by: user.id,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'wardrobe_item_id'
-        });
-
-      if (error) {
-        console.error('Supabase error saving mock:', error);
-        throw new Error(error.message || 'Failed to save mock data');
-      }
-
-      console.log('✅ Mock data saved successfully via Supabase:', data);
-    } catch (error) {
-      console.error('Error saving mock data:', error);
-      throw error; // Re-throw to trigger error state in modal
-    }
-  };
 
   // AI Recommendation hook
   const {
@@ -273,7 +182,7 @@ const AIAssistantPage: React.FC = () => {
                 onImageLinkChange={(value) => {
                   setImageLink(value);
                   // Clear selected wishlist item when user manually enters a URL
-                  setSelectedWishlistItem(null);
+                  clearSelectedWishlistItem();
                 }}
                 onFileUpload={handleFileUpload}
                 onCheckItem={handleCheckItem}
