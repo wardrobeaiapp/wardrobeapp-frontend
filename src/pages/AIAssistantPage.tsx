@@ -10,12 +10,10 @@ import {
   useAIAssistantModals
 } from '../hooks/ai';
 import type { AIHistoryItem } from '../types/ai';
-import AICheckCard from '../components/features/ai-assistant/AICheckCard/AICheckCard';
-import AIRecommendationCard from '../components/features/ai-assistant/AIRecommendationCard/AIRecommendationCard';
 import AIHistorySection from '../components/features/ai-assistant/AIHistorySection/AIHistorySection';
 import AIAssistantModals from '../components/features/ai-assistant/AIAssistantModals';
+import AIAssistantCards from '../components/features/ai-assistant/AIAssistantCards';
 import { PageContainer } from '../components/layout/PageContainer';
-import { CardsContainer } from './AIAssistantPage.styles';
 
 const AIAssistantPage: React.FC = () => {
   const { items } = useWardrobe();
@@ -173,37 +171,35 @@ const AIAssistantPage: React.FC = () => {
       <Header />
       <PageContainer>
         {/* Main View - Show AI cards and limited history */}
-        <CardsContainer>
-              <AICheckCard
-                imageLink={imageLink}
-                onImageLinkChange={(value) => {
-                  setImageLink(value);
-                  // Clear selected wishlist item when user manually enters a URL
-                  clearSelectedWishlistItem();
-                }}
-                onFileUpload={handleFileUpload}
-                onCheckItem={handleCheckItem}
-                onOpenWishlistModal={handleOpenWishlistModal}
-                isLoading={isCheckLoading}
-                error={errorType}
-                itemCheckResponse={itemCheckResponse}
-                isFileUpload={isFileUpload}
-                uploadedFile={uploadedFile}
-                onProcessedImageChange={handleProcessedImageChange}
-                isWishlistItem={!!selectedWishlistItem}
-              />
-              <AIRecommendationCard
-                selectedSeason={selectedSeason}
-                onSeasonChange={setSelectedSeason}
-                selectedScenario={selectedScenario}
-                onScenarioChange={setSelectedScenario}
-                scenarioOptions={scenarioOptions}
-                loadingScenarios={isRecommendationLoading}
-                onGetRecommendation={handleGetRecommendation}
-                isLoading={isRecommendationLoading}
-                error={recommendationError}
-              />
-        </CardsContainer>
+        <AIAssistantCards
+          // AI Check props
+          imageLink={imageLink}
+          onImageLinkChange={(value: string) => {
+            setImageLink(value);
+            // Clear selected wishlist item when user manually enters a URL
+            clearSelectedWishlistItem();
+          }}
+          onFileUpload={handleFileUpload}
+          onCheckItem={handleCheckItem}
+          onOpenWishlistModal={handleOpenWishlistModal}
+          isCheckLoading={isCheckLoading}
+          errorType={errorType}
+          itemCheckResponse={itemCheckResponse}
+          isFileUpload={isFileUpload}
+          uploadedFile={uploadedFile}
+          onProcessedImageChange={handleProcessedImageChange}
+          selectedWishlistItem={selectedWishlistItem}
+
+          // AI Recommendation props
+          selectedSeason={selectedSeason}
+          onSeasonChange={setSelectedSeason}
+          selectedScenario={selectedScenario}
+          onScenarioChange={setSelectedScenario}
+          scenarioOptions={scenarioOptions}
+          isRecommendationLoading={isRecommendationLoading}
+          onGetRecommendation={handleGetRecommendation}
+          recommendationError={recommendationError}
+        />
 
         {/* History Section - Limited Items */}
         <AIHistorySection
