@@ -8,7 +8,17 @@ import { AIHistoryItem } from '../../types/ai';
 jest.mock('../../services/ai/aiCheckHistoryService', () => ({
   aiCheckHistoryService: {
     getHistory: jest.fn(),
-    updateRecordStatus: jest.fn()
+    updateRecordStatus: jest.fn(),
+    getHistoryRecord: jest.fn(),
+    cleanupRichData: jest.fn()
+  }
+}));
+
+jest.mock('../../services/core/supabaseClient', () => ({
+  supabase: {
+    auth: {
+      getSession: jest.fn()
+    }
   }
 }));
 
@@ -85,6 +95,15 @@ describe('useAIHistory', () => {
     
     // Default mock response
     mockAICheckHistoryService.getHistory.mockResolvedValue(mockServiceResponse);
+    mockAICheckHistoryService.getHistoryRecord.mockResolvedValue({ success: false });
+    mockAICheckHistoryService.cleanupRichData.mockResolvedValue({ success: true });
+
+    (global as any).fetch = jest.fn();
+    jest.spyOn(window, 'dispatchEvent');
+  });
+
+  afterEach(() => {
+    (window.dispatchEvent as jest.Mock | any).mockRestore?.();
   });
 
   describe('Initial State', () => {
@@ -293,7 +312,7 @@ describe('useAIHistory', () => {
       });
 
       act(() => {
-        result.current.handleHistoryItemClick('history-123');
+        result.current.handleOpenHistoryDetailModal('history-123');
       });
 
       expect(result.current.selectedHistoryItem).toBe(result.current.historyItems[0]);
@@ -309,7 +328,7 @@ describe('useAIHistory', () => {
 
       // Open modal first
       act(() => {
-        result.current.handleHistoryItemClick('history-123');
+        result.current.handleOpenHistoryDetailModal('history-123');
       });
 
       expect(result.current.isHistoryDetailModalOpen).toBe(true);
@@ -494,11 +513,73 @@ describe('useAIHistory', () => {
       });
 
       act(() => {
-        result.current.handleHistoryItemClick('nonexistent-id');
+        result.current.handleOpenHistoryDetailModal('nonexistent-id');
       });
 
       expect(result.current.selectedHistoryItem).toBeNull();
       expect(result.current.isHistoryDetailModalOpen).toBe(false);
+    });
+  });
+
+  describe('Actions', () => {
+    it('handleRemoveFromWishlist should cleanup, delete wardrobe item, set dismissed status, update local state, and dispatch wardrobe:changed', async () => {
+      const historyItem = {
+        ...mockServiceResponse.history[0],
+        id: 'history-remove-1',
+        wardrobe_item_id: 'wardrobe-123',
+        analysisData: {
+          ...mockServiceResponse.history[0].analysisData,
+          score: 8
+        },
+        createdAt: '2024-01-20T10:00:00Z',
+        analysisDate: '2024-01-20T10:00:00Z'
+      } as any;
+
+      mockAICheckHistoryService.getHistory.mockResolvedValue({
+        success: true,
+        history: [historyItem],
+        total: 1
+      });
+
+      mockAICheckHistoryService.cleanupRichData.mockResolvedValue({ success: true });
+      mockAICheckHistoryService.updateRecordStatus.mockResolvedValue({ success: true });
+
+      (global as any).fetch.mockResolvedValue({ ok: true, text: async () => '' });
+
+      const { result } = renderHook(() => useAIHistory());
+
+      await waitFor(() => {
+        expect(result.current.historyItems).toHaveLength(1);
+      });
+
+      await act(async () => {
+        const ok = await result.current.handleRemoveFromWishlist('history-remove-1');
+        expect(ok).toBe(true);
+      });
+
+      expect(mockAICheckHistoryService.cleanupRichData).toHaveBeenCalledWith('history-remove-1');
+
+      expect((global as any).fetch).toHaveBeenCalled();
+      const fetchArgs = (global as any).fetch.mock.calls[0];
+      expect(fetchArgs[0]).toContain('/api/wardrobe-items/wardrobe-123');
+      expect(fetchArgs[1]?.method).toBe('DELETE');
+
+      expect(mockAICheckHistoryService.updateRecordStatus).toHaveBeenCalledWith('history-remove-1', 'dismissed');
+
+      expect(window.dispatchEvent).toHaveBeenCalled();
+      const dispatched = (window.dispatchEvent as jest.Mock).mock.calls
+        .map(call => call[0])
+        .find((evt: any) => evt?.type === 'wardrobe:changed');
+      expect(dispatched).toBeTruthy();
+
+      await waitFor(() => {
+        const updated = result.current.historyItems.find(i => i.id === 'history-remove-1') as AIHistoryItem | undefined;
+        expect(updated).toBeTruthy();
+        if (updated && updated.type === 'check') {
+          expect(updated.userActionStatus).toBe(UserActionStatus.DISMISSED);
+          expect(updated.wardrobeItemId).toBeUndefined();
+        }
+      });
     });
   });
 });

@@ -103,6 +103,12 @@ export const useAICheckPersistence = () => {
           
           if (updatedItem) {
             console.log('Wardrobe item wishlist status updated successfully');
+
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(
+                new CustomEvent('wardrobe:changed', { detail: { type: 'updated', id: preFilledData.id } })
+              );
+            }
           } else {
             console.warn('Failed to update wardrobe item wishlist status');
           }

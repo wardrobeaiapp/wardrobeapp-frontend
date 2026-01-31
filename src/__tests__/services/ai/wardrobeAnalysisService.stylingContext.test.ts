@@ -167,8 +167,9 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.stringContaining('/api/analyze-wardrobe-item-simple'),
       expect.objectContaining({
-        stylingContext: undefined // Service sends undefined when no styling context items
-      })
+        stylingContext: undefined
+      }),
+      expect.any(Object) // config object with headers
     );
   });
 
@@ -223,7 +224,8 @@ describe('wardrobeAnalysisService - Styling Context Integration', () => {
           stylingContext: expect.arrayContaining([
             expect.objectContaining({ name: 'Navy Trousers' })
           ])
-        })
+        }),
+        expect.any(Object) // config object with headers
       );
     });
   });
