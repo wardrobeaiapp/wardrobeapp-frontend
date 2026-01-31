@@ -184,5 +184,98 @@ export const aiAnalysisMocksService = {
     if (error) {
       throw new Error(`Failed to delete mock: ${error.message}`);
     }
+  },
+
+  /**
+   * Save AI analysis result as mock data for a wardrobe item
+   */
+  async saveMockAnalysis(mockData: any, wardrobeItemId: string): Promise<{ success: boolean; data?: any; error?: string }> {
+    try {
+      // Validate input
+      if (!wardrobeItemId) {
+        throw new Error('No wardrobe item ID provided');
+      }
+
+      // Get authenticated user from Supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('User not authenticated');
+      }
+
+      console.log('💾 [aiAnalysisMocksService] Saving analysis as mock for item:', wardrobeItemId, 'user:', user.id);
+      
+      // Extract optimized fields using helper function
+      const optimizedFields = mockHelpers.extractOptimizedFields(mockData);
+      
+      // Save with optimized structure to Supabase
+      const { data, error } = await supabase
+        .from('ai_analysis_mocks')
+        .upsert({
+          wardrobe_item_id: wardrobeItemId,
+          ...optimizedFields,
+          // Metadata
+          created_from_real_analysis: true,
+          created_by: user.id,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'wardrobe_item_id'
+        });
+
+      if (error) {
+        console.error('[aiAnalysisMocksService] Supabase error saving mock:', error);
+        throw new Error(error.message || 'Failed to save mock data');
+      }
+
+      console.log('✅ [aiAnalysisMocksService] Mock data saved successfully:', data);
+      
+      return {
+        success: true,
+        data
+      };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('[aiAnalysisMocksService] Error saving mock data:', error);
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  },
+
+  /**
+   * Check if mock analysis exists for a wardrobe item
+   */
+  async hasMockAnalysis(wardrobeItemId: string): Promise<boolean> {
+    try {
+      if (!wardrobeItemId) {
+        return false;
+      }
+
+      // Get authenticated user from Supabase
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return false;
+      }
+
+      const { data, error } = await supabase
+        .from('ai_analysis_mocks')
+        .select('wardrobe_item_id')
+        .eq('wardrobe_item_id', wardrobeItemId)
+        .eq('created_by', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('[aiAnalysisMocksService] Error checking mock existence:', error);
+        return false;
+      }
+
+      return !!data;
+
+    } catch (error) {
+      console.error('[aiAnalysisMocksService] Error checking mock existence:', error);
+      return false;
+    }
   }
 };

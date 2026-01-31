@@ -1,6 +1,5 @@
 import { ChangeEvent } from 'react';
-import { supabase } from '../../services/core';
-import { mockDataHelpers } from '../../types/aiAnalysisMocks';
+import { aiAnalysisMocksService } from '../../services/ai/aiAnalysisMocksService';
 import type { WardrobeItem } from '../../types';
 
 interface UseAICheckHandlersProps {
@@ -102,41 +101,13 @@ export const useAICheckHandlers = ({
       throw new Error('No wardrobe item selected');
     }
 
-    try {
-      // Get authenticated user from Supabase
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        throw new Error('User not authenticated');
-      }
+    const result = await aiAnalysisMocksService.saveMockAnalysis(
+      mockData,
+      selectedWishlistItem.id
+    );
 
-      console.log('💾 Saving analysis as mock for item:', selectedWishlistItem.id, 'user:', user.id);
-      
-      // Extract optimized fields using helper function
-      const optimizedFields = mockDataHelpers.extractOptimizedFields(mockData);
-      
-      // Save with optimized structure to Supabase
-      const { data, error } = await supabase
-        .from('ai_analysis_mocks')
-        .upsert({
-          wardrobe_item_id: selectedWishlistItem.id,
-          ...optimizedFields,
-          // Metadata
-          created_from_real_analysis: true,
-          created_by: user.id,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'wardrobe_item_id'
-        });
-
-      if (error) {
-        console.error('Supabase error saving mock:', error);
-        throw new Error(error.message || 'Failed to save mock data');
-      }
-
-      console.log('✅ Mock data saved successfully via Supabase:', data);
-    } catch (error) {
-      console.error('Error saving mock data:', error);
-      throw error; // Re-throw to trigger error state in modal
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to save mock data');
     }
   };
 
