@@ -582,4 +582,151 @@ describe('useAIHistory', () => {
       });
     });
   });
+
+  describe('ai-history:created event handling', () => {
+    it('should update history item when ai-history:created event is dispatched', async () => {
+      const { result } = renderHook(() => useAIHistory());
+
+      await waitFor(() => {
+        expect(result.current.historyItems).toHaveLength(1);
+      });
+
+      const originalItem = result.current.historyItems[0];
+      expect(originalItem.userActionStatus).toBe('pending');
+
+      // Mock the getHistoryRecord service to return updated record
+      (aiCheckHistoryService.getHistoryRecord as jest.Mock).mockResolvedValue({
+        success: true,
+        record: {
+          id: 'history-123',
+          userId: 'user-123',
+          analysisData: {
+            compatibleItems: {
+              tops: [{ id: 'top-1', name: 'Test Top', category: 'tops' }],
+              bottoms: [],
+              shoes: [],
+              outerwear: [],
+              accessories: []
+            },
+            outfitCombinations: [
+              {
+                id: 'combo-1',
+                items: ['test-top', 'test-bottom'],
+                description: 'Great combo'
+              }
+            ],
+            suitableScenarios: ['work', 'casual'],
+            seasonScenarioCombinations: [],
+            coverageGapsWithNoOutfits: [],
+            itemDetails: {
+              name: 'Test Item',
+              category: 'tops',
+              imageUrl: 'test-image.jpg'
+            },
+            recommendationText: 'Highly recommended'
+          },
+          userActionStatus: 'saved',
+          createdAt: '2024-01-20T10:00:00Z',
+          updatedAt: '2024-01-20T10:01:00Z',
+        }
+      });
+
+      // Dispatch the ai-history:created event
+      act(() => {
+        window.dispatchEvent(
+          new CustomEvent('ai-history:created', {
+            detail: { historyRecordId: 'history-123' }
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const updatedItems = result.current.historyItems;
+        expect(updatedItems).toHaveLength(1);
+        const updatedItem = updatedItems[0];
+        expect(updatedItem.userActionStatus).toBe('saved');
+        expect(updatedItem.id).toBe('history-123');
+      });
+
+      expect((aiCheckHistoryService.getHistoryRecord as jest.Mock)).toHaveBeenCalledWith('history-123');
+    });
+
+    it('should add new history item when ai-history:created event is dispatched for new record', async () => {
+      const { result } = renderHook(() => useAIHistory());
+
+      await waitFor(() => {
+        expect(result.current.historyItems).toHaveLength(1);
+      });
+
+      // Mock the getHistoryRecord service to return new record
+      (aiCheckHistoryService.getHistoryRecord as jest.Mock).mockResolvedValue({
+        success: true,
+        record: {
+          id: 'history-456',
+          userId: 'user-123',
+          analysisData: {
+            compatibleItems: { tops: [], bottoms: [], shoes: [], outerwear: [], accessories: [] },
+            outfitCombinations: [],
+            suitableScenarios: ['casual'],
+            seasonScenarioCombinations: [],
+            coverageGapsWithNoOutfits: [],
+            itemDetails: { name: 'New Item', category: 'tops', imageUrl: 'new-image.jpg' },
+            recommendationText: 'Recommended'
+          },
+          userActionStatus: 'pending',
+          createdAt: '2024-01-20T11:00:00Z',
+          updatedAt: '2024-01-20T11:00:00Z',
+        }
+      });
+
+      // Dispatch the ai-history:created event for new record
+      act(() => {
+        window.dispatchEvent(
+          new CustomEvent('ai-history:created', {
+            detail: { historyRecordId: 'history-456' }
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const updatedItems = result.current.historyItems;
+        expect(updatedItems).toHaveLength(2);
+        const newItem = updatedItems.find(item => item.id === 'history-456');
+        expect(newItem).toBeDefined();
+        expect(newItem?.userActionStatus).toBe('pending');
+      });
+
+      expect((aiCheckHistoryService.getHistoryRecord as jest.Mock)).toHaveBeenCalledWith('history-456');
+    });
+
+    it('should handle errors gracefully when getHistoryRecord fails', async () => {
+      const { result } = renderHook(() => useAIHistory());
+
+      await waitFor(() => {
+        expect(result.current.historyItems).toHaveLength(1);
+      });
+
+      const originalItems = result.current.historyItems;
+
+      // Mock the getHistoryRecord service to return error
+      (aiCheckHistoryService.getHistoryRecord as jest.Mock).mockResolvedValue({
+        success: false,
+        error: 'Record not found'
+      });
+
+      // Dispatch the ai-history:created event
+      act(() => {
+        window.dispatchEvent(
+          new CustomEvent('ai-history:created', {
+            detail: { historyRecordId: 'nonexistent-id' }
+          })
+        );
+      });
+
+      // Items should remain unchanged
+      await waitFor(() => {
+        expect(result.current.historyItems).toEqual(originalItems);
+      });
+    });
+  });
 });

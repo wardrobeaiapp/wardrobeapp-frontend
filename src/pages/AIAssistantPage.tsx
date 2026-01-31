@@ -2,6 +2,7 @@ import React, { ChangeEvent, useState } from 'react';
 import { useWardrobe } from '../context/WardrobeContext';
 import { supabase } from '../services/core';
 import { mockDataHelpers } from '../types/aiAnalysisMocks';
+import { aiCheckHistoryService } from '../services/ai/aiCheckHistoryService';
 import Header from '../components/layout/Header/Header';
 import {
   useAICheck,
@@ -82,6 +83,45 @@ const AIAssistantPage: React.FC = () => {
     resetCheck: handleResetCheck,
     fetchTags,
   } = useAICheck();
+
+  // Handler for "Want to buy" button in AI Check Complete popup
+  const handleApproveForPurchase = async () => {
+    if (historyRecordId) {
+      try {
+        const result = await aiCheckHistoryService.updateRecordStatus(historyRecordId, 'saved');
+        if (result.success) {
+          console.log('History record status updated to saved');
+          
+          // Get the updated record and dispatch it to trigger the history update listener
+          const recordResult = await aiCheckHistoryService.getHistoryRecord(historyRecordId);
+          if (recordResult.success && recordResult.record) {
+            // Dispatch the updated item using the existing ai-history:created event
+            // This will trigger the listener in useAIHistory hook to update the local state
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(
+                new CustomEvent('ai-history:created', { 
+                  detail: { historyRecordId } 
+                })
+              );
+            }
+          }
+          
+          // Trigger wardrobe:changed event to refresh UI
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('wardrobe:changed', { 
+                detail: { type: 'updated', id: selectedWishlistItem?.id } 
+              })
+            );
+          }
+        } else {
+          console.error('Failed to update history record status:', result.error);
+        }
+      } catch (error) {
+        console.error('Error updating history record status:', error);
+      }
+    }
+  };
 
   // Handlers for the AI Check feature
   const handleCheckItem = async () => {
@@ -303,6 +343,7 @@ const AIAssistantPage: React.FC = () => {
           recommendationAction={recommendationAction}
           recommendationText={recommendationText}
           onAddToWishlist={handleOpenWishlistModal}
+          onApproveForPurchase={handleApproveForPurchase}
           error={errorType}
           errorDetails={errorDetails}
           onSkip={handleResetCheck}
