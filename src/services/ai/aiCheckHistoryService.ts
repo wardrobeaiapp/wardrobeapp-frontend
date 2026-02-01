@@ -92,10 +92,10 @@ export class AICheckHistoryService {
     success: boolean; 
     stats?: {
       total: number;
-      avgScore: number;
+      savedCount: number;
+      dismissedCount: number;
       byCategory: { [key: string]: number };
       byStatus: { [key: string]: number };
-      recentCount: number;
     };
     error?: string;
   }> {
@@ -110,16 +110,16 @@ export class AICheckHistoryService {
         };
       }
 
-      const { total, avgScore, byCategory, byStatus, recentCount } = calculateHistoryStats(history);
+      const { total, savedCount, dismissedCount, byCategory, byStatus } = calculateHistoryStats(history);
       
       return {
         success: true,
         stats: {
           total: total,
-          avgScore: Math.round(avgScore * 10) / 10, // Round to 1 decimal
+          savedCount: savedCount,
+          dismissedCount: dismissedCount,
           byCategory,
-          byStatus,
-          recentCount
+          byStatus
         }
       };
 

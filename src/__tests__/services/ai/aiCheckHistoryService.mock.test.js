@@ -270,7 +270,8 @@ describe('AI Check History Service - Test Infrastructure', () => {
         
         // Simulate statistics calculation
         const total = data.history.length;
-        const avgScore = data.history.reduce((sum, item) => sum + item.analysisData.score, 0) / total;
+        const savedCount = data.history.filter(item => item.userActionStatus === 'saved').length;
+        const dismissedCount = data.history.filter(item => item.userActionStatus === 'dismissed').length;
         
         const byCategory = {};
         const byStatus = {};
@@ -286,10 +287,10 @@ describe('AI Check History Service - Test Infrastructure', () => {
           success: true,
           stats: {
             total,
-            avgScore,
+            savedCount,
+            dismissedCount,
             byCategory,
-            byStatus,
-            recentCount: 1
+            byStatus
           }
         };
       });
@@ -300,7 +301,8 @@ describe('AI Check History Service - Test Infrastructure', () => {
       // Verify
       expect(result.success).toBe(true);
       expect(result.stats.total).toBe(2);
-      expect(result.stats.avgScore).toBe(6.5);
+      expect(result.stats.savedCount).toBe(1);
+      expect(result.stats.dismissedCount).toBe(1);
       expect(result.stats.byCategory.tops).toBe(1);
       expect(result.stats.byCategory.bottoms).toBe(1);
       expect(result.stats.byStatus.saved).toBe(1);

@@ -316,7 +316,7 @@ describe('AICheckHistoryService - Basic Tests', () => {
       // Verify
       expect(result.success).toBe(true);
       expect(result.stats.total).toBe(2);
-      expect(result.stats.avgScore).toBe(6.5);
+      expect(result.stats.savedCount).toBe(1);
       expect(result.stats.byCategory.tops).toBe(1);
       expect(result.stats.byCategory.bottoms).toBe(1);
       expect(result.stats.byStatus.saved).toBe(1);
@@ -340,7 +340,7 @@ describe('AICheckHistoryService - Basic Tests', () => {
       // Verify
       expect(result.success).toBe(true);
       expect(result.stats.total).toBe(0);
-      expect(result.stats.avgScore).toBe(0);
+      expect(result.stats.savedCount).toBe(0);
     });
   });
 

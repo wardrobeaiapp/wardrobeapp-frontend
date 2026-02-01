@@ -2,28 +2,19 @@ import { AICheckHistoryItem } from '../../../types';
 
 type HistoryStats = {
   total: number;
-  avgScore: number;
+  savedCount: number;
+  dismissedCount: number;
   byCategory: { [key: string]: number };
   byStatus: { [key: string]: number };
-  recentCount: number;
 };
 
 export function calculateHistoryStats(history: AICheckHistoryItem[]): HistoryStats {
   const total = history.length;
-  const avgScore =
-    total > 0
-      ? history.reduce((sum, item) => {
-          const score = item.analysisData?.score || 0;
-          return sum + score;
-        }, 0) / total
-      : 0;
+  const savedCount = history.filter(item => item.userActionStatus === 'saved').length;
+  const dismissedCount = history.filter(item => item.userActionStatus === 'dismissed').length;
 
   const byCategory: Record<string, number> = {};
   const byStatus: Record<string, number> = {};
-
-  const weekAgo = new Date();
-  weekAgo.setDate(weekAgo.getDate() - 7);
-  let recentCount = 0;
 
   history.forEach(item => {
     const category = item.analysisData?.itemDetails?.category || 'other';
@@ -31,18 +22,13 @@ export function calculateHistoryStats(history: AICheckHistoryItem[]): HistorySta
 
     const status = item.userActionStatus || 'pending';
     byStatus[status] = (byStatus[status] || 0) + 1;
-
-    const itemDate = new Date(item.createdAt);
-    if (itemDate > weekAgo) {
-      recentCount++;
-    }
   });
 
   return {
     total,
-    avgScore: Math.round(avgScore * 10) / 10,
+    savedCount,
+    dismissedCount,
     byCategory,
-    byStatus,
-    recentCount
+    byStatus
   };
 }

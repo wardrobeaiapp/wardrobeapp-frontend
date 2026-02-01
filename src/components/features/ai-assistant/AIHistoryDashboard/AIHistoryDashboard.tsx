@@ -36,10 +36,10 @@ interface AIHistoryDashboardProps {
 
 interface HistoryStats {
   total: number;
-  avgScore: number;
+  savedCount: number;
+  dismissedCount: number;
   byCategory: Record<string, number>;
   byStatus: Record<string, number>;
-  recentCount: number;
 }
 
 const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
@@ -171,33 +171,33 @@ const AIHistoryDashboard: React.FC<AIHistoryDashboardProps> = ({
         <StatCard>
           <StatContent>
             <StatValue>
-              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.avgScore?.toFixed(1) || '0.0'}
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.savedCount || 0}
             </StatValue>
-            <StatLabel>Average Score</StatLabel>
-          </StatContent>
-          <StatIcon className="recommendation">
-            <FaMagic size={20} />
-          </StatIcon>
-        </StatCard>
-        
-        <StatCard className="wishlist">
-          <StatContent>
-            <StatValue>
-              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.byStatus?.applied || 0}
-            </StatValue>
-            <StatLabel>Applied Suggestions</StatLabel>
+            <StatLabel>Saved to Wishlist</StatLabel>
           </StatContent>
           <StatIcon className="wishlist">
             <FaTshirt size={20} />
           </StatIcon>
         </StatCard>
         
+        <StatCard className="applied">
+          <StatContent>
+            <StatValue>
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.byStatus?.applied || 0}
+            </StatValue>
+            <StatLabel>Applied Suggestions</StatLabel>
+          </StatContent>
+          <StatIcon className="recommendation">
+            <FaMagic size={20} />
+          </StatIcon>
+        </StatCard>
+        
         <StatCard>
           <StatContent>
             <StatValue>
-              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.recentCount || 0}
+              {statsLoading ? <FaSpinner className="fa-spin" size={16} /> : stats?.dismissedCount || 0}
             </StatValue>
-            <StatLabel>Recent Checks (30d)</StatLabel>
+            <StatLabel>Dismissed</StatLabel>
           </StatContent>
           <StatIcon className="discarded">
             <FaTrash size={20} />

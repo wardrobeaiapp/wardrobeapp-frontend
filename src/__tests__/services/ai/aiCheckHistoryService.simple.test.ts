@@ -305,7 +305,7 @@ describe('AICheckHistoryService - Core Functionality', () => {
       expect(result.success).toBe(true);
       expect(result.stats).toBeDefined();
       expect(result.stats!.total).toBe(2);
-      expect(result.stats!.avgScore).toBe(6.5); // (8 + 5) / 2
+      expect(result.stats!.savedCount).toBe(1); // 1 item with 'saved' status
       expect(result.stats!.byCategory).toEqual({
         'tops': 1,
         'bottoms': 1
