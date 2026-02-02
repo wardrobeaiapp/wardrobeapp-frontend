@@ -67,7 +67,7 @@ export async function detachHistoryRecord(recordId: string): Promise<{ success: 
 
 export async function updateRecordStatus(
   id: string,
-  status: 'saved' | 'dismissed' | 'pending' | 'applied' | 'obtained'
+  status: 'saved' | 'dismissed' | 'pending' | 'applied'
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('Updating AI Check history record status:', { id, status });

@@ -73,9 +73,11 @@ const AIHistoryItem: React.FC<AIHistoryItemProps> = ({
           )}
           {item.userActionStatus && (
             <StatusBadge $status={item.userActionStatus === 'saved' ? 'approved' : 
-                                   item.userActionStatus === 'dismissed' ? 'potential_issue' : 'not_reviewed'}>
+                                   item.userActionStatus === 'dismissed' ? 'potential_issue' : 
+                                   item.userActionStatus === 'applied' ? 'approved' : 'not_reviewed'}>
               {item.userActionStatus === 'saved' ? '💾 Saved' :
-               item.userActionStatus === 'dismissed' ? '❌ Dismissed' : '⏳ Pending'}
+               item.userActionStatus === 'dismissed' ? '❌ Dismissed' : 
+               item.userActionStatus === 'applied' ? '✅ Applied' : '⏳ Pending'}
             </StatusBadge>
           )}
         </HistoryItemTitle>

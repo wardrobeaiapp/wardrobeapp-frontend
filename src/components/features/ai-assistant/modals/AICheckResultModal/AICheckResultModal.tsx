@@ -32,7 +32,7 @@ interface AICheckResultModalProps {
   extractedTags?: DetectedTags | null;
   onAddToWishlist?: () => void; // For new items: open wishlist selection popup
   onApproveForPurchase?: () => void; // For wishlist items: mark as "want to buy" (SAVED status)
-  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (OBTAINED status)
+  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (APPLIED status)
   onRemoveFromWishlist?: () => void; // Remove from wishlist (DISMISSED status)  
   onSkip?: () => void;
   onDecideLater?: () => void;
@@ -130,7 +130,7 @@ const AICheckResultModal: React.FC<AICheckResultModalProps> = ({
     onClose();
   };
 
-  // Handler for marking items as purchased (status SAVED → OBTAINED)
+  // Handler for marking items as purchased (status SAVED → APPLIED)
   const handleMarkAsPurchased = () => {
     onMarkAsPurchased?.();
     onClose();

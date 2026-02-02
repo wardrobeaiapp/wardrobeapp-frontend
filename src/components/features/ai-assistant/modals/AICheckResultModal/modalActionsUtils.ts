@@ -11,7 +11,7 @@ interface CreateModalActionsProps {
   itemStatus?: string; // Current status of the history item for context-aware buttons
   onAddToWishlist: () => void; // For new items: open wishlist selection popup
   onApproveForPurchase?: () => void; // For wishlist items: mark as "want to buy" (SAVED status)
-  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (OBTAINED status)
+  onMarkAsPurchased?: () => void; // For saved items: mark as purchased (APPLIED status)
   onRemoveFromWishlist?: () => void; // Remove from wishlist (DISMISSED status)
   onSkip: () => void;
   onDecideLater: () => void;
@@ -89,14 +89,8 @@ export const createModalActions = ({
     } else if (itemStatus === 'dismissed') {
       // For dismissed items, no actions available (removal is final)
       // Items are permanently removed from wishlist
-    } else if (itemStatus === 'obtained') {
-      // For purchased items, show confirmation or option to remove
-      actions.push({
-        label: 'Remove from wishlist',
-        onClick: () => onRemoveFromWishlist?.(),
-        variant: 'secondary',
-        fullWidth: true
-      });
+    } else if (itemStatus === 'applied') {
+      // For applied items, no actions available (item is already purchased/processed)
     }
   } else {
     // For fresh analysis (non-history items)

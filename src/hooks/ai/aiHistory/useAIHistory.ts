@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { aiCheckHistoryService } from '../../../services/ai/aiCheckHistoryService';
 import { supabase } from '../../../services/core/supabaseClient';
 import { UserActionStatus } from '../../../types';
-import { AIHistoryItem } from '../../../types/ai';
+import { AIHistoryItem, AICheckHistoryItem } from '../../../types/ai';
 import { filterHistoryItems } from './filters';
 import { HISTORY_CREATED_EVENT, type ActivityType, type CheckStatus } from './types';
 import { transformHistoryRecord } from './transform';
@@ -125,19 +125,76 @@ export const useAIHistory = () => {
 
   const handleMarkAsPurchased = async (itemId: string) => {
     try {
-      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'obtained');
+      // First, get the history item to find the wardrobe item ID
+      const historyItem = historyItems.find(item => item.id === itemId);
+      
+      // Only check items can be marked as purchased (not recommendations)
+      if (!historyItem || historyItem.type !== 'check') {
+        throw new Error('Only AI check items can be marked as purchased');
+      }
+      
+      const checkItem = historyItem as AICheckHistoryItem;
+      if (!checkItem.wardrobeItemId) {
+        throw new Error('No wardrobe item found for this history record');
+      }
 
+      // Update the history status to 'applied'
+      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'applied');
       if (!result.success) {
         throw new Error(result.error);
       }
 
+      // Move the item from wishlist to wardrobe by making a direct API call
+      let authToken = '';
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          authToken = sessionData.session.access_token;
+        }
+      } catch (e) {}
+      if (!authToken) {
+        authToken = localStorage.getItem('token') || '';
+      }
+
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+      const updateResponse = await fetch(`${apiUrl}/api/wardrobe-items/${checkItem.wardrobeItemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': authToken
+        },
+        body: JSON.stringify({
+          wishlist: false
+        })
+      });
+
+      if (!updateResponse.ok) {
+        console.warn('Failed to update wardrobe item wishlist status, but history was updated');
+      }
+
+      // Wait a moment for the database to process the update
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Update local state
       setHistoryItems(prevItems =>
         prevItems.map(item =>
           item.id === itemId
-            ? { ...item, userActionStatus: UserActionStatus.OBTAINED }
+            ? { ...item, userActionStatus: UserActionStatus.APPLIED }
             : item
         )
       );
+
+      // Trigger wardrobe refresh event
+      window.dispatchEvent(
+        new CustomEvent('wardrobe:changed', { 
+          detail: { 
+            type: 'updated', 
+            id: checkItem.wardrobeItemId,
+            movedFromWishlist: true
+          } 
+        })
+      );
+
       setIsHistoryDetailModalOpen(false);
     } catch (error: any) {
       console.error('Failed to mark item as purchased:', error.message || error);

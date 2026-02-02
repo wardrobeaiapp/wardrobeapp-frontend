@@ -103,14 +103,6 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
 function transformDatabaseToFrontend(dbRecord) {
   // analysis_data is already an object from Supabase JSONB field (no need to parse)
   const analysisData = dbRecord.analysis_data || {};
-  
-  console.log('🎯 Transforming simplified ai_check_history record:', {
-    id: dbRecord.id,
-    hasAnalysisData: !!analysisData && Object.keys(analysisData).length > 0,
-    compatibleItemsKeys: analysisData?.compatibleItems ? Object.keys(analysisData.compatibleItems) : [],
-    outfitCombinationsLength: analysisData?.outfitCombinations?.length || 0,
-    hasItemDetails: !!analysisData?.itemDetails
-  });
 
   // Build title and description from analysis_data
   const itemName = analysisData.itemDetails?.name || 'Unknown Item';
@@ -126,7 +118,7 @@ function transformDatabaseToFrontend(dbRecord) {
     summary,
     date: new Date(dbRecord.created_at),
     status: dbRecord.wishlist_status,
-    userActionStatus: dbRecord.user_action_status,
+    userActionStatus: dbRecord.user_action_status || 'pending', // Add fallback
     
     // Simplified structure matching new interface
     wardrobeItemId: dbRecord.wardrobe_item_id,

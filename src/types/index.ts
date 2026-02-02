@@ -9,8 +9,7 @@ export enum UserActionStatus {
   SAVED = 'saved',
   DISMISSED = 'dismissed', 
   PENDING = 'pending',
-  APPLIED = 'applied',
-  OBTAINED = 'obtained'
+  APPLIED = 'applied'
 }
 
 export interface WardrobeItem {

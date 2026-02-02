@@ -212,7 +212,7 @@ router.put('/:id/status', auth, async (req, res) => {
     const user_id = req.user.id;
     
     // Validate status
-    const validStatuses = ['saved', 'dismissed', 'pending', 'applied', 'obtained'];
+    const validStatuses = ['saved', 'dismissed', 'pending', 'applied'];
     if (!validStatuses.includes(user_action_status)) {
       return res.status(400).json({ 
         error: 'Invalid user_action_status',

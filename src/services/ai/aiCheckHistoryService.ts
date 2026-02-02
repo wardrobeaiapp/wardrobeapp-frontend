@@ -73,7 +73,7 @@ export class AICheckHistoryService {
    */
   async updateRecordStatus(
     id: string, 
-    status: 'saved' | 'dismissed' | 'pending' | 'applied' | 'obtained'
+    status: 'saved' | 'dismissed' | 'pending' | 'applied'
   ): Promise<{ success: boolean; error?: string }> {
     return updateRecordStatus(id, status);
   }
