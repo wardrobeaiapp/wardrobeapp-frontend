@@ -130,7 +130,8 @@ function transformDatabaseToFrontend(dbRecord) {
     // For backward compatibility - extract from analysisData
     score: analysisData.score,
     feedback: analysisData.feedback,
-    recommendationText: analysisData.recommendationText,
+    // Use database recommendation_text field if analysisData doesn't have it (for cleaned up dismissed items)
+    recommendationText: analysisData.recommendationText || dbRecord.recommendation_text,
     analysisDate: dbRecord.created_at,
     
     // Extract rich data for frontend consumption

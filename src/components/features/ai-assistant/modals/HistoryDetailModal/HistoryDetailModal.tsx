@@ -31,7 +31,14 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
   onDismiss,
   onApply
 }) => {
-  if (!isOpen || !item) return null;
+  console.log('🚀 HistoryDetailModal - Component called:', { isOpen, hasItem: !!item, itemType: item?.type });
+  
+  if (!isOpen || !item) {
+    console.log('❌ HistoryDetailModal - Early return:', { isOpen, hasItem: !!item });
+    return null;
+  }
+
+  console.log('✅ HistoryDetailModal - Rendering modal for item:', item);
 
   const formatDate = (date: Date): string => {
     return date.toLocaleDateString('en-US', {
@@ -70,6 +77,26 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
         return 'Applied';
       default:
         return userActionStatus;
+    }
+  };
+
+  const getRecommendationActionFromStatus = (status: WishlistStatus | string) => {
+    const statusString = String(status).toLowerCase();
+    switch (statusString) {
+      case 'approved':
+      case WishlistStatus.APPROVED:
+        return 'RECOMMEND';
+      case 'potential_issue':
+      case WishlistStatus.POTENTIAL_ISSUE:
+        return 'MAYBE';
+      case 'not_recommended':
+      case WishlistStatus.NOT_RECOMMENDED:
+        return 'SKIP';
+      case 'not_reviewed':
+      case WishlistStatus.NOT_REVIEWED:
+        return 'RECOMMEND'; // Default fallback
+      default:
+        return 'RECOMMEND'; // Default fallback
     }
   };
 
@@ -159,6 +186,8 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
       hasRichData: !!checkItem.richData,
       compatibleItemsKeys: checkItem.richData ? Object.keys(checkItem.richData.compatibleItems || {}) : [],
       outfitCombinationsLength: checkItem.richData?.outfitCombinations?.length || 0,
+      itemStatus: item.status,
+      richDataRecommendationAction: checkItem.richData?.recommendationAction,
       fullItem: item
     });
   }
@@ -196,7 +225,18 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
             </ItemImageContainer>
           )}
 
-          {hasRichData ? (
+          {(() => {
+            const checkItem = item.type === 'check' ? item as any : null;
+            console.log('🔍 HistoryDetailModal - Rendering debug:', {
+              hasRichData,
+              hasRecommendationText: !!(item as any).richData?.recommendationText,
+              recommendationText: (item as any).richData?.recommendationText,
+              itemStatus: checkItem?.status,
+              itemType: item.type,
+              richDataKeys: (item as any).richData ? Object.keys((item as any).richData) : []
+            });
+            return hasRichData;
+          })() ? (
             <>
               {/* Rich visual display - same as AICheckResultModal */}
               <CompatibleItemsSection compatibleItems={(item as any).richData.compatibleItems} />
@@ -211,13 +251,33 @@ const HistoryDetailModal: React.FC<HistoryDetailModalProps> = ({
                 selectedWishlistItem={(item as any).richData.itemDetails}
               />
 
-              {(item as any).richData.recommendationText && (
-                <RecommendationSection 
-                  recommendationAction="RECOMMEND"
-                  recommendationText={(item as any).richData.recommendationText}
-                  score={item.score}
-                />
-              )}
+              {(() => {
+                const checkItem = item.type === 'check' ? item as any : null;
+                const hasRecommendationText = !!(item as any).richData?.recommendationText;
+                const derivedAction = checkItem?.status ? getRecommendationActionFromStatus(checkItem.status) : 'RECOMMEND';
+                console.log('🎯 RecommendationSection Debug:', {
+                  hasRecommendationText,
+                  itemStatus: checkItem?.status,
+                  derivedAction,
+                  statusType: typeof checkItem?.status,
+                  statusString: String(checkItem?.status),
+                  richDataAction: (item as any).richData?.recommendationAction,
+                  recommendationText: (item as any).richData?.recommendationText
+                });
+                
+                if (!hasRecommendationText) {
+                  console.log('❌ No recommendationText found, not rendering RecommendationSection');
+                  return null;
+                }
+                
+                return (
+                  <RecommendationSection 
+                    recommendationAction={derivedAction}
+                    recommendationText={(item as any).richData.recommendationText}
+                    score={checkItem?.score}
+                  />
+                );
+              })()}
             </>
           ) : (
             <>

@@ -396,23 +396,27 @@ export const StatusBadge = styled.div<{ $status: string }>`
   background-color: ${props => {
     switch (props.$status) {
       case 'approved':
-        return '#dcfce7'; // green-100
+        return '#ecfdf5'; // green-50 - matching recommendation block
       case 'potential_issue':
-        return '#fef3c7'; // amber-100  
+        return '#fef3c7'; // amber-100 - matching recommendation block
+      case 'not_recommended':
+        return '#fef2f2'; // red-50 - matching recommendation block
       case 'not_reviewed':
       default:
-        return '#f3f4f6'; // gray-100
+        return '#f9fafb'; // gray-50
     }
   }};
   color: ${props => {
     switch (props.$status) {
       case 'approved':
-        return '#16a34a'; // green-600
+        return '#059669'; // green-600 - matching recommendation block
       case 'potential_issue':
-        return '#d97706'; // amber-600
+        return '#d97706'; // amber-600 - matching recommendation block
+      case 'not_recommended':
+        return '#dc2626'; // red-600 - matching recommendation block
       case 'not_reviewed':
       default:
-        return '#4b5563'; // gray-600
+        return '#6b7280'; // gray-500
     }
   }};
 `;

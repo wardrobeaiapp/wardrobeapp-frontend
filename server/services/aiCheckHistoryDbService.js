@@ -95,6 +95,7 @@ async function getHistoryForUser(userId, options = {}) {
       created_at,
       updated_at,
       analysis_data,
+      recommendation_text,
       wardrobeItems:wardrobe_item_id (
         id,
         name,
@@ -113,11 +114,13 @@ async function getHistoryForUser(userId, options = {}) {
     query = query.eq('wardrobe_item_id', wardrobeItemId);
   }
 
-  const { data: historyRecords, error: historyError } = await query;
+  // Execute query and get results
+  const { data: historyRecords, error: queryError } = await query;
+  
 
-  if (historyError) {
-    console.error('❌ Error fetching AI Check history:', historyError);
-    throw new Error(`Failed to fetch AI Check history: ${historyError.message}`);
+  if (queryError) {
+    console.error('❌ Error fetching AI Check history:', queryError);
+    throw new Error(`Failed to fetch AI Check history: ${queryError.message}`);
   }
 
   // Transform records for frontend
@@ -178,6 +181,7 @@ async function getHistoryById(recordId, userId) {
       analysis_data,
       wishlist_status,
       image_url,
+      recommendation_text,
       wardrobeItems:wardrobe_item_id (
         id,
         name,

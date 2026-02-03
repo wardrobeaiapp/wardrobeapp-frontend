@@ -4,16 +4,19 @@ import { AIHistoryItem } from '../../../types/ai';
 export const transformHistoryRecord = (item: any): AIHistoryItem => {
   let richDataObject;
 
-  if (item.analysisData) {
+  // Always create richDataObject if we have any data to show
+  // Even for cleaned up items, we want to preserve recommendation text
+  if (item.analysisData || item.recommendation_text) {
     richDataObject = {
-      compatibleItems: item.analysisData.compatibleItems || {},
-      outfitCombinations: item.analysisData.outfitCombinations || [],
-      suitableScenarios: item.analysisData.suitableScenarios || [],
-      seasonScenarioCombinations: item.analysisData.seasonScenarioCombinations || [],
-      coverageGapsWithNoOutfits: item.analysisData.coverageGapsWithNoOutfits || [],
-      itemDetails: item.analysisData.itemDetails || item.itemDetails || {},
-      recommendationText: item.analysisData.recommendationText || item.recommendationText,
-      analysis: item.analysisData.analysis || item.analysis,
+      compatibleItems: item.analysisData?.compatibleItems || {},
+      outfitCombinations: item.analysisData?.outfitCombinations || [],
+      suitableScenarios: item.analysisData?.suitableScenarios || [],
+      seasonScenarioCombinations: item.analysisData?.seasonScenarioCombinations || [],
+      coverageGapsWithNoOutfits: item.analysisData?.coverageGapsWithNoOutfits || [],
+      itemDetails: item.analysisData?.itemDetails || item.itemDetails || {},
+      // Always check for recommendation_text even if analysisData is cleaned up
+      recommendationText: item.analysisData?.recommendationText || item.recommendationText || item.recommendation_text,
+      analysis: item.analysisData?.analysis || item.analysis,
       rawAnalysis: item.rawAnalysis
     };
   } else {

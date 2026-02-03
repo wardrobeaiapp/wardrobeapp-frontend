@@ -72,8 +72,25 @@ const AIHistoryPage: React.FC = () => {
           coverageGapsWithNoOutfits={selectedHistoryItem.richData.coverageGapsWithNoOutfits || []}
           score={selectedHistoryItem.score}
           imageUrl={selectedHistoryItem.richData.itemDetails?.imageUrl || selectedHistoryItem.image}
-          recommendationAction={selectedHistoryItem.richData.recommendationAction || 'RECOMMEND'}
-          recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description}
+          recommendationAction={(() => {
+            const getRecommendationActionFromStatus = (status: string) => {
+              switch (status?.toLowerCase()) {
+                case 'approved':
+                  return 'RECOMMEND';
+                case 'potential_issue':
+                  return 'MAYBE';
+                case 'not_recommended':
+                  return 'SKIP';
+                case 'not_reviewed':
+                  return 'RECOMMEND';
+                default:
+                  return 'RECOMMEND';
+              }
+            };
+            const derivedAction = selectedHistoryItem.status ? getRecommendationActionFromStatus(selectedHistoryItem.status) : 'RECOMMEND';
+            return derivedAction;
+          })()}
+          recommendationText={selectedHistoryItem.richData.recommendationText || selectedHistoryItem.description || selectedHistoryItem.summary}
           status={selectedHistoryItem.status}
           userActionStatus={selectedHistoryItem.userActionStatus}
           hideActions={false}

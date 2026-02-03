@@ -349,7 +349,7 @@ export const StatusValue = styled(DetailValue)<{
   font-size: 0.85rem;
   letter-spacing: 0.5px;
   
-  /* Conditional styling based on status */
+  /* Conditional styling based on status - matching recommendation block colors */
   ${({ $status }) => {
     if ($status === 'approved') {
       return `
@@ -358,6 +358,12 @@ export const StatusValue = styled(DetailValue)<{
         border: 1px solid #d1fae5;
       `;
     } else if ($status === 'potential_issue' || $status === 'potential issue') {
+      return `
+        background-color: #fef3c7;
+        color: #d97706;
+        border: 1px solid #fde68a;
+      `;
+    } else if ($status === 'not_recommended' || $status === 'not recommended') {
       return `
         background-color: #fef2f2;
         color: #dc2626;

@@ -202,8 +202,25 @@ const AIAssistantModals: React.FC<AIAssistantModalsProps> = ({
           coverageGapsWithNoOutfits={(selectedHistoryItem as any).richData.coverageGapsWithNoOutfits || []}
           score={(selectedHistoryItem as any).score}
           imageUrl={(selectedHistoryItem as any).richData.itemDetails?.imageUrl || (selectedHistoryItem as any).image}
-          recommendationAction={(selectedHistoryItem as any).richData.recommendationAction || 'RECOMMEND'}
-          recommendationText={(selectedHistoryItem as any).richData.recommendationText || (selectedHistoryItem as any).description}
+          recommendationAction={(() => {
+            const getRecommendationActionFromStatus = (status: string) => {
+              switch (status?.toLowerCase()) {
+                case 'approved':
+                  return 'RECOMMEND';
+                case 'potential_issue':
+                  return 'MAYBE';
+                case 'not_recommended':
+                  return 'SKIP';
+                case 'not_reviewed':
+                  return 'RECOMMEND';
+                default:
+                  return 'RECOMMEND';
+              }
+            };
+            const derivedAction = (selectedHistoryItem as any).status ? getRecommendationActionFromStatus((selectedHistoryItem as any).status) : 'RECOMMEND';
+            return derivedAction;
+          })()}
+          recommendationText={(selectedHistoryItem as any).richData.recommendationText || (selectedHistoryItem as any).description || (selectedHistoryItem as any).summary}
           status={(selectedHistoryItem as any).status}
           userActionStatus={(selectedHistoryItem as any).userActionStatus}
           hideActions={false}
