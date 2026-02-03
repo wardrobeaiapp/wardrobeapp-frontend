@@ -248,6 +248,35 @@ export const updateWardrobeItem = async (id: string, updates: Partial<WardrobeIt
         const newIsWishlist = updatedItem.wishlist === true;
         const wishlistChanged = oldWasWishlist !== newIsWishlist;
 
+        // 🔄 AI HISTORY: Update history status when moving from wishlist to wardrobe
+        if (wishlistChanged && !newIsWishlist && oldWasWishlist) {
+          // Item moved FROM wishlist TO wardrobe
+          console.log('🔄 AI HISTORY - Item moved from wishlist to wardrobe:', updatedItem.name);
+          
+          // Check if wishlist status is not not_reviewed
+          if (oldItem.wishlistStatus && oldItem.wishlistStatus !== 'not_reviewed') {
+            console.log('🔄 AI HISTORY - Updating history status to applied for:', updatedItem.name);
+            
+            try {
+              const historyResult = await aiCheckHistoryService.getHistoryByWardrobeItemId(updatedItem.id);
+              if (historyResult.success && historyResult.record?.id) {
+                const updateResult = await aiCheckHistoryService.updateRecordStatus(historyResult.record.id, 'applied');
+                if (updateResult.success) {
+                  console.log('✅ AI HISTORY - Successfully updated history status to applied');
+                } else {
+                  console.warn('⚠️ AI HISTORY - Failed to update history status:', updateResult.error);
+                }
+              } else {
+                console.log('ℹ️ AI HISTORY - No history record found for item:', updatedItem.name);
+              }
+            } catch (error) {
+              console.error('🔴 AI HISTORY - Error updating history status:', error);
+            }
+          } else {
+            console.log('ℹ️ AI HISTORY - Wishlist status is not_reviewed, skipping history update');
+          }
+        }
+
         if (newIsWishlist && !wishlistChanged) {
           return updatedItem;
         }
