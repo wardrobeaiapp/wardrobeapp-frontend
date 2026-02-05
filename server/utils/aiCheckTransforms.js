@@ -85,7 +85,10 @@ function transformAnalysisForDatabase(analysisData, itemData, userId) {
     item_subcategory: itemData?.subcategory || null,
     recommendation_action: analysisData.score >= 7 ? 'add_to_wardrobe' : 'consider_carefully',
     recommendation_text: analysisData.recommendationText || analysisData.feedback || null,
-    wishlist_status: itemData.wishlistStatus || 'not_reviewed',
+    wishlist_status: itemData.wishlistStatus || (
+      analysisData.score >= 8 ? 'approved' : 
+      analysisData.score >= 6 ? 'potential_issue' : 'not_recommended'
+    ),
     has_compatible_items: Object.keys(analysisData.compatibleItems || {}).length > 0,
     outfit_combinations_count: (analysisData.outfitCombinations || []).length,
     analysis_error: null, // No error since we have successful analysis
