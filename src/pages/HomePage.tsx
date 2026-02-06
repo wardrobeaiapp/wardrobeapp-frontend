@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/Header/Header';
 import TabContent from '../components/features/wardrobe/header/TabContent';
 import HomePageModals from '../components/features/wardrobe/modals/HomePageModals';
@@ -20,6 +21,11 @@ import { PageHeader, HeaderContent } from './HomePage.styles';
 import PageContainer from '../components/layout/PageContainer';
 
 const HomePage: React.FC = () => {
+  const navigate = useNavigate();
+  
+  // State for AI history data pre-filling
+  const [aiHistoryInitialItem, setAiHistoryInitialItem] = useState<any>(null);
+  
   // Tab and filter state management (needed early)
   const { 
     activeTab, 
@@ -37,6 +43,41 @@ const HomePage: React.FC = () => {
     setSearchQuery,
     setScenarioFilter
   } = useTabState(TabType.ITEMS);
+
+  // Get modal state - lifted up to share with both TabActions and HomePageModals
+  const modalState = useModalState();
+  
+  // Check for AI history data on component mount
+  useEffect(() => {
+    const aiHistoryData = sessionStorage.getItem('aiHistoryAddItem');
+    
+    if (aiHistoryData) {
+      try {
+        const { fromAIHistory, itemData } = JSON.parse(aiHistoryData);
+        
+        if (fromAIHistory && itemData) {
+          // Switch to items tab (not wishlist)
+          setActiveTab(TabType.ITEMS);
+          
+          // Store AI history data for pre-filling
+          const initialItem = {
+            ...itemData,
+            wishlist: false
+          };
+          setAiHistoryInitialItem(initialItem);
+          
+          // Open Add Item modal with pre-filled data after a short delay
+          setTimeout(() => {
+            modalState.setIsAddModalOpen(true);
+            sessionStorage.removeItem('aiHistoryAddItem');
+          }, 500);
+        }
+      } catch (error) {
+        console.error('Error parsing AI history data:', error);
+        sessionStorage.removeItem('aiHistoryAddItem');
+      }
+    }
+  }, [navigate, setActiveTab, modalState]);
 
   // Data loading hooks with proper null handling  
   const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItemsData();
@@ -85,12 +126,8 @@ const HomePage: React.FC = () => {
     }
   );
   
-  // Get modal state - lifted up to share with both TabActions and HomePageModals
-  const modalState = useModalState();
-  
-  
   // Get data handlers from useHomePageData and tab actions from useTabActions
-  // Moved above the conditional return to follow React's Rules of Hooks
+  // Moved above conditional return to follow React's Rules of Hooks
   // Pass modalState to useHomePageData first
   const homePageData = useHomePageData(modalState);
   
@@ -233,6 +270,7 @@ const HomePage: React.FC = () => {
           currentItem={homePageData.currentItem}
           selectedItem={homePageData.selectedItem}
           itemToDelete={homePageData.itemToDelete}
+          initialItem={aiHistoryInitialItem} // Pass AI history data for pre-filling
           activeTab={activeTab}
           
           // Outfits

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { WardrobeItem } from '../../../../types';
-import WardrobeItemForm from '../forms/WardrobeItemForm';
+import WardrobeItemForm from '../forms/WardrobeItemForm/WardrobeItemForm';
 import { Modal } from '../../../common/Modal';
 
 interface ItemFormModalProps {
@@ -17,11 +17,13 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
   onClose,
   onSubmit,
   initialItem,
-  isEditing,
+  isEditing = false,
   defaultWishlist = false
 }) => {
   // Track if component is mounted to prevent state updates after unmount
   const [isMounted, setIsMounted] = useState(true);
+  
+  console.log('🔍 [ItemFormModal] initialItem prop:', initialItem);
   
   useEffect(() => {
     // Set up component mount state
@@ -33,10 +35,10 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
     };
   }, []);
   
-  // Removed blocking console.log operations for performance
-
-  const handleSubmit = useCallback((item: any, file?: File) => {
-    onSubmit(item, file);
+  const handleSubmit = useCallback(async (item: any, file?: File) => {
+    // Call original submit handler
+    await onSubmit(item, file);
+    
     // Close the modal after submission
     if (isMounted) {
       onClose();

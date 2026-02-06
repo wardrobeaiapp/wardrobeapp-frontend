@@ -16,6 +16,7 @@ interface HomePageModalsProps {
   currentItem?: WardrobeItem;
   selectedItem?: WardrobeItem;
   itemToDelete?: WardrobeItem;
+  initialItem?: WardrobeItem; // For AI history pre-filling
   activeTab: TabType;
   
   // Outfits
@@ -71,6 +72,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   currentItem,
   selectedItem,
   itemToDelete,
+  initialItem, // For AI history pre-filling
   activeTab,
   
   // Outfits
@@ -163,8 +165,9 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
     onClose: closeAddModal,
     onSubmit: handleSubmitAdd,
     isEditing: false,
+    initialItem: initialItem, // Pass AI history data for pre-filling
     defaultWishlist: activeTab === 'wishlist'
-  }), [isAddModalOpen, closeAddModal, handleSubmitAdd, activeTab]);
+  }), [isAddModalOpen, closeAddModal, handleSubmitAdd, activeTab, initialItem]);
 
   const editItemFormModalProps = useMemo(() => ({
     isOpen: isEditModalOpen && !!currentItem,

@@ -199,6 +199,9 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   onClearImage,
   isEditing = false
 }) => {
+  console.log('🔍 [ImageUploadSection] previewImage prop:', previewImage);
+  console.log('🔍 [ImageUploadSection] previewImage type:', typeof previewImage);
+  console.log('🔍 [ImageUploadSection] previewImage length:', previewImage?.length);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputMode, setInputMode] = useState<'file' | 'url'>('file');
   const [imageUrl, setImageUrl] = useState('');
@@ -289,6 +292,8 @@ export const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
                 objectFit: 'cover',
                 borderRadius: '8px'
               }}
+              onLoad={() => console.log('🖼️ [ImageUploadSection] Image loaded successfully:', previewImage)}
+              onError={(e) => console.error('❌ [ImageUploadSection] Image failed to load:', previewImage, e)}
             />
             {onClearImage && (
               <RemoveImageButton

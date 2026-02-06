@@ -104,22 +104,78 @@ export const useAIHistory = () => {
 
   const handleMoveToWishlist = async (itemId: string) => {
     try {
-      const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'saved');
-
-      if (!result.success) {
-        throw new Error(result.error);
+      // Find the history item to determine if it's from wishlist or image-based
+      const historyItem = historyItems.find(item => item.id === itemId);
+      
+      if (!historyItem) {
+        throw new Error('History item not found');
       }
 
-      setHistoryItems(prevItems =>
-        prevItems.map(item =>
-          item.id === itemId
-            ? { ...item, userActionStatus: UserActionStatus.SAVED }
-            : item
-        )
-      );
-      setIsHistoryDetailModalOpen(false);
+      // Check if this is a wishlist item (has wardrobeItemId and itemDetails)
+      const isFromWishlistItem = (historyItem as any).wardrobeItemId && 
+        (historyItem as any).richData?.itemDetails?.id;
+
+      if (isFromWishlistItem) {
+        // For wishlist items: Just update status to SAVED (current behavior)
+        console.log('📝 [useAIHistory] Updating wishlist item status to saved');
+        const result = await aiCheckHistoryService.updateRecordStatus(itemId, 'saved');
+
+        if (!result.success) {
+          throw new Error(result.error);
+        }
+
+        setHistoryItems(prevItems =>
+          prevItems.map(item =>
+            item.id === itemId
+              ? { ...item, userActionStatus: UserActionStatus.SAVED }
+              : item
+          )
+        );
+        setIsHistoryDetailModalOpen(false);
+      } else {
+        // For image-based items: Navigate to wardrobe page and open Add Item modal
+        console.log('🛍️ [useAIHistory] Navigating to wardrobe page to add image-based item');
+        
+        // Get image URL from history item
+        const imageUrl = (historyItem as any).richData?.itemDetails?.imageUrl || 
+                         (historyItem as any).image || 
+                         (historyItem as any).richData?.image;
+        
+        if (!imageUrl) {
+          throw new Error('No image URL found in history item');
+        }
+
+        // Get AI analysis data to pre-fill the form
+        const richData = (historyItem as any).richData || {};
+        const analysisData = {
+          category: richData.itemDetails?.category,
+          subcategory: richData.itemDetails?.subcategory,
+          color: richData.itemDetails?.color,
+          seasons: richData.itemDetails?.seasons || [],
+          scenarios: richData.itemDetails?.scenarios || [],
+          style: richData.itemDetails?.style,
+          material: richData.itemDetails?.material,
+          size: richData.itemDetails?.size,
+          brand: richData.itemDetails?.brand,
+          // Pre-fill image with correct field name for WardrobeItem interface
+          imageUrl: imageUrl
+        };
+
+        // Store the data in sessionStorage for the wardrobe page to pick up
+        sessionStorage.setItem('aiHistoryAddItem', JSON.stringify({
+          fromAIHistory: true,
+          historyItemId: itemId,
+          itemData: analysisData
+        }));
+
+        // Navigate to wardrobe page
+        window.location.href = '/';
+        
+        // Close the history modal
+        setIsHistoryDetailModalOpen(false);
+      }
     } catch (error: any) {
-      console.error('Failed to update record status:', error.message || error);
+      console.error('Failed to handle move to wishlist:', error.message || error);
     }
   };
 
