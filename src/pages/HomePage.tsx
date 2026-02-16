@@ -62,7 +62,7 @@ const HomePage: React.FC = () => {
           // Store AI history data for pre-filling
           const initialItem = {
             ...itemData,
-            wishlist: false
+            wishlist: true
           };
           setAiHistoryInitialItem(initialItem);
           
