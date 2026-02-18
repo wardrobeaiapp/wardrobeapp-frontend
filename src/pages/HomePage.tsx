@@ -77,7 +77,8 @@ const HomePage: React.FC = () => {
         sessionStorage.removeItem('aiHistoryAddItem');
       }
     }
-  }, [navigate, setActiveTab, modalState]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate, setActiveTab, modalState.setIsAddModalOpen]);
 
   // Data loading hooks with proper null handling  
   const { items: itemsData = null, isLoading: isLoadingItems, error: itemsError } = useWardrobeItemsData();

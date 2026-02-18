@@ -20,7 +20,7 @@ export const useModalState = () => {
     setIsViewItemModalOpen(value);
   }, []);
 
-  // Handlers for opening modals
+  // Handlers for opening modals (using raw setState directly to avoid circular dependencies)
   const openAddModal = useCallback(() => setIsAddModalOpen(true), []);
   const openEditModal = useCallback(() => setIsEditModalOpen(true), []);
   const openAddOutfitModal = useCallback(() => setIsAddOutfitModalOpen(true), []);
@@ -31,9 +31,9 @@ export const useModalState = () => {
   const openGenerateWithAIModal = useCallback(() => setIsGenerateWithAIModalOpen(true), []);
   const openGenerateCapsuleWithAIModal = useCallback(() => setIsGenerateCapsuleWithAIModalOpen(true), []);
   const openAddCapsuleModal = useCallback(() => setIsAddCapsuleModalOpen(true), []);
-  const openViewItemModal = useCallback(() => setIsViewItemModalOpen(true), []);
+  const openViewItemModal = useCallback(() => debugSetIsViewItemModalOpen(true), [debugSetIsViewItemModalOpen]);
 
-  // Handlers for closing modals
+  // Handlers for closing modals (using raw setState directly to avoid circular dependencies)
   const closeAddModal = useCallback(() => setIsAddModalOpen(false), []);
   const closeEditModal = useCallback(() => setIsEditModalOpen(false), []);
   const closeAddOutfitModal = useCallback(() => setIsAddOutfitModalOpen(false), []);
@@ -44,7 +44,10 @@ export const useModalState = () => {
   const closeGenerateWithAIModal = useCallback(() => setIsGenerateWithAIModalOpen(false), []);
   const closeGenerateCapsuleWithAIModal = useCallback(() => setIsGenerateCapsuleWithAIModalOpen(false), []);
   const closeAddCapsuleModal = useCallback(() => setIsAddCapsuleModalOpen(false), []);
-  const closeViewItemModal = useCallback(() => setIsViewItemModalOpen(false), []);
+  const closeViewItemModal = useCallback(() => debugSetIsViewItemModalOpen(false), [debugSetIsViewItemModalOpen]);
+
+  // Stable setter for Add Modal (the only one we need for HomePage useEffect)
+  const stableSetIsAddModalOpen = useCallback((value: boolean | ((prev: boolean) => boolean)) => setIsAddModalOpen(value), []);
 
   // Close all modals
   const closeAllModals = useCallback(() => {
@@ -80,8 +83,8 @@ export const useModalState = () => {
     isAddCapsuleModalOpen,
     isViewItemModalOpen,
 
-    // Modal state setters
-    setIsAddModalOpen,
+    // Modal state setters (raw functions - only setIsAddModalOpen is stable for HomePage)
+    setIsAddModalOpen: stableSetIsAddModalOpen,
     setIsEditModalOpen,
     setIsAddOutfitModalOpen,
     setIsEditOutfitModalOpen,
