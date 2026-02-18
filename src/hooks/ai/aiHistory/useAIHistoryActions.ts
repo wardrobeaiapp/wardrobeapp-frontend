@@ -54,15 +54,28 @@ export const useAIHistoryActions = (
         // Get AI analysis data to pre-fill the form
         const richData = (historyItem as any).richData || {};
         const analysisData = {
+          name: richData.itemDetails?.name,
           category: richData.itemDetails?.category,
           subcategory: richData.itemDetails?.subcategory,
           color: richData.itemDetails?.color,
+          pattern: richData.itemDetails?.pattern,
+          material: richData.itemDetails?.material,
+          brand: richData.itemDetails?.brand,
+          price: richData.itemDetails?.price,
+          silhouette: richData.itemDetails?.silhouette,
+          length: richData.itemDetails?.length,
+          sleeves: richData.itemDetails?.sleeves,
+          style: richData.itemDetails?.style,
+          rise: richData.itemDetails?.rise,
+          neckline: richData.itemDetails?.neckline,
+          heelHeight: richData.itemDetails?.heelHeight,
+          bootHeight: richData.itemDetails?.bootHeight,
+          type: richData.itemDetails?.type,
+          closure: richData.itemDetails?.closure,
+          details: richData.itemDetails?.details,
           seasons: richData.itemDetails?.seasons || [],
           scenarios: richData.itemDetails?.scenarios || [],
-          style: richData.itemDetails?.style,
-          material: richData.itemDetails?.material,
           size: richData.itemDetails?.size,
-          brand: richData.itemDetails?.brand,
           // Pre-fill image with correct field name for WardrobeItem interface
           imageUrl: imageUrl
         };
