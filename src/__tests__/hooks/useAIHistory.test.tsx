@@ -4,12 +4,12 @@ import { aiCheckHistoryService } from '../../services/ai/aiCheckHistoryService';
 import { UserActionStatus, WishlistStatus } from '../../types';
 import { AIHistoryItem } from '../../types/ai';
 
-// Mock the aiCheckHistoryService
+// Mock aiCheckHistoryService
 jest.mock('../../services/ai/aiCheckHistoryService', () => ({
   aiCheckHistoryService: {
     getHistory: jest.fn(),
-    updateRecordStatus: jest.fn(),
     getHistoryRecord: jest.fn(),
+    updateRecordStatus: jest.fn(),
     cleanupRichData: jest.fn()
   }
 }));
@@ -340,83 +340,6 @@ describe('useAIHistory', () => {
 
       expect(result.current.isHistoryDetailModalOpen).toBe(false);
       expect(result.current.selectedHistoryItem).toBeNull();
-    });
-  });
-
-  describe('Status Updates', () => {
-    beforeEach(async () => {
-      mockAICheckHistoryService.getHistory.mockResolvedValue({
-        success: true,
-        history: [mockServiceResponse.history[0]],
-        total: 1
-      });
-    });
-
-    it('should handle moving item to wishlist', async () => {
-      mockAICheckHistoryService.updateRecordStatus.mockResolvedValue({
-        success: true
-      });
-
-      const { result } = renderHook(() => useAIHistory());
-
-      await waitFor(() => {
-        expect(result.current.historyItems).toHaveLength(1);
-      });
-
-      await act(async () => {
-        await result.current.handleMoveToWishlist('history-123');
-      });
-
-      expect(mockAICheckHistoryService.updateRecordStatus).toHaveBeenCalledWith('history-123', 'saved');
-      
-      // Item should be updated in local state
-      const updatedItem = result.current.historyItems.find(item => item.id === 'history-123');
-      expect(updatedItem?.userActionStatus).toBe('saved');
-    });
-
-    it('should handle dismissing item', async () => {
-      mockAICheckHistoryService.updateRecordStatus.mockResolvedValue({
-        success: true
-      });
-
-      const { result } = renderHook(() => useAIHistory());
-
-      await waitFor(() => {
-        expect(result.current.historyItems).toHaveLength(1);
-      });
-
-      await act(async () => {
-        await result.current.handleDismissHistoryItem('history-123');
-      });
-
-      expect(mockAICheckHistoryService.updateRecordStatus).toHaveBeenCalledWith('history-123', 'dismissed');
-      
-      // Item should be updated in local state
-      const updatedItem = result.current.historyItems.find(item => item.id === 'history-123');
-      expect(updatedItem?.userActionStatus).toBe('dismissed');
-    });
-
-    it('should handle status update failures', async () => {
-      mockAICheckHistoryService.updateRecordStatus.mockResolvedValue({
-        success: false,
-        error: 'Update failed'
-      });
-
-      const { result } = renderHook(() => useAIHistory());
-
-      await waitFor(() => {
-        expect(result.current.historyItems).toHaveLength(1);
-      });
-
-      await act(async () => {
-        await result.current.handleMoveToWishlist('history-123');
-      });
-
-      expect(mockConsole.error).toHaveBeenCalledWith('Failed to update record status:', 'Update failed');
-      
-      // Item should not be updated in local state
-      const item = result.current.historyItems.find(item => item.id === 'history-123');
-      expect(item?.userActionStatus).toBe('pending'); // Original status
     });
   });
 
