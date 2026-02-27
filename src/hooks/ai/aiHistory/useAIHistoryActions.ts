@@ -81,11 +81,21 @@ export const useAIHistoryActions = (
         };
 
         // Store the data in sessionStorage for the wardrobe page to pick up
-        sessionStorage.setItem('aiHistoryAddItem', JSON.stringify({
+        const sessionStorageData = {
           fromAIHistory: true,
           historyItemId: itemId,
           itemData: analysisData
-        }));
+        };
+        
+        console.log('🛍️ [useAIHistory] Storing AI history data in sessionStorage:');
+        console.log('  📝 History item ID:', itemId);
+        console.log('  📋 Item data keys:', Object.keys(analysisData));
+        console.log('  🎯 Item name:', analysisData.name);
+        console.log('  📂 Category:', analysisData.category);
+        console.log('  📋 Subcategory:', analysisData.subcategory);
+        console.log('  🖼️  Has image URL:', !!analysisData.imageUrl);
+        
+        sessionStorage.setItem('aiHistoryAddItem', JSON.stringify(sessionStorageData));
 
         // Navigate to wardrobe page
         window.location.href = '/';

@@ -51,31 +51,53 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const aiHistoryData = sessionStorage.getItem('aiHistoryAddItem');
     
+    console.log('🏠 [HomePage] Checking for AI history data on mount...');
+    console.log('  📦 Found sessionStorage data:', !!aiHistoryData);
+    
     if (aiHistoryData) {
       try {
-        const { fromAIHistory, itemData } = JSON.parse(aiHistoryData);
+        const { fromAIHistory, historyItemId, itemData } = JSON.parse(aiHistoryData);
+        
+        console.log('🔄 [HomePage] Processing AI history data:');
+        console.log('  ✅ fromAIHistory:', fromAIHistory);
+        console.log('  📝 historyItemId:', historyItemId);
+        console.log('  📋 itemData name:', itemData?.name);
+        console.log('  📂 itemData category:', itemData?.category);
+        console.log('  📋 itemData subcategory:', itemData?.subcategory);
         
         if (fromAIHistory && itemData) {
+          console.log('🎯 [HomePage] Setting up AI history redirection flow...');
+          
           // Switch to items tab (not wishlist)
           setActiveTab(TabType.ITEMS);
+          console.log('  📑 Switched to Items tab');
           
           // Store AI history data for pre-filling
           const initialItem = {
             ...itemData,
-            wishlist: true
+            wishlist: true,
+            // Add the history item ID so the form can detect the source even after sessionStorage is cleared
+            historyItemId: historyItemId
           };
           setAiHistoryInitialItem(initialItem);
+          console.log('  📦 Stored initial item data with wishlist flag');
+          console.log('  🆔 Initial item ID:', initialItem.id);
+          console.log('  📝 History item ID (passed separately):', historyItemId);
           
           // Open Add Item modal with pre-filled data after a short delay
           setTimeout(() => {
+            console.log('🚀 [HomePage] Opening Add Item modal with AI history data...');
             modalState.setIsAddModalOpen(true);
             sessionStorage.removeItem('aiHistoryAddItem');
+            console.log('  🧹 Cleaned up sessionStorage');
           }, 500);
         }
       } catch (error) {
-        console.error('Error parsing AI history data:', error);
+        console.error('❌ [HomePage] Error parsing AI history data:', error);
         sessionStorage.removeItem('aiHistoryAddItem');
       }
+    } else {
+      console.log('🆕 [HomePage] No AI history data found - normal page load');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, setActiveTab, modalState.setIsAddModalOpen]);

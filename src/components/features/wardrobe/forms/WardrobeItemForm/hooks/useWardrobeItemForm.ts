@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { WardrobeItem, ItemCategory, Season } from '../../../../../../types';
 
 interface FormErrors {
@@ -33,11 +33,43 @@ export interface WardrobeItemFormData {
 }
 
 interface UseWardrobeItemFormProps {
-  initialItem?: Partial<WardrobeItem>;
+  initialItem?: Partial<WardrobeItem> & { historyItemId?: string };
   defaultWishlist?: boolean;
 }
 
 export const useWardrobeItemForm = ({ initialItem, defaultWishlist = false }: UseWardrobeItemFormProps = {}) => {
+  // Log form opening source and history item ID
+  React.useEffect(() => {
+    // Check if we have AI history data in sessionStorage (indicates redirection)
+    const aiHistoryData = sessionStorage.getItem('aiHistoryAddItem');
+    const hasHistoryItemId = !!initialItem?.historyItemId && typeof initialItem.historyItemId === 'string' && initialItem.historyItemId.length > 0;
+    const hasRegularItemId = !!initialItem?.id && typeof initialItem.id === 'string' && initialItem.id.length > 0;
+    
+    if (aiHistoryData) {
+      try {
+        const parsed = JSON.parse(aiHistoryData);
+        console.log('🔄 [WardrobeItemForm] Form opened from AI history redirection (sessionStorage still exists)');
+        console.log('📝 [WardrobeItemForm] History item ID from sessionStorage:', parsed.historyItemId);
+        console.log('🎯 [WardrobeItemForm] Has history item ID in initialItem prop:', hasHistoryItemId);
+        console.log('📋 [WardrobeItemForm] Initial item ID (regular):', initialItem?.id);
+        console.log('🏷️ [WardrobeItemForm] History item ID from prop:', initialItem?.historyItemId);
+      } catch (error) {
+        console.error('❌ [WardrobeItemForm] Error parsing AI history data:', error);
+      }
+    } else if (hasHistoryItemId) {
+      console.log('🔄 [WardrobeItemForm] Form opened from AI history redirection (detected via prop)');
+      console.log('📝 [WardrobeItemForm] History item ID from initialItem prop:', initialItem?.historyItemId);
+      console.log('� [WardrobeItemForm] Has history item ID in initialItem prop:', hasHistoryItemId);
+      console.log('📋 [WardrobeItemForm] Initial item ID (regular):', initialItem?.id);
+      console.log('🧹 [WardrobeItemForm] SessionStorage already cleared');
+    } else {
+      console.log('�� [WardrobeItemForm] Form opened directly (no redirection)');
+      console.log('🎯 [WardrobeItemForm] Has history item ID in initialItem prop:', hasHistoryItemId);
+      console.log('📋 [WardrobeItemForm] Initial item ID (regular):', hasRegularItemId);
+      console.log('🏷️ [WardrobeItemForm] History item ID from prop:', initialItem?.historyItemId);
+    }
+  }, [initialItem?.id, initialItem?.historyItemId]);
+
   // Form state
   const [name, setName] = useState(initialItem?.name || '');
   const [category, setCategory] = useState<ItemCategory | ''>(initialItem?.category || '');

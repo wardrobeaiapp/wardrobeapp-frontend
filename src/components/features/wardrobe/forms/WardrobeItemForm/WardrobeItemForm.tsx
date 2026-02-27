@@ -15,7 +15,7 @@ const BackgroundRemovalPreview = lazy(() => import('./components/BackgroundRemov
 const FormActions = lazy(() => import('./components/FormActions').then(module => ({ default: module.FormActions })));
 
 interface WardrobeItemFormProps {
-  initialItem?: WardrobeItem;
+  initialItem?: WardrobeItem & { historyItemId?: string };
   defaultWishlist?: boolean;
   onSubmit: (item: WardrobeItem, file?: File) => void;
   onCancel: () => void;

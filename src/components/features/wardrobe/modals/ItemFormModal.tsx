@@ -7,7 +7,7 @@ interface ItemFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (item: any, file?: File) => void;
-  initialItem?: WardrobeItem;
+  initialItem?: WardrobeItem & { historyItemId?: string };
   isEditing: boolean;
   defaultWishlist?: boolean;
 }
