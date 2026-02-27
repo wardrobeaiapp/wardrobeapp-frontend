@@ -26,6 +26,29 @@ const HomePage: React.FC = () => {
   // State for AI history data pre-filling
   const [aiHistoryInitialItem, setAiHistoryInitialItem] = useState<any>(null);
   
+  // Function to update AI history item status after saving
+  const handleHistoryItemSaved = async (historyItemId: string, destination: 'wishlist' | 'wardrobe') => {
+    try {
+      // Import the service dynamically to avoid circular dependencies
+      const { aiCheckHistoryService } = await import('../services/ai/aiCheckHistoryService');
+      
+      // Determine status based on destination
+      const newStatus = destination === 'wishlist' ? 'saved' : 'applied';
+      
+      console.log(`🔄 [HomePage] Updating AI history item ${historyItemId} status to: ${newStatus}`);
+      
+      const result = await aiCheckHistoryService.updateRecordStatus(historyItemId, newStatus);
+      
+      if (result.success) {
+        console.log(`✅ [HomePage] Successfully updated AI history item status to: ${newStatus}`);
+      } else {
+        console.error(`❌ [HomePage] Failed to update AI history item status:`, result.error);
+      }
+    } catch (error) {
+      console.error('❌ [HomePage] Error updating AI history item status:', error);
+    }
+  };
+  
   // Tab and filter state management (needed early)
   const { 
     activeTab, 
@@ -315,6 +338,7 @@ const HomePage: React.FC = () => {
           handleAddCapsule={homePageData.handleAddCapsule}
           handleEditCapsuleSubmit={homePageData.handleEditCapsuleSubmit}
           confirmDeleteItem={tabActions.confirmDeleteItem}
+          onHistoryItemSaved={handleHistoryItemSaved}
           
           // Item handlers
           handleEditItem={tabActions.onEditItem}

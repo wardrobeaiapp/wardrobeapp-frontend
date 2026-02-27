@@ -19,13 +19,15 @@ interface WardrobeItemFormProps {
   defaultWishlist?: boolean;
   onSubmit: (item: WardrobeItem, file?: File) => void;
   onCancel: () => void;
+  onHistoryItemSaved?: (historyItemId: string, destination: 'wishlist' | 'wardrobe') => void;
 }
 
 const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
   initialItem,
   defaultWishlist = false,
   onSubmit,
-  onCancel
+  onCancel,
+  onHistoryItemSaved
 }) => {
   const [isImageFromUrl, setIsImageFromUrl] = useState(false);
   const [loadedComponents, setLoadedComponents] = useState<Set<string>>(new Set());
@@ -217,6 +219,32 @@ const WardrobeItemForm: React.FC<WardrobeItemFormProps> = ({
       const finalImageUrl = formData.imageUrl || previewImage || '';
       const item = createWardrobeItem(formData, finalImageUrl);
       const fileToSubmit = determineImageToSubmit(finalImageUrl);
+      
+      // Check if this is an AI history redirection and log save destination
+      const isFromAIHistory = !!initialItem?.historyItemId;
+      const destination = item.wishlist ? 'wishlist' : 'wardrobe';
+      
+      if (isFromAIHistory) {
+        console.log('💾 [WardrobeItemForm] SAVING ITEM FROM AI HISTORY:');
+        console.log('  📝 History item ID:', initialItem?.historyItemId);
+        console.log('  🎯 Item name:', item.name);
+        console.log('  📂 Category:', item.category);
+        console.log('  📋 Subcategory:', item.subcategory);
+        console.log('  📍 Save destination:', destination);
+        console.log('  ✅ Is wishlist item:', item.wishlist);
+        console.log('  🖼️  Has image:', !!item.imageUrl);
+        
+        // Call callback to update AI history item status
+        if (onHistoryItemSaved && initialItem?.historyItemId) {
+          console.log('🔄 [WardrobeItemForm] Updating AI history item status...');
+          onHistoryItemSaved(initialItem.historyItemId, destination);
+        }
+      } else {
+        console.log('💾 [WardrobeItemForm] SAVING ITEM (regular):');
+        console.log('  🎯 Item name:', item.name);
+        console.log('  📍 Save destination:', destination);
+        console.log('  ✅ Is wishlist item:', item.wishlist);
+      }
       
       // Mark the final image as saved (remove from cleanup list)
       if (finalImageUrl) {

@@ -38,6 +38,7 @@ interface HomePageModalsProps {
   handleAddCapsule: (id: string, data: CapsuleFormData) => void;
   handleEditCapsuleSubmit: (id: string, data: CapsuleFormData) => void;
   confirmDeleteItem: () => void;
+  onHistoryItemSaved?: (historyItemId: string, destination: 'wishlist' | 'wardrobe') => void;
   
   // Item handlers
   handleEditItem: (id: string) => void;
@@ -94,6 +95,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   handleAddCapsule,
   handleEditCapsuleSubmit,
   confirmDeleteItem,
+  onHistoryItemSaved,
   
   // Item handlers
   handleEditItem,
@@ -160,14 +162,15 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   const closeDeleteConfirmModal = useCallback(() => setIsDeleteConfirmModalOpen(false), [setIsDeleteConfirmModalOpen]);
 
   // Memoize modal props that don't need to be recreated on every render
-  const itemFormModalProps = useMemo(() => ({
+  const addItemFormModalProps = useMemo(() => ({
     isOpen: isAddModalOpen,
     onClose: closeAddModal,
     onSubmit: handleSubmitAdd,
-    isEditing: false,
     initialItem: initialItem, // Pass AI history data for pre-filling
-    defaultWishlist: activeTab === 'wishlist'
-  }), [isAddModalOpen, closeAddModal, handleSubmitAdd, activeTab, initialItem]);
+    defaultWishlist: activeTab === 'wishlist',
+    onHistoryItemSaved: onHistoryItemSaved,
+    isEditing: false
+  }), [isAddModalOpen, closeAddModal, handleSubmitAdd, activeTab, initialItem, onHistoryItemSaved]);
 
   const editItemFormModalProps = useMemo(() => ({
     isOpen: isEditModalOpen && !!currentItem,
@@ -249,7 +252,7 @@ const HomePageModals: React.FC<HomePageModalsProps> = ({
   return (
     <>
       {/* Item Modals */}
-      <MemoizedItemFormModal {...itemFormModalProps} />
+      <MemoizedItemFormModal {...addItemFormModalProps} />
       <MemoizedItemFormModal {...editItemFormModalProps} />
       
       {/* ItemViewModal */}

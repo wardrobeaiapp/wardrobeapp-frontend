@@ -10,6 +10,7 @@ interface ItemFormModalProps {
   initialItem?: WardrobeItem & { historyItemId?: string };
   isEditing: boolean;
   defaultWishlist?: boolean;
+  onHistoryItemSaved?: (historyItemId: string, destination: 'wishlist' | 'wardrobe') => void;
 }
 
 const ItemFormModal: React.FC<ItemFormModalProps> = ({
@@ -18,7 +19,8 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
   onSubmit,
   initialItem,
   isEditing = false,
-  defaultWishlist = false
+  defaultWishlist = false,
+  onHistoryItemSaved
 }) => {
   // Track if component is mounted to prevent state updates after unmount
   const [isMounted, setIsMounted] = useState(true);
@@ -66,6 +68,7 @@ const ItemFormModal: React.FC<ItemFormModalProps> = ({
             onClose();
           }
         }}
+        onHistoryItemSaved={onHistoryItemSaved}
       />
     </Modal>
   );
